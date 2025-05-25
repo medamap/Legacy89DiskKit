@@ -9,8 +9,9 @@
 ## ✨ 特徴
 
 ### 🎯 対応フォーマット
-- **ディスクイメージ**: D88形式（Sharp X1等）、DSK形式（MSX/CPC等）
-- **ファイルシステム**: Hu-BASIC（Sharp X1）、MS-DOS FAT12（PC互換機）
+- **ディスクイメージ**: D88形式、DSK形式
+- **ファイルシステム**: Hu-BASIC、MS-DOS FAT12
+- **組み合わせ**: D88+Hu-BASIC、D88+FAT12、DSK+Hu-BASIC、DSK+FAT12
 - **将来拡張予定**: N88-BASIC、CP/M、FAT16等
 
 ### 🏗️ モダンアーキテクチャ
@@ -81,7 +82,9 @@ dotnet run --project Legacy89DiskKit.CLI -- info disk.dsk
 
 # 🆕 安全な書き込み操作（ファイルシステム指定必須）
 dotnet run --project Legacy89DiskKit.CLI -- export-text disk.dsk README.TXT readme.txt --filesystem fat12
+dotnet run --project Legacy89DiskKit.CLI -- export-text mydisk.d88 README.TXT readme.txt --filesystem fat12
 dotnet run --project Legacy89DiskKit.CLI -- import-text mydisk.d88 readme.txt README.TXT --filesystem hu-basic
+dotnet run --project Legacy89DiskKit.CLI -- import-text disk.dsk readme.txt README.TXT --filesystem hu-basic
 ```
 
 ## 📋 機能一覧
@@ -149,20 +152,25 @@ writeFileSystem.WriteFile("test.txt", data);
 
 ## 💾 対応ディスクタイプ
 
-### Hu-BASIC (D88)
+### D88形式 + Hu-BASICファイルシステム
 | タイプ | 容量 | トラック数 | 面数 | セクタ/トラック | セクタサイズ |
 |-------|------|-----------|------|---------------|-------------|
 | **2D** | 320KB | 40 | 2 | 16 | 256B |
 | **2DD** | 640KB | 80 | 2 | 16 | 256B |
 | **2HD** | 1.2MB | 77 | 2 | 26 | 256B |
 
-### MS-DOS FAT12 (DSK)
+### DSK形式 + MS-DOS FAT12ファイルシステム
 | タイプ | 容量 | トラック数 | 面数 | セクタ/トラック | セクタサイズ |
 |-------|------|-----------|------|---------------|-------------|
 | **5.25" DD** | 360KB | 40 | 2 | 9 | 512B |
 | **3.5" DD** | 720KB | 80 | 2 | 9 | 512B |
 | **5.25" HD** | 1.2MB | 80 | 2 | 15 | 512B |
 | **3.5" HD** | 1.44MB | 80 | 2 | 18 | 512B |
+
+### 🔄 クロス対応
+**D88形式**: Hu-BASIC + MS-DOS FAT12 両方対応  
+**DSK形式**: MS-DOS FAT12 + Hu-BASIC 両方対応  
+※ ファイルシステムは `--filesystem` パラメータで明示的に指定
 
 ## 🛠️ アーキテクチャ
 
