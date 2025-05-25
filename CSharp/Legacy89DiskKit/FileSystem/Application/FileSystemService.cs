@@ -136,7 +136,7 @@ public class FileSystemService
             IsAscii: false
         );
         
-        fileSystem.WriteFile(diskFileName, binaryData, isText: false, loadAddress: loadAddress, execAddress: execAddress);
+        fileSystem.WriteFile(diskFileName, binaryData, isText: false, loadAddress: loadAddress, execAddress: executeAddress);
         fileSystem.DiskContainer.Save();
     }
 
