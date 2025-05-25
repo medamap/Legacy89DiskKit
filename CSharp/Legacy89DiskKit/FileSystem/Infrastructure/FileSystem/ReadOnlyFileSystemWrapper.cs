@@ -1,5 +1,6 @@
 using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
 using Legacy89DiskKit.FileSystem.Domain.Exception;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
 
 namespace Legacy89DiskKit.FileSystem.Infrastructure.FileSystem;
 
@@ -12,13 +13,23 @@ public class ReadOnlyFileSystemWrapper : IFileSystem
         _innerFileSystem = innerFileSystem ?? throw new ArgumentNullException(nameof(innerFileSystem));
     }
 
+    // IFileSystem プロパティ
+    public IDiskContainer DiskContainer => _innerFileSystem.DiskContainer;
+    public bool IsFormatted => _innerFileSystem.IsFormatted;
+
     // 読み取り専用操作：そのまま委譲
-    public IEnumerable<FileEntry> ListFiles() => _innerFileSystem.ListFiles();
+    public IEnumerable<FileEntry> GetFiles() => _innerFileSystem.GetFiles();
     
-    public byte[] ReadFile(string fileName, bool allowPartialRead = false) => 
+    public FileEntry? GetFile(string fileName) => _innerFileSystem.GetFile(fileName);
+    
+    public byte[] ReadFile(string fileName) => _innerFileSystem.ReadFile(fileName);
+    
+    public byte[] ReadFile(string fileName, bool allowPartialRead) => 
         _innerFileSystem.ReadFile(fileName, allowPartialRead);
     
-    public BootSectorInfo ReadBootSector() => _innerFileSystem.ReadBootSector();
+    public BootSector GetBootSector() => _innerFileSystem.GetBootSector();
+    
+    public HuBasicFileSystemInfo GetFileSystemInfo() => _innerFileSystem.GetFileSystemInfo();
 
     // 書き込み操作：すべて禁止
     public void Format()
@@ -42,7 +53,7 @@ public class ReadOnlyFileSystemWrapper : IFileSystem
             "Use OpenFileSystem() with explicit filesystem type for write access.");
     }
 
-    public void WriteBootSector(string label, byte[] bootCode)
+    public void WriteBootSector(BootSector bootSector)
     {
         throw new InvalidOperationException(
             "Write operations not allowed on read-only filesystem. " +
@@ -51,6 +62,8 @@ public class ReadOnlyFileSystemWrapper : IFileSystem
 
     public void Dispose()
     {
-        _innerFileSystem?.Dispose();
+        // IFileSystemインターフェースにDisposeメソッドがないため、何もしない
+        // 必要に応じてIDiskContainerのDisposeを呼び出し
+        _innerFileSystem?.DiskContainer?.Dispose();
     }
 }

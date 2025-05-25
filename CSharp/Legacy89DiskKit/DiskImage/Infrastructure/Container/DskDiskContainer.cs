@@ -275,6 +275,44 @@ public class DskDiskContainer : IDiskContainer
                 $"Sector {sector} out of range (1-{_header.SectorsPerTrack})");
         }
     }
+
+    public bool SectorExists(int cylinder, int head, int sector)
+    {
+        return cylinder >= 0 && cylinder < _header.Cylinders &&
+               head >= 0 && head < _header.Heads &&
+               sector >= 1 && sector <= _header.SectorsPerTrack;
+    }
+
+    public IEnumerable<SectorInfo> GetAllSectors()
+    {
+        for (int c = 0; c < _header.Cylinders; c++)
+        {
+            for (int h = 0; h < _header.Heads; h++)
+            {
+                for (int s = 1; s <= _header.SectorsPerTrack; s++)
+                {
+                    yield return new SectorInfo(c, h, s, _header.SectorSize, false, false);
+                }
+            }
+        }
+    }
+
+    public void Save()
+    {
+        SaveAs(_filePath);
+    }
+
+    public void SaveAs(string filePath)
+    {
+        try
+        {
+            File.WriteAllBytes(filePath, _imageData);
+        }
+        catch (IOException ex)
+        {
+            throw new DiskImageException($"Failed to save DSK image: {ex.Message}", ex);
+        }
+    }
 }
 
 public class DskHeader
