@@ -4,7 +4,7 @@
 **実装者**: Claude (Anthropic AI Assistant)
 **アーキテクチャ**: Domain Driven Design (DDD) + Dependency Injection
 **言語**: C# (.NET 8.0)
-**状態**: Phase 4完了（DI対応、複数ファイルシステム対応基盤完成）
+**状態**: Phase 5完了（MS-DOS FAT12対応、DSK形式対応）
 
 ---
 
@@ -22,10 +22,12 @@ Sharp X1 Hu-BASICディスクイメージ（D88形式）を操作するための
 - **エラーハンドリング**: 破損復旧、メモリ安全、詳細診断
 - **CLI Tool**: 全コマンド実装済み
 
-### ✅ **Architecture (Phase 4)**
+### ✅ **Architecture (Phase 4-5)**
 - **Dependency Injection**: Microsoft.Extensions.DependencyInjection
 - **Factory Pattern**: ディスクコンテナ・ファイルシステム工場
 - **Extension Framework**: 新ファイルシステム追加基盤
+- **Multi-Format Support**: D88 + DSK ディスクイメージ対応
+- **MS-DOS FAT12**: 完全読み取り対応
 
 ---
 
@@ -113,12 +115,90 @@ var fileSystem = fileSystemFactory.OpenFileSystem(container);
 public enum FileSystemType
 {
     HuBasic,    // ✅ 実装済み
-    Fat12,      // 🚧 準備完了
+    Fat12,      // ✅ 実装完了
     Fat16,      // 🚧 準備完了  
     Cpm,        // 🚧 準備完了
     N88Basic,   // 🚧 準備完了
     MsxDos      // 🚧 準備完了
 }
+```
+
+---
+
+### **Phase 5: MS-DOS FAT12ファイルシステム実装** (5-6時間実装)
+
+#### **新ファイルシステム実装**
+```
+FileSystem/Infrastructure/FileSystem/
+└── Fat12FileSystem.cs           # FAT12完全実装
+    ├── Fat12BootSector         # 512バイトブートセクタ解析
+    ├── Fat12DirectoryEntry    # 32バイトDOSディレクトリエントリ
+    └── 12ビットFAT管理         # クラスタチェーン追跡
+```
+
+#### **技術的実装詳細**
+1. **Fat12FileSystem**: MS-DOS FAT12フルサポート
+   - 512バイトブートセクタ解析とバリデーション
+   - 12ビットFATテーブル読み込みと圧縮解凍
+   - DOSディレクトリエントリ処理（8.3ファイル名）
+   - DOS日時形式→DateTime変換
+
+2. **12ビットFAT特有処理**: 
+   ```csharp
+   // 偶数/奇数クラスタで異なる12ビット抽出
+   if (currentCluster % 2 == 0) {
+       nextCluster = fat[offset] | ((fat[offset+1] & 0x0F) << 8);
+   } else {
+       nextCluster = (fat[offset] >> 4) | (fat[offset+1] << 4);
+   }
+   ```
+
+3. **クラスタジオメトリ計算**: 
+   ```csharp
+   firstDataSector = reservedSectors + (numberOfFats * sectorsPerFat) + rootDirSectors;
+   clusterSector = firstDataSector + (clusterNumber - 2) * sectorsPerCluster;
+   ```
+
+#### **DSK形式ディスクイメージ対応**
+```
+DiskImage/Infrastructure/Container/
+└── DskDiskContainer.cs          # DSK形式サポート
+    ├── 自動ジオメトリ検出      # ファイルサイズからCHS推定
+    ├── 標準的なフロッピーサイズ対応
+    └── 生セクタアクセス        # ヘッダなしフォーマット
+```
+
+#### **自動検出機能強化**
+```csharp
+public FileSystemType DetectFileSystemType(IDiskContainer container)
+{
+    // 1. FAT12/16署名チェック ("FAT12   " at 0x36)
+    // 2. ブート署名チェック (0x55AA at 0x1FE)  
+    // 3. 構造的妥当性検証 (BytesPerSector, SectorsPerCluster)
+    // 4. Hu-BASIC署名チェック (フォールバック)
+}
+```
+
+#### **対応ディスクサイズ**
+- **360KB**: 5.25" DD (40トラック × 2面 × 9セクタ)
+- **720KB**: 3.5" DD (80トラック × 2面 × 9セクタ)  
+- **1.2MB**: 5.25" HD (80トラック × 2面 × 15セクタ)
+- **1.44MB**: 3.5" HD (80トラック × 2面 × 18セクタ)
+- **カスタムサイズ**: 自動ジオメトリ推定
+
+#### **エラーハンドリング継承**
+- Phase 3のメモリ安全・破損復旧機能をFAT12にも適用
+- クラスタチェーン循環検出
+- 部分ファイル復旧（`allowPartialRead`）
+
+#### **CLI統合**
+```bash
+# 自動検出（FAT12を優先判定）
+./Legacy89DiskKit.CLI list disk.dsk
+
+# 明示的ファイルシステム指定
+./Legacy89DiskKit.CLI list disk.dsk fat12
+./Legacy89DiskKit.CLI export-text disk.dsk README.TXT readme.txt
 ```
 
 ---

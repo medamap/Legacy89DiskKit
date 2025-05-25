@@ -18,6 +18,7 @@ public class DiskContainerFactory : IDiskContainerFactory
         return extension switch
         {
             ".d88" => new D88DiskContainer(filePath, readOnly),
+            ".dsk" => new DskDiskContainer(filePath, readOnly),
             _ => throw new NotSupportedException($"Unsupported disk image format: {extension}")
         };
     }
@@ -29,6 +30,7 @@ public class DiskContainerFactory : IDiskContainerFactory
         return extension switch
         {
             ".d88" => D88DiskContainer.CreateNew(filePath, diskType, diskName),
+            ".dsk" => DskDiskContainer.CreateNew(filePath, diskType, diskName),
             _ => throw new NotSupportedException($"Cannot create disk image format: {extension}")
         };
     }
