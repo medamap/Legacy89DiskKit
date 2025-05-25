@@ -1,3 +1,0 @@
-Hello, Sharp X1!
-This is a test file for Hu-BASIC file system.
-こんにちは、世界！
