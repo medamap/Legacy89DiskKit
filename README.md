@@ -215,16 +215,42 @@ Legacy89DiskKit/
 
 ## 🔄 文字コード対応
 
-Sharp X1固有の文字コード体系をサポート：
+18種類のレトロコンピュータ機種の文字コード体系をサポート：
 
-- **JIS X 0201**: 基本ASCII + 半角カタカナ
-- **X1独自記号**: 罫線文字等
-- **自動変換**: Unicode ↔ X1文字コード
+### 📟 対応機種
+| カテゴリ | 機種名 | 実装状況 |
+|---------|-------|---------|
+| **Sharp** | X1, X1 Turbo | ✅ 完全実装 |
+| **NEC** | PC-8801, PC-8801mkII, PC-8001, PC-8001mkII, PC-6001, PC-6601 | 🚧 基本ASCII |
+| **MSX** | MSX1, MSX2 | 🚧 基本ASCII |
+| **Sharp MZ** | MZ-80K, MZ-700, MZ-1500, MZ-2500 | 🚧 基本ASCII |
+| **富士通** | FM-7, FM-77, FM-77AV | 🚧 基本ASCII |
+| **任天堂** | ファミリーコンピュータ | 🚧 基本ASCII |
 
+### 🔧 使用方法
 ```csharp
-var converter = new X1Converter();
-var x1Text = converter.ToX1("こんにちは");        // ひらがな→カタカナ変換
-var unicodeText = converter.ToUnicode(x1Bytes);  // X1→Unicode変換
+// DI経由でエンコーダーサービス取得
+var encodingService = serviceProvider.GetRequiredService<CharacterEncodingService>();
+
+// 機種別文字エンコーディング
+var x1Bytes = encodingService.EncodeText("こんにちは", MachineType.X1);
+var pc8801Bytes = encodingService.EncodeText("Hello", MachineType.Pc8801);
+
+// デコード
+var unicodeText = encodingService.DecodeText(x1Bytes, MachineType.X1);
+```
+
+### 📋 CLI使用例
+```bash
+# X1文字コードでテキストエクスポート
+./CLI export-text disk.d88 HELLO.TXT hello.txt --filesystem hu-basic --machine x1
+
+# PC-8801文字コードでテキストインポート
+./CLI import-text disk.dsk hello.txt HELLO.TXT --filesystem fat12 --machine pc8801
+
+# 機種省略時はファイルシステムのデフォルト
+./CLI export-text disk.d88 HELLO.TXT hello.txt --filesystem hu-basic  # → X1
+./CLI import-text disk.dsk hello.txt HELLO.TXT --filesystem fat12     # → PC-8801
 ```
 
 ## 🚧 今後の拡張予定
@@ -235,23 +261,36 @@ var unicodeText = converter.ToUnicode(x1Bytes);  // X1→Unicode変換
 - **構造検証による不正アクセス阻止**
 - **詳細エラーメッセージとガイダンス**
 
-### Phase 6: 追加ファイルシステム対応 🆕
+### ✅ Phase 6.1完了: CharacterEncodingドメイン (2025年1月)
+- **18機種の文字コード対応アーキテクチャ**
+- **DDD設計による拡張可能な文字エンコーダー**
+- **CLI統合: --machineパラメータ追加**
+- **ファイルシステム別デフォルト機種設定**
+- **X1エンコーダー完全実装・基本ASCII他機種対応**
+
+### Phase 6.2: 文字エンコーダー拡張 🆕
+- **PC-8801エンコーダー**: グラフィック文字・罫線文字対応
+- **MSX1/MSX2エンコーダー**: MSX固有文字セット対応
+- **MZ-700/MZ-1500エンコーダー**: Sharp MZ系統文字コード
+- **FM-7/FM-77エンコーダー**: 富士通系統文字コード
+
+### Phase 7: 追加ファイルシステム対応
 - **MS-DOS FAT16**: FAT12の上位互換、大容量対応
 - **CP/M**: 8ビット時代の標準、資料豊富
 - **PC-8801 N88-BASIC**: PC-8801ユーザー需要高い
 - **MSX-DOS**: MSXコミュニティ需要あり
 
-### Phase 7: ディスクフォーマット拡張
+### Phase 8: ディスクフォーマット拡張
 - **IMD形式**: ImageDisk形式対応  
 - **IMG形式**: PC標準イメージ対応
 - **ディスクイメージ変換**: D88 ↔ DSK ↔ IMD ↔ IMG
 
-### Phase 8: 高度な機能
+### Phase 9: 高度な機能
 - **仮想ディスクマウント**: OSレベルでのマウント機能
 - **バッチ処理**: 複数ディスクの一括処理
 - **REST API**: Webサービス化
 
-### Phase 9: GUI・Web版
+### Phase 10: GUI・Web版
 - **デスクトップGUI**: WPF/Avalonia版
 - **Webアプリケーション**: Blazor版ディスクブラウザ
 - **クロスプラットフォーム**: MAUI対応
