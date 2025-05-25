@@ -400,3 +400,9 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 .DS_Store
+
+# Legacy89DiskKit specific ignores
+*.d88
+*.ddx
+*.dsk
+test*.txt
