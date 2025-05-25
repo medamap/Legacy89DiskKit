@@ -163,29 +163,34 @@ class Program
     {
         if (parameters.Length < 1)
         {
-            Console.WriteLine("Usage: list <disk-file> [filesystem-type]");
+            Console.WriteLine("Usage: list <disk-file> [--filesystem <type>]");
             return;
         }
 
         var diskFile = parameters[0];
-        var fileSystemTypeStr = parameters.Length > 1 ? parameters[1] : null;
+        var fileSystemTypeStr = GetFileSystemParameter(parameters);
 
         try
         {
             using var container = _diskContainerFactory.OpenDiskImage(diskFile, readOnly: true);
             
-            FileSystemType? fileSystemType = null;
+            IFileSystem fileSystem;
             if (fileSystemTypeStr != null)
             {
                 if (!Enum.TryParse<FileSystemType>(ConvertFileSystemName(fileSystemTypeStr), true, out var type))
                 {
                     Console.WriteLine($"Invalid filesystem type: {fileSystemTypeStr}");
+                    Console.WriteLine("Supported types: hu-basic, fat12");
                     return;
                 }
-                fileSystemType = type;
+                fileSystem = _fileSystemFactory.OpenFileSystem(container, type);
+            }
+            else
+            {
+                // Use read-only auto-detection for list operation
+                fileSystem = _fileSystemFactory.OpenFileSystemReadOnly(container);
             }
 
-            var fileSystem = _fileSystemFactory.OpenFileSystem(container, fileSystemType);
             var files = fileSystem.ListFiles();
 
             Console.WriteLine($"Files in {diskFile}:");
@@ -212,18 +217,40 @@ class Program
     {
         if (parameters.Length < 3)
         {
-            Console.WriteLine("Usage: import-text <disk-file> <host-file> <disk-filename>");
+            Console.WriteLine("Usage: import-text <disk-file> <host-file> <disk-filename> --filesystem <type>");
+            Console.WriteLine("Required: --filesystem parameter (hu-basic, fat12)");
             return;
         }
 
         var diskFile = parameters[0];
         var hostFile = parameters[1];
         var diskFileName = parameters[2];
+        var fileSystemTypeStr = GetFileSystemParameter(parameters);
+
+        if (fileSystemTypeStr == null)
+        {
+            Console.WriteLine("Error: --filesystem parameter is required for write operations");
+            Console.WriteLine("Supported filesystems: hu-basic, fat12");
+            Console.WriteLine("");
+            Console.WriteLine("To detect filesystem type (read-only):");
+            Console.WriteLine($"  ./Legacy89DiskKit info {diskFile}");
+            Console.WriteLine("");
+            Console.WriteLine("Example with explicit filesystem:");
+            Console.WriteLine($"  ./Legacy89DiskKit import-text {diskFile} {hostFile} {diskFileName} --filesystem hu-basic");
+            return;
+        }
+
+        if (!Enum.TryParse<FileSystemType>(ConvertFileSystemName(fileSystemTypeStr), true, out var fileSystemType))
+        {
+            Console.WriteLine($"Invalid filesystem type: {fileSystemTypeStr}");
+            Console.WriteLine("Supported types: hu-basic, fat12");
+            return;
+        }
 
         try
         {
             using var container = _diskContainerFactory.OpenDiskImage(diskFile);
-            var fileSystem = _fileSystemFactory.OpenFileSystem(container);
+            var fileSystem = _fileSystemFactory.OpenFileSystem(container, fileSystemType);
             
             var hostText = File.ReadAllText(hostFile);
             var converter = new X1Converter();
@@ -242,18 +269,40 @@ class Program
     {
         if (parameters.Length < 3)
         {
-            Console.WriteLine("Usage: export-text <disk-file> <disk-filename> <host-file>");
+            Console.WriteLine("Usage: export-text <disk-file> <disk-filename> <host-file> --filesystem <type>");
+            Console.WriteLine("Required: --filesystem parameter (hu-basic, fat12)");
             return;
         }
 
         var diskFile = parameters[0];
         var diskFileName = parameters[1];
         var hostFile = parameters[2];
+        var fileSystemTypeStr = GetFileSystemParameter(parameters);
+
+        if (fileSystemTypeStr == null)
+        {
+            Console.WriteLine("Error: --filesystem parameter is required for write operations");
+            Console.WriteLine("Supported filesystems: hu-basic, fat12");
+            Console.WriteLine("");
+            Console.WriteLine("To detect filesystem type (read-only):");
+            Console.WriteLine($"  ./Legacy89DiskKit info {diskFile}");
+            Console.WriteLine("");
+            Console.WriteLine("Example with explicit filesystem:");
+            Console.WriteLine($"  ./Legacy89DiskKit export-text {diskFile} {diskFileName} {hostFile} --filesystem fat12");
+            return;
+        }
+
+        if (!Enum.TryParse<FileSystemType>(ConvertFileSystemName(fileSystemTypeStr), true, out var fileSystemType))
+        {
+            Console.WriteLine($"Invalid filesystem type: {fileSystemTypeStr}");
+            Console.WriteLine("Supported types: hu-basic, fat12");
+            return;
+        }
 
         try
         {
             using var container = _diskContainerFactory.OpenDiskImage(diskFile, readOnly: true);
-            var fileSystem = _fileSystemFactory.OpenFileSystem(container);
+            var fileSystem = _fileSystemFactory.OpenFileSystem(container, fileSystemType);
             
             var x1Data = fileSystem.ReadFile(diskFileName);
             var converter = new X1Converter();
@@ -435,13 +484,21 @@ class Program
         try
         {
             using var container = _diskContainerFactory.OpenDiskImage(diskFile, readOnly: true);
-            var detectedType = _fileSystemFactory.DetectFileSystemType(container);
             
             Console.WriteLine($"Disk Information for: {diskFile}");
             Console.WriteLine($"Container Type: {Path.GetExtension(diskFile).ToUpper()}");
             Console.WriteLine($"Disk Type: {container.DiskType}");
-            Console.WriteLine($"Detected Filesystem: {detectedType}");
             Console.WriteLine($"Read-Only: {container.IsReadOnly}");
+            
+            try
+            {
+                var detectedType = _fileSystemFactory.GuessFileSystemType(container);
+                Console.WriteLine($"Detected Filesystem: {detectedType}");
+            }
+            catch (Exception fsEx)
+            {
+                Console.WriteLine($"Filesystem Detection: {fsEx.Message}");
+            }
         }
         catch (Exception ex)
         {
@@ -464,7 +521,8 @@ class Program
         try
         {
             using var container = _diskContainerFactory.OpenDiskImage(diskFile, readOnly: true);
-            var fileSystem = _fileSystemFactory.OpenFileSystem(container);
+            // Recovery operations use read-only auto-detection (safe)
+            var fileSystem = _fileSystemFactory.OpenFileSystemReadOnly(container);
             
             Console.WriteLine("WARNING: Attempting to recover from damaged disk. Some data may be lost or corrupted.");
             
@@ -482,6 +540,18 @@ class Program
         }
     }
 
+    private static string? GetFileSystemParameter(string[] parameters)
+    {
+        for (int i = 0; i < parameters.Length - 1; i++)
+        {
+            if (parameters[i] == "--filesystem" || parameters[i] == "-fs")
+            {
+                return parameters[i + 1];
+            }
+        }
+        return null;
+    }
+
     private static void RecoverBinaryFile(string[] parameters)
     {
         if (parameters.Length < 3)
@@ -497,7 +567,8 @@ class Program
         try
         {
             using var container = _diskContainerFactory.OpenDiskImage(diskFile, readOnly: true);
-            var fileSystem = _fileSystemFactory.OpenFileSystem(container);
+            // Recovery operations use read-only auto-detection (safe)
+            var fileSystem = _fileSystemFactory.OpenFileSystemReadOnly(container);
             
             Console.WriteLine("WARNING: Attempting to recover from damaged disk. Some data may be lost or corrupted.");
             
@@ -556,18 +627,22 @@ class Program
         Console.WriteLine();
         Console.WriteLine("Commands:");
         Console.WriteLine("  create <disk-file> <type> <name>           Create new disk image");
-        Console.WriteLine("  format <disk-file> [filesystem]            Format disk with filesystem");
-        Console.WriteLine("  list <disk-file> [filesystem]              List files on disk");
-        Console.WriteLine("  import-text <disk-file> <host-file> <name> Import text file");
-        Console.WriteLine("  export-text <disk-file> <name> <host-file> Export text file");
-        Console.WriteLine("  import-binary <disk-file> <host-file> <name> [load] [exec]");
+        Console.WriteLine("  format <disk-file> --filesystem <type>     Format disk with filesystem");
+        Console.WriteLine("  list <disk-file> [--filesystem <type>]     List files on disk");
+        Console.WriteLine("  import-text <disk-file> <host-file> <name> --filesystem <type>");
+        Console.WriteLine("                                              Import text file");
+        Console.WriteLine("  export-text <disk-file> <name> <host-file> --filesystem <type>");
+        Console.WriteLine("                                              Export text file");
+        Console.WriteLine("  import-binary <disk-file> <host-file> <name> [load] [exec] --filesystem <type>");
         Console.WriteLine("                                              Import binary file");
-        Console.WriteLine("  export-binary <disk-file> <name> <host-file>");
+        Console.WriteLine("  export-binary <disk-file> <name> <host-file> --filesystem <type>");
         Console.WriteLine("                                              Export binary file");
-        Console.WriteLine("  import-boot <disk-file> <host-file> <label>");
+        Console.WriteLine("  import-boot <disk-file> <host-file> <label> --filesystem <type>");
         Console.WriteLine("                                              Import boot sector");
-        Console.WriteLine("  export-boot <disk-file> <output-file>      Export boot sector info");
-        Console.WriteLine("  delete <disk-file> <name>                  Delete file");
+        Console.WriteLine("  export-boot <disk-file> <output-file> --filesystem <type>");
+        Console.WriteLine("                                              Export boot sector info");
+        Console.WriteLine("  delete <disk-file> <name> --filesystem <type>");
+        Console.WriteLine("                                              Delete file");
         Console.WriteLine("  info <disk-file>                           Show disk information");
         Console.WriteLine("  recover-text <disk-file> <name> <host-file>");
         Console.WriteLine("                                              Recover damaged text file");
@@ -580,8 +655,10 @@ class Program
         Console.WriteLine();
         Console.WriteLine("Examples:");
         Console.WriteLine("  Legacy89DiskKit create mydisk.d88 2D \"My Disk\"");
-        Console.WriteLine("  Legacy89DiskKit format mydisk.d88");
+        Console.WriteLine("  Legacy89DiskKit format mydisk.d88 --filesystem hu-basic");
         Console.WriteLine("  Legacy89DiskKit list mydisk.d88");
-        Console.WriteLine("  Legacy89DiskKit import-text mydisk.d88 readme.txt README.TXT");
+        Console.WriteLine("  Legacy89DiskKit info mydisk.d88");
+        Console.WriteLine("  Legacy89DiskKit import-text mydisk.d88 readme.txt README.TXT --filesystem hu-basic");
+        Console.WriteLine("  Legacy89DiskKit export-text disk.dsk README.TXT readme.txt --filesystem fat12");
     }
 }
