@@ -11,7 +11,7 @@ public class FileSystemFactory : IFileSystemFactory
 {
     public IFileSystem CreateFileSystem(IDiskContainer container, FileSystemType fileSystemType)
     {
-        var fileSystem = fileSystemType switch
+        IFileSystem fileSystem = fileSystemType switch
         {
             FileSystemType.HuBasic => new HuBasicFileSystem(container),
             FileSystemType.Fat12 => new Fat12FileSystem(container),
