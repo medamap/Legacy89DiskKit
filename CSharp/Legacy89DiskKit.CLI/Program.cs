@@ -3,7 +3,9 @@ using Microsoft.Extensions.Hosting;
 using Legacy89DiskKit.DependencyInjection;
 using Legacy89DiskKit.DiskImage.Domain.Interface.Factory;
 using Legacy89DiskKit.FileSystem.Domain.Interface.Factory;
-using Legacy89DiskKit.FileSystem.Infrastructure.Utility;
+using Legacy89DiskKit.CharacterEncoding.Domain.Interface.Factory;
+using Legacy89DiskKit.CharacterEncoding.Domain.Model;
+using Legacy89DiskKit.CharacterEncoding.Application;
 using System.Globalization;
 
 namespace Legacy89DiskKit.CLI;
@@ -12,6 +14,7 @@ class Program
 {
     private static IDiskContainerFactory _diskContainerFactory = null!;
     private static IFileSystemFactory _fileSystemFactory = null!;
+    private static CharacterEncodingService _characterEncodingService = null!;
 
     static async Task Main(string[] args)
     {
@@ -19,6 +22,7 @@ class Program
         
         _diskContainerFactory = host.Services.GetRequiredService<IDiskContainerFactory>();
         _fileSystemFactory = host.Services.GetRequiredService<IFileSystemFactory>();
+        _characterEncodingService = host.Services.GetRequiredService<CharacterEncodingService>();
 
         try
         {
@@ -217,8 +221,9 @@ class Program
     {
         if (parameters.Length < 3)
         {
-            Console.WriteLine("Usage: import-text <disk-file> <host-file> <disk-filename> --filesystem <type>");
+            Console.WriteLine("Usage: import-text <disk-file> <host-file> <disk-filename> --filesystem <type> [--machine <machine>]");
             Console.WriteLine("Required: --filesystem parameter (hu-basic, fat12)");
+            Console.WriteLine("Optional: --machine parameter (x1, pc8801, msx1, etc.)");
             return;
         }
 
@@ -226,17 +231,20 @@ class Program
         var hostFile = parameters[1];
         var diskFileName = parameters[2];
         var fileSystemTypeStr = GetFileSystemParameter(parameters);
+        var machineTypeStr = GetMachineParameter(parameters);
 
         if (fileSystemTypeStr == null)
         {
             Console.WriteLine("Error: --filesystem parameter is required for write operations");
             Console.WriteLine("Supported filesystems: hu-basic, fat12");
+            Console.WriteLine("Supported machines: x1, x1turbo, pc8801, pc8801mk2, msx1, msx2");
             Console.WriteLine("");
             Console.WriteLine("To detect filesystem type (read-only):");
             Console.WriteLine($"  ./Legacy89DiskKit info {diskFile}");
             Console.WriteLine("");
             Console.WriteLine("Example with explicit filesystem:");
             Console.WriteLine($"  ./Legacy89DiskKit import-text {diskFile} {hostFile} {diskFileName} --filesystem hu-basic");
+            Console.WriteLine($"  ./Legacy89DiskKit import-text {diskFile} {hostFile} {diskFileName} --filesystem hu-basic --machine x1");
             return;
         }
 
@@ -247,17 +255,33 @@ class Program
             return;
         }
 
+        // Determine machine type
+        MachineType machineType;
+        if (machineTypeStr != null)
+        {
+            if (!Enum.TryParse<MachineType>(ConvertMachineName(machineTypeStr), true, out machineType))
+            {
+                Console.WriteLine($"Invalid machine type: {machineTypeStr}");
+                Console.WriteLine("Supported machines: x1, x1turbo, pc8801, pc8801mk2, msx1, msx2, mz80k, mz700, mz1500, mz2500, fm7, fm77, fm77av, pc8001, pc8001mk2, pc6001, pc6601, fc");
+                return;
+            }
+        }
+        else
+        {
+            machineType = GetDefaultMachineType(fileSystemTypeStr);
+            Console.WriteLine($"Using default machine type for {fileSystemTypeStr}: {machineType}");
+        }
+
         try
         {
             using var container = _diskContainerFactory.OpenDiskImage(diskFile);
             var fileSystem = _fileSystemFactory.OpenFileSystem(container, fileSystemType);
             
             var hostText = File.ReadAllText(hostFile);
-            var converter = new X1Converter();
-            var x1Text = converter.ToX1(hostText);
+            var machineData = _characterEncodingService.EncodeText(hostText, machineType);
             
-            fileSystem.WriteFile(diskFileName, x1Text, isText: true);
-            Console.WriteLine($"Imported text file: {hostFile} -> {diskFileName}");
+            fileSystem.WriteFile(diskFileName, machineData, isText: true);
+            Console.WriteLine($"Imported text file: {hostFile} -> {diskFileName} (machine: {machineType})");
         }
         catch (Exception ex)
         {
@@ -269,8 +293,9 @@ class Program
     {
         if (parameters.Length < 3)
         {
-            Console.WriteLine("Usage: export-text <disk-file> <disk-filename> <host-file> --filesystem <type>");
+            Console.WriteLine("Usage: export-text <disk-file> <disk-filename> <host-file> --filesystem <type> [--machine <machine>]");
             Console.WriteLine("Required: --filesystem parameter (hu-basic, fat12)");
+            Console.WriteLine("Optional: --machine parameter (x1, pc8801, msx1, etc.)");
             return;
         }
 
@@ -278,17 +303,20 @@ class Program
         var diskFileName = parameters[1];
         var hostFile = parameters[2];
         var fileSystemTypeStr = GetFileSystemParameter(parameters);
+        var machineTypeStr = GetMachineParameter(parameters);
 
         if (fileSystemTypeStr == null)
         {
             Console.WriteLine("Error: --filesystem parameter is required for write operations");
             Console.WriteLine("Supported filesystems: hu-basic, fat12");
+            Console.WriteLine("Supported machines: x1, x1turbo, pc8801, pc8801mk2, msx1, msx2");
             Console.WriteLine("");
             Console.WriteLine("To detect filesystem type (read-only):");
             Console.WriteLine($"  ./Legacy89DiskKit info {diskFile}");
             Console.WriteLine("");
             Console.WriteLine("Example with explicit filesystem:");
             Console.WriteLine($"  ./Legacy89DiskKit export-text {diskFile} {diskFileName} {hostFile} --filesystem fat12");
+            Console.WriteLine($"  ./Legacy89DiskKit export-text {diskFile} {diskFileName} {hostFile} --filesystem hu-basic --machine x1");
             return;
         }
 
@@ -299,17 +327,33 @@ class Program
             return;
         }
 
+        // Determine machine type
+        MachineType machineType;
+        if (machineTypeStr != null)
+        {
+            if (!Enum.TryParse<MachineType>(ConvertMachineName(machineTypeStr), true, out machineType))
+            {
+                Console.WriteLine($"Invalid machine type: {machineTypeStr}");
+                Console.WriteLine("Supported machines: x1, x1turbo, pc8801, pc8801mk2, msx1, msx2, mz80k, mz700, mz1500, mz2500, fm7, fm77, fm77av, pc8001, pc8001mk2, pc6001, pc6601, fc");
+                return;
+            }
+        }
+        else
+        {
+            machineType = GetDefaultMachineType(fileSystemTypeStr);
+            Console.WriteLine($"Using default machine type for {fileSystemTypeStr}: {machineType}");
+        }
+
         try
         {
             using var container = _diskContainerFactory.OpenDiskImage(diskFile, readOnly: true);
             var fileSystem = _fileSystemFactory.OpenFileSystem(container, fileSystemType);
             
-            var x1Data = fileSystem.ReadFile(diskFileName);
-            var converter = new X1Converter();
-            var unicodeText = converter.ToUnicode(x1Data);
+            var machineData = fileSystem.ReadFile(diskFileName);
+            var unicodeText = _characterEncodingService.DecodeText(machineData, machineType);
             
             File.WriteAllText(hostFile, unicodeText);
-            Console.WriteLine($"Exported text file: {diskFileName} -> {hostFile}");
+            Console.WriteLine($"Exported text file: {diskFileName} -> {hostFile} (machine: {machineType})");
         }
         catch (Exception ex)
         {
@@ -526,12 +570,12 @@ class Program
             
             Console.WriteLine("WARNING: Attempting to recover from damaged disk. Some data may be lost or corrupted.");
             
-            var x1Data = fileSystem.ReadFile(diskFileName, allowPartialRead: true);
-            var converter = new X1Converter();
-            var unicodeText = converter.ToUnicode(x1Data);
+            var machineData = fileSystem.ReadFile(diskFileName, allowPartialRead: true);
+            // Use default machine type for recovery (X1 - most common for legacy disks)
+            var unicodeText = _characterEncodingService.DecodeText(machineData, MachineType.X1);
             
             File.WriteAllText(hostFile, unicodeText);
-            Console.WriteLine($"Recovered text file: {diskFileName} -> {hostFile}");
+            Console.WriteLine($"Recovered text file: {diskFileName} -> {hostFile} (machine: X1)");
             Console.WriteLine("Please verify the recovered data for completeness and accuracy.");
         }
         catch (Exception ex)
@@ -550,6 +594,28 @@ class Program
             }
         }
         return null;
+    }
+
+    private static string? GetMachineParameter(string[] parameters)
+    {
+        for (int i = 0; i < parameters.Length - 1; i++)
+        {
+            if (parameters[i] == "--machine" || parameters[i] == "-m")
+            {
+                return parameters[i + 1];
+            }
+        }
+        return null;
+    }
+
+    private static MachineType GetDefaultMachineType(string fileSystemType)
+    {
+        return fileSystemType?.ToLower() switch
+        {
+            "hu-basic" => MachineType.X1,
+            "fat12" => MachineType.Pc8801,
+            _ => MachineType.X1
+        };
     }
 
     private static void RecoverBinaryFile(string[] parameters)
@@ -597,6 +663,32 @@ class Program
         };
     }
 
+    private static string ConvertMachineName(string name)
+    {
+        return name.ToLower() switch
+        {
+            "x1" => "X1",
+            "x1turbo" or "x1-turbo" => "X1Turbo",
+            "pc8801" or "pc-8801" => "Pc8801",
+            "pc8801mk2" or "pc-8801mk2" or "pc8801-mk2" => "Pc8801Mk2",
+            "msx1" or "msx-1" => "Msx1",
+            "msx2" or "msx-2" => "Msx2",
+            "mz80k" or "mz-80k" => "Mz80k",
+            "mz700" or "mz-700" => "Mz700",
+            "mz1500" or "mz-1500" => "Mz1500",
+            "mz2500" or "mz-2500" => "Mz2500",
+            "fm7" => "Fm7",
+            "fm77" => "Fm77",
+            "fm77av" or "fm77-av" => "Fm77av",
+            "pc8001" or "pc-8001" => "Pc8001",
+            "pc8001mk2" or "pc-8001mk2" or "pc8001-mk2" => "Pc8001Mk2",
+            "pc6001" or "pc-6001" => "Pc6001",
+            "pc6601" or "pc-6601" => "Pc6601",
+            "fc" or "famicom" or "familycomputer" => "Fc",
+            _ => name
+        };
+    }
+
     private static string GetModeString(byte mode)
     {
         var result = "";
@@ -629,9 +721,9 @@ class Program
         Console.WriteLine("  create <disk-file> <type> <name>           Create new disk image");
         Console.WriteLine("  format <disk-file> --filesystem <type>     Format disk with filesystem");
         Console.WriteLine("  list <disk-file> [--filesystem <type>]     List files on disk");
-        Console.WriteLine("  import-text <disk-file> <host-file> <name> --filesystem <type>");
+        Console.WriteLine("  import-text <disk-file> <host-file> <name> --filesystem <type> [--machine <machine>]");
         Console.WriteLine("                                              Import text file");
-        Console.WriteLine("  export-text <disk-file> <name> <host-file> --filesystem <type>");
+        Console.WriteLine("  export-text <disk-file> <name> <host-file> --filesystem <type> [--machine <machine>]");
         Console.WriteLine("                                              Export text file");
         Console.WriteLine("  import-binary <disk-file> <host-file> <name> [load] [exec] --filesystem <type>");
         Console.WriteLine("                                              Import binary file");
@@ -652,13 +744,14 @@ class Program
         Console.WriteLine();
         Console.WriteLine("Disk Types: 2D, 2DD, 2HD");
         Console.WriteLine("Filesystems: hu-basic (default), fat12");
+        Console.WriteLine("Machine Types: x1, x1turbo, pc8801, pc8801mk2, msx1, msx2, mz80k, mz700, mz1500, mz2500, fm7, fm77, fm77av, pc8001, pc8001mk2, pc6001, pc6601, fc");
         Console.WriteLine();
         Console.WriteLine("Examples:");
         Console.WriteLine("  Legacy89DiskKit create mydisk.d88 2D \"My Disk\"");
         Console.WriteLine("  Legacy89DiskKit format mydisk.d88 --filesystem hu-basic");
         Console.WriteLine("  Legacy89DiskKit list mydisk.d88");
         Console.WriteLine("  Legacy89DiskKit info mydisk.d88");
-        Console.WriteLine("  Legacy89DiskKit import-text mydisk.d88 readme.txt README.TXT --filesystem hu-basic");
-        Console.WriteLine("  Legacy89DiskKit export-text disk.dsk README.TXT readme.txt --filesystem fat12");
+        Console.WriteLine("  Legacy89DiskKit import-text mydisk.d88 readme.txt README.TXT --filesystem hu-basic --machine x1");
+        Console.WriteLine("  Legacy89DiskKit export-text disk.dsk README.TXT readme.txt --filesystem fat12 --machine pc8801");
     }
 }
