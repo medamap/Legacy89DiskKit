@@ -68,6 +68,7 @@ public class Fat12DirectoryEntry
     public uint FileSize { get; set; }
     
     public bool IsDeleted => Name.StartsWith("\x00") || Name.StartsWith("\xE5");
+    public bool IsEndOfDirectory => Name.StartsWith("\x00");
     public bool IsDirectory => (Attributes & 0x10) != 0;
     public bool IsReadOnly => (Attributes & 0x01) != 0;
     public bool IsHidden => (Attributes & 0x02) != 0;
