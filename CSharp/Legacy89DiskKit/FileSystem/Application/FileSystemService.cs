@@ -66,7 +66,7 @@ public class FileSystemService
             IsAscii: true
         );
         
-        fileSystem.WriteFile(diskFileName, dataWithTerminator.ToArray(), attributes);
+        fileSystem.WriteFile(diskFileName, dataWithTerminator.ToArray(), isText: true);
         fileSystem.DiskContainer.Save();
     }
 
@@ -136,7 +136,7 @@ public class FileSystemService
             IsAscii: false
         );
         
-        fileSystem.WriteFile(diskFileName, binaryData, attributes);
+        fileSystem.WriteFile(diskFileName, binaryData, isText: false, loadAddress: loadAddress, execAddress: execAddress);
         fileSystem.DiskContainer.Save();
     }
 

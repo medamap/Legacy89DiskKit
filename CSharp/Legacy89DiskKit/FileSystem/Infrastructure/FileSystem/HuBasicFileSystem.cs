@@ -777,6 +777,20 @@ public class HuBasicFileSystem : IFileSystem
         throw new NotImplementedException("WriteFile not yet implemented");
     }
 
+    public void WriteFile(string fileName, byte[] data, bool isText = false, ushort loadAddress = 0, ushort execAddress = 0)
+    {
+        var attributes = new HuBasicFileAttributes(
+            IsDirectory: false,
+            IsReadOnly: false,
+            IsVerify: false,
+            IsHidden: false,
+            IsBinary: !isText,
+            IsBasic: false,
+            IsAscii: isText);
+            
+        WriteFile(fileName, data, attributes);
+    }
+
     public void DeleteFile(string fileName)
     {
         if (_diskContainer.IsReadOnly)

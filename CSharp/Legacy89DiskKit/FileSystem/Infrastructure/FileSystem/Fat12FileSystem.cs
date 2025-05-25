@@ -35,6 +35,44 @@ public class Fat12DirectoryEntry
     public bool IsDirectory => (Attributes & 0x10) != 0;
     public bool IsReadOnly => (Attributes & 0x01) != 0;
     public bool IsHidden => (Attributes & 0x02) != 0;
+    public bool IsVolumeLabel => (Attributes & 0x08) != 0;
+
+    public string GetFileName()
+    {
+        return Name.Trim();
+    }
+
+    public string GetExtension()
+    {
+        return Extension.Trim();
+    }
+
+    public DateTime GetModifiedDate()
+    {
+        return ConvertDosDateTime(WriteDate, WriteTime);
+    }
+
+    private static DateTime ConvertDosDateTime(ushort date, ushort time)
+    {
+        if (date == 0) return DateTime.MinValue;
+        
+        try
+        {
+            var year = 1980 + ((date >> 9) & 0x7F);
+            var month = (date >> 5) & 0x0F;
+            var day = date & 0x1F;
+            
+            var hour = (time >> 11) & 0x1F;
+            var minute = (time >> 5) & 0x3F;
+            var second = (time & 0x1F) * 2;
+            
+            return new DateTime(year, month, day, hour, minute, second);
+        }
+        catch
+        {
+            return DateTime.MinValue;
+        }
+    }
 }
 
 public class Fat12FileSystem : IFileSystem

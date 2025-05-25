@@ -2,6 +2,7 @@ using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
 using Legacy89DiskKit.FileSystem.Domain.Interface.Factory;
 using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
 using Legacy89DiskKit.FileSystem.Infrastructure.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Exception;
 using System.Text;
 
 namespace Legacy89DiskKit.FileSystem.Infrastructure.Factory;
