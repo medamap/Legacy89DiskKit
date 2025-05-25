@@ -142,7 +142,7 @@ class Program
         if (!Enum.TryParse<FileSystemType>(ConvertFileSystemName(fileSystemTypeStr), true, out var fileSystemType))
         {
             Console.WriteLine($"Invalid filesystem type: {fileSystemTypeStr}");
-            Console.WriteLine("Supported types: hu-basic");
+            Console.WriteLine("Supported types: hu-basic, fat12");
             return;
         }
 
@@ -576,7 +576,7 @@ class Program
         Console.WriteLine("  help                                        Show this help");
         Console.WriteLine();
         Console.WriteLine("Disk Types: 2D, 2DD, 2HD");
-        Console.WriteLine("Filesystems: hu-basic (default)");
+        Console.WriteLine("Filesystems: hu-basic (default), fat12");
         Console.WriteLine();
         Console.WriteLine("Examples:");
         Console.WriteLine("  Legacy89DiskKit create mydisk.d88 2D \"My Disk\"");
