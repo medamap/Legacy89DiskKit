@@ -1,4 +1,5 @@
 using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Factory;
 using Legacy89DiskKit.DiskImage.Domain.Exception;
 
 namespace Legacy89DiskKit.DiskImage.Infrastructure.Container;
