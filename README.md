@@ -187,21 +187,37 @@ Legacy89DiskKit/
 │   │   │   └── Factory/          # IDiskContainerFactory
 │   │   └── Exception/            # DiskImageException
 │   ├── Infrastructure/
-│   │   ├── Container/            # D88DiskContainer
+│   │   ├── Container/            # D88DiskContainer, DskDiskContainer
 │   │   └── Factory/              # DiskContainerFactory
 │   └── Application/              # DiskImageService
 │
-└── FileSystem/                   # ファイルシステムドメイン
+├── FileSystem/                   # ファイルシステムドメイン
+│   ├── Domain/
+│   │   ├── Interface/
+│   │   │   ├── FileSystem/       # IFileSystem
+│   │   │   └── Factory/          # IFileSystemFactory
+│   │   └── Exception/            # FileSystemException
+│   ├── Infrastructure/
+│   │   ├── FileSystem/           # HuBasicFileSystem, Fat12FileSystem
+│   │   ├── Factory/              # FileSystemFactory
+│   │   └── ReadOnlyWrapper/      # ReadOnlyFileSystemWrapper
+│   └── Application/              # FileSystemService
+│
+└── CharacterEncoding/            # 文字エンコーディングドメイン
     ├── Domain/
     │   ├── Interface/
-    │   │   ├── FileSystem/       # IFileSystem
-    │   │   └── Factory/          # IFileSystemFactory
-    │   └── Exception/            # FileSystemException
+    │   │   ├── ICharacterEncoder.cs  # エンコーダーインターフェース
+    │   │   └── Factory/          # ICharacterEncoderFactory
+    │   ├── Model/
+    │   │   └── MachineType.cs    # 18機種対応
+    │   └── Exception/            # CharacterEncodingException
     ├── Infrastructure/
-    │   ├── FileSystem/           # HuBasicFileSystem
-    │   ├── Factory/              # FileSystemFactory
-    │   └── Utility/              # X1文字コード変換等
-    └── Application/              # FileSystemService
+    │   ├── Encoder/              # 機種別エンコーダー
+    │   │   ├── X1CharacterEncoder.cs      # X1完全実装
+    │   │   ├── Pc8801CharacterEncoder.cs  # 基本ASCII
+    │   │   └── Msx1CharacterEncoder.cs    # 基本ASCII
+    │   └── Factory/              # CharacterEncoderFactory
+    └── Application/              # CharacterEncodingService
 ```
 
 ### 設計原則
