@@ -5,6 +5,38 @@ using System.Text;
 
 namespace Legacy89DiskKit.FileSystem.Infrastructure.FileSystem;
 
+public class Fat12BootSector
+{
+    public ushort BytesPerSector { get; set; } = 512;
+    public byte SectorsPerCluster { get; set; } = 1;
+    public ushort ReservedSectors { get; set; } = 1;
+    public byte NumberOfFats { get; set; } = 2;
+    public ushort RootEntries { get; set; } = 224;
+    public ushort TotalSectors16 { get; set; }
+    public uint TotalSectors32 { get; set; }
+    public ushort SectorsPerFat { get; set; }
+    public string VolumeLabel { get; set; } = "";
+    
+    public bool IsValid => BytesPerSector == 512 && NumberOfFats > 0 && RootEntries > 0;
+    public int FirstDataSector => ReservedSectors + (NumberOfFats * SectorsPerFat) + ((RootEntries * 32 + BytesPerSector - 1) / BytesPerSector);
+}
+
+public class Fat12DirectoryEntry
+{
+    public string Name { get; set; } = "";
+    public string Extension { get; set; } = "";
+    public byte Attributes { get; set; }
+    public ushort WriteTime { get; set; }
+    public ushort WriteDate { get; set; }
+    public ushort FirstCluster { get; set; }
+    public uint FileSize { get; set; }
+    
+    public bool IsDeleted => Name.StartsWith("\x00") || Name.StartsWith("\xE5");
+    public bool IsDirectory => (Attributes & 0x10) != 0;
+    public bool IsReadOnly => (Attributes & 0x01) != 0;
+    public bool IsHidden => (Attributes & 0x02) != 0;
+}
+
 public class Fat12FileSystem : IFileSystem
 {
     private readonly IDiskContainer _diskContainer;
@@ -15,6 +47,9 @@ public class Fat12FileSystem : IFileSystem
     // FAT12 constants
     private const int MaxFileSize = 10 * 1024 * 1024; // 10MB safety limit
     private const int MaxClusterChainLength = 4000; // Prevent infinite loops
+
+    public IDiskContainer DiskContainer => _diskContainer;
+    public bool IsFormatted => CheckIfFormatted();
     
     public Fat12FileSystem(IDiskContainer diskContainer)
     {
@@ -93,21 +128,122 @@ public class Fat12FileSystem : IFileSystem
         throw new NotImplementedException("FAT12 file deletion not yet implemented");
     }
 
-    public BootSectorInfo ReadBootSector()
+    public BootSector GetBootSector()
     {
-        return new BootSectorInfo
-        {
-            Label = _bootSector.VolumeLabel.Trim(),
-            LoadAddress = 0,
-            ExecAddress = 0,
-            Size = _bootSector.BytesPerSector,
-            ModifiedDate = DateTime.MinValue
-        };
+        return new BootSector(
+            IsBootable: false,
+            Label: _bootSector.VolumeLabel.Trim(),
+            Extension: "",
+            Size: _bootSector.BytesPerSector,
+            LoadAddress: 0,
+            ExecuteAddress: 0,
+            ModifiedDate: DateTime.MinValue,
+            StartSector: 0);
     }
 
-    public void WriteBootSector(string label, byte[] bootCode)
+    public void WriteBootSector(BootSector bootSector)
     {
         throw new NotImplementedException("FAT12 boot sector writing not yet implemented");
+    }
+
+    public HuBasicFileSystemInfo GetFileSystemInfo()
+    {
+        var totalClusters = CalculateTotalClusters();
+        var freeClusters = CalculateFreeClusters();
+        
+        return new HuBasicFileSystemInfo(
+            TotalClusters: totalClusters,
+            FreeClusters: freeClusters, 
+            ClusterSize: _bootSector.SectorsPerCluster * _bootSector.BytesPerSector,
+            SectorSize: _bootSector.BytesPerSector);
+    }
+
+    public FileEntry? GetFile(string fileName)
+    {
+        var entry = _rootDirectory.FirstOrDefault(e => 
+            !e.IsDeleted && GetDosFileName(e).Equals(fileName, StringComparison.OrdinalIgnoreCase));
+        
+        if (entry == null) return null;
+        
+        return new FileEntry(
+            FileName: GetDosFileName(entry),
+            Extension: "",
+            Mode: HuBasicFileMode.Binary, // FAT12 files are treated as binary
+            Attributes: new HuBasicFileAttributes(
+                IsDirectory: entry.IsDirectory,
+                IsReadOnly: entry.IsReadOnly,
+                IsVerify: false,
+                IsHidden: entry.IsHidden,
+                IsBinary: true,
+                IsBasic: false,
+                IsAscii: false),
+            Size: (int)entry.FileSize,
+            LoadAddress: 0,
+            ExecuteAddress: 0,
+            ModifiedDate: ConvertDosDateTime(entry.WriteDate, entry.WriteTime),
+            IsProtected: entry.IsReadOnly);
+    }
+
+    public byte[] ReadFile(string fileName)
+    {
+        return ReadFile(fileName, false);
+    }
+
+    public IEnumerable<FileEntry> GetFiles()
+    {
+        return _rootDirectory.Where(e => !e.IsDeleted && !e.IsDirectory)
+            .Select(e => new FileEntry(
+                FileName: GetDosFileName(e),
+                Extension: "",
+                Mode: HuBasicFileMode.Binary,
+                Attributes: new HuBasicFileAttributes(
+                    IsDirectory: false,
+                    IsReadOnly: e.IsReadOnly,
+                    IsVerify: false,
+                    IsHidden: e.IsHidden,
+                    IsBinary: true,
+                    IsBasic: false,
+                    IsAscii: false),
+                Size: (int)e.FileSize,
+                LoadAddress: 0,
+                ExecuteAddress: 0,
+                ModifiedDate: ConvertDosDateTime(e.WriteDate, e.WriteTime),
+                IsProtected: e.IsReadOnly));
+    }
+
+    private bool CheckIfFormatted()
+    {
+        try
+        {
+            LoadBootSector();
+            return _bootSector.IsValid;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private int CalculateTotalClusters()
+    {
+        if (_bootSector.TotalSectors16 > 0)
+            return (_bootSector.TotalSectors16 - _bootSector.FirstDataSector) / _bootSector.SectorsPerCluster;
+        else
+            return ((int)_bootSector.TotalSectors32 - _bootSector.FirstDataSector) / _bootSector.SectorsPerCluster;
+    }
+
+    private int CalculateFreeClusters()
+    {
+        var totalClusters = CalculateTotalClusters();
+        var usedClusters = 0;
+        
+        for (int cluster = 2; cluster < totalClusters + 2; cluster++)
+        {
+            if (GetFatEntry(cluster) != 0)
+                usedClusters++;
+        }
+        
+        return totalClusters - usedClusters;
     }
 
     private void LoadFileSystem()
@@ -372,142 +508,27 @@ public class Fat12FileSystem : IFileSystem
         
         return mode;
     }
-}
 
-// FAT12 Boot Sector structure
-public class Fat12BootSector
-{
-    public byte[] JumpInstruction { get; set; } = new byte[3];
-    public string OemName { get; set; } = "";
-    public ushort BytesPerSector { get; set; }
-    public byte SectorsPerCluster { get; set; }
-    public ushort ReservedSectors { get; set; }
-    public byte NumberOfFats { get; set; }
-    public ushort RootEntries { get; set; }
-    public ushort TotalSectors16 { get; set; }
-    public byte MediaType { get; set; }
-    public ushort SectorsPerFat { get; set; }
-    public ushort SectorsPerTrack { get; set; }
-    public ushort NumberOfHeads { get; set; }
-    public uint HiddenSectors { get; set; }
-    public uint TotalSectors32 { get; set; }
-    public byte DriveNumber { get; set; }
-    public byte Reserved1 { get; set; }
-    public byte BootSignature { get; set; }
-    public uint VolumeId { get; set; }
-    public string VolumeLabel { get; set; } = "";
-    public string FileSystemType { get; set; } = "";
-
-    public static Fat12BootSector Parse(byte[] data)
+    private string GetDosFileName(Fat12DirectoryEntry entry)
     {
-        if (data.Length < 512)
-            throw new ArgumentException("Boot sector data too short");
-
-        var bootSector = new Fat12BootSector();
-        
-        Buffer.BlockCopy(data, 0, bootSector.JumpInstruction, 0, 3);
-        bootSector.OemName = Encoding.ASCII.GetString(data, 3, 8).Trim('\0');
-        bootSector.BytesPerSector = BitConverter.ToUInt16(data, 11);
-        bootSector.SectorsPerCluster = data[13];
-        bootSector.ReservedSectors = BitConverter.ToUInt16(data, 14);
-        bootSector.NumberOfFats = data[16];
-        bootSector.RootEntries = BitConverter.ToUInt16(data, 17);
-        bootSector.TotalSectors16 = BitConverter.ToUInt16(data, 19);
-        bootSector.MediaType = data[21];
-        bootSector.SectorsPerFat = BitConverter.ToUInt16(data, 22);
-        bootSector.SectorsPerTrack = BitConverter.ToUInt16(data, 24);
-        bootSector.NumberOfHeads = BitConverter.ToUInt16(data, 26);
-        bootSector.HiddenSectors = BitConverter.ToUInt32(data, 28);
-        bootSector.TotalSectors32 = BitConverter.ToUInt32(data, 32);
-        bootSector.DriveNumber = data[36];
-        bootSector.Reserved1 = data[37];
-        bootSector.BootSignature = data[38];
-        bootSector.VolumeId = BitConverter.ToUInt32(data, 39);
-        bootSector.VolumeLabel = Encoding.ASCII.GetString(data, 43, 11).Trim();
-        bootSector.FileSystemType = Encoding.ASCII.GetString(data, 54, 8).Trim();
-
-        return bootSector;
+        if (string.IsNullOrEmpty(entry.Extension))
+            return entry.Name;
+        return $"{entry.Name}.{entry.Extension}";
     }
 
-    public bool IsValidFat12()
+    private DateTime ConvertDosDateTime(ushort date, ushort time)
     {
-        return BytesPerSector > 0 && 
-               SectorsPerCluster > 0 && 
-               NumberOfFats > 0 && 
-               RootEntries > 0 &&
-               (FileSystemType.Contains("FAT12") || FileSystemType.Contains("FAT"));
-    }
-}
-
-// FAT12 Directory Entry structure
-public class Fat12DirectoryEntry
-{
-    public byte[] FileName { get; set; } = new byte[8];
-    public byte[] Extension { get; set; } = new byte[3];
-    public byte Attributes { get; set; }
-    public byte Reserved { get; set; }
-    public byte CreationTimeTenths { get; set; }
-    public ushort CreationTime { get; set; }
-    public ushort CreationDate { get; set; }
-    public ushort LastAccessDate { get; set; }
-    public ushort FirstClusterHigh { get; set; }
-    public ushort WriteTime { get; set; }
-    public ushort WriteDate { get; set; }
-    public ushort FirstCluster { get; set; }
-    public uint FileSize { get; set; }
-
-    public bool IsDeleted => FileName[0] == 0xE5;
-    public bool IsEndOfDirectory => FileName[0] == 0x00;
-    public bool IsDirectory => (Attributes & 0x10) != 0;
-    public bool IsVolumeLabel => (Attributes & 0x08) != 0;
-
-    public static Fat12DirectoryEntry Parse(byte[] data)
-    {
-        if (data.Length < 32)
-            throw new ArgumentException("Directory entry data too short");
-
-        var entry = new Fat12DirectoryEntry();
-        
-        Buffer.BlockCopy(data, 0, entry.FileName, 0, 8);
-        Buffer.BlockCopy(data, 8, entry.Extension, 0, 3);
-        entry.Attributes = data[11];
-        entry.Reserved = data[12];
-        entry.CreationTimeTenths = data[13];
-        entry.CreationTime = BitConverter.ToUInt16(data, 14);
-        entry.CreationDate = BitConverter.ToUInt16(data, 16);
-        entry.LastAccessDate = BitConverter.ToUInt16(data, 18);
-        entry.FirstClusterHigh = BitConverter.ToUInt16(data, 20);
-        entry.WriteTime = BitConverter.ToUInt16(data, 22);
-        entry.WriteDate = BitConverter.ToUInt16(data, 24);
-        entry.FirstCluster = BitConverter.ToUInt16(data, 26);
-        entry.FileSize = BitConverter.ToUInt32(data, 28);
-
-        return entry;
-    }
-
-    public string GetFileName()
-    {
-        return Encoding.ASCII.GetString(FileName).Trim();
-    }
-
-    public string GetExtension()
-    {
-        return Encoding.ASCII.GetString(Extension).Trim();
-    }
-
-    public DateTime GetModifiedDate()
-    {
-        if (WriteDate == 0) return DateTime.MinValue;
+        if (date == 0) return DateTime.MinValue;
         
         try
         {
-            var year = 1980 + ((WriteDate >> 9) & 0x7F);
-            var month = (WriteDate >> 5) & 0x0F;
-            var day = WriteDate & 0x1F;
+            var year = 1980 + ((date >> 9) & 0x7F);
+            var month = (date >> 5) & 0x0F;
+            var day = date & 0x1F;
             
-            var hour = (WriteTime >> 11) & 0x1F;
-            var minute = (WriteTime >> 5) & 0x3F;
-            var second = (WriteTime & 0x1F) * 2;
+            var hour = (time >> 11) & 0x1F;
+            var minute = (time >> 5) & 0x3F;
+            var second = (time & 0x1F) * 2;
             
             return new DateTime(year, month, day, hour, minute, second);
         }
@@ -515,5 +536,28 @@ public class Fat12DirectoryEntry
         {
             return DateTime.MinValue;
         }
+    }
+
+    private int GetFatEntry(int cluster)
+    {
+        if (cluster < 2 || _fatTable.Length == 0) return 0;
+        
+        // FAT12では1.5バイトエントリを使用
+        var offset = cluster + (cluster / 2);
+        if (offset + 1 >= _fatTable.Length) return 0;
+        
+        int value;
+        if (cluster % 2 == 0)
+        {
+            // 偶数クラスタ: 下位12ビット
+            value = _fatTable[offset] | ((_fatTable[offset + 1] & 0x0F) << 8);
+        }
+        else
+        {
+            // 奇数クラスタ: 上位12ビット
+            value = (_fatTable[offset] >> 4) | (_fatTable[offset + 1] << 4);
+        }
+        
+        return value & 0xFFF;
     }
 }
