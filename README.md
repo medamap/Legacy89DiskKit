@@ -25,6 +25,28 @@
 - **メモリ安全**: 大容量ファイルの安全な処理（10MB制限）
 - **エラー検出**: 循環参照検出、詳細な診断情報
 - **入力検証**: Hu-BASIC固有のファイル名規則対応
+- **🆕 データ安全**: 書き込み時のファイルシステム指定必須化
+- **🆕 誤操作防止**: 構造検証による不正アクセス阻止
+
+## ⚠️ 重要な安全性について (Phase 5.5)
+
+**🔒 データ保護強化**: ファイルシステムの誤判定による**データ破損を防止**するため、**すべての書き込み操作**で `--filesystem` パラメータの指定が**必須**になりました。
+
+### 安全な操作パターン
+
+```bash
+# ✅ 安全：読み取り専用操作（自動検出OK）
+./CLI list disk.d88                    # ファイル一覧表示
+./CLI info disk.d88                    # ディスク情報表示
+./CLI recover-text disk.d88 src dst    # 破損ファイル復旧
+
+# ⚠️ 必須：書き込み操作（ファイルシステム指定必須）
+./CLI export-text disk.d88 src dst --filesystem fat12       # ✅ 正しい
+./CLI import-text disk.d88 src dst --filesystem hu-basic    # ✅ 正しい
+./CLI export-text disk.d88 src dst                          # ❌ エラー
+```
+
+**対応ファイルシステム**: `hu-basic`, `fat12`
 
 ## 🚀 クイックスタート
 
@@ -51,15 +73,15 @@ dotnet run --project Legacy89DiskKit.CLI -- create mydisk.d88 2D "MY DISK"
 # ディスクをフォーマット
 dotnet run --project Legacy89DiskKit.CLI -- format mydisk.d88
 
-# ファイル一覧表示（自動検出）
+# ファイル一覧表示（自動検出・読み取り専用）
 dotnet run --project Legacy89DiskKit.CLI -- list mydisk.d88
 
-# FAT12ディスクの読み取り
-dotnet run --project Legacy89DiskKit.CLI -- list disk.dsk
-dotnet run --project Legacy89DiskKit.CLI -- export-text disk.dsk README.TXT readme.txt
+# ディスク情報表示（ファイルシステム推測）
+dotnet run --project Legacy89DiskKit.CLI -- info disk.dsk
 
-# テキストファイルをインポート
-dotnet run --project Legacy89DiskKit.CLI -- import-text mydisk.d88 readme.txt README.TXT
+# 🆕 安全な書き込み操作（ファイルシステム指定必須）
+dotnet run --project Legacy89DiskKit.CLI -- export-text disk.dsk README.TXT readme.txt --filesystem fat12
+dotnet run --project Legacy89DiskKit.CLI -- import-text mydisk.d88 readme.txt README.TXT --filesystem hu-basic
 ```
 
 ## 📋 機能一覧
@@ -71,13 +93,13 @@ dotnet run --project Legacy89DiskKit.CLI -- import-text mydisk.d88 readme.txt RE
 | `create` | 新しいディスクイメージ作成 | `create disk.d88 2D "TITLE"` |
 | `format` | ディスクフォーマット | `format disk.d88` |
 | `list` | ファイル一覧表示 | `list disk.d88` |
-| `import-text` | テキストファイル書き込み | `import-text disk.d88 host.txt DISK.TXT` |
-| `export-text` | テキストファイル読み出し | `export-text disk.d88 DISK.TXT host.txt` |
-| `import-binary` | バイナリファイル書き込み | `import-binary disk.d88 prog.bin PROG.BIN 8000 8000` |
-| `export-binary` | バイナリファイル読み出し | `export-binary disk.d88 PROG.BIN prog.bin` |
-| `import-boot` | ブートセクタ書き込み | `import-boot disk.d88 boot.bin "BOOTLOADER"` |
-| `export-boot` | ブートセクタ情報出力 | `export-boot disk.d88 boot.txt` |
-| `delete` | ファイル削除 | `delete disk.d88 OLDFILE.TXT` |
+| `import-text` | テキストファイル書き込み | `import-text disk.d88 host.txt DISK.TXT --filesystem hu-basic` |
+| `export-text` | テキストファイル読み出し | `export-text disk.d88 DISK.TXT host.txt --filesystem hu-basic` |
+| `import-binary` | バイナリファイル書き込み | `import-binary disk.d88 prog.bin PROG.BIN 8000 8000 --filesystem hu-basic` |
+| `export-binary` | バイナリファイル読み出し | `export-binary disk.d88 PROG.BIN prog.bin --filesystem hu-basic` |
+| `import-boot` | ブートセクタ書き込み | `import-boot disk.d88 boot.bin "BOOTLOADER" --filesystem hu-basic` |
+| `export-boot` | ブートセクタ情報出力 | `export-boot disk.d88 boot.txt --filesystem hu-basic` |
+| `delete` | ファイル削除 | `delete disk.d88 OLDFILE.TXT --filesystem hu-basic` |
 | `info` | ディスク情報表示 | `info disk.d88` |
 | **`recover-text`** | **破損テキストファイル復旧** | `recover-text disk.d88 damaged.txt recovered.txt` |
 | **`recover-binary`** | **破損バイナリファイル復旧** | `recover-binary disk.d88 damaged.bin recovered.bin` |
@@ -97,9 +119,9 @@ var serviceProvider = services.BuildServiceProvider();
 var diskFactory = serviceProvider.GetRequiredService<IDiskContainerFactory>();
 var fsFactory = serviceProvider.GetRequiredService<IFileSystemFactory>();
 
-// ディスクイメージを開く
+// ディスクイメージを開く（読み取り専用・自動検出）
 using var container = diskFactory.OpenDiskImage("disk.d88", readOnly: true);
-var fileSystem = fsFactory.OpenFileSystem(container); // 自動検出
+var fileSystem = fsFactory.OpenFileSystemReadOnly(container); // 読み取り専用
 
 // ファイル一覧取得
 var files = fileSystem.ListFiles();
@@ -114,10 +136,15 @@ var data = fileSystem.ReadFile("README.TXT");
 // 破損ファイルの部分復旧
 var partialData = fileSystem.ReadFile("damaged.txt", allowPartialRead: true);
 
-// 新規ディスクイメージ作成
+// 新規ディスクイメージ作成（ファイルシステム指定必須）
 using var newContainer = diskFactory.CreateNewDiskImage("new.d88", DiskType.TwoD, "NEW DISK");
 var newFileSystem = fsFactory.CreateFileSystem(newContainer, FileSystemType.HuBasic);
 newFileSystem.Format();
+
+// 既存ディスクへの書き込み（ファイルシステム指定必須）
+using var writeContainer = diskFactory.OpenDiskImage("disk.d88", readOnly: false);
+var writeFileSystem = fsFactory.OpenFileSystem(writeContainer, FileSystemType.HuBasic);
+writeFileSystem.WriteFile("test.txt", data);
 ```
 
 ## 💾 対応ディスクタイプ
@@ -193,6 +220,12 @@ var unicodeText = converter.ToUnicode(x1Bytes);  // X1→Unicode変換
 ```
 
 ## 🚧 今後の拡張予定
+
+### ✅ Phase 5.5完了: 安全性強化 (2025年1月)
+- **書き込み時ファイルシステム指定必須化**
+- **ReadOnlyFileSystemWrapper実装**  
+- **構造検証による不正アクセス阻止**
+- **詳細エラーメッセージとガイダンス**
 
 ### Phase 6: 追加ファイルシステム対応 🆕
 - **MS-DOS FAT16**: FAT12の上位互換、大容量対応
