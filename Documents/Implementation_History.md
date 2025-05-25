@@ -4,7 +4,7 @@
 **実装者**: Claude (Anthropic AI Assistant)
 **アーキテクチャ**: Domain Driven Design (DDD) + Dependency Injection
 **言語**: C# (.NET 8.0)
-**状態**: Phase 5.5完了（安全性強化とファイルシステム指定必須化完了）
+**状態**: Phase 6.1完了（CharacterEncodingドメイン実装・CLI統合完了）
 
 ---
 
@@ -758,6 +758,138 @@ private int GetFatEntry(byte[] fatData, int cluster)
 1. **警告付き継続**: エラー時でも可能な限り処理継続
 2. **代替データ提供**: 破損部分を推測値で補完
 3. **詳細ログ出力**: トラブルシューティング支援
+
+---
+
+## **Phase 6: CharacterEncodingドメイン実装** (2025年1月)
+
+### **アーキテクチャ強化**
+```
+Legacy89DiskKit/
+├── CharacterEncoding/                # 新規ドメイン
+│   ├── Domain/
+│   │   ├── Interface/
+│   │   │   ├── ICharacterEncoder.cs  # エンコーダーインターフェース
+│   │   │   └── Factory/
+│   │   │       └── ICharacterEncoderFactory.cs
+│   │   ├── Model/
+│   │   │   └── MachineType.cs        # 18機種対応
+│   │   └── Exception/
+│   │       └── CharacterEncodingException.cs
+│   ├── Infrastructure/
+│   │   ├── Encoder/                  # 機種別エンコーダー
+│   │   │   ├── X1CharacterEncoder.cs      # X1完全実装
+│   │   │   ├── Pc8801CharacterEncoder.cs  # 基本ASCII実装
+│   │   │   └── Msx1CharacterEncoder.cs    # 基本ASCII実装
+│   │   └── Factory/
+│   │       └── CharacterEncoderFactory.cs
+│   └── Application/
+│       └── CharacterEncodingService.cs     # 高レベルサービス
+```
+
+### **実装詳細**
+
+#### **1. 機種別文字エンコーディング**
+```csharp
+public enum MachineType
+{
+    X1, X1Turbo, Pc8801, Pc8801Mk2, Msx1, Msx2, 
+    Mz80k, Mz700, Mz1500, Mz2500, Fm7, Fm77, Fm77av, 
+    Pc8001, Pc8001Mk2, Pc6001, Pc6601, Fc
+}
+```
+
+#### **2. エンコーダーインターフェース**
+```csharp
+public interface ICharacterEncoder
+{
+    byte[] EncodeText(string unicodeText);
+    string DecodeText(byte[] machineBytes);
+    MachineType SupportedMachine { get; }
+}
+```
+
+#### **3. X1エンコーダー完全移植**
+- 既存のX1Converterロジックを完全移植
+- ひらがな→カタカナ変換
+- X1固有グラフィック文字対応
+- Unicode↔X1文字コード双方向変換
+
+#### **4. 拡張可能な設計**
+```csharp
+// 新機種追加例（将来）
+public class Pc9801CharacterEncoder : ICharacterEncoder
+{
+    public MachineType SupportedMachine => MachineType.Pc9801;
+    // 機種固有実装
+}
+```
+
+### **CLI統合強化**
+
+#### **--machineパラメータ追加**
+```bash
+# 機種指定あり
+./CLI export-text disk.d88 file.txt output.txt --filesystem hu-basic --machine x1
+./CLI import-text disk.dsk input.txt file.txt --filesystem fat12 --machine pc8801
+
+# 機種省略時はデフォルト
+./CLI export-text disk.d88 file.txt output.txt --filesystem hu-basic  # → X1
+./CLI import-text disk.dsk input.txt file.txt --filesystem fat12      # → PC8801
+```
+
+#### **ファイルシステム別デフォルト機種**
+- **hu-basic** → X1 (Sharp X1が主用途)
+- **fat12** → PC8801 (PC-8801でよく使用)
+
+#### **18機種対応一覧**
+```
+x1, x1turbo, pc8801, pc8801mk2, msx1, msx2, mz80k, mz700, 
+mz1500, mz2500, fm7, fm77, fm77av, pc8001, pc8001mk2, 
+pc6001, pc6601, fc
+```
+
+### **アーキテクチャ利点**
+
+#### **1. ドメイン分離**
+- 文字エンコーディングをFileSystemから独立
+- 単一責任原則の徹底
+- テスト容易性の向上
+
+#### **2. 拡張性**
+- 新機種エンコーダーの追加が容易
+- ファクトリーパターンによる統一的なアクセス
+- 依存性注入による柔軟な実装
+
+#### **3. 保守性**
+- 機種固有ロジックの分離
+- 既存コードへの影響最小化
+- 段階的な機種対応追加
+
+### **今後の拡張方針**
+
+#### **優先実装機種**
+1. **PC-8801**: 需要が高く、FAT12との組み合わせで使用頻度高
+2. **MSX1/MSX2**: コミュニティ需要、カートリッジ文化で特殊文字多用
+3. **MZ-700/MZ-1500**: Sharp系統、X1と類似性あり
+
+#### **実装パターン**
+```csharp
+// 段階的実装例
+public class Pc8801CharacterEncoder : BaseCharacterEncoder
+{
+    protected override byte[] EncodeExtendedCharacters(char unicodeChar)
+    {
+        return unicodeChar switch
+        {
+            '─' => new byte[] { 0x81 },  // 水平線
+            '│' => new byte[] { 0x82 },  // 垂直線
+            // PC-8801固有グラフィック文字
+            _ => base.EncodeExtendedCharacters(unicodeChar)
+        };
+    }
+}
+```
 
 ---
 
