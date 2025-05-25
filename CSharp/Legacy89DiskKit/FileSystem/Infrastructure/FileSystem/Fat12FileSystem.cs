@@ -15,10 +15,46 @@ public class Fat12BootSector
     public ushort TotalSectors16 { get; set; }
     public uint TotalSectors32 { get; set; }
     public ushort SectorsPerFat { get; set; }
+    public ushort SectorsPerTrack { get; set; }
+    public ushort NumberOfHeads { get; set; }
     public string VolumeLabel { get; set; } = "";
     
     public bool IsValid => BytesPerSector == 512 && NumberOfFats > 0 && RootEntries > 0;
     public int FirstDataSector => ReservedSectors + (NumberOfFats * SectorsPerFat) + ((RootEntries * 32 + BytesPerSector - 1) / BytesPerSector);
+
+    public static Fat12BootSector Parse(byte[] data)
+    {
+        if (data.Length < 512)
+            throw new ArgumentException("Boot sector data too short");
+
+        var bootSector = new Fat12BootSector();
+        
+        bootSector.BytesPerSector = BitConverter.ToUInt16(data, 11);
+        bootSector.SectorsPerCluster = data[13];
+        bootSector.ReservedSectors = BitConverter.ToUInt16(data, 14);
+        bootSector.NumberOfFats = data[16];
+        bootSector.RootEntries = BitConverter.ToUInt16(data, 17);
+        bootSector.TotalSectors16 = BitConverter.ToUInt16(data, 19);
+        bootSector.SectorsPerFat = BitConverter.ToUInt16(data, 22);
+        bootSector.SectorsPerTrack = BitConverter.ToUInt16(data, 24);
+        bootSector.NumberOfHeads = BitConverter.ToUInt16(data, 26);
+        bootSector.TotalSectors32 = BitConverter.ToUInt32(data, 32);
+        
+        if (data.Length >= 54)
+        {
+            bootSector.VolumeLabel = Encoding.ASCII.GetString(data, 43, 11).Trim();
+        }
+
+        return bootSector;
+    }
+
+    public bool IsValidFat12()
+    {
+        return BytesPerSector > 0 && 
+               SectorsPerCluster > 0 && 
+               NumberOfFats > 0 && 
+               RootEntries > 0;
+    }
 }
 
 public class Fat12DirectoryEntry
@@ -72,6 +108,24 @@ public class Fat12DirectoryEntry
         {
             return DateTime.MinValue;
         }
+    }
+
+    public static Fat12DirectoryEntry Parse(byte[] data)
+    {
+        if (data.Length < 32)
+            throw new ArgumentException("Directory entry data too short");
+
+        var entry = new Fat12DirectoryEntry();
+        
+        entry.Name = Encoding.ASCII.GetString(data, 0, 8).Trim();
+        entry.Extension = Encoding.ASCII.GetString(data, 8, 3).Trim();
+        entry.Attributes = data[11];
+        entry.WriteTime = BitConverter.ToUInt16(data, 22);
+        entry.WriteDate = BitConverter.ToUInt16(data, 24);
+        entry.FirstCluster = BitConverter.ToUInt16(data, 26);
+        entry.FileSize = BitConverter.ToUInt32(data, 28);
+
+        return entry;
     }
 }
 
