@@ -1,8 +1,8 @@
-using Legacy89DiskKit.DiskImage.Application;
-using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
-using Legacy89DiskKit.DiskImage.Domain.Exception;
-using Legacy89DiskKit.FileSystem.Application;
-using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Legacy89DiskKit.DependencyInjection;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Factory;
+using Legacy89DiskKit.FileSystem.Domain.Interface.Factory;
 using Legacy89DiskKit.FileSystem.Infrastructure.Utility;
 using System.Globalization;
 
@@ -10,11 +10,16 @@ namespace Legacy89DiskKit.CLI;
 
 class Program
 {
-    private static readonly DiskImageService _diskImageService = new();
-    private static readonly FileSystemService _fileSystemService = new();
+    private static IDiskContainerFactory _diskContainerFactory = null!;
+    private static IFileSystemFactory _fileSystemFactory = null!;
 
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
+        var host = CreateHostBuilder(args).Build();
+        
+        _diskContainerFactory = host.Services.GetRequiredService<IDiskContainerFactory>();
+        _fileSystemFactory = host.Services.GetRequiredService<IFileSystemFactory>();
+
         try
         {
             if (args.Length == 0)
@@ -58,14 +63,14 @@ class Program
                 case "delete":
                     DeleteFile(parameters);
                     break;
+                case "info":
+                    ShowDiskInfo(parameters);
+                    break;
                 case "recover-text":
                     RecoverTextFile(parameters);
                     break;
                 case "recover-binary":
                     RecoverBinaryFile(parameters);
-                    break;
-                case "info":
-                    ShowDiskInfo(parameters);
                     break;
                 case "help":
                 case "--help":
@@ -74,185 +79,136 @@ class Program
                     break;
                 default:
                     Console.WriteLine($"Unknown command: {command}");
-                    ShowHelp();
+                    Console.WriteLine("Use 'help' to see available commands.");
+                    Environment.Exit(1);
                     break;
             }
         }
-        catch (InvalidDiskFormatException ex)
-        {
-            Console.WriteLine($"Invalid disk format: {ex.Message}");
-            Environment.Exit(2);
-        }
-        catch (FileNotFoundException ex)
-        {
-            Console.WriteLine($"File not found: {ex.Message}");
-            Environment.Exit(3);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            Console.WriteLine($"Access denied: {ex.Message}");
-            Environment.Exit(4);
-        }
-        catch (IOException ex)
-        {
-            Console.WriteLine($"I/O error: {ex.Message}");
-            Environment.Exit(5);
-        }
-        catch (OutOfMemoryException ex)
-        {
-            Console.WriteLine($"Out of memory: {ex.Message}");
-            Environment.Exit(6);
-        }
-        catch (ArgumentException ex)
-        {
-            Console.WriteLine($"Invalid argument: {ex.Message}");
-            Environment.Exit(7);
-        }
         catch (Exception ex)
         {
-            Console.WriteLine($"Unexpected error: {ex.Message}");
-            if (ex.InnerException != null)
-                Console.WriteLine($"  Inner exception: {ex.InnerException.Message}");
+            Console.WriteLine($"Error: {ex.Message}");
             Environment.Exit(1);
         }
     }
 
-    static void ShowHelp()
-    {
-        Console.WriteLine("Legacy89DiskKit CLI - D88 Disk Image Tool for Hu-BASIC File System");
-        Console.WriteLine();
-        Console.WriteLine("Usage:");
-        Console.WriteLine("  create <disk-file> <type> [disk-name]    Create new D88 disk image");
-        Console.WriteLine("  format <disk-file>                       Format disk with Hu-BASIC file system");
-        Console.WriteLine("  list <disk-file>                         List files on disk");
-        Console.WriteLine("  import-text <disk-file> <host-file> <disk-filename>");
-        Console.WriteLine("  export-text <disk-file> <disk-filename> <host-file>");
-        Console.WriteLine("  import-binary <disk-file> <host-file> <disk-filename> [load-addr] [exec-addr]");
-        Console.WriteLine("  export-binary <disk-file> <disk-filename> <host-file>");
-        Console.WriteLine("  import-boot <disk-file> <host-file> [label]");
-        Console.WriteLine("  export-boot <disk-file> <host-file>");
-        Console.WriteLine("  delete <disk-file> <disk-filename>");
-        Console.WriteLine("  recover-text <disk-file> <disk-filename> <host-file>    Recover corrupted text file");
-        Console.WriteLine("  recover-binary <disk-file> <disk-filename> <host-file>  Recover corrupted binary file");
-        Console.WriteLine("  info <disk-file>                         Show disk information");
-        Console.WriteLine();
-        Console.WriteLine("Disk types: 2D, 2DD, 2HD");
-        Console.WriteLine();
-        Console.WriteLine("Examples:");
-        Console.WriteLine("  Legacy89DiskKit.CLI create disk.d88 2D \"My Disk\"");
-        Console.WriteLine("  Legacy89DiskKit.CLI format disk.d88");
-        Console.WriteLine("  Legacy89DiskKit.CLI import-text disk.d88 readme.txt README.TXT");
-        Console.WriteLine("  Legacy89DiskKit.CLI list disk.d88");
-    }
+    private static IHostBuilder CreateHostBuilder(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .ConfigureServices((context, services) =>
+            {
+                services.AddLegacy89DiskKit();
+            });
 
-    static void CreateDiskImage(string[] parameters)
+    private static void CreateDiskImage(string[] parameters)
     {
-        if (parameters.Length < 2)
+        if (parameters.Length < 3)
         {
-            Console.WriteLine("Usage: create <disk-file> <type> [disk-name]");
+            Console.WriteLine("Usage: create <disk-file> <type> <disk-name>");
+            Console.WriteLine("Types: 2D, 2DD, 2HD");
             return;
         }
 
         var diskFile = parameters[0];
         var diskTypeStr = parameters[1].ToUpper();
-        var diskName = parameters.Length > 2 ? parameters[2] : "";
+        var diskName = parameters[2];
 
-        var diskType = diskTypeStr switch
+        if (!Enum.TryParse<DiskType>(diskTypeStr.Replace("2", "Two"), out var diskType))
         {
-            "2D" => DiskType.TwoD,
-            "2DD" => DiskType.TwoDD,
-            "2HD" => DiskType.TwoHD,
-            _ => (DiskType?)null
-        };
-
-        if (diskType == null)
-        {
-            Console.WriteLine("Invalid disk type. Use: 2D, 2DD, or 2HD");
+            Console.WriteLine($"Invalid disk type: {diskTypeStr}. Use 2D, 2DD, or 2HD.");
             return;
         }
 
-        if (File.Exists(diskFile))
+        try
         {
-            Console.Write($"File {diskFile} already exists. Overwrite? (y/N): ");
-            var response = Console.ReadLine();
-            if (response?.ToLower() != "y")
+            using var container = _diskContainerFactory.CreateNewDiskImage(diskFile, diskType, diskName);
+            Console.WriteLine($"Created new disk image: {diskFile} ({diskTypeStr}) \"{diskName}\"");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to create disk image: {ex.Message}");
+        }
+    }
+
+    private static void FormatDiskImage(string[] parameters)
+    {
+        if (parameters.Length < 1)
+        {
+            Console.WriteLine("Usage: format <disk-file> [filesystem-type]");
+            return;
+        }
+
+        var diskFile = parameters[0];
+        var fileSystemTypeStr = parameters.Length > 1 ? parameters[1] : "hu-basic";
+
+        if (!Enum.TryParse<FileSystemType>(ConvertFileSystemName(fileSystemTypeStr), true, out var fileSystemType))
+        {
+            Console.WriteLine($"Invalid filesystem type: {fileSystemTypeStr}");
+            Console.WriteLine("Supported types: hu-basic");
+            return;
+        }
+
+        try
+        {
+            using var container = _diskContainerFactory.OpenDiskImage(diskFile);
+            var fileSystem = _fileSystemFactory.CreateFileSystem(container, fileSystemType);
+            fileSystem.Format();
+            Console.WriteLine($"Formatted disk: {diskFile} with {fileSystemTypeStr} filesystem");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to format disk: {ex.Message}");
+        }
+    }
+
+    private static void ListFiles(string[] parameters)
+    {
+        if (parameters.Length < 1)
+        {
+            Console.WriteLine("Usage: list <disk-file> [filesystem-type]");
+            return;
+        }
+
+        var diskFile = parameters[0];
+        var fileSystemTypeStr = parameters.Length > 1 ? parameters[1] : null;
+
+        try
+        {
+            using var container = _diskContainerFactory.OpenDiskImage(diskFile, readOnly: true);
+            
+            FileSystemType? fileSystemType = null;
+            if (fileSystemTypeStr != null)
             {
-                Console.WriteLine("Cancelled.");
-                return;
+                if (!Enum.TryParse<FileSystemType>(ConvertFileSystemName(fileSystemTypeStr), true, out var type))
+                {
+                    Console.WriteLine($"Invalid filesystem type: {fileSystemTypeStr}");
+                    return;
+                }
+                fileSystemType = type;
+            }
+
+            var fileSystem = _fileSystemFactory.OpenFileSystem(container, fileSystemType);
+            var files = fileSystem.ListFiles();
+
+            Console.WriteLine($"Files in {diskFile}:");
+            Console.WriteLine("Name".PadRight(17) + "Size".PadLeft(8) + " Mode  Date");
+            Console.WriteLine(new string('-', 40));
+
+            foreach (var file in files)
+            {
+                var fileName = $"{file.FileName}.{file.Extension}";
+                var size = file.Size.ToString();
+                var mode = GetModeString(file.Mode);
+                var date = FormatDate(file.ModifiedDate);
+                
+                Console.WriteLine($"{fileName.PadRight(17)}{size.PadLeft(8)} {mode} {date}");
             }
         }
-
-        using var container = _diskImageService.CreateNewDiskImage(diskFile, diskType.Value, diskName);
-        Console.WriteLine($"Created {diskTypeStr} disk image: {diskFile}");
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to list files: {ex.Message}");
+        }
     }
 
-    static void FormatDiskImage(string[] parameters)
-    {
-        if (parameters.Length < 1)
-        {
-            Console.WriteLine("Usage: format <disk-file>");
-            return;
-        }
-
-        var diskFile = parameters[0];
-        using var container = _diskImageService.OpenDiskImage(diskFile);
-        _fileSystemService.FormatDisk(container);
-        Console.WriteLine($"Formatted disk: {diskFile}");
-    }
-
-    static void ListFiles(string[] parameters)
-    {
-        if (parameters.Length < 1)
-        {
-            Console.WriteLine("Usage: list <disk-file>");
-            return;
-        }
-
-        var diskFile = parameters[0];
-        using var container = _diskImageService.OpenDiskImage(diskFile, true);
-        var fileSystem = _fileSystemService.OpenFileSystem(container);
-
-        if (!fileSystem.IsFormatted)
-        {
-            Console.WriteLine("Disk is not formatted with Hu-BASIC file system.");
-            return;
-        }
-
-        var files = _fileSystemService.ListFiles(fileSystem);
-        var fileList = files.ToList();
-
-        if (!fileList.Any())
-        {
-            Console.WriteLine("No files found.");
-            return;
-        }
-
-        Console.WriteLine("Filename         Ext  Type   Size   Load   Exec   Modified");
-        Console.WriteLine("---------------- ---- ------ ------ ------ ------ --------");
-
-        foreach (var file in fileList)
-        {
-            var typeStr = GetFileTypeString(file);
-            var protectedStr = file.IsProtected ? "*" : " ";
-            
-            Console.WriteLine($"{file.FileName,-16} {file.Extension,-4} {typeStr,-6} {file.Size,6} {file.LoadAddress:X4}   {file.ExecuteAddress:X4}   {file.ModifiedDate:yyyy-MM-dd}{protectedStr}");
-        }
-
-        var fsInfo = _fileSystemService.GetFileSystemInfo(fileSystem);
-        Console.WriteLine();
-        Console.WriteLine($"Files: {fileList.Count}");
-        Console.WriteLine($"Free space: {fsInfo.FreeClusters * fsInfo.ClusterSize} bytes ({fsInfo.FreeClusters}/{fsInfo.TotalClusters} clusters)");
-    }
-
-    static string GetFileTypeString(FileEntry file)
-    {
-        if (file.Attributes.IsBinary) return "BIN";
-        if (file.Attributes.IsBasic) return "BASIC";
-        if (file.Attributes.IsAscii) return "ASCII";
-        return "UNK";
-    }
-
-    static void ImportTextFile(string[] parameters)
+    private static void ImportTextFile(string[] parameters)
     {
         if (parameters.Length < 3)
         {
@@ -264,74 +220,16 @@ class Program
         var hostFile = parameters[1];
         var diskFileName = parameters[2];
 
-        // パラメータ検証
-        if (string.IsNullOrWhiteSpace(diskFile))
-        {
-            Console.WriteLine("Error: Disk file path cannot be empty");
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(hostFile))
-        {
-            Console.WriteLine("Error: Host file path cannot be empty");
-            return;
-        }
-
-        if (!HuBasicFileNameValidator.IsValidFileName(diskFileName))
-        {
-            Console.WriteLine($"Error: Invalid disk filename '{diskFileName}'");
-            Console.WriteLine("Valid filenames: 1-13 characters, no spaces or special characters");
-            
-            var suggested = HuBasicFileNameValidator.CreateValidFileName(diskFileName);
-            Console.WriteLine($"Suggested filename: {suggested}");
-            return;
-        }
-
-        if (!File.Exists(hostFile))
-        {
-            Console.WriteLine($"Host file not found: {hostFile}");
-            return;
-        }
-
-        // ファイルサイズチェック
-        var hostFileInfo = new FileInfo(hostFile);
-        if (hostFileInfo.Length > 65535)
-        {
-            Console.WriteLine($"Host file too large: {hostFileInfo.Length:N0} bytes (max: 65,535)");
-            return;
-        }
-
-        if (hostFileInfo.Length > 10 * 1024 * 1024)
-        {
-            Console.WriteLine($"Host file too large for processing: {hostFileInfo.Length:N0} bytes (max: 10MB)");
-            return;
-        }
-
         try
         {
-            using var container = _diskImageService.OpenDiskImage(diskFile);
-            var fileSystem = _fileSystemService.OpenFileSystem(container);
-
-            if (!fileSystem.IsFormatted)
-            {
-                Console.WriteLine("Disk is not formatted. Use 'format' command first.");
-                return;
-            }
-
-            // 既存ファイルチェック
-            var existingFile = fileSystem.GetFile(diskFileName);
-            if (existingFile != null)
-            {
-                Console.Write($"File '{diskFileName}' already exists. Overwrite? (y/N): ");
-                var response = Console.ReadLine();
-                if (response?.ToLower() != "y")
-                {
-                    Console.WriteLine("Import cancelled.");
-                    return;
-                }
-            }
-
-            _fileSystemService.ImportTextFile(fileSystem, hostFile, diskFileName);
+            using var container = _diskContainerFactory.OpenDiskImage(diskFile);
+            var fileSystem = _fileSystemFactory.OpenFileSystem(container);
+            
+            var hostText = File.ReadAllText(hostFile);
+            var converter = new X1Converter();
+            var x1Text = converter.ToX1(hostText);
+            
+            fileSystem.WriteFile(diskFileName, x1Text, isText: true);
             Console.WriteLine($"Imported text file: {hostFile} -> {diskFileName}");
         }
         catch (Exception ex)
@@ -340,7 +238,7 @@ class Program
         }
     }
 
-    static void ExportTextFile(string[] parameters)
+    private static void ExportTextFile(string[] parameters)
     {
         if (parameters.Length < 3)
         {
@@ -352,147 +250,59 @@ class Program
         var diskFileName = parameters[1];
         var hostFile = parameters[2];
 
-        using var container = _diskImageService.OpenDiskImage(diskFile, true);
-        var fileSystem = _fileSystemService.OpenFileSystem(container);
-
-        if (!fileSystem.IsFormatted)
+        try
         {
-            Console.WriteLine("Disk is not formatted with Hu-BASIC file system.");
-            return;
+            using var container = _diskContainerFactory.OpenDiskImage(diskFile, readOnly: true);
+            var fileSystem = _fileSystemFactory.OpenFileSystem(container);
+            
+            var x1Data = fileSystem.ReadFile(diskFileName);
+            var converter = new X1Converter();
+            var unicodeText = converter.ToUnicode(x1Data);
+            
+            File.WriteAllText(hostFile, unicodeText);
+            Console.WriteLine($"Exported text file: {diskFileName} -> {hostFile}");
         }
-
-        _fileSystemService.ExportTextFile(fileSystem, diskFileName, hostFile);
-        Console.WriteLine($"Exported text file: {diskFileName} -> {hostFile}");
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to export text file: {ex.Message}");
+        }
     }
 
-    static void ImportBinaryFile(string[] parameters)
+    private static void ImportBinaryFile(string[] parameters)
     {
         if (parameters.Length < 3)
         {
-            Console.WriteLine("Usage: import-binary <disk-file> <host-file> <disk-filename> [load-addr] [exec-addr]");
+            Console.WriteLine("Usage: import-binary <disk-file> <host-file> <disk-filename> [load-address] [exec-address]");
             return;
         }
 
         var diskFile = parameters[0];
         var hostFile = parameters[1];
         var diskFileName = parameters[2];
-
-        // パラメータ検証
-        if (string.IsNullOrWhiteSpace(diskFile))
+        
+        ushort loadAddress = 0;
+        ushort execAddress = 0;
+        
+        if (parameters.Length > 3 && !ushort.TryParse(parameters[3], NumberStyles.HexNumber, null, out loadAddress))
         {
-            Console.WriteLine("Error: Disk file path cannot be empty");
+            Console.WriteLine("Invalid load address (use hex format, e.g., 8000)");
             return;
         }
-
-        if (string.IsNullOrWhiteSpace(hostFile))
+        
+        if (parameters.Length > 4 && !ushort.TryParse(parameters[4], NumberStyles.HexNumber, null, out execAddress))
         {
-            Console.WriteLine("Error: Host file path cannot be empty");
-            return;
-        }
-
-        if (!HuBasicFileNameValidator.IsValidFileName(diskFileName))
-        {
-            Console.WriteLine($"Error: Invalid disk filename '{diskFileName}'");
-            Console.WriteLine("Valid filenames: 1-13 characters, no spaces or special characters");
-            
-            var suggested = HuBasicFileNameValidator.CreateValidFileName(diskFileName);
-            Console.WriteLine($"Suggested filename: {suggested}");
-            return;
-        }
-
-        ushort loadAddr = 0;
-        ushort execAddr = 0;
-
-        if (parameters.Length > 3)
-        {
-            if (!ushort.TryParse(parameters[3], NumberStyles.HexNumber, null, out loadAddr))
-            {
-                Console.WriteLine("Invalid load address format. Use hexadecimal (e.g., 8000)");
-                return;
-            }
-            
-            try
-            {
-                HuBasicFileNameValidator.ValidateAddress(loadAddr, "Load");
-            }
-            catch (ArgumentException ex)
-            {
-                Console.WriteLine($"Warning: {ex.Message}");
-                Console.Write("Continue anyway? (y/N): ");
-                var response = Console.ReadLine();
-                if (response?.ToLower() != "y")
-                {
-                    Console.WriteLine("Import cancelled.");
-                    return;
-                }
-            }
-        }
-
-        if (parameters.Length > 4)
-        {
-            if (!ushort.TryParse(parameters[4], NumberStyles.HexNumber, null, out execAddr))
-            {
-                Console.WriteLine("Invalid execute address format. Use hexadecimal (e.g., 8000)");
-                return;
-            }
-            
-            try
-            {
-                HuBasicFileNameValidator.ValidateLoadExecuteAddresses(loadAddr, execAddr);
-            }
-            catch (ArgumentException ex)
-            {
-                Console.WriteLine($"Warning: {ex.Message}");
-                Console.Write("Continue anyway? (y/N): ");
-                var response = Console.ReadLine();
-                if (response?.ToLower() != "y")
-                {
-                    Console.WriteLine("Import cancelled.");
-                    return;
-                }
-            }
-        }
-
-        if (!File.Exists(hostFile))
-        {
-            Console.WriteLine($"Host file not found: {hostFile}");
-            return;
-        }
-
-        // ファイルサイズチェック
-        var hostFileInfo = new FileInfo(hostFile);
-        if (hostFileInfo.Length > 65535)
-        {
-            Console.WriteLine($"Host file too large: {hostFileInfo.Length:N0} bytes (max: 65,535)");
+            Console.WriteLine("Invalid exec address (use hex format, e.g., 8000)");
             return;
         }
 
         try
         {
-            using var container = _diskImageService.OpenDiskImage(diskFile);
-            var fileSystem = _fileSystemService.OpenFileSystem(container);
-
-            if (!fileSystem.IsFormatted)
-            {
-                Console.WriteLine("Disk is not formatted. Use 'format' command first.");
-                return;
-            }
-
-            // 既存ファイルチェック
-            var existingFile = fileSystem.GetFile(diskFileName);
-            if (existingFile != null)
-            {
-                Console.Write($"File '{diskFileName}' already exists. Overwrite? (y/N): ");
-                var response = Console.ReadLine();
-                if (response?.ToLower() != "y")
-                {
-                    Console.WriteLine("Import cancelled.");
-                    return;
-                }
-            }
-
-            _fileSystemService.ImportBinaryFile(fileSystem, hostFile, diskFileName, loadAddr, execAddr);
-            Console.WriteLine($"Imported binary file: {hostFile} -> {diskFileName} (Load: {loadAddr:X4}, Exec: {execAddr:X4})");
+            using var container = _diskContainerFactory.OpenDiskImage(diskFile);
+            var fileSystem = _fileSystemFactory.OpenFileSystem(container);
+            
+            var binaryData = File.ReadAllBytes(hostFile);
+            fileSystem.WriteFile(diskFileName, binaryData, isText: false, loadAddress, execAddress);
+            Console.WriteLine($"Imported binary file: {hostFile} -> {diskFileName} (Load: ${loadAddress:X4}, Exec: ${execAddress:X4})");
         }
         catch (Exception ex)
         {
@@ -500,7 +310,7 @@ class Program
         }
     }
 
-    static void ExportBinaryFile(string[] parameters)
+    private static void ExportBinaryFile(string[] parameters)
     {
         if (parameters.Length < 3)
         {
@@ -512,63 +322,82 @@ class Program
         var diskFileName = parameters[1];
         var hostFile = parameters[2];
 
-        using var container = _diskImageService.OpenDiskImage(diskFile, true);
-        var fileSystem = _fileSystemService.OpenFileSystem(container);
-
-        if (!fileSystem.IsFormatted)
+        try
         {
-            Console.WriteLine("Disk is not formatted with Hu-BASIC file system.");
-            return;
+            using var container = _diskContainerFactory.OpenDiskImage(diskFile, readOnly: true);
+            var fileSystem = _fileSystemFactory.OpenFileSystem(container);
+            
+            var binaryData = fileSystem.ReadFile(diskFileName);
+            File.WriteAllBytes(hostFile, binaryData);
+            Console.WriteLine($"Exported binary file: {diskFileName} -> {hostFile}");
         }
-
-        _fileSystemService.ExportBinaryFile(fileSystem, diskFileName, hostFile);
-        Console.WriteLine($"Exported binary file: {diskFileName} -> {hostFile}");
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to export binary file: {ex.Message}");
+        }
     }
 
-    static void ImportBootSector(string[] parameters)
+    private static void ImportBootSector(string[] parameters)
     {
-        if (parameters.Length < 2)
+        if (parameters.Length < 3)
         {
-            Console.WriteLine("Usage: import-boot <disk-file> <host-file> [label]");
+            Console.WriteLine("Usage: import-boot <disk-file> <host-file> <boot-label>");
             return;
         }
 
         var diskFile = parameters[0];
         var hostFile = parameters[1];
-        var label = parameters.Length > 2 ? parameters[2] : "BOOT";
+        var bootLabel = parameters[2];
 
-        if (!File.Exists(hostFile))
+        try
         {
-            Console.WriteLine($"Host file not found: {hostFile}");
-            return;
+            using var container = _diskContainerFactory.OpenDiskImage(diskFile);
+            var fileSystem = _fileSystemFactory.OpenFileSystem(container);
+            
+            var bootData = File.ReadAllBytes(hostFile);
+            fileSystem.WriteBootSector(bootLabel, bootData);
+            Console.WriteLine($"Imported boot sector: {hostFile} -> \"{bootLabel}\"");
         }
-
-        using var container = _diskImageService.OpenDiskImage(diskFile);
-        var fileSystem = _fileSystemService.OpenFileSystem(container);
-
-        _fileSystemService.ImportBootSector(fileSystem, hostFile, label);
-        Console.WriteLine($"Imported boot sector: {hostFile}");
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to import boot sector: {ex.Message}");
+        }
     }
 
-    static void ExportBootSector(string[] parameters)
+    private static void ExportBootSector(string[] parameters)
     {
         if (parameters.Length < 2)
         {
-            Console.WriteLine("Usage: export-boot <disk-file> <host-file>");
+            Console.WriteLine("Usage: export-boot <disk-file> <output-file>");
             return;
         }
 
         var diskFile = parameters[0];
-        var hostFile = parameters[1];
+        var outputFile = parameters[1];
 
-        using var container = _diskImageService.OpenDiskImage(diskFile, true);
-        var fileSystem = _fileSystemService.OpenFileSystem(container);
-
-        _fileSystemService.ExportBootSector(fileSystem, hostFile);
-        Console.WriteLine($"Exported boot sector info: {hostFile}");
+        try
+        {
+            using var container = _diskContainerFactory.OpenDiskImage(diskFile, readOnly: true);
+            var fileSystem = _fileSystemFactory.OpenFileSystem(container);
+            
+            var bootInfo = fileSystem.ReadBootSector();
+            var output = $"Boot Sector Information:\n" +
+                        $"Label: {bootInfo.Label}\n" +
+                        $"Load Address: ${bootInfo.LoadAddress:X4}\n" +
+                        $"Exec Address: ${bootInfo.ExecAddress:X4}\n" +
+                        $"Size: {bootInfo.Size} bytes\n" +
+                        $"Date: {FormatDate(bootInfo.ModifiedDate)}\n";
+            
+            File.WriteAllText(outputFile, output);
+            Console.WriteLine($"Exported boot sector info: {outputFile}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to export boot sector: {ex.Message}");
+        }
     }
 
-    static void DeleteFile(string[] parameters)
+    private static void DeleteFile(string[] parameters)
     {
         if (parameters.Length < 2)
         {
@@ -579,20 +408,21 @@ class Program
         var diskFile = parameters[0];
         var diskFileName = parameters[1];
 
-        using var container = _diskImageService.OpenDiskImage(diskFile);
-        var fileSystem = _fileSystemService.OpenFileSystem(container);
-
-        if (!fileSystem.IsFormatted)
+        try
         {
-            Console.WriteLine("Disk is not formatted with Hu-BASIC file system.");
-            return;
+            using var container = _diskContainerFactory.OpenDiskImage(diskFile);
+            var fileSystem = _fileSystemFactory.OpenFileSystem(container);
+            
+            fileSystem.DeleteFile(diskFileName);
+            Console.WriteLine($"Deleted file: {diskFileName}");
         }
-
-        _fileSystemService.DeleteFile(fileSystem, diskFileName);
-        Console.WriteLine($"Deleted file: {diskFileName}");
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to delete file: {ex.Message}");
+        }
     }
 
-    static void ShowDiskInfo(string[] parameters)
+    private static void ShowDiskInfo(string[] parameters)
     {
         if (parameters.Length < 1)
         {
@@ -601,35 +431,25 @@ class Program
         }
 
         var diskFile = parameters[0];
-        using var container = _diskImageService.OpenDiskImage(diskFile, true);
 
-        Console.WriteLine($"Disk Image: {diskFile}");
-        Console.WriteLine($"Type: {container.DiskType}");
-        Console.WriteLine($"Read-only: {container.IsReadOnly}");
-
-        var sectors = container.GetAllSectors().ToList();
-        Console.WriteLine($"Total sectors: {sectors.Count}");
-
-        var fileSystem = _fileSystemService.OpenFileSystem(container);
-        if (fileSystem.IsFormatted)
+        try
         {
-            Console.WriteLine("File System: Hu-BASIC (formatted)");
-            var fsInfo = _fileSystemService.GetFileSystemInfo(fileSystem);
-            Console.WriteLine($"Cluster size: {fsInfo.ClusterSize} bytes");
-            Console.WriteLine($"Total clusters: {fsInfo.TotalClusters}");
-            Console.WriteLine($"Free clusters: {fsInfo.FreeClusters}");
-            Console.WriteLine($"Free space: {fsInfo.FreeClusters * fsInfo.ClusterSize} bytes");
-
-            var files = _fileSystemService.ListFiles(fileSystem).ToList();
-            Console.WriteLine($"Files: {files.Count}");
+            using var container = _diskContainerFactory.OpenDiskImage(diskFile, readOnly: true);
+            var detectedType = _fileSystemFactory.DetectFileSystemType(container);
+            
+            Console.WriteLine($"Disk Information for: {diskFile}");
+            Console.WriteLine($"Container Type: {Path.GetExtension(diskFile).ToUpper()}");
+            Console.WriteLine($"Disk Type: {container.DiskType}");
+            Console.WriteLine($"Detected Filesystem: {detectedType}");
+            Console.WriteLine($"Read-Only: {container.IsReadOnly}");
         }
-        else
+        catch (Exception ex)
         {
-            Console.WriteLine("File System: Not formatted or unknown");
+            Console.WriteLine($"Failed to get disk info: {ex.Message}");
         }
     }
 
-    static void RecoverTextFile(string[] parameters)
+    private static void RecoverTextFile(string[] parameters)
     {
         if (parameters.Length < 3)
         {
@@ -643,30 +463,26 @@ class Program
 
         try
         {
-            using var container = _diskImageService.OpenDiskImage(diskFile, true);
-            var fileSystem = _fileSystemService.OpenFileSystem(container);
-
-            if (!fileSystem.IsFormatted)
-            {
-                Console.WriteLine("Disk is not formatted with Hu-BASIC file system.");
-                return;
-            }
-
-            Console.WriteLine($"Attempting to recover text file: {diskFileName}");
-            Console.WriteLine("Warning: This may produce partial or corrupted data.");
-            Console.WriteLine();
-
-            _fileSystemService.ExportTextFile(fileSystem, diskFileName, hostFile, allowPartialRead: true);
-            Console.WriteLine($"Recovery attempt completed: {diskFileName} -> {hostFile}");
-            Console.WriteLine("Please verify the recovered file contents manually.");
+            using var container = _diskContainerFactory.OpenDiskImage(diskFile, readOnly: true);
+            var fileSystem = _fileSystemFactory.OpenFileSystem(container);
+            
+            Console.WriteLine("WARNING: Attempting to recover from damaged disk. Some data may be lost or corrupted.");
+            
+            var x1Data = fileSystem.ReadFile(diskFileName, allowPartialRead: true);
+            var converter = new X1Converter();
+            var unicodeText = converter.ToUnicode(x1Data);
+            
+            File.WriteAllText(hostFile, unicodeText);
+            Console.WriteLine($"Recovered text file: {diskFileName} -> {hostFile}");
+            Console.WriteLine("Please verify the recovered data for completeness and accuracy.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Recovery failed: {ex.Message}");
+            Console.WriteLine($"Failed to recover text file: {ex.Message}");
         }
     }
 
-    static void RecoverBinaryFile(string[] parameters)
+    private static void RecoverBinaryFile(string[] parameters)
     {
         if (parameters.Length < 3)
         {
@@ -680,27 +496,92 @@ class Program
 
         try
         {
-            using var container = _diskImageService.OpenDiskImage(diskFile, true);
-            var fileSystem = _fileSystemService.OpenFileSystem(container);
-
-            if (!fileSystem.IsFormatted)
-            {
-                Console.WriteLine("Disk is not formatted with Hu-BASIC file system.");
-                return;
-            }
-
-            Console.WriteLine($"Attempting to recover binary file: {diskFileName}");
-            Console.WriteLine("Warning: This may produce partial or corrupted data.");
-            Console.WriteLine("Corrupted sectors will be replaced with zeros or default patterns.");
-            Console.WriteLine();
-
-            _fileSystemService.ExportBinaryFile(fileSystem, diskFileName, hostFile, allowPartialRead: true);
-            Console.WriteLine($"Recovery attempt completed: {diskFileName} -> {hostFile}");
-            Console.WriteLine("Please verify the recovered file contents manually.");
+            using var container = _diskContainerFactory.OpenDiskImage(diskFile, readOnly: true);
+            var fileSystem = _fileSystemFactory.OpenFileSystem(container);
+            
+            Console.WriteLine("WARNING: Attempting to recover from damaged disk. Some data may be lost or corrupted.");
+            
+            var binaryData = fileSystem.ReadFile(diskFileName, allowPartialRead: true);
+            File.WriteAllBytes(hostFile, binaryData);
+            Console.WriteLine($"Recovered binary file: {diskFileName} -> {hostFile}");
+            Console.WriteLine("Please verify the recovered data for completeness and accuracy.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Recovery failed: {ex.Message}");
+            Console.WriteLine($"Failed to recover binary file: {ex.Message}");
         }
+    }
+
+    private static string ConvertFileSystemName(string name)
+    {
+        return name.ToLower() switch
+        {
+            "hu-basic" or "hubasic" => "HuBasic",
+            "fat12" => "Fat12",
+            "fat16" => "Fat16", 
+            "cpm" => "Cpm",
+            "n88-basic" or "n88basic" => "N88Basic",
+            "msx-dos" or "msxdos" => "MsxDos",
+            _ => name
+        };
+    }
+
+    private static string GetModeString(byte mode)
+    {
+        var result = "";
+        if ((mode & 0x01) != 0) result += "BIN";
+        else if ((mode & 0x02) != 0) result += "BAS";
+        else if ((mode & 0x04) != 0 || (mode & 0x08) != 0) result += "ASC";
+        else result += "---";
+        
+        if ((mode & 0x40) != 0) result += " R";
+        if ((mode & 0x10) != 0) result += " H";
+        
+        return result.PadRight(5);
+    }
+
+    private static string FormatDate(DateTime date)
+    {
+        if (date == DateTime.MinValue)
+            return "----/--/--";
+        
+        return date.ToString("yyyy/MM/dd");
+    }
+
+    private static void ShowHelp()
+    {
+        Console.WriteLine("Legacy89DiskKit CLI - Retro Computer Disk Image Tool");
+        Console.WriteLine();
+        Console.WriteLine("Usage: Legacy89DiskKit <command> [parameters]");
+        Console.WriteLine();
+        Console.WriteLine("Commands:");
+        Console.WriteLine("  create <disk-file> <type> <name>           Create new disk image");
+        Console.WriteLine("  format <disk-file> [filesystem]            Format disk with filesystem");
+        Console.WriteLine("  list <disk-file> [filesystem]              List files on disk");
+        Console.WriteLine("  import-text <disk-file> <host-file> <name> Import text file");
+        Console.WriteLine("  export-text <disk-file> <name> <host-file> Export text file");
+        Console.WriteLine("  import-binary <disk-file> <host-file> <name> [load] [exec]");
+        Console.WriteLine("                                              Import binary file");
+        Console.WriteLine("  export-binary <disk-file> <name> <host-file>");
+        Console.WriteLine("                                              Export binary file");
+        Console.WriteLine("  import-boot <disk-file> <host-file> <label>");
+        Console.WriteLine("                                              Import boot sector");
+        Console.WriteLine("  export-boot <disk-file> <output-file>      Export boot sector info");
+        Console.WriteLine("  delete <disk-file> <name>                  Delete file");
+        Console.WriteLine("  info <disk-file>                           Show disk information");
+        Console.WriteLine("  recover-text <disk-file> <name> <host-file>");
+        Console.WriteLine("                                              Recover damaged text file");
+        Console.WriteLine("  recover-binary <disk-file> <name> <host-file>");
+        Console.WriteLine("                                              Recover damaged binary file");
+        Console.WriteLine("  help                                        Show this help");
+        Console.WriteLine();
+        Console.WriteLine("Disk Types: 2D, 2DD, 2HD");
+        Console.WriteLine("Filesystems: hu-basic (default)");
+        Console.WriteLine();
+        Console.WriteLine("Examples:");
+        Console.WriteLine("  Legacy89DiskKit create mydisk.d88 2D \"My Disk\"");
+        Console.WriteLine("  Legacy89DiskKit format mydisk.d88");
+        Console.WriteLine("  Legacy89DiskKit list mydisk.d88");
+        Console.WriteLine("  Legacy89DiskKit import-text mydisk.d88 readme.txt README.TXT");
     }
 }
