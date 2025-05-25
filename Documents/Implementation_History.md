@@ -4,7 +4,7 @@
 **実装者**: Claude (Anthropic AI Assistant)
 **アーキテクチャ**: Domain Driven Design (DDD) + Dependency Injection
 **言語**: C# (.NET 8.0)
-**状態**: Phase 5完了（MS-DOS FAT12対応、DSK形式対応）
+**状態**: Phase 5.5完了（安全性強化とファイルシステム指定必須化完了）
 
 ---
 
@@ -200,6 +200,112 @@ public FileSystemType DetectFileSystemType(IDiskContainer container)
 ./Legacy89DiskKit.CLI list disk.dsk fat12
 ./Legacy89DiskKit.CLI export-text disk.dsk README.TXT readme.txt
 ```
+
+---
+
+### **Phase 5.5: 安全性強化とファイルシステム指定必須化** (2-3時間実装)
+
+#### **セキュリティ強化の背景**
+- **誤判定リスク**: FAT12 ↔ Hu-BASIC、破損ディスク等での誤検出
+- **データ破損防止**: 間違ったファイルシステムでの書き込みを防止
+- **明示的操作**: ユーザーの意図を明確化
+
+#### **新しいAPI設計**
+```csharp
+public interface IFileSystemFactory
+{
+    // 新規作成：ファイルシステム指定必須
+    IFileSystem CreateFileSystem(IDiskContainer container, FileSystemType fileSystemType);
+    
+    // 読み取り専用：自動判定OK（安全）
+    IFileSystem OpenFileSystemReadOnly(IDiskContainer container);
+    
+    // 読み書き：ファイルシステム指定必須（安全）
+    IFileSystem OpenFileSystem(IDiskContainer container, FileSystemType fileSystemType);
+    
+    // 推測：参考情報のみ（書き込み禁止）
+    FileSystemType GuessFileSystemType(IDiskContainer container);
+}
+```
+
+#### **ReadOnlyFileSystemWrapper実装**
+```csharp
+public class ReadOnlyFileSystemWrapper : IFileSystem
+{
+    // 読み取り操作：委譲
+    public IEnumerable<FileEntry> ListFiles() => _innerFileSystem.ListFiles();
+    public byte[] ReadFile(string fileName, bool allowPartialRead = false) => 
+        _innerFileSystem.ReadFile(fileName, allowPartialRead);
+    
+    // 書き込み操作：すべて禁止
+    public void WriteFile(...) => throw new InvalidOperationException(
+        "Write operations not allowed on read-only filesystem. Use OpenFileSystem() with explicit filesystem type.");
+}
+```
+
+#### **構造検証機能**
+```csharp
+private bool ValidateFileSystemStructure(IDiskContainer container, FileSystemType fileSystemType)
+{
+    return fileSystemType switch
+    {
+        FileSystemType.Fat12 => ValidateFat12Structure(bootSector),   // 0x55AA署名チェック
+        FileSystemType.HuBasic => ValidateHuBasicStructure(bootSector), // 32バイト構造チェック
+        _ => false
+    };
+}
+```
+
+#### **未フォーマット検出**
+```csharp
+private bool IsBlankSector(byte[] sector) => sector.All(b => b == 0x00);
+
+// 使用例
+if (IsBlankSector(bootSector)) {
+    throw new FileSystemException("Disk is not formatted. Use 'format' command first.");
+}
+```
+
+#### **CLI安全性強化**
+
+**安全な操作（自動判定OK）:**
+```bash
+# 読み取り専用 - 安全
+./CLI list disk.d88                    # ReadOnlyWrapper使用
+./CLI info disk.d88                    # 情報表示のみ
+./CLI recover-text disk.d88 src dst    # 復旧（読み取りのみ）
+```
+
+**危険な操作（必須指定）:**
+```bash
+# 書き込み - 明示的指定必須
+./CLI export-text disk.d88 src dst --filesystem fat12       # 必須
+./CLI import-text disk.d88 src dst --filesystem hu-basic    # 必須
+./CLI format disk.d88 --filesystem fat12                    # 必須
+
+# 指定なしはエラー
+./CLI export-text disk.d88 src dst
+# → "Error: --filesystem parameter is required for write operations"
+```
+
+#### **詳細エラーメッセージ**
+```bash
+Error: --filesystem parameter is required for write operations
+Supported filesystems: hu-basic, fat12
+
+To detect filesystem type (read-only):
+  ./Legacy89DiskKit info disk.d88
+
+Example with explicit filesystem:
+  ./Legacy89DiskKit export-text disk.d88 README.TXT readme.txt --filesystem fat12
+```
+
+#### **安全性の向上効果**
+1. **誤判定による破損防止**: 構造検証で不正アクセス阻止
+2. **明確な操作意図**: ユーザーが明示的にファイルシステム指定
+3. **教育効果**: ファイルシステムの違いを意識
+4. **デバッグ容易**: 問題時の原因特定が簡単
+5. **後方互換性**: 読み取り操作は従来通り簡単
 
 ---
 
