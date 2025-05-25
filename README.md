@@ -9,9 +9,9 @@
 ## ✨ 特徴
 
 ### 🎯 対応フォーマット
-- **D88形式**: 完全対応（2D/2DD/2HD）
-- **Hu-BASICファイルシステム**: Sharp X1専用ファイルシステム
-- **将来拡張予定**: N88-BASIC、MSX-DOS、CP/M等
+- **ディスクイメージ**: D88形式（Sharp X1等）、DSK形式（MSX/CPC等）
+- **ファイルシステム**: Hu-BASIC（Sharp X1）、MS-DOS FAT12（PC互換機）
+- **将来拡張予定**: N88-BASIC、CP/M、FAT16等
 
 ### 🏗️ モダンアーキテクチャ
 - **DDD（ドメイン駆動設計）**: 拡張性・保守性を重視した設計
@@ -51,8 +51,12 @@ dotnet run --project Legacy89DiskKit.CLI -- create mydisk.d88 2D "MY DISK"
 # ディスクをフォーマット
 dotnet run --project Legacy89DiskKit.CLI -- format mydisk.d88
 
-# ファイル一覧表示
+# ファイル一覧表示（自動検出）
 dotnet run --project Legacy89DiskKit.CLI -- list mydisk.d88
+
+# FAT12ディスクの読み取り
+dotnet run --project Legacy89DiskKit.CLI -- list disk.dsk
+dotnet run --project Legacy89DiskKit.CLI -- export-text disk.dsk README.TXT readme.txt
 
 # テキストファイルをインポート
 dotnet run --project Legacy89DiskKit.CLI -- import-text mydisk.d88 readme.txt README.TXT
@@ -118,11 +122,20 @@ newFileSystem.Format();
 
 ## 💾 対応ディスクタイプ
 
+### Hu-BASIC (D88)
 | タイプ | 容量 | トラック数 | 面数 | セクタ/トラック | セクタサイズ |
 |-------|------|-----------|------|---------------|-------------|
 | **2D** | 320KB | 40 | 2 | 16 | 256B |
 | **2DD** | 640KB | 80 | 2 | 16 | 256B |
 | **2HD** | 1.2MB | 77 | 2 | 26 | 256B |
+
+### MS-DOS FAT12 (DSK)
+| タイプ | 容量 | トラック数 | 面数 | セクタ/トラック | セクタサイズ |
+|-------|------|-----------|------|---------------|-------------|
+| **5.25" DD** | 360KB | 40 | 2 | 9 | 512B |
+| **3.5" DD** | 720KB | 80 | 2 | 9 | 512B |
+| **5.25" HD** | 1.2MB | 80 | 2 | 15 | 512B |
+| **3.5" HD** | 1.44MB | 80 | 2 | 18 | 512B |
 
 ## 🛠️ アーキテクチャ
 
@@ -181,23 +194,23 @@ var unicodeText = converter.ToUnicode(x1Bytes);  // X1→Unicode変換
 
 ## 🚧 今後の拡張予定
 
-### Phase 5: 追加ファイルシステム対応 🆕
-- **MS-DOS FAT12/16**: 最も実装可能性の高いファイルシステム
+### Phase 6: 追加ファイルシステム対応 🆕
+- **MS-DOS FAT16**: FAT12の上位互換、大容量対応
 - **CP/M**: 8ビット時代の標準、資料豊富
 - **PC-8801 N88-BASIC**: PC-8801ユーザー需要高い
 - **MSX-DOS**: MSXコミュニティ需要あり
 
-### Phase 6: ディスクフォーマット拡張
-- **DSK形式**: MSX-DOS標準フォーマット対応
-- **IMD形式**: ImageDisk形式対応
-- **ディスクイメージ変換**: D88 ↔ DSK ↔ IMD等
+### Phase 7: ディスクフォーマット拡張
+- **IMD形式**: ImageDisk形式対応  
+- **IMG形式**: PC標準イメージ対応
+- **ディスクイメージ変換**: D88 ↔ DSK ↔ IMD ↔ IMG
 
-### Phase 7: 高度な機能
+### Phase 8: 高度な機能
 - **仮想ディスクマウント**: OSレベルでのマウント機能
 - **バッチ処理**: 複数ディスクの一括処理
 - **REST API**: Webサービス化
 
-### Phase 8: GUI・Web版
+### Phase 9: GUI・Web版
 - **デスクトップGUI**: WPF/Avalonia版
 - **Webアプリケーション**: Blazor版ディスクブラウザ
 - **クロスプラットフォーム**: MAUI対応
@@ -213,6 +226,7 @@ var unicodeText = converter.ToUnicode(x1Bytes);  // X1→Unicode変換
 
 - [**D88フォーマット仕様**](Documents/D88_Format.md): D88形式の詳細仕様
 - [**Hu-BASICファイルシステム**](Documents/Hu-BASIC_Format.md): Hu-BASICの構造解説
+- [**FAT12ファイルシステム**](Documents/FAT12_Format.md): MS-DOS FAT12の詳細仕様
 - [**実装履歴**](Documents/Implementation_History.md): 開発プロセスの詳細
 - [**実装要件**](Documents/Implement.md): プロジェクトの要件定義
 
