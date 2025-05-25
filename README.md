@@ -15,6 +15,8 @@
 
 ### 🏗️ モダンアーキテクチャ
 - **DDD（ドメイン駆動設計）**: 拡張性・保守性を重視した設計
+- **Dependency Injection**: Microsoft.Extensions.DependencyInjection採用
+- **Factory Pattern**: ディスクコンテナ・ファイルシステムの抽象化
 - **インターフェース駆動**: 異なるディスクフォーマットの統一的な操作
 - **レイヤー分離**: ドメイン・インフラ・アプリケーション層の明確な分離
 
@@ -79,12 +81,21 @@ dotnet run --project Legacy89DiskKit.CLI -- import-text mydisk.d88 readme.txt RE
 ### ライブラリAPI
 
 ```csharp
-using Legacy89DiskKit.DiskImage.Infrastructure.Container;
-using Legacy89DiskKit.FileSystem.Infrastructure.FileSystem;
+using Microsoft.Extensions.DependencyInjection;
+using Legacy89DiskKit.DependencyInjection;
+
+// DI設定
+var services = new ServiceCollection();
+services.AddLegacy89DiskKit();
+var serviceProvider = services.BuildServiceProvider();
+
+// ファクトリー取得
+var diskFactory = serviceProvider.GetRequiredService<IDiskContainerFactory>();
+var fsFactory = serviceProvider.GetRequiredService<IFileSystemFactory>();
 
 // ディスクイメージを開く
-using var container = new D88DiskContainer("disk.d88");
-var fileSystem = new HuBasicFileSystem(container);
+using var container = diskFactory.OpenDiskImage("disk.d88", readOnly: true);
+var fileSystem = fsFactory.OpenFileSystem(container); // 自動検出
 
 // ファイル一覧取得
 var files = fileSystem.ListFiles();
@@ -100,8 +111,8 @@ var data = fileSystem.ReadFile("README.TXT");
 var partialData = fileSystem.ReadFile("damaged.txt", allowPartialRead: true);
 
 // 新規ディスクイメージ作成
-using var newContainer = D88DiskContainer.CreateNew("new.d88", DiskType.TwoD, "NEW DISK");
-var newFileSystem = new HuBasicFileSystem(newContainer);
+using var newContainer = diskFactory.CreateNewDiskImage("new.d88", DiskType.TwoD, "NEW DISK");
+var newFileSystem = fsFactory.CreateFileSystem(newContainer, FileSystemType.HuBasic);
 newFileSystem.Format();
 ```
 
@@ -119,21 +130,30 @@ newFileSystem.Format();
 
 ```
 Legacy89DiskKit/
+├── DependencyInjection/           # DI設定
+│   └── ServiceCollectionExtensions.cs
 ├── DiskImage/                     # ディスクイメージドメイン
 │   ├── Domain/
-│   │   ├── Interface/Container/   # IDiskContainer
+│   │   ├── Interface/
+│   │   │   ├── Container/        # IDiskContainer
+│   │   │   └── Factory/          # IDiskContainerFactory
 │   │   └── Exception/            # DiskImageException
-│   ├── Infrastructure/Container/  # D88DiskContainer
+│   ├── Infrastructure/
+│   │   ├── Container/            # D88DiskContainer
+│   │   └── Factory/              # DiskContainerFactory
 │   └── Application/              # DiskImageService
 │
 └── FileSystem/                   # ファイルシステムドメイン
     ├── Domain/
-    │   ├── Interface/FileSystem/ # IFileSystem
-    │   └── Exception/           # FileSystemException
+    │   ├── Interface/
+    │   │   ├── FileSystem/       # IFileSystem
+    │   │   └── Factory/          # IFileSystemFactory
+    │   └── Exception/            # FileSystemException
     ├── Infrastructure/
-    │   ├── FileSystem/          # HuBasicFileSystem
-    │   └── Utility/             # X1文字コード変換等
-    └── Application/             # FileSystemService
+    │   ├── FileSystem/           # HuBasicFileSystem
+    │   ├── Factory/              # FileSystemFactory
+    │   └── Utility/              # X1文字コード変換等
+    └── Application/              # FileSystemService
 ```
 
 ### 設計原則
@@ -142,6 +162,8 @@ Legacy89DiskKit/
 - **Open/Closed**: 拡張に開いて修正に閉じている
 - **Dependency Inversion**: 具象ではなく抽象に依存
 - **Interface Segregation**: 必要最小限のインターフェース
+- **Factory Method**: オブジェクト生成の抽象化
+- **Service Locator**: DIコンテナによる依存性解決
 
 ## 🔄 文字コード対応
 
@@ -159,20 +181,26 @@ var unicodeText = converter.ToUnicode(x1Bytes);  // X1→Unicode変換
 
 ## 🚧 今後の拡張予定
 
-### Phase 4: 追加ディスクフォーマット対応
-- **PC-8801 N88-BASIC**: `.D88`形式内のN88-BASICファイルシステム
-- **MSX-DOS**: `.DSK`形式とMSX-DOSファイルシステム
-- **CP/M**: 8インチディスクフォーマット
+### Phase 5: 追加ファイルシステム対応 🆕
+- **MS-DOS FAT12/16**: 最も実装可能性の高いファイルシステム
+- **CP/M**: 8ビット時代の標準、資料豊富
+- **PC-8801 N88-BASIC**: PC-8801ユーザー需要高い
+- **MSX-DOS**: MSXコミュニティ需要あり
 
-### Phase 5: 高度な機能
+### Phase 6: ディスクフォーマット拡張
+- **DSK形式**: MSX-DOS標準フォーマット対応
+- **IMD形式**: ImageDisk形式対応
 - **ディスクイメージ変換**: D88 ↔ DSK ↔ IMD等
+
+### Phase 7: 高度な機能
 - **仮想ディスクマウント**: OSレベルでのマウント機能
 - **バッチ処理**: 複数ディスクの一括処理
+- **REST API**: Webサービス化
 
-### Phase 6: GUI・Web版
+### Phase 8: GUI・Web版
 - **デスクトップGUI**: WPF/Avalonia版
 - **Webアプリケーション**: Blazor版ディスクブラウザ
-- **REST API**: Webサービス化
+- **クロスプラットフォーム**: MAUI対応
 
 ## 🎯 対象ユーザー
 

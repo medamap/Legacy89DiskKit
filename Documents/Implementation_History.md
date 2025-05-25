@@ -2,15 +2,30 @@
 
 **実装期間**: 2025年1月
 **実装者**: Claude (Anthropic AI Assistant)
-**アーキテクチャ**: Domain Driven Design (DDD)
+**アーキテクチャ**: Domain Driven Design (DDD) + Dependency Injection
 **言語**: C# (.NET 8.0)
-**状態**: Phase 3まで完了（全機能実装済み）
+**状態**: Phase 4完了（DI対応、複数ファイルシステム対応基盤完成）
 
 ---
 
 ## 概要
 
 Sharp X1 Hu-BASICディスクイメージ（D88形式）を操作するためのC#ライブラリとCLIツールの実装プロジェクト。DDDアーキテクチャに基づき、3段階のフェイズに分けてエラーハンドリングを強化し、デモレベルからプロフェッショナルレベルまで品質向上を実現。
+
+---
+
+## 📋 実装完了機能
+
+### ✅ **Core Features (Phase 0-3)**
+- **D88ディスクイメージ**: 完全対応（2D/2DD/2HD）
+- **Hu-BASICファイルシステム**: 完全実装
+- **エラーハンドリング**: 破損復旧、メモリ安全、詳細診断
+- **CLI Tool**: 全コマンド実装済み
+
+### ✅ **Architecture (Phase 4)**
+- **Dependency Injection**: Microsoft.Extensions.DependencyInjection
+- **Factory Pattern**: ディスクコンテナ・ファイルシステム工場
+- **Extension Framework**: 新ファイルシステム追加基盤
 
 ---
 
@@ -48,6 +63,63 @@ Legacy89DiskKit/
 - **型名競合**: `FileMode` vs `System.IO.FileMode` → `HuBasicFileMode`に改名
 - **Using不足**: 各ドメイン間の参照を適切に設定
 - **Null許容性**: C# 8.0のnull許容参照型に対応
+
+---
+
+### **Phase 4: Dependency Injection対応** (2-3時間実装)
+
+#### **アーキテクチャ強化**
+```
+Legacy89DiskKit/
+├── DependencyInjection/              # DI設定
+│   └── ServiceCollectionExtensions.cs
+├── DiskImage/Domain/Interface/Factory/
+│   └── IDiskContainerFactory.cs      # ディスクコンテナ工場
+├── DiskImage/Infrastructure/Factory/
+│   └── DiskContainerFactory.cs       # D88対応実装
+├── FileSystem/Domain/Interface/Factory/
+│   └── IFileSystemFactory.cs         # ファイルシステム工場
+└── FileSystem/Infrastructure/Factory/
+    └── FileSystemFactory.cs          # Hu-BASIC + 拡張枠組み
+```
+
+#### **Factory Pattern実装**
+1. **IDiskContainerFactory**: ディスクイメージ形式の抽象化
+   - 拡張子ベースの自動判定（`.d88` → D88Container）
+   - 新規作成 vs 既存読み込みの統一インターフェース
+
+2. **IFileSystemFactory**: ファイルシステムの抽象化
+   - 自動検出機能（ブートセクタ解析）
+   - 将来対応: FAT12, CP/M, N88-BASIC, MSX-DOS
+
+#### **DI統合**
+```csharp
+// サービス登録
+services.AddLegacy89DiskKit();
+
+// CLI使用例
+var container = diskContainerFactory.CreateNewDiskImage("disk.d88", DiskType.TwoD, "MY DISK");
+var fileSystem = fileSystemFactory.OpenFileSystem(container);
+```
+
+#### **CLIの近代化**
+- **HostBuilder Pattern**: Microsoft.Extensions.Hosting使用
+- **サービスローケーター**: 依存性注入によるファクトリー取得
+- **拡張可能性**: 設定ファイルでのファイルシステム切り替え準備
+
+#### **将来対応基盤**
+```csharp
+// 新ファイルシステム追加例（将来）
+public enum FileSystemType
+{
+    HuBasic,    // ✅ 実装済み
+    Fat12,      // 🚧 準備完了
+    Fat16,      // 🚧 準備完了  
+    Cpm,        // 🚧 準備完了
+    N88Basic,   // 🚧 準備完了
+    MsxDos      // 🚧 準備完了
+}
+```
 
 ---
 
