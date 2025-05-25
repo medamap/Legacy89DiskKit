@@ -13,7 +13,8 @@ public interface IFileSystem
     FileEntry? GetFile(string fileName);
     
     byte[] ReadFile(string fileName);
-    void WriteFile(string fileName, byte[] data, HuBasicFileAttributes attributes);
+    byte[] ReadFile(string fileName, bool allowPartialRead);
+    void WriteFile(string fileName, byte[] data, bool isText = false, ushort loadAddress = 0, ushort execAddress = 0);
     void DeleteFile(string fileName);
     
     BootSector GetBootSector();
