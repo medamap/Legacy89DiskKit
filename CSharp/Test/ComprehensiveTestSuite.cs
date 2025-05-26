@@ -51,7 +51,7 @@ public class ComprehensiveTestSuite
         _results.Clear();
 
         // テストマトリックス定義
-        var fileSystemTypes = new[] { FileSystemType.HuBasic, FileSystemType.Fat12 };
+        var fileSystemTypes = new[] { FileSystemType.HuBasic, FileSystemType.Fat12, FileSystemType.N88Basic };
         var diskTypes = new[] { DiskType.TwoD, DiskType.TwoDD, DiskType.TwoHD };
         var containerExtensions = new[] { ".d88", ".dsk" };
         var machineTypes = new[] { MachineType.X1, MachineType.Pc8801, MachineType.Msx1 };
@@ -118,6 +118,26 @@ public class ComprehensiveTestSuite
 
     private void RunSingleTest(FileSystemType fileSystemType, DiskType diskType, string containerExt, string operation, MachineType? machineType)
     {
+        // N88-BASICはTwoHDをサポートしていない
+        if (fileSystemType == FileSystemType.N88Basic && diskType == DiskType.TwoHD)
+        {
+            var skipTestName = $"{fileSystemType}_{diskType}_{containerExt.Replace(".", "")}_{operation}" + 
+                              (machineType.HasValue ? $"_{machineType}" : "");
+            Console.WriteLine($"⏩ Skipping {skipTestName} (N88-BASIC doesn't support TwoHD)");
+            
+            _results.Add(new TestResult
+            {
+                FileSystemType = fileSystemType,
+                DiskType = diskType,
+                ContainerType = containerExt,
+                Operation = operation,
+                MachineType = machineType,
+                Status = TestStatus.Skipped,
+                Message = "N88-BASIC doesn't support TwoHD disk type"
+            });
+            return;
+        }
+        
         var testName = $"{fileSystemType}_{diskType}_{containerExt.Replace(".", "")}_{operation}" + 
                        (machineType.HasValue ? $"_{machineType}" : "");
         
