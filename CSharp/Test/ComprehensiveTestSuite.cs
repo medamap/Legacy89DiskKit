@@ -51,7 +51,7 @@ public class ComprehensiveTestSuite
         _results.Clear();
 
         // テストマトリックス定義
-        var fileSystemTypes = new[] { FileSystemType.HuBasic, FileSystemType.Fat12, FileSystemType.N88Basic };
+        var fileSystemTypes = new[] { FileSystemType.HuBasic, FileSystemType.Fat12, FileSystemType.N88Basic, FileSystemType.MsxDos };
         var diskTypes = new[] { DiskType.TwoD, DiskType.TwoDD, DiskType.TwoHD };
         var containerExtensions = new[] { ".d88", ".dsk" };
         var machineTypes = new[] { MachineType.X1, MachineType.Pc8801, MachineType.Msx1 };
@@ -134,6 +134,26 @@ public class ComprehensiveTestSuite
                 MachineType = machineType,
                 Status = TestStatus.Skipped,
                 Message = "N88-BASIC doesn't support TwoHD disk type"
+            });
+            return;
+        }
+        
+        // MSX-DOSは720KB (TwoDD)が標準、他のディスクタイプもテスト対象に含める
+        if (fileSystemType == FileSystemType.MsxDos && (diskType == DiskType.TwoD || diskType == DiskType.TwoHD))
+        {
+            var skipTestName = $"{fileSystemType}_{diskType}_{containerExt.Replace(".", "")}_{operation}" + 
+                              (machineType.HasValue ? $"_{machineType}" : "");
+            Console.WriteLine($"⏩ Skipping {skipTestName} (MSX-DOS primarily supports TwoDD/720KB)");
+            
+            _results.Add(new TestResult
+            {
+                FileSystemType = fileSystemType,
+                DiskType = diskType,
+                ContainerType = containerExt,
+                Operation = operation,
+                MachineType = machineType,
+                Status = TestStatus.Skipped,
+                Message = "MSX-DOS primarily supports TwoDD (720KB) disk type"
             });
             return;
         }
