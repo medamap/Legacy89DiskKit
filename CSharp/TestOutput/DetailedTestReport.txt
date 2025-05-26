@@ -1,0 +1,896 @@
+COMPREHENSIVE TEST SUITE - DETAILED REPORT
+==========================================
+Generated: 2025-05-26 09:11:09
+
+SUCCESS TESTS (19):
+--------------------------------------------------
+  Fat12_TwoD_d88_CreateDiskImage
+    Status: Success
+    Message: Created 348848 bytes
+
+  Fat12_TwoD_d88_DiskInfo
+    Status: Success
+    Message: Type: TwoD, ReadOnly: True
+
+  Fat12_TwoDD_d88_CreateDiskImage
+    Status: Success
+    Message: Created 697008 bytes
+
+  Fat12_TwoDD_d88_DiskInfo
+    Status: Success
+    Message: Type: TwoDD, ReadOnly: True
+
+  Fat12_TwoHD_d88_CreateDiskImage
+    Status: Success
+    Message: Created 1089776 bytes
+
+  Fat12_TwoHD_d88_DiskInfo
+    Status: Success
+    Message: Type: TwoHD, ReadOnly: True
+
+  HuBasic_TwoD_d88_CreateDiskImage
+    Status: Success
+    Message: Created 348848 bytes
+
+  HuBasic_TwoD_d88_DiskInfo
+    Status: Success
+    Message: Type: TwoD, ReadOnly: True
+
+  HuBasic_TwoD_d88_FormatDisk
+    Status: Success
+    Message: Disk formatted successfully
+
+  HuBasic_TwoD_d88_ListFiles
+    Status: Success
+    Message: Listed 0 files
+
+  HuBasic_TwoDD_d88_CreateDiskImage
+    Status: Success
+    Message: Created 697008 bytes
+
+  HuBasic_TwoDD_d88_DiskInfo
+    Status: Success
+    Message: Type: TwoDD, ReadOnly: True
+
+  HuBasic_TwoDD_d88_FormatDisk
+    Status: Success
+    Message: Disk formatted successfully
+
+  HuBasic_TwoDD_d88_ListFiles
+    Status: Success
+    Message: Listed 0 files
+
+  HuBasic_TwoHD_d88_CreateDiskImage
+    Status: Success
+    Message: Created 1089776 bytes
+
+  HuBasic_TwoHD_d88_DiskInfo
+    Status: Success
+    Message: Type: TwoHD, ReadOnly: True
+
+  HuBasic_TwoHD_d88_ExportBinaryFile
+    Status: Success
+    Message: Exported 35 bytes
+
+  HuBasic_TwoHD_d88_FormatDisk
+    Status: Success
+    Message: Disk formatted successfully
+
+  HuBasic_TwoHD_d88_ListFiles
+    Status: Success
+    Message: Listed 0 files
+
+FAILED TESTS (131):
+--------------------------------------------------
+  Fat12_TwoD_d88_DeleteFile
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoD_d88_ExportBinaryFile
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoD_d88_ExportTextFile_Msx1
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoD_d88_ExportTextFile_Pc8801
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoD_d88_ExportTextFile_X1
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoD_d88_FormatDisk
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoD_d88_ImportBinaryFile
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoD_d88_ImportTextFile_Msx1
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoD_d88_ImportTextFile_Pc8801
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoD_d88_ImportTextFile_X1
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoD_d88_ListFiles
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoD_dsk_DeleteFile
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoD_dsk_DiskInfo
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoD_dsk_ExportBinaryFile
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoD_dsk_ExportTextFile_Msx1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoD_dsk_ExportTextFile_Pc8801
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoD_dsk_ExportTextFile_X1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoD_dsk_FormatDisk
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoD_dsk_ImportBinaryFile
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoD_dsk_ImportTextFile_Msx1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoD_dsk_ImportTextFile_Pc8801
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoD_dsk_ImportTextFile_X1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoD_dsk_ListFiles
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoDD_d88_DeleteFile
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoDD_d88_ExportBinaryFile
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoDD_d88_ExportTextFile_Msx1
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoDD_d88_ExportTextFile_Pc8801
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoDD_d88_ExportTextFile_X1
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoDD_d88_FormatDisk
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoDD_d88_ImportBinaryFile
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoDD_d88_ImportTextFile_Msx1
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoDD_d88_ImportTextFile_Pc8801
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoDD_d88_ImportTextFile_X1
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoDD_d88_ListFiles
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoDD_dsk_DeleteFile
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoDD_dsk_DiskInfo
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoDD_dsk_ExportBinaryFile
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoDD_dsk_ExportTextFile_Msx1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoDD_dsk_ExportTextFile_Pc8801
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoDD_dsk_ExportTextFile_X1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoDD_dsk_FormatDisk
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoDD_dsk_ImportBinaryFile
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoDD_dsk_ImportTextFile_Msx1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoDD_dsk_ImportTextFile_Pc8801
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoDD_dsk_ImportTextFile_X1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoDD_dsk_ListFiles
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoHD_d88_DeleteFile
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoHD_d88_ExportBinaryFile
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoHD_d88_ExportTextFile_Msx1
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoHD_d88_ExportTextFile_Pc8801
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoHD_d88_ExportTextFile_X1
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoHD_d88_FormatDisk
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoHD_d88_ImportBinaryFile
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoHD_d88_ImportTextFile_Msx1
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoHD_d88_ImportTextFile_Pc8801
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoHD_d88_ImportTextFile_X1
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoHD_d88_ListFiles
+    Status: Failed
+    Message: FAT12 filesystem formatting not yet implemented
+    Exception: NotImplementedException
+    Details: FAT12 filesystem formatting not yet implemented
+
+  Fat12_TwoHD_dsk_DeleteFile
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoHD_dsk_DiskInfo
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoHD_dsk_ExportBinaryFile
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoHD_dsk_ExportTextFile_Msx1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoHD_dsk_ExportTextFile_Pc8801
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoHD_dsk_ExportTextFile_X1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoHD_dsk_FormatDisk
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoHD_dsk_ImportBinaryFile
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoHD_dsk_ImportTextFile_Msx1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoHD_dsk_ImportTextFile_Pc8801
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoHD_dsk_ImportTextFile_X1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  Fat12_TwoHD_dsk_ListFiles
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoD_d88_DeleteFile
+    Status: Failed
+    Message: File already exists: TEST.COM
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.COM
+
+  HuBasic_TwoD_d88_ExportBinaryFile
+    Status: Failed
+    Message: File already exists: TEST.COM
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.COM
+
+  HuBasic_TwoD_d88_ExportTextFile_Msx1
+    Status: Failed
+    Message: File already exists: TEST.TXT
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.TXT
+
+  HuBasic_TwoD_d88_ExportTextFile_Pc8801
+    Status: Failed
+    Message: File already exists: TEST.TXT
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.TXT
+
+  HuBasic_TwoD_d88_ExportTextFile_X1
+    Status: Failed
+    Message: File already exists: TEST.TXT
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.TXT
+
+  HuBasic_TwoD_d88_ImportBinaryFile
+    Status: Failed
+    Message: File already exists: TEST.COM
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.COM
+
+  HuBasic_TwoD_d88_ImportTextFile_Msx1
+    Status: Failed
+    Message: File already exists: TEST.TXT
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.TXT
+
+  HuBasic_TwoD_d88_ImportTextFile_Pc8801
+    Status: Failed
+    Message: File already exists: TEST.TXT
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.TXT
+
+  HuBasic_TwoD_d88_ImportTextFile_X1
+    Status: Failed
+    Message: File already exists: TEST.TXT
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.TXT
+
+  HuBasic_TwoD_dsk_DeleteFile
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoD_dsk_DiskInfo
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoD_dsk_ExportBinaryFile
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoD_dsk_ExportTextFile_Msx1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoD_dsk_ExportTextFile_Pc8801
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoD_dsk_ExportTextFile_X1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoD_dsk_FormatDisk
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoD_dsk_ImportBinaryFile
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoD_dsk_ImportTextFile_Msx1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoD_dsk_ImportTextFile_Pc8801
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoD_dsk_ImportTextFile_X1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoD_dsk_ListFiles
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoDD_d88_DeleteFile
+    Status: Failed
+    Message: File already exists: TEST.COM
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.COM
+
+  HuBasic_TwoDD_d88_ExportBinaryFile
+    Status: Failed
+    Message: File already exists: TEST.COM
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.COM
+
+  HuBasic_TwoDD_d88_ExportTextFile_Msx1
+    Status: Failed
+    Message: File already exists: TEST.TXT
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.TXT
+
+  HuBasic_TwoDD_d88_ExportTextFile_Pc8801
+    Status: Failed
+    Message: File already exists: TEST.TXT
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.TXT
+
+  HuBasic_TwoDD_d88_ExportTextFile_X1
+    Status: Failed
+    Message: File already exists: TEST.TXT
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.TXT
+
+  HuBasic_TwoDD_d88_ImportBinaryFile
+    Status: Failed
+    Message: File already exists: TEST.COM
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.COM
+
+  HuBasic_TwoDD_d88_ImportTextFile_Msx1
+    Status: Failed
+    Message: File already exists: TEST.TXT
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.TXT
+
+  HuBasic_TwoDD_d88_ImportTextFile_Pc8801
+    Status: Failed
+    Message: File already exists: TEST.TXT
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.TXT
+
+  HuBasic_TwoDD_d88_ImportTextFile_X1
+    Status: Failed
+    Message: File already exists: TEST.TXT
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.TXT
+
+  HuBasic_TwoDD_dsk_DeleteFile
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoDD_dsk_DiskInfo
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoDD_dsk_ExportBinaryFile
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoDD_dsk_ExportTextFile_Msx1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoDD_dsk_ExportTextFile_Pc8801
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoDD_dsk_ExportTextFile_X1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoDD_dsk_FormatDisk
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoDD_dsk_ImportBinaryFile
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoDD_dsk_ImportTextFile_Msx1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoDD_dsk_ImportTextFile_Pc8801
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoDD_dsk_ImportTextFile_X1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoDD_dsk_ListFiles
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoHD_d88_DeleteFile
+    Status: Failed
+    Message: DeleteFile not yet implemented
+    Exception: NotImplementedException
+    Details: DeleteFile not yet implemented
+
+  HuBasic_TwoHD_d88_ExportTextFile_Msx1
+    Status: Failed
+    Message: File already exists: TEST.TXT
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.TXT
+
+  HuBasic_TwoHD_d88_ExportTextFile_Pc8801
+    Status: Failed
+    Message: File already exists: TEST.TXT
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.TXT
+
+  HuBasic_TwoHD_d88_ExportTextFile_X1
+    Status: Failed
+    Message: File already exists: TEST.TXT
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.TXT
+
+  HuBasic_TwoHD_d88_ImportBinaryFile
+    Status: Failed
+    Message: File already exists: TEST.COM
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.COM
+
+  HuBasic_TwoHD_d88_ImportTextFile_Msx1
+    Status: Failed
+    Message: File already exists: TEST.TXT
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.TXT
+
+  HuBasic_TwoHD_d88_ImportTextFile_Pc8801
+    Status: Failed
+    Message: File already exists: TEST.TXT
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.TXT
+
+  HuBasic_TwoHD_d88_ImportTextFile_X1
+    Status: Failed
+    Message: File already exists: TEST.TXT
+    Exception: FileAlreadyExistsException
+    Details: File already exists: TEST.TXT
+
+  HuBasic_TwoHD_dsk_DeleteFile
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoHD_dsk_DiskInfo
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoHD_dsk_ExportBinaryFile
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoHD_dsk_ExportTextFile_Msx1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoHD_dsk_ExportTextFile_Pc8801
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoHD_dsk_ExportTextFile_X1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoHD_dsk_FormatDisk
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoHD_dsk_ImportBinaryFile
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoHD_dsk_ImportTextFile_Msx1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoHD_dsk_ImportTextFile_Pc8801
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoHD_dsk_ImportTextFile_X1
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+  HuBasic_TwoHD_dsk_ListFiles
+    Status: Failed
+    Message: DSK disk image creation not yet implemented
+    Exception: NotImplementedException
+    Details: DSK disk image creation not yet implemented
+
+SKIPPED TESTS (6):
+--------------------------------------------------
+  Fat12_TwoD_dsk_CreateDiskImage
+    Status: Skipped
+    Message: DSK creation not implemented
+
+  Fat12_TwoDD_dsk_CreateDiskImage
+    Status: Skipped
+    Message: DSK creation not implemented
+
+  Fat12_TwoHD_dsk_CreateDiskImage
+    Status: Skipped
+    Message: DSK creation not implemented
+
+  HuBasic_TwoD_dsk_CreateDiskImage
+    Status: Skipped
+    Message: DSK creation not implemented
+
+  HuBasic_TwoDD_dsk_CreateDiskImage
+    Status: Skipped
+    Message: DSK creation not implemented
+
+  HuBasic_TwoHD_dsk_CreateDiskImage
+    Status: Skipped
+    Message: DSK creation not implemented
+

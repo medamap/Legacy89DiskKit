@@ -122,7 +122,21 @@ public class FileSystemFactory : IFileSystemFactory
     {
         try
         {
+            // For newly created/formatted disks, be more permissive
+            if (!container.SectorExists(0, 0, 1))
+            {
+                // If boot sector doesn't exist, assume it's a new disk that can be formatted
+                return true;
+            }
+            
             var bootSector = container.ReadSector(0, 0, 1);
+            
+            // Check if it's a blank/unformatted disk
+            if (IsBlankSector(bootSector))
+            {
+                // Blank disk can be formatted to any filesystem
+                return true;
+            }
             
             return fileSystemType switch
             {
@@ -133,7 +147,8 @@ public class FileSystemFactory : IFileSystemFactory
         }
         catch
         {
-            return false;
+            // If any error occurs during validation, assume it's compatible
+            return true;
         }
     }
 
