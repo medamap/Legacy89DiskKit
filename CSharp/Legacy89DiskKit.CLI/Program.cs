@@ -150,7 +150,7 @@ class Program
         if (!Enum.TryParse<FileSystemType>(ConvertFileSystemName(fileSystemTypeStr), true, out var fileSystemType))
         {
             Console.WriteLine($"Invalid filesystem type: {fileSystemTypeStr}");
-            Console.WriteLine("Supported types: hu-basic, fat12");
+            Console.WriteLine("Supported types: hu-basic, fat12, n88-basic");
             return;
         }
 
@@ -188,7 +188,7 @@ class Program
                 if (!Enum.TryParse<FileSystemType>(ConvertFileSystemName(fileSystemTypeStr), true, out var type))
                 {
                     Console.WriteLine($"Invalid filesystem type: {fileSystemTypeStr}");
-                    Console.WriteLine("Supported types: hu-basic, fat12");
+                    Console.WriteLine("Supported types: hu-basic, fat12, n88-basic");
                     return;
                 }
                 fileSystem = _fileSystemFactory.OpenFileSystem(container, type);
@@ -240,7 +240,7 @@ class Program
         if (fileSystemTypeStr == null)
         {
             Console.WriteLine("Error: --filesystem parameter is required for write operations");
-            Console.WriteLine("Supported filesystems: hu-basic, fat12");
+            Console.WriteLine("Supported filesystems: hu-basic, fat12, n88-basic");
             Console.WriteLine("Supported machines: x1, x1turbo, pc8801, pc8801mk2, msx1, msx2");
             Console.WriteLine("");
             Console.WriteLine("To detect filesystem type (read-only):");
@@ -255,7 +255,7 @@ class Program
         if (!Enum.TryParse<FileSystemType>(ConvertFileSystemName(fileSystemTypeStr), true, out var fileSystemType))
         {
             Console.WriteLine($"Invalid filesystem type: {fileSystemTypeStr}");
-            Console.WriteLine("Supported types: hu-basic, fat12");
+            Console.WriteLine("Supported types: hu-basic, fat12, n88-basic");
             return;
         }
 
@@ -312,7 +312,7 @@ class Program
         if (fileSystemTypeStr == null)
         {
             Console.WriteLine("Error: --filesystem parameter is required for write operations");
-            Console.WriteLine("Supported filesystems: hu-basic, fat12");
+            Console.WriteLine("Supported filesystems: hu-basic, fat12, n88-basic");
             Console.WriteLine("Supported machines: x1, x1turbo, pc8801, pc8801mk2, msx1, msx2");
             Console.WriteLine("");
             Console.WriteLine("To detect filesystem type (read-only):");
@@ -327,7 +327,7 @@ class Program
         if (!Enum.TryParse<FileSystemType>(ConvertFileSystemName(fileSystemTypeStr), true, out var fileSystemType))
         {
             Console.WriteLine($"Invalid filesystem type: {fileSystemTypeStr}");
-            Console.WriteLine("Supported types: hu-basic, fat12");
+            Console.WriteLine("Supported types: hu-basic, fat12, n88-basic");
             return;
         }
 
@@ -528,7 +528,7 @@ class Program
                 if (!Enum.TryParse<FileSystemType>(parameters[i + 1].Replace("-", ""), true, out fileSystemType))
                 {
                     Console.WriteLine($"Invalid filesystem type: {parameters[i + 1]}");
-                    Console.WriteLine("Supported types: hu-basic, fat12");
+                    Console.WriteLine("Supported types: hu-basic, fat12, n88-basic");
                     return;
                 }
                 break;
@@ -648,6 +648,7 @@ class Program
         {
             "hu-basic" => MachineType.X1,
             "fat12" => MachineType.Pc8801,
+            "n88-basic" or "n88basic" => MachineType.Pc8801,
             _ => MachineType.X1
         };
     }
@@ -777,7 +778,7 @@ class Program
         Console.WriteLine("  help                                        Show this help");
         Console.WriteLine();
         Console.WriteLine("Disk Types: 2D, 2DD, 2HD");
-        Console.WriteLine("Filesystems: hu-basic (default), fat12");
+        Console.WriteLine("Filesystems: hu-basic (default), fat12, n88-basic");
         Console.WriteLine("Machine Types: x1, x1turbo, pc8801, pc8801mk2, msx1, msx2, mz80k, mz700, mz1500, mz2500, fm7, fm77, fm77av, pc8001, pc8001mk2, pc6001, pc6601, fc");
         Console.WriteLine();
         Console.WriteLine("Examples:");

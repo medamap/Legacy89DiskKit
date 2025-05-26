@@ -1,5 +1,6 @@
 using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
 using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Interface.Factory;
 using Legacy89DiskKit.FileSystem.Infrastructure.FileSystem;
 using Legacy89DiskKit.FileSystem.Infrastructure.Utility;
 
@@ -7,16 +8,64 @@ namespace Legacy89DiskKit.FileSystem.Application;
 
 public class FileSystemService
 {
+    private readonly IFileSystemFactory _fileSystemFactory;
+    
+    public FileSystemService(IFileSystemFactory fileSystemFactory)
+    {
+        _fileSystemFactory = fileSystemFactory ?? throw new ArgumentNullException(nameof(fileSystemFactory));
+    }
+    
+    /// <summary>
+    /// 読み取り専用でファイルシステムを開く（自動検出）
+    /// </summary>
+    public IFileSystem OpenFileSystemReadOnly(IDiskContainer diskContainer)
+    {
+        return _fileSystemFactory.OpenFileSystemReadOnly(diskContainer);
+    }
+    
+    /// <summary>
+    /// 指定したファイルシステムタイプで開く
+    /// </summary>
+    public IFileSystem OpenFileSystem(IDiskContainer diskContainer, FileSystemType fileSystemType)
+    {
+        return _fileSystemFactory.OpenFileSystem(diskContainer, fileSystemType);
+    }
+    
+    /// <summary>
+    /// ファイルシステムタイプを推測
+    /// </summary>
+    public FileSystemType GuessFileSystemType(IDiskContainer diskContainer)
+    {
+        return _fileSystemFactory.GuessFileSystemType(diskContainer);
+    }
+    
+    /// <summary>
+    /// レガシーメソッド（後方互換性のため残存）- 自動検出で開く
+    /// </summary>
+    [Obsolete("Use OpenFileSystemReadOnly or OpenFileSystem with explicit filesystem type")]
     public IFileSystem OpenFileSystem(IDiskContainer diskContainer)
     {
-        return new HuBasicFileSystem(diskContainer);
+        return _fileSystemFactory.OpenFileSystemReadOnly(diskContainer);
     }
 
-    public void FormatDisk(IDiskContainer diskContainer)
+    /// <summary>
+    /// 指定したファイルシステムでディスクをフォーマット
+    /// </summary>
+    public void FormatDisk(IDiskContainer diskContainer, FileSystemType fileSystemType)
     {
-        var fileSystem = OpenFileSystem(diskContainer);
+        var fileSystem = _fileSystemFactory.CreateFileSystem(diskContainer, fileSystemType);
         fileSystem.Format();
         diskContainer.Save();
+    }
+    
+    /// <summary>
+    /// レガシーメソッド（後方互換性のため残存）
+    /// </summary>
+    [Obsolete("Use FormatDisk with explicit filesystem type")]
+    public void FormatDisk(IDiskContainer diskContainer)
+    {
+        // デフォルトでHu-BASICでフォーマット（後方互換性）
+        FormatDisk(diskContainer, FileSystemType.HuBasic);
     }
 
     public void ImportTextFile(IFileSystem fileSystem, string hostFilePath, string diskFileName)
