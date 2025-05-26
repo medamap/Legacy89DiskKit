@@ -92,6 +92,18 @@ public class FileSystemFactory : IFileSystemFactory
                     {
                         return FileSystemType.HuBasic;
                     }
+                    
+                    // Additional check: Hu-BASIC usually has bootable flag at offset 0
+                    var bootFlag = bootSector[0];
+                    if (bootFlag == 0x01 || bootFlag == 0x00)
+                    {
+                        // Check if it looks like Hu-BASIC structure
+                        var diskName = Encoding.ASCII.GetString(bootSector, 1, 13).TrimEnd('\0', ' ');
+                        if (!string.IsNullOrWhiteSpace(diskName) || bootFlag == 0x01)
+                        {
+                            return FileSystemType.HuBasic;
+                        }
+                    }
                 }
             }
             
