@@ -4,13 +4,15 @@ using Legacy89DiskKit.DiskImage.Domain.Exception;
 
 namespace Legacy89DiskKit.DiskImage.Infrastructure.Container;
 
-public class D88DiskContainer : IDiskContainer
+public class D88DiskContainer : IDiskContainer, IDisposable
 {
     private string _filePath;
     private bool _isReadOnly;
     private byte[] _imageData = Array.Empty<byte>();
     private D88Header _header = new D88Header();
     private readonly Dictionary<(int, int, int), D88Sector> _sectors;
+    private bool _hasChanges = false;
+    private bool _disposed = false;
 
     public string FilePath => _filePath;
     public bool IsReadOnly => _isReadOnly;
@@ -38,6 +40,7 @@ public class D88DiskContainer : IDiskContainer
         container._filePath = filePath;
         container._isReadOnly = false;
         container.CreateEmptyImage(diskType, diskName);
+        container.SaveToFile();
         return container;
     }
 
@@ -331,6 +334,9 @@ public class D88DiskContainer : IDiskContainer
             
         d88Sector.Data = data;
         d88Sector.ActualSize = (ushort)data.Length;
+        
+        _hasChanges = true;
+        BuildImageData();
     }
 
     public bool SectorExists(int cylinder, int head, int sector)
@@ -557,11 +563,6 @@ public class D88DiskContainer : IDiskContainer
         }
     }
 
-    public void Dispose()
-    {
-        // No resources to dispose
-    }
-
     private class D88Header
     {
         public string ImageName { get; set; } = "";
@@ -584,5 +585,56 @@ public class D88DiskContainer : IDiskContainer
         public ushort ActualSize { get; set; }
         public byte[] Data { get; set; } = Array.Empty<byte>();
         public uint FileOffset { get; set; }
+    }
+
+    private void SaveToFile()
+    {
+        if (_isReadOnly)
+            throw new InvalidOperationException("Cannot save to read-only disk image");
+            
+        try
+        {
+            File.WriteAllBytes(_filePath, _imageData);
+            _hasChanges = false;
+        }
+        catch (Exception ex)
+        {
+            throw new DiskImageException($"Failed to save disk image to {_filePath}: {ex.Message}", ex);
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                // Save changes if any
+                if (_hasChanges && !_isReadOnly && !string.IsNullOrEmpty(_filePath))
+                {
+                    try
+                    {
+                        SaveToFile();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log the error but don't throw in Dispose
+                        Console.WriteLine($"Warning: Failed to save changes during dispose: {ex.Message}");
+                    }
+                }
+            }
+            _disposed = true;
+        }
+    }
+
+    ~D88DiskContainer()
+    {
+        Dispose(false);
     }
 }

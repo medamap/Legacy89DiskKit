@@ -2,7 +2,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Legacy89DiskKit.DependencyInjection;
 using Legacy89DiskKit.DiskImage.Domain.Interface.Factory;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
 using Legacy89DiskKit.FileSystem.Domain.Interface.Factory;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
 using Legacy89DiskKit.CharacterEncoding.Domain.Interface.Factory;
 using Legacy89DiskKit.CharacterEncoding.Domain.Model;
 using Legacy89DiskKit.CharacterEncoding.Application;
@@ -16,7 +18,7 @@ class Program
     private static IFileSystemFactory _fileSystemFactory = null!;
     private static CharacterEncodingService _characterEncodingService = null!;
 
-    static async Task Main(string[] args)
+    static Task Main(string[] args)
     {
         var host = CreateHostBuilder(args).Build();
         
@@ -29,7 +31,7 @@ class Program
             if (args.Length == 0)
             {
                 ShowHelp();
-                return;
+                return Task.CompletedTask;
             }
 
             var command = args[0].ToLower();
@@ -93,6 +95,8 @@ class Program
             Console.WriteLine($"Error: {ex.Message}");
             Environment.Exit(1);
         }
+        
+        return Task.CompletedTask;
     }
 
     private static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -195,7 +199,7 @@ class Program
                 fileSystem = _fileSystemFactory.OpenFileSystemReadOnly(container);
             }
 
-            var files = fileSystem.ListFiles();
+            var files = fileSystem.GetFiles();
 
             Console.WriteLine($"Files in {diskFile}:");
             Console.WriteLine("Name".PadRight(17) + "Size".PadLeft(8) + " Mode  Date");
@@ -205,7 +209,7 @@ class Program
             {
                 var fileName = $"{file.FileName}.{file.Extension}";
                 var size = file.Size.ToString();
-                var mode = GetModeString(file.Mode);
+                var mode = GetModeString((byte)file.Mode);
                 var date = FormatDate(file.ModifiedDate);
                 
                 Console.WriteLine($"{fileName.PadRight(17)}{size.PadLeft(8)} {mode} {date}");
@@ -391,7 +395,8 @@ class Program
         try
         {
             using var container = _diskContainerFactory.OpenDiskImage(diskFile);
-            var fileSystem = _fileSystemFactory.OpenFileSystem(container);
+            var fileSystemType = _fileSystemFactory.GuessFileSystemType(container);
+            var fileSystem = _fileSystemFactory.OpenFileSystem(container, fileSystemType);
             
             var binaryData = File.ReadAllBytes(hostFile);
             fileSystem.WriteFile(diskFileName, binaryData, isText: false, loadAddress, execAddress);
@@ -418,7 +423,8 @@ class Program
         try
         {
             using var container = _diskContainerFactory.OpenDiskImage(diskFile, readOnly: true);
-            var fileSystem = _fileSystemFactory.OpenFileSystem(container);
+            var fileSystemType = _fileSystemFactory.GuessFileSystemType(container);
+            var fileSystem = _fileSystemFactory.OpenFileSystem(container, fileSystemType);
             
             var binaryData = fileSystem.ReadFile(diskFileName);
             File.WriteAllBytes(hostFile, binaryData);
@@ -445,10 +451,21 @@ class Program
         try
         {
             using var container = _diskContainerFactory.OpenDiskImage(diskFile);
-            var fileSystem = _fileSystemFactory.OpenFileSystem(container);
+            var fileSystemType = _fileSystemFactory.GuessFileSystemType(container);
+            var fileSystem = _fileSystemFactory.OpenFileSystem(container, fileSystemType);
             
             var bootData = File.ReadAllBytes(hostFile);
-            fileSystem.WriteBootSector(bootLabel, bootData);
+            var bootSector = new BootSector(
+                IsBootable: true,
+                Label: bootLabel,
+                Extension: "",
+                Size: bootData.Length,
+                LoadAddress: 0,
+                ExecuteAddress: 0,
+                ModifiedDate: DateTime.Now,
+                StartSector: 0
+            );
+            fileSystem.WriteBootSector(bootSector);
             Console.WriteLine($"Imported boot sector: {hostFile} -> \"{bootLabel}\"");
         }
         catch (Exception ex)
@@ -471,13 +488,14 @@ class Program
         try
         {
             using var container = _diskContainerFactory.OpenDiskImage(diskFile, readOnly: true);
-            var fileSystem = _fileSystemFactory.OpenFileSystem(container);
+            var fileSystemType = _fileSystemFactory.GuessFileSystemType(container);
+            var fileSystem = _fileSystemFactory.OpenFileSystem(container, fileSystemType);
             
-            var bootInfo = fileSystem.ReadBootSector();
+            var bootInfo = fileSystem.GetBootSector();
             var output = $"Boot Sector Information:\n" +
                         $"Label: {bootInfo.Label}\n" +
                         $"Load Address: ${bootInfo.LoadAddress:X4}\n" +
-                        $"Exec Address: ${bootInfo.ExecAddress:X4}\n" +
+                        $"Exec Address: ${bootInfo.ExecuteAddress:X4}\n" +
                         $"Size: {bootInfo.Size} bytes\n" +
                         $"Date: {FormatDate(bootInfo.ModifiedDate)}\n";
             
@@ -504,7 +522,8 @@ class Program
         try
         {
             using var container = _diskContainerFactory.OpenDiskImage(diskFile);
-            var fileSystem = _fileSystemFactory.OpenFileSystem(container);
+            var fileSystemType = _fileSystemFactory.GuessFileSystemType(container);
+            var fileSystem = _fileSystemFactory.OpenFileSystem(container, fileSystemType);
             
             fileSystem.DeleteFile(diskFileName);
             Console.WriteLine($"Deleted file: {diskFileName}");

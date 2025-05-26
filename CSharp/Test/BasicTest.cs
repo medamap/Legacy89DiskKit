@@ -73,6 +73,22 @@ class Program
 {
     static void Main(string[] args)
     {
-        BasicTest.RunTests();
+        Console.WriteLine("Legacy89DiskKit Test Suite");
+        Console.WriteLine("==========================");
+        Console.WriteLine();
+        
+        if (args.Length > 0 && args[0].ToLower() == "comprehensive")
+        {
+            var comprehensiveTests = new ComprehensiveTestSuite();
+            comprehensiveTests.RunAllTests();
+        }
+        else
+        {
+            Console.WriteLine("Running basic tests...");
+            BasicTest.RunTests();
+            
+            Console.WriteLine();
+            Console.WriteLine("To run comprehensive tests, use: dotnet run comprehensive");
+        }
     }
 }
