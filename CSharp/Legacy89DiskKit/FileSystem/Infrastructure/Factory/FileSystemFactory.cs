@@ -17,7 +17,7 @@ public class FileSystemFactory : IFileSystemFactory
             FileSystemType.Fat12 => new Fat12FileSystem(container),
             FileSystemType.Fat16 => throw new NotImplementedException("FAT16 filesystem not yet implemented"),
             FileSystemType.Cpm => throw new NotImplementedException("CP/M filesystem not yet implemented"),
-            FileSystemType.N88Basic => throw new NotImplementedException("N88-BASIC filesystem not yet implemented"),
+            FileSystemType.N88Basic => new N88BasicFileSystem(container),
             FileSystemType.MsxDos => throw new NotImplementedException("MSX-DOS filesystem not yet implemented"),
             _ => throw new ArgumentException($"Unsupported filesystem type: {fileSystemType}")
         };
@@ -83,6 +83,47 @@ public class FileSystemFactory : IFileSystemFactory
                     }
                 }
                 
+                // Check for N88-BASIC signature (check system track location)
+                if (container.DiskType == DiskType.TwoD || container.DiskType == DiskType.TwoDD)
+                {
+                    try
+                    {
+                        // Try N88-BASIC system track locations
+                        var (systemTrack, systemHead) = container.DiskType == DiskType.TwoD ? (18, 1) : (40, 0);
+                        
+                        // Try to read directory area (sector 1 on system track)
+                        var directoryData = container.ReadSector(systemTrack, systemHead, 1);
+                        if (directoryData != null && directoryData.Length > 0)
+                        {
+                            // Check for N88-BASIC directory structure (16-byte entries)
+                            var hasValidEntries = false;
+                            for (int offset = 0; offset < Math.Min(directoryData.Length, 256); offset += 16)
+                            {
+                                if (offset + 16 <= directoryData.Length)
+                                {
+                                    var firstByte = directoryData[offset];
+                                    // Check for valid entry patterns (not all FF or 00)
+                                    if (firstByte != 0xFF && firstByte != 0x00 && firstByte >= 0x20 && firstByte <= 0x7E)
+                                    {
+                                        // Looks like ASCII filename start
+                                        hasValidEntries = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            if (hasValidEntries)
+                            {
+                                return FileSystemType.N88Basic;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // N88-BASIC check failed, continue to other checks
+                    }
+                }
+                
                 // Check for Hu-BASIC signature (32-byte boot sector format)
                 if (bootSector.Length >= 32)
                 {
@@ -125,7 +166,8 @@ public class FileSystemFactory : IFileSystemFactory
         return new[]
         {
             FileSystemType.HuBasic,
-            FileSystemType.Fat12
+            FileSystemType.Fat12,
+            FileSystemType.N88Basic
             // Additional types will be added as they are implemented
         };
     }
