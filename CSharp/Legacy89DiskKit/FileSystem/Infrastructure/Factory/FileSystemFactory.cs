@@ -18,7 +18,7 @@ public class FileSystemFactory : IFileSystemFactory
             FileSystemType.Fat16 => throw new NotImplementedException("FAT16 filesystem not yet implemented"),
             FileSystemType.Cpm => throw new NotImplementedException("CP/M filesystem not yet implemented"),
             FileSystemType.N88Basic => new N88BasicFileSystem(container),
-            FileSystemType.MsxDos => throw new NotImplementedException("MSX-DOS filesystem not yet implemented"),
+            FileSystemType.MsxDos => new MsxDosFileSystem(container),
             _ => throw new ArgumentException($"Unsupported filesystem type: {fileSystemType}")
         };
 
@@ -66,6 +66,17 @@ public class FileSystemFactory : IFileSystemFactory
                 var fileSystemType = Encoding.ASCII.GetString(bootSector, 54, 8).Trim();
                 if (fileSystemType.Contains("FAT12") || fileSystemType.Contains("FAT"))
                 {
+                    // Check if it's MSX-DOS specific (MSX has different cluster size)
+                    var sectorsPerCluster = bootSector[13];
+                    var rootEntries = BitConverter.ToUInt16(bootSector, 17);
+                    var mediaDescriptor = bootSector[21];
+                    
+                    // MSX-DOS typically has 2 sectors/cluster and 112 root entries
+                    if (sectorsPerCluster == 2 && rootEntries == 112 && mediaDescriptor == 0xF9)
+                    {
+                        return FileSystemType.MsxDos;
+                    }
+                    
                     return FileSystemType.Fat12;
                 }
                 
@@ -79,6 +90,15 @@ public class FileSystemFactory : IFileSystemFactory
                     
                     if (bytesPerSector == 512 && sectorsPerCluster > 0 && numberOfFats > 0)
                     {
+                        // Check for MSX-DOS specific configuration
+                        var rootEntries = BitConverter.ToUInt16(bootSector, 17);
+                        var mediaDescriptor = bootSector[21];
+                        
+                        if (sectorsPerCluster == 2 && rootEntries == 112 && mediaDescriptor == 0xF9)
+                        {
+                            return FileSystemType.MsxDos;
+                        }
+                        
                         return FileSystemType.Fat12;
                     }
                 }
@@ -167,7 +187,8 @@ public class FileSystemFactory : IFileSystemFactory
         {
             FileSystemType.HuBasic,
             FileSystemType.Fat12,
-            FileSystemType.N88Basic
+            FileSystemType.N88Basic,
+            FileSystemType.MsxDos
             // Additional types will be added as they are implemented
         };
     }
@@ -196,6 +217,7 @@ public class FileSystemFactory : IFileSystemFactory
             {
                 FileSystemType.Fat12 => ValidateFat12Structure(bootSector),
                 FileSystemType.HuBasic => ValidateHuBasicStructure(bootSector),
+                FileSystemType.MsxDos => ValidateMsxDosStructure(bootSector),
                 _ => false
             };
         }
@@ -237,6 +259,28 @@ public class FileSystemFactory : IFileSystemFactory
         // Check for typical file extension
         var extension = Encoding.ASCII.GetString(bootSector, 14, 3).Trim().ToUpper();
         return extension == "SYS" || extension == "";
+    }
+
+    private bool ValidateMsxDosStructure(byte[] bootSector)
+    {
+        if (bootSector.Length < 512) return false;
+        
+        // Check boot signature
+        if (bootSector[510] != 0x55 || bootSector[511] != 0xAA) return false;
+        
+        // Check MSX-DOS specific BPB structure
+        var bytesPerSector = BitConverter.ToUInt16(bootSector, 11);
+        var sectorsPerCluster = bootSector[13];
+        var numberOfFats = bootSector[16];
+        var rootEntries = BitConverter.ToUInt16(bootSector, 17);
+        var mediaDescriptor = bootSector[21];
+        
+        // MSX-DOS specific values
+        return bytesPerSector == 512 && 
+               sectorsPerCluster == 2 &&       // MSX固有
+               numberOfFats > 0 && 
+               rootEntries == 112 &&           // MSX固有
+               (mediaDescriptor == 0xF9 || mediaDescriptor == 0xF8 || mediaDescriptor == 0xF0);
     }
 
     private bool IsBlankSector(byte[] sector)
