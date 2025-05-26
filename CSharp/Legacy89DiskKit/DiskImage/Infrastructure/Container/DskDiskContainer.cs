@@ -32,7 +32,18 @@ public class DskDiskContainer : IDiskContainer
 
     public static DskDiskContainer CreateNew(string filePath, DiskType diskType, string diskName = "")
     {
-        throw new NotImplementedException("DSK disk image creation not yet implemented");
+        var container = new DskDiskContainer();
+        container._filePath = filePath;
+        container._isReadOnly = false;
+        container.CreateEmptyImage(diskType);
+        container.SaveToFile();
+        return container;
+    }
+
+    private DskDiskContainer()
+    {
+        // Private constructor for CreateNew
+        _filePath = string.Empty;
     }
 
     public byte[] ReadSector(int cylinder, int head, int sector)
@@ -87,14 +98,76 @@ public class DskDiskContainer : IDiskContainer
             throw new InvalidOperationException("Cannot write to read-only disk");
         }
 
-        throw new NotImplementedException("DSK sector writing not yet implemented");
+        ValidateParameters(cylinder, head, sector);
+
+        if (data.Length != _header.SectorSize)
+        {
+            throw new ArgumentException($"Data size {data.Length} does not match sector size {_header.SectorSize}");
+        }
+
+        try
+        {
+            var sectorOffset = CalculateSectorOffset(cylinder, head, sector);
+            Array.Copy(data, 0, _imageData, sectorOffset, _header.SectorSize);
+        }
+        catch (Exception ex)
+        {
+            throw new DiskImageException($"Failed to write sector C:{cylinder} H:{head} S:{sector}: {ex.Message}", ex);
+        }
     }
 
     public void Flush()
     {
         if (_isReadOnly) return;
         
-        throw new NotImplementedException("DSK flushing not yet implemented");
+        SaveToFile();
+    }
+
+    private void CreateEmptyImage(DiskType diskType)
+    {
+        // Set header parameters based on disk type
+        _header.DiskType = diskType;
+        _header.SectorSize = 512;
+
+        switch (diskType)
+        {
+            case DiskType.TwoD:
+                _header.Cylinders = 40;
+                _header.Heads = 1;
+                _header.SectorsPerTrack = 16;
+                break;
+            case DiskType.TwoDD:
+                _header.Cylinders = 40;
+                _header.Heads = 2;
+                _header.SectorsPerTrack = 16;
+                break;
+            case DiskType.TwoHD:
+                _header.Cylinders = 80;
+                _header.Heads = 2;
+                _header.SectorsPerTrack = 18;
+                break;
+            default:
+                throw new ArgumentException($"Unsupported disk type: {diskType}");
+        }
+
+        // Calculate total image size
+        var totalSize = _header.Cylinders * _header.Heads * _header.SectorsPerTrack * _header.SectorSize;
+        _imageData = new byte[totalSize];
+        
+        // Fill with zeros (empty disk)
+        Array.Fill(_imageData, (byte)0x00);
+    }
+
+    private void SaveToFile()
+    {
+        try
+        {
+            File.WriteAllBytes(_filePath, _imageData);
+        }
+        catch (Exception ex)
+        {
+            throw new DiskImageException($"Failed to save DSK file to {_filePath}: {ex.Message}", ex);
+        }
     }
 
     public void Dispose()
