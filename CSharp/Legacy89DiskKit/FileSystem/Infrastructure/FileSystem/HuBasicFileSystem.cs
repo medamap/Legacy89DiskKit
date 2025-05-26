@@ -391,7 +391,13 @@ public class HuBasicFileSystem : IFileSystem
     public FileEntry? GetFile(string fileName)
     {
         return GetFiles().FirstOrDefault(f => 
-            string.Equals(f.FileName, fileName, StringComparison.OrdinalIgnoreCase));
+        {
+            // ファイル名.拡張子の形式で比較
+            var fullName = string.IsNullOrWhiteSpace(f.Extension) 
+                ? f.FileName 
+                : $"{f.FileName}.{f.Extension}";
+            return string.Equals(fullName, fileName, StringComparison.OrdinalIgnoreCase);
+        });
     }
 
     public byte[] ReadFile(string fileName)
@@ -544,7 +550,11 @@ public class HuBasicFileSystem : IFileSystem
                 if (fileMode == 0x00) continue;
                 
                 var entryFileName = System.Text.Encoding.ASCII.GetString(entryData, 1, 13).TrimEnd(' ');
-                if (string.Equals(entryFileName, fileName, StringComparison.OrdinalIgnoreCase))
+                var entryExtension = System.Text.Encoding.ASCII.GetString(entryData, 0x0E, 3).TrimEnd(' ');
+                var fullName = string.IsNullOrWhiteSpace(entryExtension) 
+                    ? entryFileName 
+                    : $"{entryFileName}.{entryExtension}";
+                if (string.Equals(fullName, fileName, StringComparison.OrdinalIgnoreCase))
                 {
                     var low = entryData[0x1D];
                     var middle = entryData[0x1E];
@@ -772,9 +782,31 @@ public class HuBasicFileSystem : IFileSystem
         if (GetFile(fileName) != null)
             throw new FileAlreadyExistsException(fileName);
             
-        // This is a simplified implementation
-        // Full implementation would need to allocate clusters, update FAT, etc.
-        throw new NotImplementedException("WriteFile not yet implemented");
+        if (data.Length > MaxFileSize)
+            throw new FileSystemException($"File too large: {data.Length} bytes (max: {MaxFileSize})");
+            
+        // Parse filename and extension
+        var (name, extension) = ParseFileName(fileName);
+        
+        // Allocate clusters for the file data
+        var clustersNeeded = (data.Length + _config.ClusterSize - 1) / _config.ClusterSize;
+        if (clustersNeeded == 0) clustersNeeded = 1; // At least one cluster
+        
+        var allocatedClusters = AllocateClusters(clustersNeeded);
+        if (allocatedClusters.Count == 0)
+            throw new FileSystemException("No free space available");
+            
+        // Write file data to allocated clusters
+        WriteDataToClusters(data, allocatedClusters);
+        
+        // Create directory entry
+        var directoryEntry = CreateDirectoryEntry(name, extension, attributes, data.Length, allocatedClusters[0]);
+        
+        // Add directory entry to the filesystem
+        AddDirectoryEntry(directoryEntry, allocatedClusters[0]);
+        
+        // Update FAT to link clusters
+        UpdateFatForFile(allocatedClusters);
     }
 
     public void WriteFile(string fileName, byte[] data, bool isText = false, ushort loadAddress = 0, ushort execAddress = 0)
@@ -789,6 +821,249 @@ public class HuBasicFileSystem : IFileSystem
             IsAscii: isText);
             
         WriteFile(fileName, data, attributes);
+    }
+
+    private (string name, string extension) ParseFileName(string fileName)
+    {
+        var parts = fileName.Split('.');
+        var name = parts[0].PadRight(13).Substring(0, 13).ToUpper();
+        var extension = parts.Length > 1 ? parts[1].PadRight(3).Substring(0, 3).ToUpper() : "   ";
+        return (name, extension);
+    }
+
+    private List<int> AllocateClusters(int count)
+    {
+        var fatData = ReadFat();
+        var allocatedClusters = new List<int>();
+        
+        for (int cluster = 2; cluster < _config.TotalClusters && allocatedClusters.Count < count; cluster++)
+        {
+            if (GetFatEntry(fatData, cluster) == 0) // Free cluster
+            {
+                allocatedClusters.Add(cluster);
+            }
+        }
+        
+        return allocatedClusters;
+    }
+
+    private void WriteDataToClusters(byte[] data, List<int> clusters)
+    {
+        int dataOffset = 0;
+        
+        foreach (var cluster in clusters)
+        {
+            var remainingData = data.Length - dataOffset;
+            var clusterDataSize = Math.Min(_config.ClusterSize, remainingData);
+            var clusterData = new byte[_config.ClusterSize];
+            
+            // Copy file data to cluster buffer
+            Array.Copy(data, dataOffset, clusterData, 0, clusterDataSize);
+            
+            // Fill remaining space with padding if needed
+            if (clusterDataSize < _config.ClusterSize)
+            {
+                Array.Fill(clusterData, (byte)0x00, clusterDataSize, _config.ClusterSize - clusterDataSize);
+            }
+            
+            WriteCluster(cluster, clusterData);
+            dataOffset += clusterDataSize;
+        }
+    }
+
+    private void WriteCluster(int cluster, byte[] data)
+    {
+        var (cylinder, head) = GetClusterPosition(cluster);
+        var sectorsInCluster = _config.ClusterSize / _config.SectorSize;
+        
+        for (int sector = 0; sector < sectorsInCluster; sector++)
+        {
+            var sectorData = new byte[_config.SectorSize];
+            Array.Copy(data, sector * _config.SectorSize, sectorData, 0, _config.SectorSize);
+            _diskContainer.WriteSector(cylinder, head, sector + 1, sectorData);
+        }
+    }
+
+    private FileEntry CreateDirectoryEntry(string name, string extension, HuBasicFileAttributes attributes, int fileSize, int firstCluster)
+    {
+        var mode = HuBasicFileMode.Binary;
+        if (attributes.IsBinary) mode = HuBasicFileMode.Binary;
+        else if (attributes.IsBasic) mode = HuBasicFileMode.Basic;
+        else if (attributes.IsAscii) mode = HuBasicFileMode.Ascii;
+
+        return new FileEntry(
+            name,
+            extension,
+            mode,
+            attributes,
+            fileSize,
+            0x8000, // Default load address
+            0x8000, // Default execute address
+            DateTime.Now,
+            false // Not protected
+        );
+    }
+
+    private void AddDirectoryEntry(FileEntry entry, int firstCluster)
+    {
+        // Find first available directory entry slot
+        for (int sector = 0; sector < _config.DirectorySectors; sector++)
+        {
+            var physicalSector = _config.DirectorySector + sector;
+            var cylinder = _config.DirectoryTrack / 2;
+            var head = _config.DirectoryTrack % 2;
+            
+            byte[] dirData;
+            
+            if (_diskContainer.DiskType == DiskType.TwoHD)
+            {
+                var totalSector = physicalSector - 1;
+                cylinder = totalSector / _config.SectorsPerTrack / 2;
+                head = (totalSector / _config.SectorsPerTrack) % 2;
+                var sectorNum = (totalSector % _config.SectorsPerTrack) + 1;
+                dirData = _diskContainer.ReadSector(cylinder, head, sectorNum);
+            }
+            else
+            {
+                dirData = _diskContainer.ReadSector(cylinder, head, physicalSector);
+            }
+            
+            // Look for free entry (mode = 0x00 or 0xFF)
+            for (int entryOffset = 0; entryOffset < dirData.Length; entryOffset += 32)
+            {
+                if (entryOffset + 32 > dirData.Length) break;
+                
+                var mode = dirData[entryOffset];
+                if (mode == 0x00 || mode == 0xFF) // Free entry
+                {
+                    // Write directory entry
+                    WriteDirectoryEntryToBuffer(dirData, entryOffset, entry, firstCluster);
+                    
+                    // Write sector back to disk
+                    if (_diskContainer.DiskType == DiskType.TwoHD)
+                    {
+                        var totalSector = physicalSector - 1;
+                        cylinder = totalSector / _config.SectorsPerTrack / 2;
+                        head = (totalSector / _config.SectorsPerTrack) % 2;
+                        var sectorNum = (totalSector % _config.SectorsPerTrack) + 1;
+                        _diskContainer.WriteSector(cylinder, head, sectorNum, dirData);
+                    }
+                    else
+                    {
+                        _diskContainer.WriteSector(cylinder, head, physicalSector, dirData);
+                    }
+                    return;
+                }
+            }
+        }
+        
+        throw new FileSystemException("Directory is full");
+    }
+
+    private void WriteDirectoryEntryToBuffer(byte[] buffer, int offset, FileEntry entry, int firstCluster)
+    {
+        // Calculate file mode byte from attributes
+        byte fileMode = (byte)entry.Mode;
+        if (entry.Attributes.IsDirectory) fileMode |= 0x80;
+        if (entry.Attributes.IsReadOnly) fileMode |= 0x40;
+        if (entry.Attributes.IsVerify) fileMode |= 0x20;
+        if (entry.Attributes.IsHidden) fileMode |= 0x10;
+        
+        buffer[offset] = fileMode;
+        
+        // File name (13 bytes, space-padded) - bytes 1-13
+        var nameBytes = System.Text.Encoding.ASCII.GetBytes(entry.FileName.PadRight(13));
+        Array.Copy(nameBytes, 0, buffer, offset + 1, Math.Min(13, nameBytes.Length));
+        
+        // Extension (3 bytes, space-padded) - bytes 14-16 (0x0E-0x10)
+        var extBytes = System.Text.Encoding.ASCII.GetBytes(entry.Extension.PadRight(3));
+        Array.Copy(extBytes, 0, buffer, offset + 0x0E, Math.Min(3, extBytes.Length));
+        
+        // File size (2 bytes, little endian)
+        var sizeBytes = BitConverter.GetBytes((ushort)entry.Size);
+        Array.Copy(sizeBytes, 0, buffer, offset + 0x12, 2);
+        
+        // Load address (2 bytes, little endian)
+        var loadBytes = BitConverter.GetBytes(entry.LoadAddress);
+        Array.Copy(loadBytes, 0, buffer, offset + 0x14, 2);
+        
+        // Execute address (2 bytes, little endian)
+        var execBytes = BitConverter.GetBytes(entry.ExecuteAddress);
+        Array.Copy(execBytes, 0, buffer, offset + 0x16, 2);
+        
+        // Modified date/time (6 bytes)
+        WriteBcdDate(buffer, offset + 0x18, entry.ModifiedDate);
+        
+        // First cluster encoding (3 bytes at 0x1D, 0x1E, 0x1F)
+        buffer[offset + 0x1D] = (byte)(firstCluster & 0x7F);
+        buffer[offset + 0x1E] = (byte)((firstCluster >> 7) & 0xFF);
+        buffer[offset + 0x1F] = (byte)((firstCluster >> 15) & 0xFF);
+    }
+
+    private void UpdateFatForFile(List<int> clusters)
+    {
+        var fatData = ReadFat();
+        
+        // Chain clusters together
+        for (int i = 0; i < clusters.Count; i++)
+        {
+            var cluster = clusters[i];
+            var nextCluster = (i < clusters.Count - 1) ? clusters[i + 1] : 0xFF; // End of chain
+            
+            SetFatEntry(fatData, cluster, nextCluster);
+        }
+        
+        WriteFat(fatData);
+    }
+
+    private void SetFatEntry(byte[] fatData, int cluster, int value)
+    {
+        if (_diskContainer.DiskType == DiskType.TwoHD)
+        {
+            // 2HD format uses 12-bit FAT entries
+            var byteOffset = cluster + (cluster / 2);
+            if (cluster % 2 == 0)
+            {
+                fatData[byteOffset] = (byte)(value & 0xFF);
+                fatData[byteOffset + 1] = (byte)((fatData[byteOffset + 1] & 0xF0) | ((value >> 8) & 0x0F));
+            }
+            else
+            {
+                fatData[byteOffset] = (byte)((fatData[byteOffset] & 0x0F) | ((value & 0x0F) << 4));
+                fatData[byteOffset + 1] = (byte)((value >> 4) & 0xFF);
+            }
+        }
+        else
+        {
+            // 2D/2DD format uses 8-bit FAT entries
+            fatData[cluster] = (byte)value;
+        }
+    }
+
+    private void WriteFat(byte[] fatData)
+    {
+        for (int sector = 0; sector < _config.FatSectors; sector++)
+        {
+            var sectorData = new byte[_config.SectorSize];
+            Array.Copy(fatData, sector * _config.SectorSize, sectorData, 0, _config.SectorSize);
+            
+            var physicalSector = _config.FatSector + sector;
+            var cylinder = _config.FatTrack / 2;
+            var head = _config.FatTrack % 2;
+            
+            if (_diskContainer.DiskType == DiskType.TwoHD)
+            {
+                var totalSector = physicalSector - 1;
+                cylinder = totalSector / _config.SectorsPerTrack / 2;
+                head = (totalSector / _config.SectorsPerTrack) % 2;
+                var sectorNum = (totalSector % _config.SectorsPerTrack) + 1;
+                _diskContainer.WriteSector(cylinder, head, sectorNum, sectorData);
+            }
+            else
+            {
+                _diskContainer.WriteSector(cylinder, head, physicalSector, sectorData);
+            }
+        }
     }
 
     public void DeleteFile(string fileName)
