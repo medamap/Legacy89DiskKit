@@ -3,33 +3,42 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0+-512BD4?style=flat&logo=dotnet)](https://dotnet.microsoft.com/)
 [![C#](https://img.shields.io/badge/C%23-Latest-239120?style=flat&logo=c-sharp)](https://docs.microsoft.com/en-us/dotnet/csharp/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE)
+[![Version](https://img.shields.io/badge/Version-v1.2.0-blue?style=flat)](https://github.com/yourusername/Legacy89DiskKit/releases)
 
-📀 **Legacy89DiskKit** は、1980〜90年代の日本のレトロコンピュータ（Sharp X1、PC-8801、FM-7など）で使用されていたディスクフォーマットを現代的な環境で扱うためのC#ライブラリ・CLIツールセットです。
+📀 **Legacy89DiskKit** は、1980〜90年代の日本のレトロコンピュータ（Sharp X1、PC-8801、MSX等）で使用されていたディスクフォーマットを現代的な環境で扱うためのC#ライブラリ・CLIツールセットです。
 
 ## ✨ 特徴
 
-### 🎯 対応フォーマット
-- **ディスクイメージ**: D88形式、DSK形式
-- **ファイルシステム**: Hu-BASIC、MS-DOS FAT12
-- **組み合わせ**: D88+Hu-BASIC、D88+FAT12、DSK+Hu-BASIC、DSK+FAT12
-- **将来拡張予定**: N88-BASIC、CP/M、FAT16等
+### 🎯 対応フォーマット (v1.2.0)
+
+**完全対応ファイルシステム**:
+- ✅ **Hu-BASIC** (Sharp X1) - 完全実装
+- ✅ **N88-BASIC** (PC-8801) - 完全実装  
+- ✅ **MS-DOS FAT12** (汎用PC) - 完全実装
+- ✅ **MSX-DOS** (MSX) - 完全実装
+
+**対応ディスクイメージ**:
+- ✅ **D88形式** - Sharp/NECディスクイメージ標準
+- ✅ **DSK形式** - PC汎用ディスクイメージ
+
+**文字エンコーディング**: **18機種対応** (X1完全実装、他機種基本ASCII)
 
 ### 🏗️ モダンアーキテクチャ
 - **DDD（ドメイン駆動設計）**: 拡張性・保守性を重視した設計
 - **Dependency Injection**: Microsoft.Extensions.DependencyInjection採用
 - **Factory Pattern**: ディスクコンテナ・ファイルシステムの抽象化
-- **インターフェース駆動**: 異なるディスクフォーマットの統一的な操作
+- **組成パターン**: コード再利用による効率的な実装
 - **レイヤー分離**: ドメイン・インフラ・アプリケーション層の明確な分離
 
 ### 🛡️ 堅牢性
 - **破損ディスク対応**: 部分的なデータ復旧機能
 - **メモリ安全**: 大容量ファイルの安全な処理（10MB制限）
 - **エラー検出**: 循環参照検出、詳細な診断情報
-- **入力検証**: Hu-BASIC固有のファイル名規則対応
-- **🆕 データ安全**: 書き込み時のファイルシステム指定必須化
-- **🆕 誤操作防止**: 構造検証による不正アクセス阻止
+- **入力検証**: 各ファイルシステム固有の名前規則対応
+- **データ安全**: 書き込み時のファイルシステム指定必須化
+- **誤操作防止**: 構造検証による不正アクセス阻止
 
-## ⚠️ 重要な安全性について (Phase 5.5)
+## ⚠️ 重要な安全性について
 
 **🔒 データ保護強化**: ファイルシステムの誤判定による**データ破損を防止**するため、**すべての書き込み操作**で `--filesystem` パラメータの指定が**必須**になりました。
 
@@ -42,12 +51,10 @@
 ./CLI recover-text disk.d88 src dst    # 破損ファイル復旧
 
 # ⚠️ 必須：書き込み操作（ファイルシステム指定必須）
-./CLI export-text disk.d88 src dst --filesystem fat12       # ✅ 正しい
-./CLI import-text disk.d88 src dst --filesystem hu-basic    # ✅ 正しい
+./CLI export-text disk.d88 src dst --filesystem hu-basic    # ✅ 正しい
+./CLI import-text disk.d88 src dst --filesystem msx-dos     # ✅ 正しい
 ./CLI export-text disk.d88 src dst                          # ❌ エラー
 ```
-
-**対応ファイルシステム**: `hu-basic`, `fat12`
 
 ## 🚀 クイックスタート
 
@@ -71,43 +78,108 @@ dotnet run --project Legacy89DiskKit.CLI -- help
 # 新しいディスクイメージを作成
 dotnet run --project Legacy89DiskKit.CLI -- create mydisk.d88 2D "MY DISK"
 
-# ディスクをフォーマット
-dotnet run --project Legacy89DiskKit.CLI -- format mydisk.d88
+# ディスクをフォーマット（ファイルシステム指定）
+dotnet run --project Legacy89DiskKit.CLI -- format mydisk.d88 --filesystem hu-basic
 
 # ファイル一覧表示（自動検出・読み取り専用）
 dotnet run --project Legacy89DiskKit.CLI -- list mydisk.d88
 
 # ディスク情報表示（ファイルシステム推測）
-dotnet run --project Legacy89DiskKit.CLI -- info disk.dsk
+dotnet run --project Legacy89DiskKit.CLI -- info disk.d88
 
-# 🆕 安全な書き込み操作（ファイルシステム指定必須）
-dotnet run --project Legacy89DiskKit.CLI -- export-text disk.dsk README.TXT readme.txt --filesystem fat12
-dotnet run --project Legacy89DiskKit.CLI -- export-text mydisk.d88 README.TXT readme.txt --filesystem fat12
-dotnet run --project Legacy89DiskKit.CLI -- import-text mydisk.d88 readme.txt README.TXT --filesystem hu-basic
-dotnet run --project Legacy89DiskKit.CLI -- import-text disk.dsk readme.txt README.TXT --filesystem hu-basic
+# 安全な書き込み操作（ファイルシステム指定必須）
+dotnet run --project Legacy89DiskKit.CLI -- import-text mydisk.d88 readme.txt README.TXT --filesystem hu-basic --machine x1
+dotnet run --project Legacy89DiskKit.CLI -- export-text mydisk.d88 README.TXT readme.txt --filesystem hu-basic --machine x1
 ```
 
-## 📋 機能一覧
+## 📋 CLIコマンド詳細
 
-### CLIコマンド
+### 基本コマンド
 
-| コマンド | 説明 | 例 |
-|---------|------|-----|
-| `create` | 新しいディスクイメージ作成 | `create disk.d88 2D "TITLE"` |
-| `format` | ディスクフォーマット | `format disk.d88` |
-| `list` | ファイル一覧表示 | `list disk.d88` |
-| `import-text` | テキストファイル書き込み | `import-text disk.d88 host.txt DISK.TXT --filesystem hu-basic` |
-| `export-text` | テキストファイル読み出し | `export-text disk.d88 DISK.TXT host.txt --filesystem hu-basic` |
-| `import-binary` | バイナリファイル書き込み | `import-binary disk.d88 prog.bin PROG.BIN 8000 8000 --filesystem hu-basic` |
-| `export-binary` | バイナリファイル読み出し | `export-binary disk.d88 PROG.BIN prog.bin --filesystem hu-basic` |
-| `import-boot` | ブートセクタ書き込み | `import-boot disk.d88 boot.bin "BOOTLOADER" --filesystem hu-basic` |
-| `export-boot` | ブートセクタ情報出力 | `export-boot disk.d88 boot.txt --filesystem hu-basic` |
-| `delete` | ファイル削除 | `delete disk.d88 OLDFILE.TXT --filesystem hu-basic` |
-| `info` | ディスク情報表示 | `info disk.d88` |
-| **`recover-text`** | **破損テキストファイル復旧** | `recover-text disk.d88 damaged.txt recovered.txt` |
-| **`recover-binary`** | **破損バイナリファイル復旧** | `recover-binary disk.d88 damaged.bin recovered.bin` |
+| コマンド | 説明 | 必須パラメータ | オプション |
+|---------|------|---------------|-----------|
+| `create` | 新しいディスクイメージ作成 | `<disk-file> <type> <name>` | - |
+| `format` | ディスクフォーマット | `<disk-file> --filesystem <type>` | - |
+| `list` | ファイル一覧表示 | `<disk-file>` | `--filesystem <type>` |
+| `info` | ディスク情報表示 | `<disk-file>` | - |
 
-### ライブラリAPI
+### ファイル操作コマンド
+
+| コマンド | 説明 | 必須パラメータ | オプション |
+|---------|------|---------------|-----------|
+| `import-text` | テキストファイル書き込み | `<disk-file> <host-file> <disk-name> --filesystem <type>` | `--machine <machine>` |
+| `export-text` | テキストファイル読み出し | `<disk-file> <disk-name> <host-file> --filesystem <type>` | `--machine <machine>` |
+| `import-binary` | バイナリファイル書き込み | `<disk-file> <host-file> <disk-name>` | `[load-addr] [exec-addr]` |
+| `export-binary` | バイナリファイル読み出し | `<disk-file> <disk-name> <host-file>` | - |
+| `delete` | ファイル削除 | `<disk-file> <disk-name> --filesystem <type>` | - |
+
+### システム操作コマンド
+
+| コマンド | 説明 | 必須パラメータ | オプション |
+|---------|------|---------------|-----------|
+| `import-boot` | ブートセクタ書き込み | `<disk-file> <host-file> <label>` | - |
+| `export-boot` | ブートセクタ情報出力 | `<disk-file> <output-file>` | - |
+
+### 復旧コマンド
+
+| コマンド | 説明 | 必須パラメータ | 注意 |
+|---------|------|---------------|------|
+| `recover-text` | 破損テキストファイル復旧 | `<disk-file> <disk-name> <host-file>` | 読み取り専用・自動検出 |
+| `recover-binary` | 破損バイナリファイル復旧 | `<disk-file> <disk-name> <host-file>` | 読み取り専用・自動検出 |
+
+### パラメータ詳細
+
+#### ディスクタイプ (`<type>`)
+| 値 | 説明 | 容量 | 用途 |
+|----|------|------|------|
+| `2D` | 両面倍密度 | 320KB-640KB | Sharp X1, PC-8801 |
+| `2DD` | 両面倍密度 | 640KB-720KB | 汎用, MSX |
+| `2HD` | 両面高密度 | 1.2MB-1.44MB | PC汎用 |
+
+#### ファイルシステム (`--filesystem <type>`)
+| 値 | 説明 | 対応機種 | 対応ディスクタイプ |
+|----|------|----------|------------------|
+| `hu-basic` | Hu-BASICファイルシステム | Sharp X1 | 2D, 2DD, 2HD |
+| `n88-basic` | N88-BASICファイルシステム | PC-8801 | 2D, 2DD |
+| `fat12` | MS-DOS FAT12ファイルシステム | PC汎用 | 2D, 2DD, 2HD |
+| `msx-dos` | MSX-DOSファイルシステム | MSX | 2DD |
+
+#### 機種名 (`--machine <machine>`)
+| カテゴリ | 対応値 | 実装状況 |
+|---------|-------|---------|
+| **Sharp** | `x1`, `x1turbo` | ✅ 完全実装 |
+| **NEC** | `pc8801`, `pc8801mk2`, `pc8001`, `pc8001mk2`, `pc6001`, `pc6601` | 🟡 基本ASCII |
+| **MSX** | `msx1`, `msx2` | 🟡 基本ASCII |
+| **Sharp MZ** | `mz80k`, `mz700`, `mz1500`, `mz2500` | 🟡 基本ASCII |
+| **富士通** | `fm7`, `fm77`, `fm77av` | 🟡 基本ASCII |
+| **任天堂** | `fc` | 🟡 基本ASCII |
+
+#### 使用例
+
+```bash
+# Hu-BASICディスク作成・操作
+./CLI create x1disk.d88 2D "X1 DISK"
+./CLI format x1disk.d88 --filesystem hu-basic
+./CLI import-text x1disk.d88 hello.txt HELLO.TXT --filesystem hu-basic --machine x1
+
+# MSX-DOSディスク作成・操作  
+./CLI create msxdisk.d88 2DD "MSX DISK"
+./CLI format msxdisk.d88 --filesystem msx-dos
+./CLI import-text msxdisk.d88 readme.txt README.TXT --filesystem msx-dos --machine msx1
+
+# N88-BASICディスク操作
+./CLI list pc88disk.d88 --filesystem n88-basic
+./CLI export-text pc88disk.d88 PROGRAM.BAS program.bas --filesystem n88-basic --machine pc8801
+
+# MS-DOS FAT12ディスク操作
+./CLI create pcdisk.dsk 2HD "PC DISK"  
+./CLI format pcdisk.dsk --filesystem fat12
+./CLI import-binary pcdisk.dsk program.exe PROGRAM.EXE 
+```
+
+## 🔧 ライブラリAPI詳細
+
+### 基本的な使用方法
 
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
@@ -117,29 +189,25 @@ using Legacy89DiskKit.DependencyInjection;
 var services = new ServiceCollection();
 services.AddLegacy89DiskKit();
 var serviceProvider = services.BuildServiceProvider();
+```
 
+### ファクトリーサービス
+
+```csharp
 // ファクトリー取得
 var diskFactory = serviceProvider.GetRequiredService<IDiskContainerFactory>();
 var fsFactory = serviceProvider.GetRequiredService<IFileSystemFactory>();
+var encodingService = serviceProvider.GetRequiredService<CharacterEncodingService>();
+```
 
-// ディスクイメージを開く（読み取り専用・自動検出）
+### ディスクイメージ操作
+
+```csharp
+// 既存ディスクを開く（読み取り専用・自動検出）
 using var container = diskFactory.OpenDiskImage("disk.d88", readOnly: true);
-var fileSystem = fsFactory.OpenFileSystemReadOnly(container); // 読み取り専用
+var fileSystem = fsFactory.OpenFileSystemReadOnly(container);
 
-// ファイル一覧取得
-var files = fileSystem.ListFiles();
-foreach (var file in files)
-{
-    Console.WriteLine($"{file.FileName}.{file.Extension} ({file.Size} bytes)");
-}
-
-// ファイル読み込み（通常）
-var data = fileSystem.ReadFile("README.TXT");
-
-// 破損ファイルの部分復旧
-var partialData = fileSystem.ReadFile("damaged.txt", allowPartialRead: true);
-
-// 新規ディスクイメージ作成（ファイルシステム指定必須）
+// 新規ディスクイメージ作成
 using var newContainer = diskFactory.CreateNewDiskImage("new.d88", DiskType.TwoD, "NEW DISK");
 var newFileSystem = fsFactory.CreateFileSystem(newContainer, FileSystemType.HuBasic);
 newFileSystem.Format();
@@ -147,32 +215,108 @@ newFileSystem.Format();
 // 既存ディスクへの書き込み（ファイルシステム指定必須）
 using var writeContainer = diskFactory.OpenDiskImage("disk.d88", readOnly: false);
 var writeFileSystem = fsFactory.OpenFileSystem(writeContainer, FileSystemType.HuBasic);
-writeFileSystem.WriteFile("test.txt", data);
 ```
 
-## 💾 対応ディスクタイプ
+### ファイル操作
 
-### D88形式 + Hu-BASICファイルシステム
-| タイプ | 容量 | トラック数 | 面数 | セクタ/トラック | セクタサイズ |
-|-------|------|-----------|------|---------------|-------------|
-| **2D** | 320KB | 40 | 2 | 16 | 256B |
-| **2DD** | 640KB | 80 | 2 | 16 | 256B |
-| **2HD** | 1.2MB | 77 | 2 | 26 | 256B |
+```csharp
+// ファイル一覧取得
+var files = fileSystem.GetFiles();
+foreach (var file in files)
+{
+    Console.WriteLine($"{file.FileName}.{file.Extension} ({file.Size} bytes, {file.Mode})");
+}
 
-### DSK形式 + MS-DOS FAT12ファイルシステム
-| タイプ | 容量 | トラック数 | 面数 | セクタ/トラック | セクタサイズ |
-|-------|------|-----------|------|---------------|-------------|
-| **5.25" DD** | 360KB | 40 | 2 | 9 | 512B |
-| **3.5" DD** | 720KB | 80 | 2 | 9 | 512B |
-| **5.25" HD** | 1.2MB | 80 | 2 | 15 | 512B |
-| **3.5" HD** | 1.44MB | 80 | 2 | 18 | 512B |
+// ファイル読み込み
+var data = fileSystem.ReadFile("README.TXT");
 
-### 🔄 クロス対応
-**D88形式**: Hu-BASIC + MS-DOS FAT12 両方対応  
-**DSK形式**: MS-DOS FAT12 + Hu-BASIC 両方対応  
-※ ファイルシステムは `--filesystem` パラメータで明示的に指定
+// 破損ファイルの部分復旧
+var partialData = fileSystem.ReadFile("damaged.txt", allowPartialRead: true);
 
-## 🛠️ アーキテクチャ
+// ファイル書き込み
+var textData = System.Text.Encoding.UTF8.GetBytes("Hello World!");
+writeFileSystem.WriteFile("hello.txt", textData, isText: true);
+
+// バイナリファイル書き込み
+var binaryData = File.ReadAllBytes("program.bin");
+writeFileSystem.WriteFile("program.bin", binaryData, isText: false, loadAddress: 0x8000, execAddress: 0x8000);
+
+// ファイル削除
+writeFileSystem.DeleteFile("oldfile.txt");
+```
+
+### 文字エンコーディング
+
+```csharp
+// 機種別文字エンコーディング
+var x1Bytes = encodingService.EncodeText("こんにちは、X1!", MachineType.X1);
+var pc8801Bytes = encodingService.EncodeText("Hello PC-8801!", MachineType.Pc8801);
+var msxBytes = encodingService.EncodeText("MSX World!", MachineType.Msx1);
+
+// デコード
+var unicodeText = encodingService.DecodeText(x1Bytes, MachineType.X1);
+```
+
+### エラーハンドリング
+
+```csharp
+try
+{
+    var fileSystem = fsFactory.OpenFileSystem(container, FileSystemType.HuBasic);
+    var data = fileSystem.ReadFile("test.txt");
+}
+catch (FileSystemException ex)
+{
+    Console.WriteLine($"ファイルシステムエラー: {ex.Message}");
+}
+catch (DiskImageException ex)
+{
+    Console.WriteLine($"ディスクイメージエラー: {ex.Message}");
+}
+catch (FileNotFoundException ex)
+{
+    Console.WriteLine($"ファイルが見つかりません: {ex.FileName}");
+}
+```
+
+> **📚 詳細なAPIリファレンス**: [Documents/API_Reference.md](Documents/API_Reference.md)
+
+## 💾 対応ディスクタイプ詳細
+
+### Sharp X1 (D88 + Hu-BASIC)
+| タイプ | 容量 | ジオメトリ | 用途 |
+|-------|------|-----------|------|
+| **2D** | 320KB | 40×2×16×256B | X1標準 |
+| **2DD** | 640KB | 80×2×16×256B | X1拡張 |
+| **2HD** | 1.2MB | 77×2×26×256B | X1 Turbo |
+
+### PC-8801 (D88 + N88-BASIC)
+| タイプ | 容量 | ジオメトリ | 用途 |
+|-------|------|-----------|------|
+| **2D** | 320KB | 40×2×16×256B | PC-8801標準 |
+| **2DD** | 640KB | 80×2×16×256B | PC-8801拡張 |
+
+### MSX (D88/DSK + MSX-DOS)
+| タイプ | 容量 | ジオメトリ | 用途 |
+|-------|------|-----------|------|
+| **2DD** | 720KB | 80×2×9×512B | MSX-DOS標準 |
+
+### PC汎用 (DSK + MS-DOS FAT12)
+| タイプ | 容量 | ジオメトリ | 説明 |
+|-------|------|-----------|------|
+| **5.25" DD** | 360KB | 40×2×9×512B | PC初期フロッピー |
+| **3.5" DD** | 720KB | 80×2×9×512B | PC標準フロッピー |
+| **5.25" HD** | 1.2MB | 80×2×15×512B | PC高密度フロッピー |
+| **3.5" HD** | 1.44MB | 80×2×18×512B | PC標準HD |
+
+### 🔄 クロス対応マトリックス
+
+| ディスクイメージ＼ファイルシステム | Hu-BASIC | N88-BASIC | FAT12 | MSX-DOS |
+|----------------------------------|----------|-----------|-------|---------|
+| **D88** | ✅ ネイティブ | ✅ ネイティブ | ✅ 対応 | ✅ 対応 |
+| **DSK** | ✅ 対応 | ❌ 非対応 | ✅ ネイティブ | ✅ 対応 |
+
+## 🛠️ アーキテクチャ詳細
 
 ### ドメイン構造
 
@@ -180,44 +324,61 @@ writeFileSystem.WriteFile("test.txt", data);
 Legacy89DiskKit/
 ├── DependencyInjection/           # DI設定
 │   └── ServiceCollectionExtensions.cs
+│
 ├── DiskImage/                     # ディスクイメージドメイン
 │   ├── Domain/
 │   │   ├── Interface/
-│   │   │   ├── Container/        # IDiskContainer
-│   │   │   └── Factory/          # IDiskContainerFactory
-│   │   └── Exception/            # DiskImageException
+│   │   │   ├── Container/         # IDiskContainer
+│   │   │   └── Factory/           # IDiskContainerFactory
+│   │   └── Exception/             # DiskImageException
 │   ├── Infrastructure/
-│   │   ├── Container/            # D88DiskContainer, DskDiskContainer
-│   │   └── Factory/              # DiskContainerFactory
-│   └── Application/              # DiskImageService
+│   │   ├── Container/
+│   │   │   ├── D88DiskContainer.cs    # D88形式実装
+│   │   │   └── DskDiskContainer.cs    # DSK形式実装
+│   │   └── Factory/               # DiskContainerFactory
+│   └── Application/               # DiskImageService
 │
-├── FileSystem/                   # ファイルシステムドメイン
+├── FileSystem/                    # ファイルシステムドメイン  
 │   ├── Domain/
 │   │   ├── Interface/
-│   │   │   ├── FileSystem/       # IFileSystem
-│   │   │   └── Factory/          # IFileSystemFactory
-│   │   └── Exception/            # FileSystemException
+│   │   │   ├── FileSystem/        # IFileSystem
+│   │   │   └── Factory/           # IFileSystemFactory
+│   │   ├── Model/                 # ドメインモデル
+│   │   │   ├── MsxDosConfiguration.cs
+│   │   │   ├── MsxDosBootSector.cs
+│   │   │   ├── N88BasicFileEntry.cs
+│   │   │   └── N88BasicConfiguration.cs
+│   │   └── Exception/             # FileSystemException
 │   ├── Infrastructure/
-│   │   ├── FileSystem/           # HuBasicFileSystem, Fat12FileSystem
-│   │   ├── Factory/              # FileSystemFactory
-│   │   └── ReadOnlyWrapper/      # ReadOnlyFileSystemWrapper
-│   └── Application/              # FileSystemService
+│   │   ├── FileSystem/
+│   │   │   ├── HuBasicFileSystem.cs    # Hu-BASIC実装
+│   │   │   ├── N88BasicFileSystem.cs   # N88-BASIC実装
+│   │   │   ├── Fat12FileSystem.cs      # MS-DOS FAT12実装  
+│   │   │   ├── MsxDosFileSystem.cs     # MSX-DOS実装
+│   │   │   └── ReadOnlyFileSystemWrapper.cs
+│   │   ├── Factory/               # FileSystemFactory
+│   │   └── Utility/               # ユーティリティ
+│   │       ├── X1Converter.cs         # X1文字コード変換
+│   │       ├── HuBasicFileNameValidator.cs
+│   │       ├── N88BasicFileNameValidator.cs
+│   │       └── MsxDosFileNameValidator.cs
+│   └── Application/               # FileSystemService
 │
-└── CharacterEncoding/            # 文字エンコーディングドメイン
+└── CharacterEncoding/             # 文字エンコーディングドメイン
     ├── Domain/
     │   ├── Interface/
-    │   │   ├── ICharacterEncoder.cs  # エンコーダーインターフェース
-    │   │   └── Factory/          # ICharacterEncoderFactory
+    │   │   ├── ICharacterEncoder.cs   # エンコーダーIF
+    │   │   └── Factory/           # ICharacterEncoderFactory
     │   ├── Model/
-    │   │   └── MachineType.cs    # 18機種対応
-    │   └── Exception/            # CharacterEncodingException
+    │   │   └── MachineType.cs     # 18機種定義
+    │   └── Exception/             # CharacterEncodingException
     ├── Infrastructure/
-    │   ├── Encoder/              # 機種別エンコーダー
+    │   ├── Encoder/               # 機種別エンコーダー
     │   │   ├── X1CharacterEncoder.cs      # X1完全実装
-    │   │   ├── Pc8801CharacterEncoder.cs  # 基本ASCII
-    │   │   └── Msx1CharacterEncoder.cs    # 基本ASCII
-    │   └── Factory/              # CharacterEncoderFactory
-    └── Application/              # CharacterEncodingService
+    │   │   ├── Pc8801CharacterEncoder.cs  # PC-8801基本ASCII
+    │   │   └── Msx1CharacterEncoder.cs    # MSX基本ASCII
+    │   └── Factory/               # CharacterEncoderFactory
+    └── Application/               # CharacterEncodingService
 ```
 
 ### 設計原則
@@ -227,98 +388,56 @@ Legacy89DiskKit/
 - **Dependency Inversion**: 具象ではなく抽象に依存
 - **Interface Segregation**: 必要最小限のインターフェース
 - **Factory Method**: オブジェクト生成の抽象化
-- **Service Locator**: DIコンテナによる依存性解決
+- **Composition over Inheritance**: 組成パターンによるコード再利用
 
-## 🔄 文字コード対応
+## 🚧 実装状況とロードマップ
 
-18種類のレトロコンピュータ機種の文字コード体系をサポート：
+### ✅ 完成済み機能 (v1.2.0)
 
-### 📟 対応機種
-| カテゴリ | 機種名 | 実装状況 |
-|---------|-------|---------|
-| **Sharp** | X1, X1 Turbo | ✅ 完全実装 |
-| **NEC** | PC-8801, PC-8801mkII, PC-8001, PC-8001mkII, PC-6001, PC-6601 | 🚧 基本ASCII |
-| **MSX** | MSX1, MSX2 | 🚧 基本ASCII |
-| **Sharp MZ** | MZ-80K, MZ-700, MZ-1500, MZ-2500 | 🚧 基本ASCII |
-| **富士通** | FM-7, FM-77, FM-77AV | 🚧 基本ASCII |
-| **任天堂** | ファミリーコンピュータ | 🚧 基本ASCII |
+#### Phase 8完了: MSX-DOSファイルシステム (2025年5月)
+- ✅ **MSX-DOS完全実装**: FAT12ベース、720KB標準フォーマット
+- ✅ **MSX-DOS 1.0/2.0互換性**: BPB・FATメディア記述子自動検出
+- ✅ **CLI統合**: `--filesystem msx-dos`、`--machine msx1`対応
+- ✅ **自動検出強化**: MSX固有設定値による判定ロジック
 
-### 🔧 使用方法
-```csharp
-// DI経由でエンコーダーサービス取得
-var encodingService = serviceProvider.GetRequiredService<CharacterEncodingService>();
+#### Phase 7完了: N88-BASICファイルシステム (2025年5月)
+- ✅ **N88-BASIC完全実装**: PC-8801専用、16バイトディレクトリエントリ
+- ✅ **ディスクタイプ対応**: 2D/2DD（2HD非対応）
+- ✅ **属性処理**: バイナリ・BASIC・ASCII・書き込み保護
+- ✅ **CLI統合**: `--filesystem n88-basic`、`--machine pc8801`対応
 
-// 機種別文字エンコーディング
-var x1Bytes = encodingService.EncodeText("こんにちは", MachineType.X1);
-var pc8801Bytes = encodingService.EncodeText("Hello", MachineType.Pc8801);
+#### Phase 6完了: 基本機能完成 (2025年1月-5月)
+- ✅ **Hu-BASIC完全実装**: Sharp X1、全ディスクタイプ対応
+- ✅ **MS-DOS FAT12基本実装**: PC汎用、DSK形式ネイティブサポート
+- ✅ **DSK形式完全対応**: 作成・読み書き・フォーマット
+- ✅ **文字エンコーディング**: 18機種アーキテクチャ、X1完全実装
+- ✅ **安全性強化**: 書き込み時ファイルシステム指定必須
+- ✅ **エラーハンドリング**: 破損ディスク復旧、プロフェッショナルレベル
 
-// デコード
-var unicodeText = encodingService.DecodeText(x1Bytes, MachineType.X1);
-```
+### 🚧 今後の拡張予定
 
-### 📋 CLI使用例
-```bash
-# X1文字コードでテキストエクスポート
-./CLI export-text disk.d88 HELLO.TXT hello.txt --filesystem hu-basic --machine x1
-
-# PC-8801文字コードでテキストインポート
-./CLI import-text disk.dsk hello.txt HELLO.TXT --filesystem fat12 --machine pc8801
-
-# 機種省略時はファイルシステムのデフォルト
-./CLI export-text disk.d88 HELLO.TXT hello.txt --filesystem hu-basic  # → X1
-./CLI import-text disk.dsk hello.txt HELLO.TXT --filesystem fat12     # → PC-8801
-```
-
-## 🚧 今後の拡張予定
-
-### ✅ Phase 5.5完了: 安全性強化 (2025年1月)
-- **書き込み時ファイルシステム指定必須化**
-- **ReadOnlyFileSystemWrapper実装**  
-- **構造検証による不正アクセス阻止**
-- **詳細エラーメッセージとガイダンス**
-
-### ✅ Phase 6.1完了: CharacterEncodingドメイン (2025年1月)
-- **18機種の文字コード対応アーキテクチャ**
-- **DDD設計による拡張可能な文字エンコーダー**
-- **CLI統合: --machineパラメータ追加**
-- **ファイルシステム別デフォルト機種設定**
-- **X1エンコーダー完全実装・基本ASCII他機種対応**
-
-### ✅ Phase 6.2-6.4完了: 最終機能実装 (2025年5月)
-- **Phase 6.2: ファイルエクスポートエラー修正** - HuBasicFileSystemのファイル名処理を完全修正
-- **Phase 6.3: ファイル削除機能実装** - DeleteFile完全実装、CLIコマンド対応
-- **Phase 6.4: DSK形式完全サポート** - DSK作成・書き込み・フォーマット完全実装
-
-### 🎉 全機能実装完了: Legacy89DiskKit v1.0 ✅
-- **ディスクイメージ**: D88 ✅完全, DSK ✅完全
-- **ファイルシステム**: Hu-BASIC ✅完全, FAT12 ✅基本フォーマット対応
-- **文字エンコーディング**: 18機種 ✅対応
-- **CLI操作**: 全コマンド ✅実装完了（削除・エクスポート・DSK対応）
-- **エラーハンドリング**: プロフェッショナルレベル ✅
-
-### Phase 7: 文字エンコーダー拡張 🚧 今後予定
+#### Phase 9: 文字エンコーダー拡張
 - **PC-8801エンコーダー**: グラフィック文字・罫線文字対応
-- **MSX1/MSX2エンコーダー**: MSX固有文字セット対応
+- **MSX1/MSX2エンコーダー**: MSX固有文字セット対応  
 - **MZ-700/MZ-1500エンコーダー**: Sharp MZ系統文字コード
 - **FM-7/FM-77エンコーダー**: 富士通系統文字コード
 
-### Phase 8: 追加ファイルシステム対応
+#### Phase 10: 追加ファイルシステム対応
 - **MS-DOS FAT16**: FAT12の上位互換、大容量対応
 - **CP/M**: 8ビット時代の標準、資料豊富
-- **PC-8801 N88-BASIC**: PC-8801ユーザー需要高い
-- **MSX-DOS**: MSXコミュニティ需要あり
+- **MSX-DOS 2.2**: サブディレクトリ対応
 
-### Phase 9: ディスクフォーマット拡張
-- **IMD形式**: ImageDisk形式対応  
+#### Phase 11: ディスクフォーマット拡張
+- **IMD形式**: ImageDisk形式対応
 - **IMG形式**: PC標準イメージ対応
 - **ディスクイメージ変換**: D88 ↔ DSK ↔ IMD ↔ IMG
 
-### Phase 10: 高度な機能
+#### Phase 12: 高度な機能
 - **仮想ディスクマウント**: OSレベルでのマウント機能
-- **バッチ処理**: 複数ディスクの一括処理
+- **バッチ処理**: 複数ディスクの一括処理  
 - **REST API**: Webサービス化
 
-### Phase 11: GUI・Web版
+#### Phase 13: GUI・Web版
 - **デスクトップGUI**: WPF/Avalonia版
 - **Webアプリケーション**: Blazor版ディスクブラウザ
 - **クロスプラットフォーム**: MAUI対応
@@ -332,10 +451,15 @@ var unicodeText = encodingService.DecodeText(x1Bytes, MachineType.X1);
 
 ## 📚 ドキュメント
 
+### フォーマット仕様
 - [**D88フォーマット仕様**](Documents/D88_Format.md): D88形式の詳細仕様
 - [**Hu-BASICファイルシステム**](Documents/Hu-BASIC_Format.md): Hu-BASICの構造解説
 - [**FAT12ファイルシステム**](Documents/FAT12_Format.md): MS-DOS FAT12の詳細仕様
-- [**実装履歴**](Documents/Implementation_History.md): 開発プロセスの詳細
+- [**MSX-DOSフォーマット仕様**](Documents/MSX_DOS_Format.md): MSX-DOS FAT12の詳細仕様
+
+### 開発ドキュメント
+- [**APIリファレンス**](Documents/API_Reference.md): 詳細なライブラリAPI仕様
+- [**実装履歴**](Documents/Implementation_History.md): 開発プロセスの詳細記録
 - [**実装要件**](Documents/Implement.md): プロジェクトの要件定義
 
 ## 🔧 開発環境
@@ -351,20 +475,37 @@ var unicodeText = encodingService.DecodeText(x1Bytes, MachineType.X1);
 # 開発用ビルド
 dotnet build
 
-# リリースビルド
+# リリースビルド  
 dotnet build -c Release
 
 # テスト実行
 dotnet test
 
+# 包括的テストスイート実行
+dotnet run --project Test
+
 # 型チェック
 dotnet build --verbosity normal
+```
+
+### プロジェクト構成
+
+```
+Legacy89DiskKit/
+├── CSharp/                        # C#実装
+│   ├── Legacy89DiskKit/           # メインライブラリ
+│   ├── Legacy89DiskKit.CLI/       # CLIツール
+│   └── Test/                      # テストプロジェクト
+├── Documents/                     # ドキュメント
+├── SampleCode/                    # サンプルコード
+└── README.md                      # このファイル
 ```
 
 ## 🤝 コントリビューション
 
 プロジェクトへの貢献を歓迎します！
 
+### 貢献方法
 1. **Issue報告**: バグ報告や機能要望
 2. **Pull Request**: コード改善・新機能追加
 3. **ドキュメント**: 説明の改善・翻訳
@@ -375,6 +516,12 @@ dotnet build --verbosity normal
 - 適切なテストを追加
 - ドキュメントを更新
 
+### 主要な貢献ポイント
+- **新ファイルシステム実装**: CP/M、FAT16等
+- **文字エンコーダー拡張**: PC-8801、MSX等のグラフィック文字対応
+- **新ディスクフォーマット**: IMD、IMG等
+- **GUI版実装**: WPF、Avalonia、Blazor等
+
 ## 📄 ライセンス
 
 このプロジェクトは[MITライセンス](LICENSE)の下で公開されています。
@@ -382,9 +529,13 @@ dotnet build --verbosity normal
 ## 🙏 謝辞
 
 - **Sharp X1ユーザーコミュニティ**: フォーマット仕様の調査・検証
+- **PC-8801保存プロジェクト**: N88-BASIC仕様の詳細情報提供
+- **MSXコミュニティ**: MSX-DOS仕様の技術資料提供
 - **レトロコンピュータ保存プロジェクト**: 貴重な資料・サンプルディスクの提供
 - **オープンソースコミュニティ**: ツール・ライブラリの提供
 
 ---
 
-💖 **Legacy89DiskKit**で、貴重なレトロコンピュータの遺産を現代に蘇らせましょう！
+💖 **Legacy89DiskKit v1.2.0**で、貴重なレトロコンピュータの遺産を現代に蘇らせましょう！
+
+**🎉 最新情報**: MSX-DOSファイルシステム完全対応！MSX、Sharp X1、PC-8801の主要ディスクフォーマットを統一的に操作可能になりました。
