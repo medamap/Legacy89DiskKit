@@ -20,6 +20,7 @@ public class Fat12BootSector
     public string VolumeLabel { get; set; } = "";
     
     public bool IsValid => BytesPerSector == 512 && NumberOfFats > 0 && RootEntries > 0;
+    public bool IsValidFat12() => IsValid && SectorsPerFat > 0 && TotalSectors16 > 0;
     public int FirstDataSector => ReservedSectors + (NumberOfFats * SectorsPerFat) + ((RootEntries * 32 + BytesPerSector - 1) / BytesPerSector);
 
     public static Fat12BootSector Parse(byte[] data)
@@ -46,14 +47,6 @@ public class Fat12BootSector
         }
 
         return bootSector;
-    }
-
-    public bool IsValidFat12()
-    {
-        return BytesPerSector > 0 && 
-               SectorsPerCluster > 0 && 
-               NumberOfFats > 0 && 
-               RootEntries > 0;
     }
 }
 
@@ -167,16 +160,17 @@ public class Fat12FileSystem : IFileSystem
             var fileName = entry.GetFileName();
             var extension = entry.GetExtension();
             
-            files.Add(new FileEntry
-            {
-                FileName = fileName,
-                Extension = extension,
-                Size = entry.FileSize,
-                LoadAddress = 0,
-                ExecAddress = 0,
-                Mode = GetFileMode(entry),
-                ModifiedDate = entry.GetModifiedDate()
-            });
+            files.Add(new FileEntry(
+                fileName,
+                extension,
+                GetFileMode(entry),
+                new HuBasicFileAttributes(false, false, false, false, true, false, false),
+                (int)entry.FileSize,
+                0,
+                0,
+                entry.GetModifiedDate(),
+                false
+            ));
         }
         
         return files;
@@ -350,19 +344,71 @@ public class Fat12FileSystem : IFileSystem
     {
         try
         {
+            // Check if boot sector exists
+            if (!_diskContainer.SectorExists(0, 0, 1))
+            {
+                // Create default boot sector for unformatted disk
+                _bootSector = CreateDefaultBootSector();
+                return;
+            }
+            
             var bootSectorData = _diskContainer.ReadSector(0, 0, 1);
+            
+            // Check if boot sector is valid (not all zeros or empty)
+            if (bootSectorData.All(b => b == 0) || bootSectorData.Length < 512)
+            {
+                _bootSector = CreateDefaultBootSector();
+                return;
+            }
+            
             _bootSector = Fat12BootSector.Parse(bootSectorData);
             
-            // Validate FAT12 signature
-            if (!_bootSector.IsValidFat12())
+            // If parsing fails, use default
+            if (!_bootSector.IsValid)
             {
-                throw new FileSystemException("Invalid FAT12 boot sector");
+                _bootSector = CreateDefaultBootSector();
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            throw new FileSystemException($"Failed to load FAT12 boot sector: {ex.Message}", ex);
+            // If any error occurs, use default boot sector
+            _bootSector = CreateDefaultBootSector();
         }
+    }
+
+    private Fat12BootSector CreateDefaultBootSector()
+    {
+        return new Fat12BootSector
+        {
+            BytesPerSector = 512,
+            SectorsPerCluster = 1,
+            ReservedSectors = 1,
+            NumberOfFats = 2,
+            RootEntries = 224,
+            TotalSectors16 = (ushort)(_diskContainer.DiskType switch
+            {
+                DiskType.TwoD => 720,   // 360KB
+                DiskType.TwoDD => 1440, // 720KB  
+                DiskType.TwoHD => 2880, // 1.44MB
+                _ => 1440
+            }),
+            SectorsPerFat = (ushort)(_diskContainer.DiskType switch
+            {
+                DiskType.TwoD => 2,
+                DiskType.TwoDD => 3,
+                DiskType.TwoHD => 9,
+                _ => 3
+            }),
+            SectorsPerTrack = (ushort)(_diskContainer.DiskType switch
+            {
+                DiskType.TwoD => 9,
+                DiskType.TwoDD => 9,
+                DiskType.TwoHD => 18,
+                _ => 9
+            }),
+            NumberOfHeads = 2,
+            VolumeLabel = "NO NAME    "
+        };
     }
 
     private void LoadFatTable()
@@ -457,7 +503,7 @@ public class Fat12FileSystem : IFileSystem
     private byte[] ReadFileData(Fat12DirectoryEntry entry, bool allowPartialRead)
     {
         var data = new List<byte>();
-        var cluster = entry.FirstCluster;
+        int cluster = entry.FirstCluster;
         var remainingBytes = entry.FileSize;
         var chainLength = 0;
 
@@ -477,9 +523,9 @@ public class Fat12FileSystem : IFileSystem
             try
             {
                 var clusterData = ReadCluster(cluster);
-                var bytesToTake = Math.Min(clusterData.Length, remainingBytes);
+                var bytesToTake = Math.Min(clusterData.Length, (int)remainingBytes);
                 data.AddRange(clusterData.Take(bytesToTake));
-                remainingBytes -= bytesToTake;
+                remainingBytes -= (uint)bytesToTake;
                 
                 cluster = GetNextCluster(cluster);
             }
@@ -496,7 +542,7 @@ public class Fat12FileSystem : IFileSystem
     private byte[] ReadFileDataPartial(Fat12DirectoryEntry entry)
     {
         var data = new List<byte>();
-        var cluster = entry.FirstCluster;
+        int cluster = entry.FirstCluster;
         var chainLength = 0;
 
         while (cluster >= 2 && cluster <= 0xFEF && chainLength < MaxClusterChainLength)
@@ -568,38 +614,27 @@ public class Fat12FileSystem : IFileSystem
         return nextCluster & 0xFFF;
     }
 
-    private static byte GetFileMode(Fat12DirectoryEntry entry)
+    private static HuBasicFileMode GetFileMode(Fat12DirectoryEntry entry)
     {
-        byte mode = 0;
-        
         // FAT12 doesn't have the same mode system as Hu-BASIC
         // We'll map based on file extension and attributes
         var ext = entry.GetExtension().ToLower();
         
         if (ext == "exe" || ext == "com" || ext == "bin")
         {
-            mode |= 0x01; // Binary
+            return HuBasicFileMode.Binary;
         }
         else if (ext == "bas")
         {
-            mode |= 0x02; // BASIC
+            return HuBasicFileMode.Basic;
         }
         else if (ext == "txt" || ext == "asc")
         {
-            mode |= 0x04; // ASCII
+            return HuBasicFileMode.Ascii;
         }
         
-        if ((entry.Attributes & 0x01) != 0) // Read-only
-        {
-            mode |= 0x40;
-        }
-        
-        if ((entry.Attributes & 0x02) != 0) // Hidden
-        {
-            mode |= 0x10;
-        }
-        
-        return mode;
+        // Default to binary for unknown file types
+        return HuBasicFileMode.Binary;
     }
 
     private string GetDosFileName(Fat12DirectoryEntry entry)
