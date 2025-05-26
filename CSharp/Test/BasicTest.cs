@@ -2,7 +2,11 @@ using System;
 using System.IO;
 using Legacy89DiskKit.DiskImage.Application;
 using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.Factory;
 using Legacy89DiskKit.FileSystem.Application;
+using Legacy89DiskKit.FileSystem.Infrastructure.Factory;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Legacy89DiskKit.Test;
 
@@ -16,6 +20,7 @@ public class BasicTest
         {
             TestCreateDiskImage();
             TestFormatDisk();
+            N88BasicFileSystemTest.RunTests();
             Console.WriteLine("All tests passed!");
         }
         catch (Exception ex)
@@ -49,16 +54,17 @@ public class BasicTest
         Console.WriteLine("Testing disk formatting...");
         
         var diskService = new DiskImageService();
-        var fileService = new FileSystemService();
+        var fileSystemFactory = new FileSystemFactory();
+        var fileService = new FileSystemService(fileSystemFactory);
         var testFile = "test_format.d88";
         
         if (File.Exists(testFile))
             File.Delete(testFile);
             
         using var container = diskService.CreateNewDiskImage(testFile, DiskType.TwoD, "FORMAT TEST");
-        fileService.FormatDisk(container);
+        fileService.FormatDisk(container, FileSystemType.Fat12);
         
-        var fileSystem = fileService.OpenFileSystem(container);
+        var fileSystem = fileService.OpenFileSystemReadOnly(container);
         
         if (!fileSystem.IsFormatted)
             throw new Exception("File system was not formatted correctly");

@@ -1,14 +1,21 @@
 # Legacy89DiskKit - C# Implementation
 
-Sharp X1 Hu-BASIC ディスクイメージ（D88形式）を操作するためのC#ライブラリとCLIツールです。
+レトロコンピュータのディスクイメージ（D88/DSK形式）を操作するためのC#ライブラリとCLIツールです。
+
+## 対応システム
+
+- **Sharp X1** - Hu-BASIC ファイルシステム
+- **PC-8801** - N88-BASIC ファイルシステム
+- **FAT12** - MS-DOS互換ファイルシステム
 
 ## 機能
 
-- D88形式ディスクイメージの作成・読み込み（2D/2DD/2HD対応）
-- Hu-BASICファイルシステムのフォーマット
+- D88/DSK形式ディスクイメージの作成・読み込み（2D/2DD/2HD対応）
+- 複数ファイルシステムのフォーマット・操作
 - ファイルの入出力（テキスト・バイナリ）
 - ブートセクタの操作
 - ファイル一覧表示・削除
+- 文字エンコーディング変換（X1/PC-8801/MSX1対応）
 
 ## プロジェクト構成
 
@@ -29,9 +36,14 @@ Legacy89DiskKit/
     │   ├── Interface/FileSystem/ # IFileSystem インターフェイス
     │   └── Exception/           # ドメイン例外
     ├── Infrastructure/
-    │   ├── FileSystem/          # HuBasicFileSystem 実装
-    │   └── Utility/             # X1文字コード変換
+    │   ├── FileSystem/          # HuBasic, N88Basic, Fat12 実装
+    │   ├── Factory/             # FileSystemFactory
+    │   └── Utility/             # 文字コード変換・ファイル名検証
     └── Application/             # FileSystemService
+├── CharacterEncoding/           # 文字エンコーディングドメイン
+│   ├── Domain/Interface/        # ICharacterEncoder インターフェイス
+│   ├── Infrastructure/Encoder/  # X1, PC-8801, MSX1 エンコーダ
+│   └── Application/             # CharacterEncodingService
 ```
 
 ### CLIツール (Legacy89DiskKit.CLI)
@@ -49,7 +61,13 @@ Legacy89DiskKit.CLI create disk.d88 2D "My Disk"
 
 #### フォーマット
 ```bash
+# ファイルシステム自動判定
 Legacy89DiskKit.CLI format disk.d88
+
+# ファイルシステム明示指定
+Legacy89DiskKit.CLI format disk.d88 --filesystem HuBasic
+Legacy89DiskKit.CLI format disk.d88 --filesystem N88Basic  
+Legacy89DiskKit.CLI format disk.d88 --filesystem Fat12
 ```
 
 #### ファイル一覧表示
@@ -59,11 +77,13 @@ Legacy89DiskKit.CLI list disk.d88
 
 #### テキストファイルの入出力
 ```bash
-# インポート
-Legacy89DiskKit.CLI import-text disk.d88 readme.txt README.TXT
+# インポート（文字エンコーディング指定可能）
+Legacy89DiskKit.CLI import-text disk.d88 readme.txt README.TXT --encoding X1
+Legacy89DiskKit.CLI import-text disk.d88 readme.txt README.TXT --encoding Pc8801
+Legacy89DiskKit.CLI import-text disk.d88 readme.txt README.TXT --encoding Msx1
 
 # エクスポート
-Legacy89DiskKit.CLI export-text disk.d88 README.TXT readme_export.txt
+Legacy89DiskKit.CLI export-text disk.d88 README.TXT readme_export.txt --encoding X1
 ```
 
 #### バイナリファイルの入出力
@@ -140,15 +160,30 @@ var fileData = existingFileSystem.ReadFile("README.TXT");
 - **2DD**: 640KB (80トラック × 2面 × 16セクタ × 256バイト) 
 - **2HD**: 1.2MB (77トラック × 2面 × 26セクタ × 256バイト)
 
-## 文字コード
+## ファイルシステム対応状況
 
-X1固有の文字コード（JIS X 0201 + カタカナ・記号）とUnicodeの相互変換をサポートしています。
+| 機能 | Hu-BASIC | N88-BASIC | FAT12 |
+|------|----------|-----------|-------|
+| ディスク作成・フォーマット | ✅ | ✅ | ✅ |
+| ファイル読み取り | ✅ | ✅ | ✅ |
+| ファイル書き込み | ✅ | ✅ | ✅ |
+| ファイル削除 | ✅ | ✅ | ✅ |
+| ディスク情報取得 | ✅ | ✅ | ✅ |
+| ブートセクタ操作 | ✅ | ✅ | ✅ |
+
+## 文字エンコーディング
+
+各システム固有の文字コードとUnicodeの相互変換をサポートしています：
+
+- **X1**: JIS X 0201 + Sharp X1固有文字
+- **PC-8801**: JIS X 0201 + PC-8801固有文字  
+- **MSX1**: JIS X 0201 + MSX固有文字
 
 ## 制限事項
 
-- 現在の実装では、ファイルの書き込み・削除機能は部分的な実装です
 - ディレクトリはサポートされていません（ルートディレクトリのみ）
 - マルチバイト文字（漢字等）はサポートされていません
+- DSK形式での2HD以外のサポートは制限があります
 
 ## ビルド
 
