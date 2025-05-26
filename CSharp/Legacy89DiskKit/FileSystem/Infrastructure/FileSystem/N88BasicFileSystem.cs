@@ -90,29 +90,8 @@ public class N88BasicFileSystem : IFileSystem
             if (fatData == null || fatData.Length == 0)
                 return false;
             
-            // 基本的なFAT値の存在確認
-            var hasValidEntries = false;
-            var hasEofMarkers = false;
-            
-            foreach (var fatValue in fatData)
-            {
-                if (_config.IsFreeCluster(fatValue))
-                    continue;
-                
-                if (_config.IsEofMarker(fatValue))
-                {
-                    hasEofMarkers = true;
-                    continue;
-                }
-                
-                if (_config.IsValidClusterNumber(fatValue))
-                {
-                    hasValidEntries = true;
-                }
-            }
-            
-            // 少なくとも空きクラスタまたは使用中クラスタが存在すること
-            return true; // 基本構造が読めれば有効とみなす
+            // 基本的なFAT値の存在確認 - 読み取れれば有効とみなす
+            return true;
         }
         catch
         {
@@ -266,6 +245,11 @@ public class N88BasicFileSystem : IFileSystem
         }
     }
     
+    public IEnumerable<FileEntry> GetFiles()
+    {
+        return ListFiles();
+    }
+    
     public List<FileEntry> ListFiles()
     {
         try
@@ -282,17 +266,32 @@ public class N88BasicFileSystem : IFileSystem
                 var size = CalculateFileSize(entry.StartCluster);
                 entry.CalculatedSize = size;
                 
-                // FileEntryに変換
-                var fileEntry = new FileEntry
-                {
-                    FileName = entry.FileName,
-                    Extension = entry.Extension,
-                    Size = size,
-                    IsDirectory = false,
-                    Attributes = entry.Attributes,
-                    CreatedDate = DateTime.MinValue, // N88-BASICは日付なし
-                    ModifiedDate = DateTime.MinValue
-                };
+                // N88BasicからHu-BASICの形式に変換
+                var mode = entry.IsBinary ? HuBasicFileMode.Binary :
+                          entry.IsTokenizedBasic ? HuBasicFileMode.Basic :
+                          HuBasicFileMode.Ascii;
+                
+                var attributes = new HuBasicFileAttributes(
+                    IsDirectory: false,
+                    IsReadOnly: entry.IsWriteProtected,
+                    IsVerify: entry.IsVerifyAfterWrite,
+                    IsHidden: false,
+                    IsBinary: entry.IsBinary,
+                    IsBasic: entry.IsTokenizedBasic,
+                    IsAscii: entry.IsAsciiText
+                );
+                
+                var fileEntry = new FileEntry(
+                    FileName: entry.FileName,
+                    Extension: entry.Extension,
+                    Mode: mode,
+                    Attributes: attributes,
+                    Size: size,
+                    LoadAddress: 0,
+                    ExecuteAddress: 0,
+                    ModifiedDate: DateTime.MinValue,
+                    IsProtected: entry.IsEditProtected
+                );
                 
                 fileEntries.Add(fileEntry);
             }
@@ -305,7 +304,12 @@ public class N88BasicFileSystem : IFileSystem
         }
     }
     
-    public byte[] ReadFile(string fileName, bool allowPartialRead = false)
+    public byte[] ReadFile(string fileName)
+    {
+        return ReadFile(fileName, false);
+    }
+    
+    public byte[] ReadFile(string fileName, bool allowPartialRead)
     {
         if (string.IsNullOrWhiteSpace(fileName))
             throw new ArgumentException("ファイル名が指定されていません");
@@ -324,7 +328,7 @@ public class N88BasicFileSystem : IFileSystem
         }
     }
     
-    public void WriteFile(string fileName, byte[] data)
+    public void WriteFile(string fileName, byte[] data, bool isText = false, ushort loadAddress = 0, ushort execAddress = 0)
     {
         if (_diskContainer.IsReadOnly)
             throw new FileSystemException("読み取り専用ディスクには書き込みできません");
@@ -345,7 +349,7 @@ public class N88BasicFileSystem : IFileSystem
         
         try
         {
-            WriteFileData(validation.BaseName, validation.Extension, data);
+            WriteFileData(validation.BaseName, validation.Extension, data, isText);
         }
         catch (Exception ex) when (!(ex is FileSystemException))
         {
@@ -388,16 +392,31 @@ public class N88BasicFileSystem : IFileSystem
             
             var size = CalculateFileSize(entry.StartCluster);
             
-            return new FileEntry
-            {
-                FileName = entry.FileName,
-                Extension = entry.Extension,
-                Size = size,
-                IsDirectory = false,
-                Attributes = entry.Attributes,
-                CreatedDate = DateTime.MinValue,
-                ModifiedDate = DateTime.MinValue
-            };
+            var mode = entry.IsBinary ? HuBasicFileMode.Binary :
+                      entry.IsTokenizedBasic ? HuBasicFileMode.Basic :
+                      HuBasicFileMode.Ascii;
+            
+            var attributes = new HuBasicFileAttributes(
+                IsDirectory: false,
+                IsReadOnly: entry.IsWriteProtected,
+                IsVerify: entry.IsVerifyAfterWrite,
+                IsHidden: false,
+                IsBinary: entry.IsBinary,
+                IsBasic: entry.IsTokenizedBasic,
+                IsAscii: entry.IsAsciiText
+            );
+            
+            return new FileEntry(
+                FileName: entry.FileName,
+                Extension: entry.Extension,
+                Mode: mode,
+                Attributes: attributes,
+                Size: size,
+                LoadAddress: 0,
+                ExecuteAddress: 0,
+                ModifiedDate: DateTime.MinValue,
+                IsProtected: entry.IsEditProtected
+            );
         }
         catch
         {
@@ -544,7 +563,30 @@ public class N88BasicFileSystem : IFileSystem
                 throw new FileSystemException($"ファイルサイズが制限を超えています: {fileData.Count}");
             }
             
-            return fileData.ToArray();
+            var result = fileData.ToArray();
+            
+            // テキストファイルの場合、終端のNUL文字を削除
+            if (entry.IsAsciiText && result.Length > 0)
+            {
+                int actualLength = result.Length;
+                for (int i = result.Length - 1; i >= 0; i--)
+                {
+                    if (result[i] != 0)
+                    {
+                        actualLength = i + 1;
+                        break;
+                    }
+                }
+                
+                if (actualLength < result.Length)
+                {
+                    var trimmedResult = new byte[actualLength];
+                    Array.Copy(result, 0, trimmedResult, 0, actualLength);
+                    result = trimmedResult;
+                }
+            }
+            
+            return result;
         }
         catch (Exception ex) when (!(ex is FileSystemException))
         {
@@ -555,7 +597,7 @@ public class N88BasicFileSystem : IFileSystem
     /// <summary>
     /// ファイルデータを書き込み
     /// </summary>
-    private void WriteFileData(string baseName, string extension, byte[] data)
+    private void WriteFileData(string baseName, string extension, byte[] data, bool isText = false)
     {
         // 既存ファイルチェック
         var existingEntry = FindFileEntry($"{baseName}.{extension}");
@@ -583,7 +625,7 @@ public class N88BasicFileSystem : IFileSystem
             BuildFatChain(allocatedClusters, data.Length);
             
             // ディレクトリエントリを作成
-            CreateDirectoryEntry(baseName, extension, allocatedClusters[0]);
+            CreateDirectoryEntry(baseName, extension, allocatedClusters[0], isText);
         }
         catch
         {
@@ -831,7 +873,7 @@ public class N88BasicFileSystem : IFileSystem
     /// <summary>
     /// ディレクトリエントリを作成
     /// </summary>
-    private void CreateDirectoryEntry(string baseName, string extension, int startCluster)
+    private void CreateDirectoryEntry(string baseName, string extension, int startCluster, bool isText = false)
     {
         var entries = ReadDirectoryEntries();
         
@@ -857,6 +899,19 @@ public class N88BasicFileSystem : IFileSystem
             StartCluster = (byte)startCluster,
             Status = N88BasicEntryStatus.Active
         };
+        
+        // ファイルタイプ属性を設定
+        if (isText)
+        {
+            // ASCIIテキストファイル（IsTokenizedBasic = false）
+            newEntry.IsTokenizedBasic = false;
+            newEntry.IsBinary = false;
+        }
+        else
+        {
+            // デフォルトでバイナリファイル
+            newEntry.IsBinary = true;
+        }
         
         // エントリを書き戻し
         WriteDirectoryEntry(emptyEntryIndex, newEntry);
@@ -898,6 +953,108 @@ public class N88BasicFileSystem : IFileSystem
         Array.Copy(entryBytes, 0, sectorData, entryOffset, _config.EntrySize);
         
         _diskContainer.WriteSector(track, head, sector, sectorData);
+    }
+    
+    /// <summary>
+    /// ブートセクタ情報を取得
+    /// </summary>
+    public BootSector GetBootSector()
+    {
+        try
+        {
+            // IDセクタ（N88-BASICのブート情報）を読み取り
+            var (track, head, sector) = _config.GetIdSectorAddress();
+            var idData = _diskContainer.ReadSector(track, head, sector);
+            
+            if (idData == null || idData.Length == 0)
+            {
+                return new BootSector(false, "", "", 0, 0, 0, DateTime.MinValue, 0);
+            }
+            
+            var isBootable = idData[1] == 0xFF; // プロンプトスキップ = ブート可能
+            var basicCode = System.Text.Encoding.ASCII.GetString(idData, 2, Math.Min(254, idData.Length - 2)).TrimEnd('\0');
+            
+            return new BootSector(
+                IsBootable: isBootable,
+                Label: "N88-BASIC",
+                Extension: "SYS",
+                Size: basicCode.Length,
+                LoadAddress: 0,
+                ExecuteAddress: 0,
+                ModifiedDate: DateTime.MinValue,
+                StartSector: (ushort)sector
+            );
+        }
+        catch (Exception ex)
+        {
+            throw new FileSystemException($"ブートセクタ読み取りエラー: {ex.Message}", ex);
+        }
+    }
+    
+    /// <summary>
+    /// ブートセクタ情報を書き込み
+    /// </summary>
+    public void WriteBootSector(BootSector bootSector)
+    {
+        if (_diskContainer.IsReadOnly)
+            throw new FileSystemException("読み取り専用ディスクには書き込みできません");
+        
+        try
+        {
+            var (track, head, sector) = _config.GetIdSectorAddress();
+            var idData = new byte[_config.SectorSize];
+            
+            // IDセクタの基本構造を設定
+            idData[0] = (byte)_config.DiskType; // ディスクメディア属性
+            idData[1] = bootSector.IsBootable ? (byte)0xFF : (byte)0x00; // プロンプトスキップ
+            
+            // BASICコード（ラベルとして使用）
+            if (!string.IsNullOrEmpty(bootSector.Label))
+            {
+                var basicBytes = System.Text.Encoding.ASCII.GetBytes(bootSector.Label);
+                var copyLength = Math.Min(basicBytes.Length, _config.SectorSize - 2);
+                Array.Copy(basicBytes, 0, idData, 2, copyLength);
+            }
+            
+            _diskContainer.WriteSector(track, head, sector, idData);
+        }
+        catch (Exception ex)
+        {
+            throw new FileSystemException($"ブートセクタ書き込みエラー: {ex.Message}", ex);
+        }
+    }
+    
+    /// <summary>
+    /// ファイルシステム情報を取得
+    /// </summary>
+    public HuBasicFileSystemInfo GetFileSystemInfo()
+    {
+        try
+        {
+            var fatData = ReadFatData();
+            if (fatData == null)
+                throw new FileSystemException("FAT読み取りに失敗しました");
+            
+            var totalClusters = _config.TotalClusters;
+            var freeClusters = 0;
+            
+            foreach (var fatValue in fatData.Take(totalClusters))
+            {
+                if (_config.IsFreeCluster(fatValue))
+                    freeClusters++;
+            }
+            
+            return new HuBasicFileSystemInfo(
+                TotalClusters: totalClusters,
+                FreeClusters: freeClusters,
+                ClusterSize: _config.ClusterSize,
+                SectorSize: _config.SectorSize
+            );
+        }
+        catch (Exception ex)
+        {
+            throw new FileSystemException($"ファイルシステム情報取得エラー: {ex.Message}", ex);
+        }
     }
     
     #endregion
