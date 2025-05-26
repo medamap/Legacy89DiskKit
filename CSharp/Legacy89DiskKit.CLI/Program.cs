@@ -512,17 +512,32 @@ class Program
     {
         if (parameters.Length < 2)
         {
-            Console.WriteLine("Usage: delete <disk-file> <disk-filename>");
+            Console.WriteLine("Usage: delete <disk-file> <disk-filename> --filesystem <type>");
             return;
         }
 
         var diskFile = parameters[0];
         var diskFileName = parameters[1];
+        
+        // Parse filesystem parameter
+        var fileSystemType = FileSystemType.HuBasic; // Default
+        for (int i = 2; i < parameters.Length - 1; i++)
+        {
+            if (parameters[i] == "--filesystem")
+            {
+                if (!Enum.TryParse<FileSystemType>(parameters[i + 1].Replace("-", ""), true, out fileSystemType))
+                {
+                    Console.WriteLine($"Invalid filesystem type: {parameters[i + 1]}");
+                    Console.WriteLine("Supported types: hu-basic, fat12");
+                    return;
+                }
+                break;
+            }
+        }
 
         try
         {
             using var container = _diskContainerFactory.OpenDiskImage(diskFile);
-            var fileSystemType = _fileSystemFactory.GuessFileSystemType(container);
             var fileSystem = _fileSystemFactory.OpenFileSystem(container, fileSystemType);
             
             fileSystem.DeleteFile(diskFileName);

@@ -1070,9 +1070,107 @@ public class HuBasicFileSystem : IFileSystem
     {
         if (_diskContainer.IsReadOnly)
             throw new InvalidOperationException("Cannot delete from read-only disk");
+
+        if (string.IsNullOrWhiteSpace(fileName))
+            throw new ArgumentException("File name cannot be null or empty", nameof(fileName));
+
+        // Check if file exists first
+        var fileEntry = GetFile(fileName);
+        if (fileEntry == null)
+            throw new Domain.Exception.FileNotFoundException(fileName);
+
+        // Get file start cluster to free FAT entries
+        var startCluster = GetFileStartCluster(fileName);
+        if (startCluster >= 0)
+        {
+            try
+            {
+                // Get cluster chain and free all clusters
+                var clusters = GetClusterChain(startCluster);
+                FreeClusters(clusters);
+            }
+            catch (FileSystemException ex)
+            {
+                // If cluster chain is corrupted, just free the start cluster
+                Console.WriteLine($"Warning: Cluster chain error during deletion: {ex.Message}");
+                Console.WriteLine("Freeing only the start cluster...");
+                FreeClusters(new List<int> { startCluster });
+            }
+        }
+
+        // Mark directory entry as deleted
+        MarkDirectoryEntryAsDeleted(fileName);
+    }
+
+    private void FreeClusters(List<int> clusters)
+    {
+        var fatData = ReadFat();
+        
+        foreach (var cluster in clusters)
+        {
+            SetFatEntry(fatData, cluster, 0x00); // Mark as free
+        }
+        
+        WriteFat(fatData);
+    }
+
+    private void MarkDirectoryEntryAsDeleted(string fileName)
+    {
+        for (int sector = 0; sector < _config.DirectorySectors; sector++)
+        {
+            var dirData = ReadDirectorySector(sector);
+            bool sectorModified = false;
             
-        // Mark directory entry as deleted and free clusters in FAT
-        throw new NotImplementedException("DeleteFile not yet implemented");
+            for (int entryOffset = 0; entryOffset < _config.SectorSize; entryOffset += 32)
+            {
+                var entryData = new byte[32];
+                Array.Copy(dirData, entryOffset, entryData, 0, 32);
+                
+                var fileMode = entryData[0];
+                if (fileMode == 0xFF) return; // End of directory
+                if (fileMode == 0x00) continue; // Already deleted
+                
+                var entryFileName = System.Text.Encoding.ASCII.GetString(entryData, 1, 13).TrimEnd(' ');
+                var entryExtension = System.Text.Encoding.ASCII.GetString(entryData, 0x0E, 3).TrimEnd(' ');
+                var fullName = string.IsNullOrWhiteSpace(entryExtension) 
+                    ? entryFileName 
+                    : $"{entryFileName}.{entryExtension}";
+                    
+                if (string.Equals(fullName, fileName, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Mark as deleted by setting first byte to 0x00
+                    dirData[entryOffset] = 0x00;
+                    sectorModified = true;
+                    break;
+                }
+            }
+            
+            if (sectorModified)
+            {
+                WriteDirectorySector(sector, dirData);
+                return;
+            }
+        }
+    }
+
+    private void WriteDirectorySector(int sector, byte[] dirData)
+    {
+        var physicalSector = _config.DirectorySector + sector;
+        var cylinder = _config.DirectoryTrack / 2;
+        var head = _config.DirectoryTrack % 2;
+        
+        if (_diskContainer.DiskType == DiskType.TwoHD)
+        {
+            var totalSector = physicalSector - 1;
+            cylinder = totalSector / _config.SectorsPerTrack / 2;
+            head = (totalSector / _config.SectorsPerTrack) % 2;
+            var sectorNum = (totalSector % _config.SectorsPerTrack) + 1;
+            _diskContainer.WriteSector(cylinder, head, sectorNum, dirData);
+        }
+        else
+        {
+            _diskContainer.WriteSector(cylinder, head, physicalSector, dirData);
+        }
     }
 
     public BootSector GetBootSector()
