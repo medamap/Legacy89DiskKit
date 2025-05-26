@@ -82,21 +82,8 @@ public class ComprehensiveTestSuite
                     {
                         totalTests++;
                         
-                        // DSK作成は未実装のためスキップ
-                        if (containerExt == ".dsk" && operation == "CreateDiskImage")
-                        {
-                            _results.Add(new TestResult
-                            {
-                                FileSystemType = fileSystemType,
-                                DiskType = diskType,
-                                ContainerType = containerExt,
-                                Operation = operation,
-                                MachineType = null,
-                                Status = TestStatus.Skipped,
-                                Message = "DSK creation not implemented"
-                            });
-                            continue;
-                        }
+                        // DSK作成は今回実装済み
+                        // (スキップコードを削除)
 
                         if (operation.Contains("Text"))
                         {
