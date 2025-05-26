@@ -145,7 +145,93 @@ public class Fat12FileSystem : IFileSystem
 
     public void Format()
     {
-        throw new NotImplementedException("FAT12 filesystem formatting not yet implemented");
+        if (_diskContainer.IsReadOnly)
+            throw new InvalidOperationException("Cannot format read-only disk");
+
+        // Create default boot sector
+        _bootSector = CreateDefaultBootSector();
+        
+        // Write boot sector
+        WriteBootSector();
+        
+        // Initialize FAT
+        InitializeFat();
+        
+        // Initialize root directory  
+        InitializeRootDirectory();
+    }
+
+    private void WriteBootSector()
+    {
+        var bootData = new byte[512];
+        
+        // FAT12 Boot Sector structure
+        bootData[0] = 0xEB; // Jump instruction
+        bootData[1] = 0x3C;
+        bootData[2] = 0x90;
+        
+        // OEM Name
+        Array.Copy(System.Text.Encoding.ASCII.GetBytes("LEGACY89"), 0, bootData, 3, 8);
+        
+        // BPB (BIOS Parameter Block)
+        BitConverter.GetBytes(_bootSector.BytesPerSector).CopyTo(bootData, 11);
+        bootData[13] = (byte)_bootSector.SectorsPerCluster;
+        BitConverter.GetBytes(_bootSector.ReservedSectors).CopyTo(bootData, 14);
+        bootData[16] = (byte)_bootSector.NumberOfFats;
+        BitConverter.GetBytes(_bootSector.RootEntries).CopyTo(bootData, 17);
+        BitConverter.GetBytes(_bootSector.TotalSectors16).CopyTo(bootData, 19);
+        bootData[21] = 0xF0; // Media descriptor
+        BitConverter.GetBytes(_bootSector.SectorsPerFat).CopyTo(bootData, 22);
+        BitConverter.GetBytes(_bootSector.SectorsPerTrack).CopyTo(bootData, 24);
+        BitConverter.GetBytes(_bootSector.NumberOfHeads).CopyTo(bootData, 26);
+        
+        // Volume label
+        Array.Copy(System.Text.Encoding.ASCII.GetBytes(_bootSector.VolumeLabel.PadRight(11)), 0, bootData, 43, 11);
+        
+        // File system type
+        Array.Copy(System.Text.Encoding.ASCII.GetBytes("FAT12   "), 0, bootData, 54, 8);
+        
+        // Boot signature
+        bootData[510] = 0x55;
+        bootData[511] = 0xAA;
+        
+        _diskContainer.WriteSector(0, 0, 1, bootData);
+    }
+
+    private void InitializeFat()
+    {
+        for (int fatCopy = 0; fatCopy < _bootSector.NumberOfFats; fatCopy++)
+        {
+            for (int sector = 0; sector < _bootSector.SectorsPerFat; sector++)
+            {
+                var fatData = new byte[512];
+                
+                if (sector == 0)
+                {
+                    // First FAT sector - initialize with media descriptor
+                    fatData[0] = 0xF0; // Media descriptor
+                    fatData[1] = 0xFF;
+                    fatData[2] = 0xFF;
+                }
+                
+                var sectorNum = _bootSector.ReservedSectors + (fatCopy * _bootSector.SectorsPerFat) + sector + 1;
+                _diskContainer.WriteSector(0, 0, sectorNum, fatData);
+            }
+        }
+    }
+
+    private void InitializeRootDirectory()
+    {
+        var rootDirSectors = (_bootSector.RootEntries * 32 + 511) / 512;
+        var rootDirStart = _bootSector.ReservedSectors + (_bootSector.NumberOfFats * _bootSector.SectorsPerFat);
+        
+        for (int sector = 0; sector < rootDirSectors; sector++)
+        {
+            var dirData = new byte[512];
+            // Initialize with zeros (empty directory)
+            var sectorNum = rootDirStart + sector + 1;
+            _diskContainer.WriteSector(0, 0, sectorNum, dirData);
+        }
     }
 
     public IEnumerable<FileEntry> ListFiles()
@@ -207,12 +293,20 @@ public class Fat12FileSystem : IFileSystem
 
     public void WriteFile(string fileName, byte[] data, bool isText = false, ushort loadAddress = 0, ushort execAddress = 0)
     {
-        throw new NotImplementedException("FAT12 file writing not yet implemented");
+        if (_diskContainer.IsReadOnly)
+            throw new InvalidOperationException("Cannot write to read-only disk");
+            
+        // Simplified implementation for basic functionality
+        throw new NotImplementedException("FAT12 file writing - complex implementation required");
     }
 
     public void DeleteFile(string fileName)
     {
-        throw new NotImplementedException("FAT12 file deletion not yet implemented");
+        if (_diskContainer.IsReadOnly)
+            throw new InvalidOperationException("Cannot delete from read-only disk");
+            
+        // Simplified implementation for basic functionality
+        throw new NotImplementedException("FAT12 file deletion - complex implementation required");
     }
 
     public BootSector GetBootSector()
@@ -378,19 +472,20 @@ public class Fat12FileSystem : IFileSystem
 
     private Fat12BootSector CreateDefaultBootSector()
     {
+        // DSK format uses different geometry than standard FAT12 floppy
         return new Fat12BootSector
         {
             BytesPerSector = 512,
             SectorsPerCluster = 1,
             ReservedSectors = 1,
             NumberOfFats = 2,
-            RootEntries = 224,
+            RootEntries = 112, // Reduced for DSK format
             TotalSectors16 = (ushort)(_diskContainer.DiskType switch
             {
-                DiskType.TwoD => 720,   // 360KB
-                DiskType.TwoDD => 1440, // 720KB  
-                DiskType.TwoHD => 2880, // 1.44MB
-                _ => 1440
+                DiskType.TwoD => 640,   // 40 cylinders × 1 head × 16 sectors
+                DiskType.TwoDD => 1280, // 40 cylinders × 2 heads × 16 sectors
+                DiskType.TwoHD => 2880, // 80 cylinders × 2 heads × 18 sectors
+                _ => 1280
             }),
             SectorsPerFat = (ushort)(_diskContainer.DiskType switch
             {
@@ -401,12 +496,18 @@ public class Fat12FileSystem : IFileSystem
             }),
             SectorsPerTrack = (ushort)(_diskContainer.DiskType switch
             {
-                DiskType.TwoD => 9,
-                DiskType.TwoDD => 9,
+                DiskType.TwoD => 16,  // DSK format uses 16 sectors per track
+                DiskType.TwoDD => 16,
                 DiskType.TwoHD => 18,
-                _ => 9
+                _ => 16
             }),
-            NumberOfHeads = 2,
+            NumberOfHeads = (ushort)(_diskContainer.DiskType switch
+            {
+                DiskType.TwoD => 1,
+                DiskType.TwoDD => 2,
+                DiskType.TwoHD => 2,
+                _ => 2
+            }),
             VolumeLabel = "NO NAME    "
         };
     }
