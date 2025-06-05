@@ -3,13 +3,13 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0+-512BD4?style=flat&logo=dotnet)](https://dotnet.microsoft.com/)
 [![C#](https://img.shields.io/badge/C%23-Latest-239120?style=flat&logo=c-sharp)](https://docs.microsoft.com/en-us/dotnet/csharp/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v1.4.0-blue?style=flat)](https://github.com/yourusername/Legacy89DiskKit/releases)
+[![Version](https://img.shields.io/badge/Version-v1.5.0-blue?style=flat)](https://github.com/yourusername/Legacy89DiskKit/releases)
 
 📀 **Legacy89DiskKit** は、1980〜90年代の日本のレトロコンピュータ（Sharp X1、PC-8801、MSX等）で使用されていたディスクフォーマットを現代的な環境で扱うためのC#ライブラリ・CLIツールセットです。
 
 ## ✨ 特徴
 
-### 🎯 対応フォーマット (v1.4.0)
+### 🎯 対応フォーマット (v1.5.0)
 
 **完全対応ファイルシステム**:
 - ✅ **Hu-BASIC** (Sharp X1) - 完全実装
@@ -17,7 +17,7 @@
 - ✅ **MS-DOS FAT12** (汎用PC) - 完全実装
 - ✅ **MSX-DOS** (MSX) - 完全実装
 - ✅ **CP/M 2.2** (汎用) - 完全実装
-- ✅ **CDOS (Club DOS)** - 完全実装 ← **NEW in v1.4.0!**
+- ✅ **CDOS (Club DOS)** - 完全実装
 
 **対応ディスクイメージ**:
 - ✅ **D88形式** - Sharp/NECディスクイメージ標準
@@ -26,6 +26,12 @@
 **文字エンコーディング**: **18機種対応** (X1完全実装、他機種基本ASCII)
 
 **対応ディスクタイプ**: 2D (320KB) / 2DD (720KB) / 2HD (1.2MB)
+
+### 🎮 インタラクティブシェル ← **NEW in v1.5.0!**
+- **対話型操作**: リアルタイムフィードバックで直感的な操作
+- **マルチスロット**: 最大10個のディスクを同時管理
+- **Tab補完**: コマンド・ファイルパスの自動補完
+- **クロスディスク操作**: ディスク間でのファイルコピー・移動
 
 ### 🏗️ モダンアーキテクチャ
 - **DDD（ドメイン駆動設計）**: 拡張性・保守性を重視した設計
@@ -77,6 +83,22 @@ dotnet run --project Legacy89DiskKit.CLI -- help
 ```
 
 ### 基本的な使用例
+
+#### 🎮 インタラクティブシェルモード（NEW!）
+
+```bash
+# インタラクティブシェルを起動
+dotnet run --project Legacy89DiskKit.CLI -- shell
+
+# シェル内での操作例
+Legacy89DiskKit [0:Empty]> open ~/disks/game.d88
+Legacy89DiskKit [0:game.d88/HuBasic]> list
+Legacy89DiskKit [0:game.d88/HuBasic]> open ~/disks/work.d88 1
+Legacy89DiskKit [0:game.d88/HuBasic]> copy GAME.BAS 1:
+Legacy89DiskKit [0:game.d88/HuBasic]> export-text README.TXT ~/desktop/readme.txt
+```
+
+#### 📝 従来のコマンドライン操作
 
 ```bash
 # 新しいディスクイメージを作成
