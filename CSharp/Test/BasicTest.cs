@@ -77,7 +77,7 @@ public class BasicTest
 
 class Program
 {
-    static void Main(string[] args)
+    /*static void Main(string[] args)
     {
         Console.WriteLine("Legacy89DiskKit Test Suite");
         Console.WriteLine("==========================");
@@ -96,5 +96,5 @@ class Program
             Console.WriteLine();
             Console.WriteLine("To run comprehensive tests, use: dotnet run comprehensive");
         }
-    }
+    }*/
 }
