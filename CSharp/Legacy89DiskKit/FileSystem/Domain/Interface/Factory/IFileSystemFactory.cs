@@ -27,6 +27,7 @@ public enum FileSystemType
     Fat12,
     Fat16,
     Cpm,
+    Cdos,
     N88Basic,
     MsxDos
 }
