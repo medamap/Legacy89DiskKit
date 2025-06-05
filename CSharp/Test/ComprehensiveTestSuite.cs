@@ -53,7 +53,7 @@ public class ComprehensiveTestSuite
         // テストマトリックス定義
         var fileSystemTypes = new[] { FileSystemType.HuBasic, FileSystemType.Fat12, FileSystemType.N88Basic, FileSystemType.MsxDos, FileSystemType.Cpm, FileSystemType.Cdos };
         var diskTypes = new[] { DiskType.TwoD, DiskType.TwoDD, DiskType.TwoHD };
-        var containerExtensions = new[] { ".d88", ".dsk" };
+        var containerExtensions = new[] { ".d88", ".dsk", ".2d" };
         var machineTypes = new[] { MachineType.X1, MachineType.Pc8801, MachineType.Msx1 };
         var cpmMachineTypes = new[] { MachineType.CpmGeneric, MachineType.CpmPc8801, MachineType.CpmX1, MachineType.CpmMsxDos };
 
