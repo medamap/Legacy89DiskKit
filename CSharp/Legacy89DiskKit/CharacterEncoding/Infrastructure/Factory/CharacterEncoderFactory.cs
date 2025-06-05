@@ -18,6 +18,10 @@ public class CharacterEncoderFactory : ICharacterEncoderFactory
             MachineType.Pc8801Mk2 => new Pc8801CharacterEncoder(), // Pc8801Mk2 uses same encoding as Pc8801
             MachineType.Msx1 => new Msx1CharacterEncoder(),
             MachineType.Msx2 => new Msx1CharacterEncoder(), // Msx2 uses same encoding as Msx1 for basic characters
+            MachineType.CpmGeneric => new CpmCharacterEncoder(),
+            MachineType.CpmPc8801 => new CpmPc8801CharacterEncoder(),
+            MachineType.CpmX1 => new CpmX1CharacterEncoder(),
+            MachineType.CpmMsxDos => new CpmMsxDosCharacterEncoder(),
             _ => throw new CharacterEncodingException($"Unsupported machine type: {machineType}")
         };
     }
