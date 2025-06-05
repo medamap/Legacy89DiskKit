@@ -17,6 +17,7 @@ public class FileSystemFactory : IFileSystemFactory
             FileSystemType.Fat12 => new Fat12FileSystem(container),
             FileSystemType.Fat16 => throw new NotImplementedException("FAT16 filesystem not yet implemented"),
             FileSystemType.Cpm => new CpmFileSystem(container),
+            FileSystemType.Cdos => new CdosFileSystem(container),
             FileSystemType.N88Basic => new N88BasicFileSystem(container),
             FileSystemType.MsxDos => new MsxDosFileSystem(container),
             _ => throw new ArgumentException($"Unsupported filesystem type: {fileSystemType}")
@@ -150,6 +151,12 @@ public class FileSystemFactory : IFileSystemFactory
                     return FileSystemType.Cpm;
                 }
                 
+                // Check for CDOS filesystem
+                if (CheckCdosSignature(container))
+                {
+                    return FileSystemType.Cdos;
+                }
+                
                 // Check for Hu-BASIC signature (32-byte boot sector format)
                 if (bootSector.Length >= 32)
                 {
@@ -195,7 +202,8 @@ public class FileSystemFactory : IFileSystemFactory
             FileSystemType.Fat12,
             FileSystemType.N88Basic,
             FileSystemType.MsxDos,
-            FileSystemType.Cpm
+            FileSystemType.Cpm,
+            FileSystemType.Cdos
         };
     }
 
@@ -225,6 +233,7 @@ public class FileSystemFactory : IFileSystemFactory
                 FileSystemType.HuBasic => ValidateHuBasicStructure(bootSector),
                 FileSystemType.MsxDos => ValidateMsxDosStructure(bootSector),
                 FileSystemType.Cpm => ValidateCpmStructure(container),
+                FileSystemType.Cdos => ValidateCdosStructure(container),
                 FileSystemType.N88Basic => ValidateN88BasicStructure(container),
                 _ => false
             };
@@ -337,10 +346,84 @@ public class FileSystemFactory : IFileSystemFactory
         return false;
     }
 
+    private bool CheckCdosSignature(IDiskContainer container)
+    {
+        try
+        {
+            // CDOS directory typically starts at track 1
+            var directorySector = container.ReadSector(1, 0, 1);
+            
+            // Check for CDOS directory entry patterns (32-byte entries)
+            for (int offset = 0; offset < directorySector.Length; offset += 32)
+            {
+                if (offset + 32 > directorySector.Length)
+                    break;
+                    
+                var firstByte = directorySector[offset];
+                
+                // Skip empty or deleted entries
+                if (firstByte == 0x00 || firstByte == 0xE5)
+                    continue;
+                
+                // Check if filename looks valid (ASCII characters)
+                bool isValidFileName = true;
+                for (int i = 0; i < 8; i++)
+                {
+                    var ch = directorySector[offset + i];
+                    if (ch != 0x20 && (ch < 0x21 || ch > 0x7E))
+                    {
+                        isValidFileName = false;
+                        break;
+                    }
+                }
+                
+                // Check extension
+                if (isValidFileName)
+                {
+                    for (int i = 8; i < 11; i++)
+                    {
+                        var ch = directorySector[offset + i];
+                        if (ch != 0x20 && (ch < 0x21 || ch > 0x7E))
+                        {
+                            isValidFileName = false;
+                            break;
+                        }
+                    }
+                }
+                
+                // Check file size (should be reasonable)
+                if (isValidFileName)
+                {
+                    var fileSize = BitConverter.ToUInt32(directorySector, offset + 0x0D);
+                    var startTrack = directorySector[offset + 0x11];
+                    var startSector = directorySector[offset + 0x12];
+                    
+                    // Reasonable file size and start position
+                    if (fileSize < 0x1000000 && startTrack < 80 && startSector > 0 && startSector <= 26)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // If we can't read the directory, it's not CDOS
+        }
+        
+        return false;
+    }
+
     private bool ValidateCpmStructure(IDiskContainer container)
     {
         // CP/M is valid if we can detect the directory structure
         return CheckCpmSignature(container);
+    }
+
+    private bool ValidateCdosStructure(IDiskContainer container)
+    {
+        // CDOS is valid if we can detect the directory structure
+        return CheckCdosSignature(container);
     }
 
     private bool ValidateN88BasicStructure(IDiskContainer container)
