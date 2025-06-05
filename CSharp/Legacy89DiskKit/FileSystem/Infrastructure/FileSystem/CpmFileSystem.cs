@@ -170,42 +170,10 @@ public class CpmFileSystem : IFileSystem
 
         using var output = new FileStream(destinationPath, FileMode.Create, FileAccess.Write);
         
-        long totalBytesWritten = 0;
         long maxFileSize = GetFileSize(fileName);
         
-        // Calculate actual file size by reading to find last non-zero byte
-        long actualFileSize = maxFileSize;
-        if (fileEntries.Count > 0)
-        {
-            var lastEntry = fileEntries.Last();
-            if (lastEntry.RecordCount > 0)
-            {
-                var lastRecord = ReadRecord(lastEntry, lastEntry.RecordCount - 1);
-                if (lastRecord != null)
-                {
-                    // Find last non-zero byte in the last record
-                    int lastNonZero = lastRecord.Length - 1;
-                    while (lastNonZero >= 0 && lastRecord[lastNonZero] == 0)
-                    {
-                        lastNonZero--;
-                    }
-                    
-                    if (lastNonZero >= 0)
-                    {
-                        actualFileSize = (fileEntries.Count - 1) * 16384L + 
-                                       (lastEntry.RecordCount - 1) * 128L + 
-                                       lastNonZero + 1;
-                    }
-                    else
-                    {
-                        // If last record is all zeros, check previous record
-                        actualFileSize = (fileEntries.Count - 1) * 16384L + 
-                                       (lastEntry.RecordCount - 1) * 128L;
-                    }
-                }
-            }
-        }
-        
+        // Read all file data first
+        var allData = new List<byte>();
         foreach (var entry in fileEntries)
         {
             var recordsToRead = entry == fileEntries.Last() ? entry.RecordCount : 128;
@@ -215,20 +183,30 @@ public class CpmFileSystem : IFileSystem
                 var data = ReadRecord(entry, record);
                 if (data != null)
                 {
-                    var bytesToWrite = Math.Min(data.Length, (int)(actualFileSize - totalBytesWritten));
-                    if (bytesToWrite > 0)
-                    {
-                        output.Write(data, 0, bytesToWrite);
-                        totalBytesWritten += bytesToWrite;
-                        
-                        if (totalBytesWritten >= actualFileSize)
-                            break;
-                    }
+                    allData.AddRange(data);
                 }
             }
-            
-            if (totalBytesWritten >= actualFileSize)
-                break;
+        }
+        
+        // Find actual file size by looking for last non-zero byte
+        long actualFileSize = 0;
+        if (allData.Count > 0)
+        {
+            // Start from the end and find the last non-zero byte
+            for (int i = allData.Count - 1; i >= 0; i--)
+            {
+                if (allData[i] != 0)
+                {
+                    actualFileSize = i + 1;
+                    break;
+                }
+            }
+        }
+        
+        // Write only the actual file content without null padding
+        if (actualFileSize > 0)
+        {
+            output.Write(allData.ToArray(), 0, (int)actualFileSize);
         }
     }
 
@@ -399,7 +377,11 @@ public class CpmFileSystem : IFileSystem
             CpmFileNameValidator.WildcardToRegex(pattern),
             System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-        return GetFiles().Where(f => regex.IsMatch(f.FileName));
+        return GetFiles().Where(f => 
+        {
+            var fullName = string.IsNullOrEmpty(f.Extension) ? f.FileName : $"{f.FileName}.{f.Extension}";
+            return regex.IsMatch(fullName);
+        });
     }
 
     /// <inheritdoc/>
@@ -420,7 +402,6 @@ public class CpmFileSystem : IFileSystem
     /// <inheritdoc/>
     public byte[] ReadFile(string fileName, bool allowPartialRead)
     {
-        using var ms = new MemoryStream();
         var tempPath = Path.GetTempFileName();
         try
         {
