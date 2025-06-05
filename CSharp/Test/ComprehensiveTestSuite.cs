@@ -51,7 +51,7 @@ public class ComprehensiveTestSuite
         _results.Clear();
 
         // テストマトリックス定義
-        var fileSystemTypes = new[] { FileSystemType.HuBasic, FileSystemType.Fat12, FileSystemType.N88Basic, FileSystemType.MsxDos, FileSystemType.Cpm };
+        var fileSystemTypes = new[] { FileSystemType.HuBasic, FileSystemType.Fat12, FileSystemType.N88Basic, FileSystemType.MsxDos, FileSystemType.Cpm, FileSystemType.Cdos };
         var diskTypes = new[] { DiskType.TwoD, DiskType.TwoDD, DiskType.TwoHD };
         var containerExtensions = new[] { ".d88", ".dsk" };
         var machineTypes = new[] { MachineType.X1, MachineType.Pc8801, MachineType.Msx1 };
@@ -156,6 +156,26 @@ public class ComprehensiveTestSuite
                 MachineType = machineType,
                 Status = TestStatus.Skipped,
                 Message = "MSX-DOS primarily supports TwoDD (720KB) disk type"
+            });
+            return;
+        }
+        
+        // CDOSは2D/2HDをサポート、2DDは非対応
+        if (fileSystemType == FileSystemType.Cdos && diskType == DiskType.TwoDD)
+        {
+            var skipTestName = $"{fileSystemType}_{diskType}_{containerExt.Replace(".", "")}_{operation}" + 
+                              (machineType.HasValue ? $"_{machineType}" : "");
+            Console.WriteLine($"⏩ Skipping {skipTestName} (CDOS doesn't support TwoDD)");
+            
+            _results.Add(new TestResult
+            {
+                FileSystemType = fileSystemType,
+                DiskType = diskType,
+                ContainerType = containerExt,
+                Operation = operation,
+                MachineType = machineType,
+                Status = TestStatus.Skipped,
+                Message = "CDOS doesn't support TwoDD disk type"
             });
             return;
         }
