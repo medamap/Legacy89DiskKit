@@ -8,6 +8,7 @@ using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
 using Legacy89DiskKit.CharacterEncoding.Domain.Interface.Factory;
 using Legacy89DiskKit.CharacterEncoding.Domain.Model;
 using Legacy89DiskKit.CharacterEncoding.Application;
+using Legacy89DiskKit.CLI.Shell;
 using System.Globalization;
 
 namespace Legacy89DiskKit.CLI;
@@ -77,6 +78,9 @@ class Program
                     break;
                 case "recover-binary":
                     RecoverBinaryFile(parameters);
+                    break;
+                case "shell":
+                    RunInteractiveShell();
                     break;
                 case "help":
                 case "--help":
@@ -618,6 +622,12 @@ class Program
         }
     }
 
+    private static void RunInteractiveShell()
+    {
+        using var shell = new InteractiveShell(_diskContainerFactory, _fileSystemFactory, _characterEncodingService);
+        shell.Run();
+    }
+
     private static string? GetFileSystemParameter(string[] parameters)
     {
         for (int i = 0; i < parameters.Length - 1; i++)
@@ -776,6 +786,7 @@ class Program
         Console.WriteLine("                                              Recover damaged text file");
         Console.WriteLine("  recover-binary <disk-file> <name> <host-file>");
         Console.WriteLine("                                              Recover damaged binary file");
+        Console.WriteLine("  shell                                       Start interactive shell");
         Console.WriteLine("  help                                        Show this help");
         Console.WriteLine();
         Console.WriteLine("Disk Types: 2D, 2DD, 2HD");
