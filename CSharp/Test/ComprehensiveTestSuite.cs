@@ -51,10 +51,11 @@ public class ComprehensiveTestSuite
         _results.Clear();
 
         // テストマトリックス定義
-        var fileSystemTypes = new[] { FileSystemType.HuBasic, FileSystemType.Fat12, FileSystemType.N88Basic, FileSystemType.MsxDos };
+        var fileSystemTypes = new[] { FileSystemType.HuBasic, FileSystemType.Fat12, FileSystemType.N88Basic, FileSystemType.MsxDos, FileSystemType.Cpm };
         var diskTypes = new[] { DiskType.TwoD, DiskType.TwoDD, DiskType.TwoHD };
         var containerExtensions = new[] { ".d88", ".dsk" };
         var machineTypes = new[] { MachineType.X1, MachineType.Pc8801, MachineType.Msx1 };
+        var cpmMachineTypes = new[] { MachineType.CpmGeneric, MachineType.CpmPc8801, MachineType.CpmX1, MachineType.CpmMsxDos };
 
         var testOperations = new[]
         {
@@ -88,7 +89,8 @@ public class ComprehensiveTestSuite
                         if (operation.Contains("Text"))
                         {
                             // テキスト操作は各機種でテスト
-                            foreach (var machineType in machineTypes)
+                            var testMachineTypes = fileSystemType == FileSystemType.Cpm ? cpmMachineTypes : machineTypes;
+                            foreach (var machineType in testMachineTypes)
                             {
                                 totalTests++;
                                 executedTests++;
