@@ -477,6 +477,9 @@ Legacy89DiskKit/
 
 ## 📚 ドキュメント
 
+### 🗺️ [開発ロードマップ](Documents/ROADMAP.md) ← **必見！**
+将来の展望、C++/WASM/組み込み対応計画など
+
 ### フォーマット仕様
 - [**D88フォーマット仕様**](Documents/D88_Format.md): D88形式の詳細仕様
 - [**Hu-BASICファイルシステム**](Documents/Hu-BASIC_Format.md): Hu-BASICの構造解説
