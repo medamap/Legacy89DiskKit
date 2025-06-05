@@ -61,6 +61,30 @@ public class FileSystemFactory : IFileSystemFactory
                 throw new FileSystemException("Disk is not formatted. Use 'format' command first.");
             }
             
+            
+            // Check for Hu-BASIC signature first (256-byte sectors)
+            if (bootSector.Length >= 32)
+            {
+                // Hu-BASIC has different structure - check for typical values
+                var extension = Encoding.ASCII.GetString(bootSector, 14, 3).Trim();
+                if (extension == "SYS" || extension == "Sys")
+                {
+                    return FileSystemType.HuBasic;
+                }
+                
+                // Additional check: Hu-BASIC usually has bootable flag at offset 0
+                var bootFlag = bootSector[0];
+                if (bootFlag == 0x01 || bootFlag == 0x00)
+                {
+                    // Check if it looks like Hu-BASIC structure
+                    var diskName = Encoding.ASCII.GetString(bootSector, 1, 13).TrimEnd('\0', ' ');
+                    if (!string.IsNullOrWhiteSpace(diskName) || bootFlag == 0x01)
+                    {
+                        return FileSystemType.HuBasic;
+                    }
+                }
+            }
+            
             if (bootSector.Length >= 512)
             {
                 // Check for FAT12/16 signature
@@ -155,29 +179,6 @@ public class FileSystemFactory : IFileSystemFactory
                 if (CheckCdosSignature(container))
                 {
                     return FileSystemType.Cdos;
-                }
-                
-                // Check for Hu-BASIC signature (32-byte boot sector format)
-                if (bootSector.Length >= 32)
-                {
-                    // Hu-BASIC has different structure - check for typical values
-                    var extension = Encoding.ASCII.GetString(bootSector, 14, 3).Trim();
-                    if (extension == "SYS" || extension == "Sys")
-                    {
-                        return FileSystemType.HuBasic;
-                    }
-                    
-                    // Additional check: Hu-BASIC usually has bootable flag at offset 0
-                    var bootFlag = bootSector[0];
-                    if (bootFlag == 0x01 || bootFlag == 0x00)
-                    {
-                        // Check if it looks like Hu-BASIC structure
-                        var diskName = Encoding.ASCII.GetString(bootSector, 1, 13).TrimEnd('\0', ' ');
-                        if (!string.IsNullOrWhiteSpace(diskName) || bootFlag == 0x01)
-                        {
-                            return FileSystemType.HuBasic;
-                        }
-                    }
                 }
             }
             
