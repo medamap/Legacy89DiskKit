@@ -19,5 +19,9 @@ public enum MachineType
     Pc8001Mk2,
     Pc6001,
     Pc6601,
-    Fc
+    Fc,
+    CpmGeneric,
+    CpmPc8801,
+    CpmX1,
+    CpmMsxDos
 }
