@@ -170,22 +170,22 @@ public class CpmFileSystem : IFileSystem
 
         using var output = new FileStream(destinationPath, FileMode.Create, FileAccess.Write);
         
-        // Calculate total records across all extents
-        long totalRecords = 0;
+        // Calculate total file size from extents
+        long totalFileSize = 0;
         foreach (var entry in fileEntries)
         {
             if (entry == fileEntries.Last())
             {
-                totalRecords += entry.RecordCount;
+                totalFileSize += entry.RecordCount * 128L;
             }
             else
             {
-                totalRecords += 128; // Full extent
+                totalFileSize += 16384; // Full extent = 128 records * 128 bytes
             }
         }
         
-        // Allocate exact amount needed
-        var dataArray = new byte[totalRecords * 128];
+        // Allocate buffer for the entire file
+        var dataArray = new byte[totalFileSize];
         int dataIndex = 0;
         
         foreach (var entry in fileEntries)
@@ -203,18 +203,36 @@ public class CpmFileSystem : IFileSystem
             }
         }
         
-        // Find actual content end by looking for last non-null byte
-        int actualFileSize = 0;
-        for (int i = dataArray.Length - 1; i >= 0; i--)
+        // Find actual content end
+        int actualFileSize = dataIndex; // Default to actual data written
+        
+        // First, look for CP/M EOF marker (Ctrl+Z = 0x1A)
+        bool foundEofMarker = false;
+        for (int i = 0; i < dataIndex; i++)
         {
-            if (dataArray[i] != 0)
+            if (dataArray[i] == 0x1A)
             {
-                actualFileSize = i + 1;
+                actualFileSize = i;
+                foundEofMarker = true;
                 break;
             }
         }
         
-        // Write only the actual content
+        // If no EOF marker found, trim trailing null bytes
+        if (!foundEofMarker)
+        {
+            // Find the last non-null byte within the actual data range
+            for (int i = dataIndex - 1; i >= 0; i--)
+            {
+                if (dataArray[i] != 0)
+                {
+                    actualFileSize = i + 1;
+                    break;
+                }
+            }
+        }
+        
+        // Write only the actual content (excluding EOF marker and padding)
         if (actualFileSize > 0)
         {
             output.Write(dataArray, 0, actualFileSize);
@@ -258,17 +276,31 @@ public class CpmFileSystem : IFileSystem
         if (blocks.Count == 0)
             throw new InvalidOperationException("Not enough free space on disk");
 
-        // Write file data
+        // Write file data with EOF marker only if file doesn't end on record boundary
         using var input = new FileStream(sourcePath, FileMode.Open, FileAccess.Read);
         var buffer = new byte[_config.BlockSize];
         var blockIndex = 0;
+        var totalBytesWritten = 0L;
+        var originalFileSize = fileInfo.Length;
+        var needsEofMarker = (originalFileSize % 128) != 0; // Add EOF if file doesn't end on record boundary
 
         foreach (var block in blocks)
         {
+            var isLastBlock = (blockIndex == blocks.Count - 1);
             var bytesRead = input.Read(buffer, 0, buffer.Length);
+            
             if (bytesRead > 0)
             {
+                // If this is the last block and we need an EOF marker,
+                // add CP/M EOF marker (Ctrl+Z = 0x1A) after the actual data
+                if (isLastBlock && needsEofMarker && input.Position >= originalFileSize && bytesRead < buffer.Length)
+                {
+                    buffer[bytesRead] = 0x1A; // CP/M EOF marker
+                    bytesRead++; // Include the EOF marker in the written data
+                }
+                
                 WriteBlock(block, buffer, bytesRead);
+                totalBytesWritten += bytesRead;
             }
             blockIndex++;
         }

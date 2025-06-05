@@ -94,9 +94,9 @@ public class CpmFileSystemTest : IDisposable
         fs.ImportFile(sourcePath, "TEST.TXT");
         fs.ExportFile("TEST.TXT", exportPath);
 
-        // Assert - CP/M pads to 128-byte boundaries, so trim trailing nulls
+        // Assert - CP/M pads to 128-byte boundaries and may add EOF marker, so trim both
         var exportedContent = File.ReadAllText(exportPath);
-        var trimmedContent = exportedContent.TrimEnd('\0');
+        var trimmedContent = exportedContent.TrimEnd('\0', '\x1A'); // Trim nulls and CP/M EOF marker (Ctrl+Z)
         Assert.Equal(content, trimmedContent);
     }
 
@@ -145,7 +145,9 @@ public class CpmFileSystemTest : IDisposable
         var exportedContent = File.ReadAllText(exportPath);
         var trimmedContent = exportedContent.TrimEnd('\0');
         Assert.Equal(content, trimmedContent);
-        Assert.Equal(20000, fs.GetFileSize("LARGE.TXT"));
+        var reportedSize = fs.GetFileSize("LARGE.TXT");
+        Console.WriteLine($"GetFileSize reports: {reportedSize}");
+        Assert.Equal(20000, reportedSize);
     }
 
     [Fact]
