@@ -59,7 +59,7 @@ public class InteractiveShell : IDisposable
 
     private void ShowWelcome()
     {
-        Console.WriteLine("Legacy89DiskKit Interactive Shell v1.4.0");
+        Console.WriteLine("Legacy89DiskKit Interactive Shell v1.5.0");
         Console.WriteLine("Type 'help' for available commands, 'exit' to quit.");
         Console.WriteLine();
     }
