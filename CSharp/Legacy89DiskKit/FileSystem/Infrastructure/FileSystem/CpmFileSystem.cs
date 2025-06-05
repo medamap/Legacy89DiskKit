@@ -170,10 +170,24 @@ public class CpmFileSystem : IFileSystem
 
         using var output = new FileStream(destinationPath, FileMode.Create, FileAccess.Write);
         
-        long maxFileSize = GetFileSize(fileName);
+        // Calculate total records across all extents
+        long totalRecords = 0;
+        foreach (var entry in fileEntries)
+        {
+            if (entry == fileEntries.Last())
+            {
+                totalRecords += entry.RecordCount;
+            }
+            else
+            {
+                totalRecords += 128; // Full extent
+            }
+        }
         
-        // Read all file data first
-        var allData = new List<byte>();
+        // Allocate exact amount needed
+        var dataArray = new byte[totalRecords * 128];
+        int dataIndex = 0;
+        
         foreach (var entry in fileEntries)
         {
             var recordsToRead = entry == fileEntries.Last() ? entry.RecordCount : 128;
@@ -183,30 +197,27 @@ public class CpmFileSystem : IFileSystem
                 var data = ReadRecord(entry, record);
                 if (data != null)
                 {
-                    allData.AddRange(data);
+                    Array.Copy(data, 0, dataArray, dataIndex, Math.Min(data.Length, 128));
+                    dataIndex += 128;
                 }
             }
         }
         
-        // Find actual file size by looking for last non-zero byte
-        long actualFileSize = 0;
-        if (allData.Count > 0)
+        // Find actual content end by looking for last non-null byte
+        int actualFileSize = 0;
+        for (int i = dataArray.Length - 1; i >= 0; i--)
         {
-            // Start from the end and find the last non-zero byte
-            for (int i = allData.Count - 1; i >= 0; i--)
+            if (dataArray[i] != 0)
             {
-                if (allData[i] != 0)
-                {
-                    actualFileSize = i + 1;
-                    break;
-                }
+                actualFileSize = i + 1;
+                break;
             }
         }
         
-        // Write only the actual file content without null padding
+        // Write only the actual content
         if (actualFileSize > 0)
         {
-            output.Write(allData.ToArray(), 0, (int)actualFileSize);
+            output.Write(dataArray, 0, actualFileSize);
         }
     }
 
