@@ -53,6 +53,7 @@ dotnet build -c Release
   - `develop`: 開発ブランチ
   - `feature/xxx-support`: 機能開発ブランチ
 - **マージ方法**: `--no-ff`オプションを使用（マージコミットを作成）
+- **Co-Authored-By**: `Co-Authored-By: Claude <claude-ai@anthropic.invalid>` を使用（RFC6761準拠の.invalidドメイン）
 
 ### ファイルシステム実装時の注意
 - **書き込み時の安全性**: ファイルシステムタイプの明示的な指定を必須とする
