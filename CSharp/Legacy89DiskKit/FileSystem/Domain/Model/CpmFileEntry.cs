@@ -68,7 +68,7 @@ public record CpmFileEntry
     /// <summary>
     /// Gets whether this is a valid file entry
     /// </summary>
-    public bool IsValid => !IsDeleted && !IsEmpty && UserNumber <= 15;
+    public bool IsValid => !IsDeleted && !IsEmpty && UserNumber <= 15 && !string.IsNullOrWhiteSpace(FileName.Trim());
 
     /// <summary>
     /// Gets the full filename with extension
