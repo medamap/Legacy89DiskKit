@@ -110,20 +110,45 @@ public static class CpmFileNameValidator
         if (string.IsNullOrEmpty(pattern))
             return ".*";
 
-        // Normalize the pattern
-        var (name, extension) = NormalizeFileName(pattern);
+        // Handle the special case of "*.*" (all files)
+        if (pattern == "*.*")
+            return ".*";
+
+        // Normalize the pattern but preserve wildcards
+        pattern = pattern.ToUpperInvariant();
+        
+        // Split into name and extension parts
+        var lastDot = pattern.LastIndexOf('.');
+        string namePattern, extPattern;
+        
+        if (lastDot < 0)
+        {
+            namePattern = pattern;
+            extPattern = "";
+        }
+        else
+        {
+            namePattern = pattern.Substring(0, lastDot);
+            extPattern = pattern.Substring(lastDot + 1);
+        }
         
         // Convert CP/M wildcards to regex
         // ? = any single character
         // * = any sequence of characters
-        name = name.Replace("?", ".").Replace("*", ".*");
-        extension = extension.Replace("?", ".").Replace("*", ".*");
+        namePattern = System.Text.RegularExpressions.Regex.Escape(namePattern).Replace("\\?", ".").Replace("\\*", ".*");
+        extPattern = System.Text.RegularExpressions.Regex.Escape(extPattern).Replace("\\?", ".").Replace("\\*", ".*");
 
         // Build complete pattern
-        if (string.IsNullOrEmpty(extension))
-            return $"^{name}(\\..{{0,3}})?$";
+        if (string.IsNullOrEmpty(extPattern))
+        {
+            // Pattern without extension - match files with or without extension
+            return $"^{namePattern}(\\..{{0,3}})?$";
+        }
         else
-            return $"^{name}\\.{extension}$";
+        {
+            // Pattern with extension
+            return $"^{namePattern}\\.{extPattern}$";
+        }
     }
 
     private static string ReplaceInvalidChars(string text)
