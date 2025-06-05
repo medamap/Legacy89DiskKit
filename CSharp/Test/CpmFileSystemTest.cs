@@ -94,9 +94,10 @@ public class CpmFileSystemTest : IDisposable
         fs.ImportFile(sourcePath, "TEST.TXT");
         fs.ExportFile("TEST.TXT", exportPath);
 
-        // Assert
+        // Assert - CP/M pads to 128-byte boundaries, so trim trailing nulls
         var exportedContent = File.ReadAllText(exportPath);
-        Assert.Equal(content, exportedContent);
+        var trimmedContent = exportedContent.TrimEnd('\0');
+        Assert.Equal(content, trimmedContent);
     }
 
     [Fact]
@@ -140,9 +141,10 @@ public class CpmFileSystemTest : IDisposable
         fs.ImportFile(sourcePath, "LARGE.TXT");
         fs.ExportFile("LARGE.TXT", exportPath);
 
-        // Assert
+        // Assert - CP/M pads to 128-byte boundaries, so trim trailing nulls
         var exportedContent = File.ReadAllText(exportPath);
-        Assert.Equal(content, exportedContent);
+        var trimmedContent = exportedContent.TrimEnd('\0');
+        Assert.Equal(content, trimmedContent);
         Assert.Equal(20000, fs.GetFileSize("LARGE.TXT"));
     }
 
