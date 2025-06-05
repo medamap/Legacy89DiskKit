@@ -16,7 +16,7 @@ public class FileSystemFactory : IFileSystemFactory
             FileSystemType.HuBasic => new HuBasicFileSystem(container),
             FileSystemType.Fat12 => new Fat12FileSystem(container),
             FileSystemType.Fat16 => throw new NotImplementedException("FAT16 filesystem not yet implemented"),
-            FileSystemType.Cpm => throw new NotImplementedException("CP/M filesystem not yet implemented"),
+            FileSystemType.Cpm => new CpmFileSystem(container),
             FileSystemType.N88Basic => new N88BasicFileSystem(container),
             FileSystemType.MsxDos => new MsxDosFileSystem(container),
             _ => throw new ArgumentException($"Unsupported filesystem type: {fileSystemType}")
@@ -144,6 +144,12 @@ public class FileSystemFactory : IFileSystemFactory
                     }
                 }
                 
+                // Check for CP/M filesystem
+                if (CheckCpmSignature(container))
+                {
+                    return FileSystemType.Cpm;
+                }
+                
                 // Check for Hu-BASIC signature (32-byte boot sector format)
                 if (bootSector.Length >= 32)
                 {
@@ -188,8 +194,8 @@ public class FileSystemFactory : IFileSystemFactory
             FileSystemType.HuBasic,
             FileSystemType.Fat12,
             FileSystemType.N88Basic,
-            FileSystemType.MsxDos
-            // Additional types will be added as they are implemented
+            FileSystemType.MsxDos,
+            FileSystemType.Cpm
         };
     }
 
@@ -218,6 +224,8 @@ public class FileSystemFactory : IFileSystemFactory
                 FileSystemType.Fat12 => ValidateFat12Structure(bootSector),
                 FileSystemType.HuBasic => ValidateHuBasicStructure(bootSector),
                 FileSystemType.MsxDos => ValidateMsxDosStructure(bootSector),
+                FileSystemType.Cpm => ValidateCpmStructure(container),
+                FileSystemType.N88Basic => ValidateN88BasicStructure(container),
                 _ => false
             };
         }
@@ -287,5 +295,84 @@ public class FileSystemFactory : IFileSystemFactory
     {
         // Check if sector is all zeros (unformatted)
         return sector.All(b => b == 0x00);
+    }
+
+    private bool CheckCpmSignature(IDiskContainer container)
+    {
+        try
+        {
+            // CP/M directory typically starts at track 2
+            var directorySector = container.ReadSector(2, 0, 1);
+            
+            // Check for CP/M directory entry patterns
+            for (int offset = 0; offset < directorySector.Length; offset += 32)
+            {
+                var userNumber = directorySector[offset];
+                
+                // Valid user numbers are 0-15 or 0xE5 (deleted)
+                if (userNumber <= 15 || userNumber == 0xE5)
+                {
+                    // Check if filename looks valid (ASCII characters)
+                    bool isValidFileName = true;
+                    for (int i = 1; i <= 11; i++)
+                    {
+                        var ch = directorySector[offset + i];
+                        if (ch != 0x20 && (ch < 0x21 || ch > 0x7E))
+                        {
+                            isValidFileName = false;
+                            break;
+                        }
+                    }
+                    
+                    if (isValidFileName)
+                        return true;
+                }
+            }
+        }
+        catch
+        {
+            // If we can't read the directory, it's not CP/M
+        }
+        
+        return false;
+    }
+
+    private bool ValidateCpmStructure(IDiskContainer container)
+    {
+        // CP/M is valid if we can detect the directory structure
+        return CheckCpmSignature(container);
+    }
+
+    private bool ValidateN88BasicStructure(IDiskContainer container)
+    {
+        try
+        {
+            // Try N88-BASIC system track locations
+            var (systemTrack, systemHead) = container.DiskType == DiskType.TwoD ? (18, 1) : (40, 0);
+            
+            // Try to read directory area
+            var directoryData = container.ReadSector(systemTrack, systemHead, 1);
+            if (directoryData != null && directoryData.Length > 0)
+            {
+                // Check for valid N88-BASIC directory entries
+                for (int offset = 0; offset < Math.Min(directoryData.Length, 256); offset += 16)
+                {
+                    if (offset + 16 <= directoryData.Length)
+                    {
+                        var firstByte = directoryData[offset];
+                        if (firstByte != 0xFF && firstByte != 0x00 && firstByte >= 0x20 && firstByte <= 0x7E)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // If validation fails, assume it's not N88-BASIC
+        }
+        
+        return false;
     }
 }
