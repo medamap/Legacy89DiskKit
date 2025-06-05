@@ -57,7 +57,7 @@ public class CpmFileSystem : IFileSystem
         
         // Group entries by filename to handle multi-extent files
         var fileGroups = cpmEntries
-            .Where(e => e.IsValid)
+            .Where(e => e.IsValid && !string.IsNullOrWhiteSpace(e.FileName.Trim()))
             .GroupBy(e => new { e.UserNumber, e.FileName, e.Extension });
 
         foreach (var group in fileGroups)
@@ -95,7 +95,7 @@ public class CpmFileSystem : IFileSystem
             );
 
             yield return new FileEntry(
-                FileName: firstEntry.FileName.TrimEnd(),
+                FileName: firstEntry.FullFileName,
                 Extension: firstEntry.Extension.TrimEnd(),
                 Mode: mode,
                 Attributes: attributes,
@@ -170,6 +170,42 @@ public class CpmFileSystem : IFileSystem
 
         using var output = new FileStream(destinationPath, FileMode.Create, FileAccess.Write);
         
+        long totalBytesWritten = 0;
+        long maxFileSize = GetFileSize(fileName);
+        
+        // Calculate actual file size by reading to find last non-zero byte
+        long actualFileSize = maxFileSize;
+        if (fileEntries.Count > 0)
+        {
+            var lastEntry = fileEntries.Last();
+            if (lastEntry.RecordCount > 0)
+            {
+                var lastRecord = ReadRecord(lastEntry, lastEntry.RecordCount - 1);
+                if (lastRecord != null)
+                {
+                    // Find last non-zero byte in the last record
+                    int lastNonZero = lastRecord.Length - 1;
+                    while (lastNonZero >= 0 && lastRecord[lastNonZero] == 0)
+                    {
+                        lastNonZero--;
+                    }
+                    
+                    if (lastNonZero >= 0)
+                    {
+                        actualFileSize = (fileEntries.Count - 1) * 16384L + 
+                                       (lastEntry.RecordCount - 1) * 128L + 
+                                       lastNonZero + 1;
+                    }
+                    else
+                    {
+                        // If last record is all zeros, check previous record
+                        actualFileSize = (fileEntries.Count - 1) * 16384L + 
+                                       (lastEntry.RecordCount - 1) * 128L;
+                    }
+                }
+            }
+        }
+        
         foreach (var entry in fileEntries)
         {
             var recordsToRead = entry == fileEntries.Last() ? entry.RecordCount : 128;
@@ -179,9 +215,20 @@ public class CpmFileSystem : IFileSystem
                 var data = ReadRecord(entry, record);
                 if (data != null)
                 {
-                    output.Write(data, 0, data.Length);
+                    var bytesToWrite = Math.Min(data.Length, (int)(actualFileSize - totalBytesWritten));
+                    if (bytesToWrite > 0)
+                    {
+                        output.Write(data, 0, bytesToWrite);
+                        totalBytesWritten += bytesToWrite;
+                        
+                        if (totalBytesWritten >= actualFileSize)
+                            break;
+                    }
                 }
             }
+            
+            if (totalBytesWritten >= actualFileSize)
+                break;
         }
     }
 
@@ -191,7 +238,11 @@ public class CpmFileSystem : IFileSystem
         if (_diskContainer.IsReadOnly)
             throw new InvalidOperationException("Disk container is read-only");
 
-        if (!CpmFileNameValidator.IsValidFileName(destinationFileName))
+        // Normalize the filename first, then validate
+        var (tempName, tempExtension) = CpmFileNameValidator.NormalizeFileName(destinationFileName);
+        var normalizedFileName = string.IsNullOrEmpty(tempExtension) ? tempName : $"{tempName}.{tempExtension}";
+        
+        if (!CpmFileNameValidator.IsValidFileName(normalizedFileName))
             throw new ArgumentException($"Invalid CP/M filename: {destinationFileName}");
 
         var (name, extension) = CpmFileNameValidator.FormatForDirectory(destinationFileName);
@@ -245,7 +296,7 @@ public class CpmFileSystem : IFileSystem
                 ExtentLow = (byte)(extent & 0xFF),
                 ExtentHigh = (byte)((extent >> 8) & 0xFF),
                 RecordCount = (byte)(extent < requiredExtents - 1 ? 128 : 
-                    ((fileSize - extent * 16384 + 127) / 128)),
+                    Math.Min(128, (fileSize - extent * 16384 + 127) / 128)),
                 AllocationBlocks = blocks
                     .Skip(extent * blocksPerExtent)
                     .Take(blocksPerExtent)
@@ -627,7 +678,12 @@ public class CpmFileSystem : IFileSystem
         var blockData = ReadBlock(blockNumber);
         
         var result = new byte[128];
-        Array.Copy(blockData, recordInBlock * 128, result, 0, 128);
+        var sourceOffset = recordInBlock * 128;
+        var copyLength = Math.Min(128, blockData.Length - sourceOffset);
+        if (copyLength > 0)
+        {
+            Array.Copy(blockData, sourceOffset, result, 0, copyLength);
+        }
         
         return result;
     }
@@ -639,11 +695,22 @@ public class CpmFileSystem : IFileSystem
 
         var result = new byte[_config.BlockSize];
         var sectorsPerBlock = _config.BlockSize / _config.SectorSize;
-        var firstSector = (blockNumber - 1) * sectorsPerBlock;
+        
+        // In CP/M, block numbering is straightforward:
+        // Block 0 is reserved, blocks start from physical sector after directory
+        var directorySize = _config.DirectoryEntries * CpmFileEntry.EntrySize;
+        var directorySectors = (directorySize + _config.SectorSize - 1) / _config.SectorSize;
+        var reservedSectors = _config.ReservedTracks * _config.SectorsPerTrack;
+        
+        // First data sector is after reserved tracks and directory
+        var firstDataSector = reservedSectors + directorySectors;
+        
+        // Calculate absolute sector for this block
+        var firstSectorOfBlock = firstDataSector + (blockNumber - 1) * sectorsPerBlock;
         
         for (int i = 0; i < sectorsPerBlock; i++)
         {
-            var absoluteSector = firstSector + i + (_config.ReservedTracks * _config.SectorsPerTrack);
+            var absoluteSector = firstSectorOfBlock + i;
             var track = absoluteSector / _config.SectorsPerTrack;
             var sector = (absoluteSector % _config.SectorsPerTrack) + 1;
             
@@ -660,11 +727,22 @@ public class CpmFileSystem : IFileSystem
             throw new ArgumentException($"Invalid block number: {blockNumber}");
 
         var sectorsPerBlock = _config.BlockSize / _config.SectorSize;
-        var firstSector = (blockNumber - 1) * sectorsPerBlock;
+        
+        // In CP/M, block numbering is straightforward:
+        // Block 0 is reserved, blocks start from physical sector after directory
+        var directorySize = _config.DirectoryEntries * CpmFileEntry.EntrySize;
+        var directorySectors = (directorySize + _config.SectorSize - 1) / _config.SectorSize;
+        var reservedSectors = _config.ReservedTracks * _config.SectorsPerTrack;
+        
+        // First data sector is after reserved tracks and directory
+        var firstDataSector = reservedSectors + directorySectors;
+        
+        // Calculate absolute sector for this block
+        var firstSectorOfBlock = firstDataSector + (blockNumber - 1) * sectorsPerBlock;
         
         for (int i = 0; i < sectorsPerBlock; i++)
         {
-            var absoluteSector = firstSector + i + (_config.ReservedTracks * _config.SectorsPerTrack);
+            var absoluteSector = firstSectorOfBlock + i;
             var track = absoluteSector / _config.SectorsPerTrack;
             var sector = (absoluteSector % _config.SectorsPerTrack) + 1;
             
@@ -703,7 +781,7 @@ public class CpmFileSystem : IFileSystem
         var entries = GetCpmDirectoryEntries();
         
         // Collect all used blocks
-        foreach (var entry in entries.Where(e => e.IsValid))
+        foreach (var entry in entries.Where(e => e.IsValid && !string.IsNullOrWhiteSpace(e.FileName.Trim())))
         {
             foreach (var block in entry.AllocationBlocks.Where(b => b > 0))
             {
@@ -711,7 +789,7 @@ public class CpmFileSystem : IFileSystem
             }
         }
         
-        // Find free blocks
+        // Find free blocks (starting from block 1, block 0 is reserved)
         var freeBlocks = new List<int>();
         for (int block = 1; block <= _config.TotalBlocks && freeBlocks.Count < count; block++)
         {
