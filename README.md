@@ -3,13 +3,13 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0+-512BD4?style=flat&logo=dotnet)](https://dotnet.microsoft.com/)
 [![C#](https://img.shields.io/badge/C%23-Latest-239120?style=flat&logo=c-sharp)](https://docs.microsoft.com/en-us/dotnet/csharp/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v1.5.0-blue?style=flat)](https://github.com/yourusername/Legacy89DiskKit/releases)
+[![Version](https://img.shields.io/badge/Version-v1.6.0-blue?style=flat)](https://github.com/yourusername/Legacy89DiskKit/releases)
 
 📀 **Legacy89DiskKit** は、1980〜90年代の日本のレトロコンピュータ（Sharp X1、PC-8801、MSX等）で使用されていたディスクフォーマットを現代的な環境で扱うためのC#ライブラリ・CLIツールセットです。
 
 ## ✨ 特徴
 
-### 🎯 対応フォーマット (v1.5.0)
+### 🎯 対応フォーマット (v1.6.0)
 
 **完全対応ファイルシステム**:
 - ✅ **Hu-BASIC** (Sharp X1) - 完全実装
@@ -22,12 +22,13 @@
 **対応ディスクイメージ**:
 - ✅ **D88形式** - Sharp/NECディスクイメージ標準
 - ✅ **DSK形式** - PC汎用ディスクイメージ
+- ✅ **2D形式** - Plain Disk Image (320KB固定) ← **NEW in v1.6.0!**
 
 **文字エンコーディング**: **18機種対応** (X1完全実装、他機種基本ASCII)
 
 **対応ディスクタイプ**: 2D (320KB) / 2DD (720KB) / 2HD (1.2MB)
 
-### 🎮 インタラクティブシェル ← **NEW in v1.5.0!**
+### 🎮 インタラクティブシェル
 - **対話型操作**: リアルタイムフィードバックで直感的な操作
 - **マルチスロット**: 最大10個のディスクを同時管理
 - **Tab補完**: コマンド・ファイルパスの自動補完
@@ -485,6 +486,7 @@ Legacy89DiskKit/
 - [**Hu-BASICファイルシステム**](Documents/Hu-BASIC_Format.md): Hu-BASICの構造解説
 - [**FAT12ファイルシステム**](Documents/FAT12_Format.md): MS-DOS FAT12の詳細仕様
 - [**MSX-DOSフォーマット仕様**](Documents/MSX_DOS_Format.md): MSX-DOS FAT12の詳細仕様
+- [**2D形式仕様**](Documents/2D_Format_Specification.md): Plain Disk Image仕様 ← **NEW!**
 
 ### 開発ドキュメント
 - [**APIリファレンス**](Documents/API_Reference.md): 詳細なライブラリAPI仕様
