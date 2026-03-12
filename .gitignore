@@ -406,3 +406,7 @@ FodyWeavers.xsd
 *.ddx
 *.dsk
 test*.txt
+
+# Ignore local disk images for testing
+images/
+!images/.gitkeep
