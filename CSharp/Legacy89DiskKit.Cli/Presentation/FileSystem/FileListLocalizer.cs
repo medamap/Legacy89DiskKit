@@ -1,0 +1,471 @@
+using System.Globalization;
+
+namespace Legacy89DiskKit.Cli.Presentation.FileSystem;
+
+public interface IFileListLocalizer
+{
+    string FileSystemLabel { get; }
+    string PlatformLabel { get; }
+    string FilesLabel { get; }
+    string TotalLabel { get; }
+    string UsedLabel { get; }
+    string FreeLabel { get; }
+    string BootLabel { get; }
+    string BootFileLabel { get; }
+    string BootLoadLabel { get; }
+    string BootExecLabel { get; }
+    string BootModeFileBacked { get; }
+    string BootModeSectorResident { get; }
+    string BootModeNone { get; }
+    string NameHeader { get; }
+    string AttrHeader { get; }
+    string SizeHeader { get; }
+    string ClusterHeader { get; }
+    string TypeHeader { get; }
+    string FlagsHeader { get; }
+    string LoadHeader { get; }
+    string EndHeader { get; }
+    string ExecHeader { get; }
+    string NoteHeader { get; }
+    string LegendsLabel { get; }
+    string FootnotesLabel { get; }
+    string HuBasicAsciiNote { get; }
+    string HuBasicBasicNote { get; }
+    string HuBasicLabelEntryNote { get; }
+    string HuBasicFlagPassword { get; }
+    string HuBasicFlagHidden { get; }
+    string HuBasicFlagVerify { get; }
+    string HuBasicFlagWriteProtect { get; }
+}
+
+public interface IConsoleLocalizer : IFileListLocalizer
+{
+    string LanguageOptionDescription { get; }
+    string EncodingOptionDescription { get; }
+    string RootDescription { get; }
+    string ListCommandDescription { get; }
+    string LayoutCommandDescription { get; }
+    string LayoutShowCommandDescription { get; }
+    string LayoutMoveCommandDescription { get; }
+    string LayoutInsertLabelCommandDescription { get; }
+    string LayoutSortCommandDescription { get; }
+    string LayoutExportCommandDescription { get; }
+    string LayoutValidateCommandDescription { get; }
+    string LayoutApplyCommandDescription { get; }
+    string FileCommandDescription { get; }
+    string FileExtractCommandDescription { get; }
+    string FileInjectCommandDescription { get; }
+    string FileDeleteCommandDescription { get; }
+    string FileRenameCommandDescription { get; }
+    string FileCopyCommandDescription { get; }
+    string DiskCommandDescription { get; }
+    string DiskCreateCommandDescription { get; }
+    string DiskFormatCommandDescription { get; }
+    string BootCommandDescription { get; }
+    string BootShowCommandDescription { get; }
+    string BootClearCommandDescription { get; }
+    string BootCloneCommandDescription { get; }
+    string ImageArgumentDescription { get; }
+    string SourceImageArgumentDescription { get; }
+    string DestinationImageArgumentDescription { get; }
+    string DiskFileArgumentDescription { get; }
+    string HostFileArgumentDescription { get; }
+    string HostPathArgumentDescription { get; }
+    string SourceNameArgumentDescription { get; }
+    string TargetNameArgumentDescription { get; }
+    string NewNameArgumentDescription { get; }
+    string LabelTextArgumentDescription { get; }
+    string LayoutInputOptionDescription { get; }
+    string LayoutOutputOptionDescription { get; }
+    string LayoutStdinOptionDescription { get; }
+    string LayoutStrictOptionDescription { get; }
+    string LayoutBeforeOptionDescription { get; }
+    string LayoutSortByOptionDescription { get; }
+    string BootFilesOptionDescription { get; }
+    string TargetFileNameOptionDescription { get; }
+    string DiskCreateDiskTypeOptionDescription { get; }
+    string DiskCreateFileSystemOptionDescription { get; }
+    string DiskCreateNameOptionDescription { get; }
+    string DiskFormatFsOptionDescription { get; }
+    string ListingFilesForMessage { get; }
+    string UsingEncodingMessage { get; }
+    string SuccessPrefix { get; }
+    string ErrorPrefix { get; }
+    string FileInjectedMessage { get; }
+    string FileExtractedMessage { get; }
+    string FileDeletedMessage { get; }
+    string FileRenamedMessage { get; }
+    string FileCopiedMessage { get; }
+    string DiskCreatedMessage { get; }
+    string DiskFormattedMessage { get; }
+    string LayoutUpdatedMessage { get; }
+    string LabelInsertedMessage { get; }
+    string DirectoryEntriesSortedMessage { get; }
+    string LayoutValidMessage { get; }
+    string LayoutAppliedMessage { get; }
+    string BootableDiskCreatedMessage { get; }
+    string BootClearedMessage { get; }
+    string UnsupportedLanguageMessage { get; }
+    string FileSystemNotDetectedMessage { get; }
+    string LayoutNotSupportedMessage { get; }
+    string StdinInputConflictMessage { get; }
+    string InputRequiredMessage { get; }
+    string ValidationSummaryFormat { get; }
+    string ValidationErrorLabel { get; }
+    string ValidationWarningLabel { get; }
+    string BootShowTitle { get; }
+}
+
+public static class FileListLocalizer
+{
+    public static IConsoleLocalizer CreateCurrent()
+    {
+        return Create(null);
+    }
+
+    public static IConsoleLocalizer Create(string? language)
+    {
+        var code = language?.Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            code = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.ToLowerInvariant();
+        }
+
+        return code switch
+        {
+            "ja" => new JapaneseConsoleLocalizer(),
+            "en" => new EnglishConsoleLocalizer(),
+            _ => throw new InvalidOperationException($"Unsupported language: {language}")
+        };
+    }
+
+    private abstract class ConsoleLocalizerBase : IConsoleLocalizer
+    {
+        public abstract string FileSystemLabel { get; }
+        public abstract string PlatformLabel { get; }
+        public abstract string FilesLabel { get; }
+        public abstract string TotalLabel { get; }
+        public abstract string UsedLabel { get; }
+        public abstract string FreeLabel { get; }
+        public abstract string BootLabel { get; }
+        public abstract string BootFileLabel { get; }
+        public abstract string BootLoadLabel { get; }
+        public abstract string BootExecLabel { get; }
+        public abstract string NameHeader { get; }
+        public abstract string AttrHeader { get; }
+        public abstract string SizeHeader { get; }
+        public abstract string ClusterHeader { get; }
+        public abstract string TypeHeader { get; }
+        public abstract string FlagsHeader { get; }
+        public abstract string LoadHeader { get; }
+        public abstract string EndHeader { get; }
+        public abstract string ExecHeader { get; }
+        public abstract string NoteHeader { get; }
+        public abstract string LegendsLabel { get; }
+        public abstract string FootnotesLabel { get; }
+        public abstract string HuBasicAsciiNote { get; }
+        public abstract string HuBasicBasicNote { get; }
+        public abstract string HuBasicLabelEntryNote { get; }
+        public abstract string HuBasicFlagPassword { get; }
+        public abstract string HuBasicFlagHidden { get; }
+        public abstract string HuBasicFlagVerify { get; }
+        public abstract string HuBasicFlagWriteProtect { get; }
+        public abstract string LanguageOptionDescription { get; }
+        public abstract string EncodingOptionDescription { get; }
+        public abstract string RootDescription { get; }
+        public abstract string ListCommandDescription { get; }
+        public abstract string LayoutCommandDescription { get; }
+        public abstract string LayoutShowCommandDescription { get; }
+        public abstract string LayoutMoveCommandDescription { get; }
+        public abstract string LayoutInsertLabelCommandDescription { get; }
+        public abstract string LayoutSortCommandDescription { get; }
+        public abstract string LayoutExportCommandDescription { get; }
+        public abstract string LayoutValidateCommandDescription { get; }
+        public abstract string LayoutApplyCommandDescription { get; }
+        public abstract string FileCommandDescription { get; }
+        public abstract string FileExtractCommandDescription { get; }
+        public abstract string FileInjectCommandDescription { get; }
+        public abstract string FileDeleteCommandDescription { get; }
+        public abstract string FileRenameCommandDescription { get; }
+        public abstract string FileCopyCommandDescription { get; }
+        public abstract string DiskCommandDescription { get; }
+        public abstract string DiskCreateCommandDescription { get; }
+        public abstract string DiskFormatCommandDescription { get; }
+        public abstract string BootCommandDescription { get; }
+        public abstract string BootShowCommandDescription { get; }
+        public abstract string BootClearCommandDescription { get; }
+        public abstract string BootCloneCommandDescription { get; }
+        public abstract string ImageArgumentDescription { get; }
+        public abstract string SourceImageArgumentDescription { get; }
+        public abstract string DestinationImageArgumentDescription { get; }
+        public abstract string DiskFileArgumentDescription { get; }
+        public abstract string HostFileArgumentDescription { get; }
+        public abstract string HostPathArgumentDescription { get; }
+        public abstract string SourceNameArgumentDescription { get; }
+        public abstract string TargetNameArgumentDescription { get; }
+        public abstract string NewNameArgumentDescription { get; }
+        public abstract string LabelTextArgumentDescription { get; }
+        public abstract string LayoutInputOptionDescription { get; }
+        public abstract string LayoutOutputOptionDescription { get; }
+        public abstract string LayoutStdinOptionDescription { get; }
+        public abstract string LayoutStrictOptionDescription { get; }
+        public abstract string LayoutBeforeOptionDescription { get; }
+        public abstract string LayoutSortByOptionDescription { get; }
+        public abstract string BootFilesOptionDescription { get; }
+        public abstract string TargetFileNameOptionDescription { get; }
+        public abstract string DiskCreateDiskTypeOptionDescription { get; }
+        public abstract string DiskCreateFileSystemOptionDescription { get; }
+        public abstract string DiskCreateNameOptionDescription { get; }
+        public abstract string DiskFormatFsOptionDescription { get; }
+        public abstract string ListingFilesForMessage { get; }
+        public abstract string UsingEncodingMessage { get; }
+        public abstract string SuccessPrefix { get; }
+        public abstract string ErrorPrefix { get; }
+        public abstract string FileInjectedMessage { get; }
+        public abstract string FileExtractedMessage { get; }
+        public abstract string FileDeletedMessage { get; }
+        public abstract string FileRenamedMessage { get; }
+        public abstract string FileCopiedMessage { get; }
+        public abstract string DiskCreatedMessage { get; }
+        public abstract string DiskFormattedMessage { get; }
+        public abstract string LayoutUpdatedMessage { get; }
+        public abstract string LabelInsertedMessage { get; }
+        public abstract string DirectoryEntriesSortedMessage { get; }
+        public abstract string LayoutValidMessage { get; }
+        public abstract string LayoutAppliedMessage { get; }
+        public abstract string BootableDiskCreatedMessage { get; }
+        public abstract string BootClearedMessage { get; }
+        public abstract string UnsupportedLanguageMessage { get; }
+        public abstract string FileSystemNotDetectedMessage { get; }
+        public abstract string LayoutNotSupportedMessage { get; }
+        public abstract string StdinInputConflictMessage { get; }
+        public abstract string InputRequiredMessage { get; }
+        public abstract string ValidationSummaryFormat { get; }
+        public abstract string ValidationErrorLabel { get; }
+        public abstract string ValidationWarningLabel { get; }
+        public abstract string BootModeFileBacked { get; }
+        public abstract string BootModeSectorResident { get; }
+        public abstract string BootModeNone { get; }
+        public abstract string BootShowTitle { get; }
+    }
+
+    private sealed class EnglishConsoleLocalizer : ConsoleLocalizerBase
+    {
+        public override string FileSystemLabel => "File System";
+        public override string PlatformLabel => "Platform";
+        public override string FilesLabel => "Files";
+        public override string TotalLabel => "Total";
+        public override string UsedLabel => "Used";
+        public override string FreeLabel => "Free";
+        public override string BootLabel => "Boot";
+        public override string BootFileLabel => "Boot File";
+        public override string BootLoadLabel => "Boot Load";
+        public override string BootExecLabel => "Boot Exec";
+        public override string NameHeader => "Name";
+        public override string AttrHeader => "Attr";
+        public override string SizeHeader => "Size";
+        public override string ClusterHeader => "Cluster";
+        public override string TypeHeader => "Type";
+        public override string FlagsHeader => "Flags";
+        public override string LoadHeader => "Load";
+        public override string EndHeader => "End";
+        public override string ExecHeader => "Exec";
+        public override string NoteHeader => "Note";
+        public override string LegendsLabel => "Legends";
+        public override string FootnotesLabel => "Footnotes";
+        public override string HuBasicAsciiNote => "ASCII files may use EOF-based logical length; displayed size or address range can differ from raw directory metadata.";
+        public override string HuBasicBasicNote => "BASIC files may use load/end/exec metadata differently from machine-language files.";
+        public override string HuBasicLabelEntryNote => "This entry may be a non-data label used as a separator or heading in the directory listing.";
+        public override string HuBasicFlagPassword => "Password";
+        public override string HuBasicFlagHidden => "Hidden";
+        public override string HuBasicFlagVerify => "Verify";
+        public override string HuBasicFlagWriteProtect => "Write-protect";
+        public override string LanguageOptionDescription => "Override UI language: ja or en";
+        public override string EncodingOptionDescription => "Override disk filename decoding and text I/O encoding (for example: X1 or Shift-JIS)";
+        public override string RootDescription => "Legacy89DiskKit CLI";
+        public override string ListCommandDescription => "List files and disk summary information";
+        public override string LayoutCommandDescription => "Inspect and edit directory entry layout. Use 'layout export IMAGE > plan.txt', then 'cat plan.txt | layout validate IMAGE --stdin' or '... apply IMAGE --stdin'.";
+        public override string LayoutShowCommandDescription => "Show the current directory entry order";
+        public override string LayoutMoveCommandDescription => "Move an entry before another entry";
+        public override string LayoutInsertLabelCommandDescription => "Insert a label-like directory entry";
+        public override string LayoutSortCommandDescription => "Sort directory entries while preserving label positions";
+        public override string LayoutExportCommandDescription => "Export the current layout as an editable text plan. Writes to stdout unless --output is specified.";
+        public override string LayoutValidateCommandDescription => "Validate a layout text plan without writing changes. Use --stdin to read from standard input.";
+        public override string LayoutApplyCommandDescription => "Apply a validated layout text plan. Use --stdin to read from standard input.";
+        public override string FileCommandDescription => "File operations on an existing disk image";
+        public override string FileExtractCommandDescription => "Extract one disk file to a host path";
+        public override string FileInjectCommandDescription => "Inject a host file into a disk image";
+        public override string FileDeleteCommandDescription => "Delete one disk file";
+        public override string FileRenameCommandDescription => "Rename one disk file";
+        public override string FileCopyCommandDescription => "Duplicate a file inside the same disk image";
+        public override string DiskCommandDescription => "Disk-level operations";
+        public override string DiskCreateCommandDescription => "Create a new disk image and initialize it with an explicit file system";
+        public override string DiskFormatCommandDescription => "Reinitialize an existing disk image, preferably with an explicit file system";
+        public override string BootCommandDescription => "Boot metadata operations";
+        public override string BootShowCommandDescription => "Show boot metadata for this disk";
+        public override string BootClearCommandDescription => "Clear file-backed boot metadata without erasing the whole boot sector";
+        public override string BootCloneCommandDescription => "Create a bootable clone of a disk image";
+        public override string ImageArgumentDescription => "Path to the disk image";
+        public override string SourceImageArgumentDescription => "Source disk image path";
+        public override string DestinationImageArgumentDescription => "Destination disk image path";
+        public override string DiskFileArgumentDescription => "File name stored on disk";
+        public override string HostFileArgumentDescription => "Host file path";
+        public override string HostPathArgumentDescription => "Destination host path";
+        public override string SourceNameArgumentDescription => "Existing disk file name";
+        public override string TargetNameArgumentDescription => "New or target disk file name";
+        public override string NewNameArgumentDescription => "New disk file name";
+        public override string LabelTextArgumentDescription => "Label text";
+        public override string LayoutInputOptionDescription => "Read the layout plan from a file";
+        public override string LayoutOutputOptionDescription => "Write the exported layout plan to a file";
+        public override string LayoutStdinOptionDescription => "Read the layout plan from standard input";
+        public override string LayoutStrictOptionDescription => "Treat warnings as errors";
+        public override string LayoutBeforeOptionDescription => "Entry name to place before";
+        public override string LayoutSortByOptionDescription => "Sort key: name, ext, type";
+        public override string BootFilesOptionDescription => "Comma-separated list of files to copy or 'all'";
+        public override string TargetFileNameOptionDescription => "Override the filename on the target disk";
+        public override string DiskCreateDiskTypeOptionDescription => "Disk media type: 2d, 2dd, or 2hd";
+        public override string DiskCreateFileSystemOptionDescription => "File system to initialize: hu-basic, n88-basic, or msx-dos";
+        public override string DiskCreateNameOptionDescription => "Optional disk name for image containers that support it";
+        public override string DiskFormatFsOptionDescription => "Explicit file system to format: hu-basic, n88-basic, or msx-dos";
+        public override string ListingFilesForMessage => "Listing files for";
+        public override string UsingEncodingMessage => "Using Encoding";
+        public override string SuccessPrefix => "Success";
+        public override string ErrorPrefix => "Error";
+        public override string FileInjectedMessage => "File injected.";
+        public override string FileExtractedMessage => "File extracted.";
+        public override string FileDeletedMessage => "File deleted.";
+        public override string FileRenamedMessage => "File renamed.";
+        public override string FileCopiedMessage => "File copied.";
+        public override string DiskCreatedMessage => "Disk created and formatted.";
+        public override string DiskFormattedMessage => "Disk formatted.";
+        public override string LayoutUpdatedMessage => "Directory layout updated.";
+        public override string LabelInsertedMessage => "Label entry inserted.";
+        public override string DirectoryEntriesSortedMessage => "Directory entries sorted.";
+        public override string LayoutValidMessage => "Layout plan is valid.";
+        public override string LayoutAppliedMessage => "Layout plan applied.";
+        public override string BootableDiskCreatedMessage => "Bootable disk created.";
+        public override string BootClearedMessage => "Boot metadata cleared.";
+        public override string UnsupportedLanguageMessage => "Unsupported language. Use 'ja' or 'en'.";
+        public override string FileSystemNotDetectedMessage => "Could not detect a supported file system on this disk.";
+        public override string LayoutNotSupportedMessage => "Directory layout is not supported for this file system.";
+        public override string StdinInputConflictMessage => "Specify either --input or --stdin, not both.";
+        public override string InputRequiredMessage => "Specify --input or --stdin.";
+        public override string ValidationSummaryFormat => "{0} errors, {1} warnings";
+        public override string ValidationErrorLabel => "ERROR";
+        public override string ValidationWarningLabel => "WARNING";
+        public override string BootModeFileBacked => "file-backed";
+        public override string BootModeSectorResident => "sector-resident";
+        public override string BootModeNone => "none";
+        public override string BootShowTitle => "Boot Information";
+    }
+
+    private sealed class JapaneseConsoleLocalizer : ConsoleLocalizerBase
+    {
+        public override string FileSystemLabel => "ファイルシステム";
+        public override string PlatformLabel => "プラットフォーム";
+        public override string FilesLabel => "ファイル数";
+        public override string TotalLabel => "総容量";
+        public override string UsedLabel => "使用量";
+        public override string FreeLabel => "空き容量";
+        public override string BootLabel => "ブート";
+        public override string BootFileLabel => "ブートファイル";
+        public override string BootLoadLabel => "ブートLoad";
+        public override string BootExecLabel => "ブートExec";
+        public override string NameHeader => "名前";
+        public override string AttrHeader => "属性";
+        public override string SizeHeader => "サイズ";
+        public override string ClusterHeader => "クラスタ";
+        public override string TypeHeader => "種別";
+        public override string FlagsHeader => "フラグ";
+        public override string LoadHeader => "Load";
+        public override string EndHeader => "End";
+        public override string ExecHeader => "Exec";
+        public override string NoteHeader => "注記";
+        public override string LegendsLabel => "凡例";
+        public override string FootnotesLabel => "注釈";
+        public override string HuBasicAsciiNote => "ASCII ファイルは EOF ベースで論理長が決まる場合があり、表示サイズやアドレス範囲がディレクトリ情報と一致しないことがあります。";
+        public override string HuBasicBasicNote => "BASIC ファイルの Load/End/Exec はマシン語ファイルほど強い意味を持たない場合があります。";
+        public override string HuBasicLabelEntryNote => "このエントリは実体のないラベル用途で、区切りや見出しのために使われている可能性があります。";
+        public override string HuBasicFlagPassword => "パスワード";
+        public override string HuBasicFlagHidden => "隠し";
+        public override string HuBasicFlagVerify => "ベリファイ";
+        public override string HuBasicFlagWriteProtect => "書き込み保護";
+        public override string LanguageOptionDescription => "UI 表示言語を指定します: ja または en";
+        public override string EncodingOptionDescription => "ディスク上ファイル名の表示デコードやテキスト入出力の文字エンコーディングを上書きします";
+        public override string RootDescription => "Legacy89DiskKit CLI";
+        public override string ListCommandDescription => "ファイル一覧とディスク概要を表示します";
+        public override string LayoutCommandDescription => "ディレクトリエントリ順を確認・編集します。'layout export IMAGE > plan.txt' のあと、'cat plan.txt | layout validate IMAGE --stdin' や '... apply IMAGE --stdin' で流し込めます";
+        public override string LayoutShowCommandDescription => "現在のディレクトリエントリ順を表示します";
+        public override string LayoutMoveCommandDescription => "指定エントリを別のエントリの前へ移動します";
+        public override string LayoutInsertLabelCommandDescription => "ラベル風のディレクトリエントリを挿入します";
+        public override string LayoutSortCommandDescription => "ラベル位置を維持したままディレクトリエントリをソートします";
+        public override string LayoutExportCommandDescription => "現在の並び順を編集用テキストとして出力します。--output 未指定時は標準出力へ出します";
+        public override string LayoutValidateCommandDescription => "レイアウト計画テキストを検証します。--stdin で標準入力から読めます";
+        public override string LayoutApplyCommandDescription => "検証済みレイアウト計画を適用します。--stdin で標準入力から読めます";
+        public override string FileCommandDescription => "既存ディスクイメージ上のファイル操作";
+        public override string FileExtractCommandDescription => "ディスク上のファイルをホストへ書き出します";
+        public override string FileInjectCommandDescription => "ホストファイルをディスクへ注入します";
+        public override string FileDeleteCommandDescription => "ディスク上のファイルを削除します";
+        public override string FileRenameCommandDescription => "ディスク上のファイル名を変更します";
+        public override string FileCopyCommandDescription => "同一ディスク内でファイルを複製します";
+        public override string DiskCommandDescription => "ディスク単位の操作";
+        public override string DiskCreateCommandDescription => "新しいディスクイメージを作成し、指定したファイルシステムで初期化します";
+        public override string DiskFormatCommandDescription => "既存ディスクイメージを再初期化します。明示的なファイルシステム指定を推奨します";
+        public override string BootCommandDescription => "ブート情報の操作";
+        public override string BootShowCommandDescription => "このディスクのブート情報を表示します";
+        public override string BootClearCommandDescription => "ブートセクタ全消去ではなく、ファイル参照型のブート情報だけを無効化します";
+        public override string BootCloneCommandDescription => "ブート可能なディスクを複製します";
+        public override string ImageArgumentDescription => "ディスクイメージへのパス";
+        public override string SourceImageArgumentDescription => "元ディスクイメージのパス";
+        public override string DestinationImageArgumentDescription => "出力先ディスクイメージのパス";
+        public override string DiskFileArgumentDescription => "ディスク上のファイル名";
+        public override string HostFileArgumentDescription => "ホスト側ファイルのパス";
+        public override string HostPathArgumentDescription => "書き出し先ホストパス";
+        public override string SourceNameArgumentDescription => "元のディスクファイル名";
+        public override string TargetNameArgumentDescription => "新しい名前または複製先のファイル名";
+        public override string NewNameArgumentDescription => "新しいディスクファイル名";
+        public override string LabelTextArgumentDescription => "ラベル文字列";
+        public override string LayoutInputOptionDescription => "レイアウト計画をファイルから読み込みます";
+        public override string LayoutOutputOptionDescription => "書き出したレイアウト計画の保存先ファイル";
+        public override string LayoutStdinOptionDescription => "レイアウト計画を標準入力から読み込みます";
+        public override string LayoutStrictOptionDescription => "警告もエラーとして扱います";
+        public override string LayoutBeforeOptionDescription => "このエントリの前へ配置します";
+        public override string LayoutSortByOptionDescription => "ソートキー: name, ext, type";
+        public override string BootFilesOptionDescription => "コピーするファイル一覧。all も指定可能";
+        public override string TargetFileNameOptionDescription => "ターゲットディスク上のファイル名を上書きします";
+        public override string DiskCreateDiskTypeOptionDescription => "ディスク種別: 2d, 2dd, 2hd";
+        public override string DiskCreateFileSystemOptionDescription => "初期化するファイルシステム: hu-basic, n88-basic, msx-dos";
+        public override string DiskCreateNameOptionDescription => "対応コンテナに設定する任意のディスク名";
+        public override string DiskFormatFsOptionDescription => "明示的にフォーマットするファイルシステム: hu-basic, n88-basic, msx-dos";
+        public override string ListingFilesForMessage => "Listing files for";
+        public override string UsingEncodingMessage => "Using Encoding";
+        public override string SuccessPrefix => "Success";
+        public override string ErrorPrefix => "Error";
+        public override string FileInjectedMessage => "ファイルを注入しました。";
+        public override string FileExtractedMessage => "ファイルを書き出しました。";
+        public override string FileDeletedMessage => "ファイルを削除しました。";
+        public override string FileRenamedMessage => "ファイル名を変更しました。";
+        public override string FileCopiedMessage => "ファイルを複製しました。";
+        public override string DiskCreatedMessage => "ディスクを作成してフォーマットしました。";
+        public override string DiskFormattedMessage => "ディスクをフォーマットしました。";
+        public override string LayoutUpdatedMessage => "ディレクトリエントリ順を更新しました。";
+        public override string LabelInsertedMessage => "ラベルエントリを挿入しました。";
+        public override string DirectoryEntriesSortedMessage => "ディレクトリエントリをソートしました。";
+        public override string LayoutValidMessage => "レイアウト計画は有効です。";
+        public override string LayoutAppliedMessage => "レイアウト計画を適用しました。";
+        public override string BootableDiskCreatedMessage => "ブート可能ディスクを作成しました。";
+        public override string BootClearedMessage => "ブート情報を無効化しました。";
+        public override string UnsupportedLanguageMessage => "未対応の言語です。ja または en を指定してください。";
+        public override string FileSystemNotDetectedMessage => "このディスクから対応ファイルシステムを検出できませんでした。";
+        public override string LayoutNotSupportedMessage => "このファイルシステムではディレクトリレイアウト編集をサポートしていません。";
+        public override string StdinInputConflictMessage => "--input と --stdin は同時に指定できません。";
+        public override string InputRequiredMessage => "--input または --stdin を指定してください。";
+        public override string ValidationSummaryFormat => "{0} errors, {1} warnings";
+        public override string ValidationErrorLabel => "ERROR";
+        public override string ValidationWarningLabel => "WARNING";
+        public override string BootModeFileBacked => "ファイル参照型";
+        public override string BootModeSectorResident => "セクタ常駐型";
+        public override string BootModeNone => "なし";
+        public override string BootShowTitle => "ブート情報";
+    }
+}

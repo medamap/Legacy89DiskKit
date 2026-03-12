@@ -1,0 +1,97 @@
+- [x] Phase 5: Native Interop & Export
+    - [x] Create Native types and handle management.
+    - [x] Implement Disk Export API (Open, Close, Create, Format, Info).
+    - [x] Implement File Export API (Read, Write, Delete, Rename, List, Attributes).
+    - [x] Implement Boot Area API (Read, Write).
+    - [x] Configure Native AOT publication (macOS arm64).
+    - [x] Verify API via P/Invoke test application.
+- [x] Phase 9: Additional File System Support & Refinement
+    - [x] Implement N88-BASIC File System Provider.
+        - [x] Create N88BasicFileSystem and Provider.
+        - [x] Implement FAT and Directory parsing for N88-BASIC.
+        - [x] Implement File I/O for N88-BASIC.
+    - [x] Implement MSX-DOS File System Provider.
+        - [x] Create MsxDosFileSystem and Provider.
+        - [x] Implement FAT12 and Root Directory parsing.
+        - [x] Implement File I/O for MSX-DOS.
+    - [x] Refine Character Encoding for X1/PC88/MSX.
+        - [x] Register platform-specific encoders in EncoderRegistry.
+        - [x] Map PlatformId to appropriate encoders.
+    - [x] Verify N88-BASIC and MSX-DOS with Native Interop layer.
+- [x] Phase 11: Boot Disk Creation Implementation (X1, MSX)
+    - [x] Implement blank disk creation for D88/RAW
+    - [x] Implement `DiskCloneService` for SysGen flow
+    - [x] Implement Multi-sector Boot Support (X1 IPL/Track 0 Cloning)
+- [x] Phase 12: Full System File Migration and 2HD Media Verification
+    - [x] Fix Hu-BASIC FAT chaining (0x01 -> 0x8F reserved range)
+    - [x] Implement dynamic Start Sector patching for Hu-BASIC
+    - [x] Support full Track 0 cloning for X1 images
+    - [x] Implement wildcard (*) support for full-disk migration
+    - [x] Fix D88 container reference sharing bug
+    - [x] Preserve memory load/execution addresses in directory entries
+- [x] Phase 13: Debugging 2HD Boot Failure (NEW_BOOT.d88)
+    - [x] Compare full file metadata (addresses, attributes) between original and NEW_BOOT.d88
+    - [x] Audit FAT chain for system files on 2HD
+    - [x] Investigate Start Sector 48 vs 78 discrepancy on 2HD
+    - [x] Verify if 2HD media requires physical file placement constraints (Documented in HuBasic_Format_Specification.md)
+    - [x] Fix file system detection false positives (X1 vs N88)
+    - [x] Fix filename casing and password block initialization
+- [x] Phase 14: Finalizing 2HD Demo Support
+    - [x] Fix D88Container 2HD sector size mismatch (256B vs 1024B)
+    - [x] Implement "Holey FAT" cluster allocation (skip 128-255 indices)
+    - [x] Refine machine language file size detection via FAT terminal flags
+    - [x] Perform final full-disk bootable clone and verify auto-demo
+- [x] Phase 15: Library Modernization & professional CLI Overhaul
+    - [x] Create Consultation Report for Codex (Success Report + Refactoring Plan)
+    - [x] Consult Codex for architectural advice and pitsfalls
+    - [x] Create `Legacy89DiskKit.Cli` project with `System.CommandLine`
+    - [x] Implement robust subcommands: `list`, `info`, `copy`, `boot`, `format`
+    - [x] Configure and verify Native AOT single-file publishing
+    - [x] Refactor Core logic into a reusable library structure (Initial implementation complete)
+- [x] Phase 10: Real Image Verification
+    - [x] Implement unified `RawDiskContainer` for 2D/2DD/2HD support
+    - [x] Fix Hu-BASIC cluster mapping (7-bit packing)
+    - [x] Fix MSX-DOS 12-bit FAT indexing bug
+    - [x] Verify Katakana decoding with X1/PC88/MSX encoders
+    - [/] Setup Diagnostic Test Tools.
+    - [ ] Execute Detection Tests (DET).
+    - [ ] Execute Read Integrity Tests (READ).
+    - [ ] Execute Charset Round-trip Tests (CHAR).
+    - [ ] Execute Write/Delete Safety Tests (WRITE/DELETE).
+    - [ ] Execute Boot Area (IPL) Verification.
+
+- [x] Phase 16: Character Encoding & Filename Normalization
+    - [x] Create Consultation Report for Codex (Encoding & Normalization)
+    - [x] Consult Codex for best practices on shortening and collisions
+    - [x] Implement `FileNameNormalizationService` with collision handling
+    - [x] Update `IFileSystem` and `FileEntry` to support metadata-rich names
+    - [x] Add CLI `--encoding` option and update `list` command
+    - [x] Implement `inject` (copy-to-disk) command with normalization support
+
+- [ ] Phase 17: Advanced File Listing & Attribute Representation
+    - [ ] Implement symbolic attribute display (e.g., `PBAGSIH`) with placeholder `-`.
+    - [ ] Show platform-specific metadata in `list` command (Hex addresses for Hu-BASIC).
+    - [ ] Design and implement filesystem-aware attribute manipulation (per-FS flags).
+
+- [ ] Phase 18: CLI Disk Creation, Option Policy, and Deferred CLI Roadmap
+    - [x] Add `disk create` CLI entrypoint for new image creation (`.d88`, `.2d`, `.dsk`) with explicit `--disk-type` and `--file-system`.
+    - [x] Support explicit initialization flow for blank media without relying on auto-detection.
+    - [x] Expose Hu-BASIC creation/format flow for `2D`, `2DD`, and `2HD`.
+    - [x] Expose N88-BASIC creation/format flow for supported media types (`2D`, `2DD`).
+    - [x] Reject Hu-BASIC writes larger than `65535` bytes before writing. This currently applies to `inject` and all other Hu-BASIC write paths.
+    - [ ] Align CLI option naming policy around long-form names plus stable short aliases:
+        - [ ] `--language` / `-l`
+        - [ ] `--encoding` / `-e`
+        - [x] `--file-system` / `-f`
+        - [x] `--disk-type` / `-d`
+        - [x] `--name` / `-n`
+        - [ ] `--input` / `-i`
+        - [ ] `--output` / `-o`
+    - [ ] Prefer consistent short-option meaning reuse across commands instead of per-command ad hoc aliases.
+    - [ ] Add CLI policy documentation for option naming and global-vs-local option scope.
+    - [ ] Keep deferred features tracked separately from v1 layout support:
+        - [ ] Layout plan direct attribute editing
+        - [ ] Layout plan direct `Load/End/Exec` editing
+        - [ ] External language packs under `~/.legacy89/languages/*`
+        - [ ] Cross-filesystem `layout export/validate/apply`
+        - [ ] More complete help localization and examples
