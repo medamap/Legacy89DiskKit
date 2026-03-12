@@ -46,6 +46,9 @@ public class N88BasicDirParser
         // For simplicity in this implementation, we might need to calculate it from clusters 
         // or rely on EOF markers in the future. For now, we use a placeholder or 0 if unknown.
         // Actually, FAT chain length * ClusterSize is a safe upper bound.
+        var nameBytes = entryData.Take(6).ToArray();
+        var extBytes = entryData.Skip(6).Take(3).ToArray();
+
         return new FileEntry(
             name,
             ext,
@@ -53,7 +56,10 @@ public class N88BasicDirParser
             null, // Date not stored in N88-BASIC dir
             DateTime.MinValue,
             extendedAttr,
-            startCluster
+            startCluster,
+            null, null, null,
+            nameBytes,
+            extBytes
         );
     }
 

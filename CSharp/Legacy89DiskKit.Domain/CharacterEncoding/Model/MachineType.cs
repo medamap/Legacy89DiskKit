@@ -10,5 +10,5 @@ public enum MachineType
     MZ2000,
     FM7,
     PC9801,
-    // Expand to 18 machines later
+    Unknown = 99
 }

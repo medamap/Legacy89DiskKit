@@ -6,7 +6,8 @@ public record DiskFileSystemInfo(
     long FreeSpace,
     int ClusterSize,
     int ReservedSectors,
-    string PlatformId = ""
+    string PlatformId = "",
+    string DefaultEncodingId = ""
 );
 
 public record BootSector(

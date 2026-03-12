@@ -18,8 +18,8 @@ public class HuBasicDirParser
     public FileEntry Parse(byte[] data)
     {
         byte modeByte = data[0];
+        byte passwordByte = data[0x11];
         
-        // Decode filename and extension using X1 encoder
         var nameBytes = data.Skip(1).Take(13).ToArray();
         var extBytes = data.Skip(0x0E).Take(3).ToArray();
         
@@ -33,22 +33,35 @@ public class HuBasicDirParser
         
         // Start Cluster: 0x1D: HIGH, 0x1E: LOW, 0x1F: MIDDLE (7 bits each)
         int startCluster = (data[0x1F] << 7) | (data[0x1E] & 0x7F);
-        // Note: HIGH (0x1D) is also 7 bits but for 2D/2DD/2HD it's usually 0 since max cluster is 250.
-        // If we needed it: startCluster |= (data[0x1D] & 0x7F) << 14;
 
         var standardAttr = Domain.FileSystem.Model.FileAttributes.None;
         if ((modeByte & 0x80) != 0) standardAttr |= Domain.FileSystem.Model.FileAttributes.Directory;
         if ((modeByte & 0x40) != 0) standardAttr |= Domain.FileSystem.Model.FileAttributes.ReadOnly;
-        if ((modeByte & 0x20) != 0) standardAttr |= Domain.FileSystem.Model.FileAttributes.System;
         if ((modeByte & 0x10) != 0) standardAttr |= Domain.FileSystem.Model.FileAttributes.Hidden;
 
-        bool isAscii = (modeByte & 0x04) != 0 || (modeByte & 0x08) != 0;
+        var fileType = GetFileType(modeByte);
+        bool isAscii = fileType == HuBasicFileType.Ascii;
 
         var extAttr = new ExtendedFileAttributes(
             standardAttr,
             modeByte,
             isAscii,
-            $"Raw:0x{modeByte:X2}"
+            "Hu-BASIC"
+        );
+
+        var metadata = new HuBasicFileMetadata(
+            fileType,
+            passwordByte != 0x20,
+            (modeByte & 0x10) != 0,
+            (modeByte & 0x20) != 0,
+            (modeByte & 0x40) != 0,
+            (modeByte & 0x80) != 0,
+            size,
+            loadAddr,
+            execAddr,
+            startCluster,
+            modeByte,
+            passwordByte
         );
 
         return new FileEntry(
@@ -61,31 +74,37 @@ public class HuBasicDirParser
             startCluster,
             loadAddr,
             (ushort?)(loadAddr + size - 1),
-            execAddr
+            execAddr,
+            nameBytes,
+            extBytes,
+            metadata
         );
     }
 
     public void WriteToBuffer(byte[] buffer, int offset, FileEntry entry)
     {
         var att = entry.Attributes;
-        byte modeByte = att.RawAttributes;
-        
-        // Reset and set flags based on standard attributes
-        modeByte &= 0x0F; // Preserve lower bits (ASCII/BIN)
-        if ((att.StandardAttributes & Domain.FileSystem.Model.FileAttributes.Directory) != 0) modeByte |= 0x80;
-        if ((att.StandardAttributes & Domain.FileSystem.Model.FileAttributes.ReadOnly) != 0) modeByte |= 0x40;
-        if ((att.StandardAttributes & Domain.FileSystem.Model.FileAttributes.System) != 0) modeByte |= 0x20;
-        if ((att.StandardAttributes & Domain.FileSystem.Model.FileAttributes.Hidden) != 0) modeByte |= 0x10;
+        var metadata = entry.FileSystemMetadata as HuBasicFileMetadata;
+        byte modeByte = metadata != null
+            ? BuildModeByte(metadata)
+            : BuildModeByte(att, entry);
 
         buffer[offset] = modeByte;
         
-        var nameBytes = _encoder.EncodeText(entry.FileName.PadRight(13));
+        // Use RawFileName if available and of correct length, otherwise encode string
+        var nameBytes = (entry.RawFileName != null && entry.RawFileName.Length == 13) 
+            ? entry.RawFileName 
+            : _encoder.EncodeText(entry.FileName.PadRight(13));
+
         for (int i = 0; i < 13; i++) buffer[offset + 1 + i] = i < nameBytes.Length ? nameBytes[i] : (byte)0x20;
         
-        var extBytes = _encoder.EncodeText(entry.Extension.PadRight(3));
+        var extBytes = (entry.RawExtension != null && entry.RawExtension.Length == 3)
+            ? entry.RawExtension
+            : _encoder.EncodeText(entry.Extension.PadRight(3));
+
         for (int i = 0; i < 3; i++) buffer[offset + 0x0E + i] = i < extBytes.Length ? extBytes[i] : (byte)0x20;
         
-        buffer[offset + 0x11] = 0x20; // Password block defaults to space (no password)
+        buffer[offset + 0x11] = metadata?.PasswordByte ?? 0x20;
         
         BitConverter.GetBytes((ushort)entry.Size).CopyTo(buffer, offset + 0x12);
         
@@ -100,6 +119,50 @@ public class HuBasicDirParser
         buffer[offset + 0x1D] = (byte)((entry.StartCluster >> 14) & 0x7F);
         buffer[offset + 0x1E] = (byte)(entry.StartCluster & 0x7F);
         buffer[offset + 0x1F] = (byte)((entry.StartCluster >> 7) & 0x7F);
+    }
+
+    private static HuBasicFileType GetFileType(byte modeByte)
+    {
+        if ((modeByte & 0x01) != 0) return HuBasicFileType.Binary;
+        if ((modeByte & 0x02) != 0) return HuBasicFileType.Basic;
+        if ((modeByte & 0x0C) != 0) return HuBasicFileType.Ascii;
+        return HuBasicFileType.Unknown;
+    }
+
+    private static byte BuildModeByte(HuBasicFileMetadata metadata)
+    {
+        byte modeByte = 0;
+
+        if (metadata.IsDirectory) modeByte |= 0x80;
+        if (metadata.IsWriteProtected) modeByte |= 0x40;
+        if (metadata.IsVerify) modeByte |= 0x20;
+        if (metadata.IsHidden) modeByte |= 0x10;
+
+        modeByte |= metadata.FileType switch
+        {
+            HuBasicFileType.Binary => (byte)0x01,
+            HuBasicFileType.Basic => (byte)0x02,
+            HuBasicFileType.Ascii => (byte)0x04,
+            _ => (byte)0x00
+        };
+
+        return modeByte;
+    }
+
+    private static byte BuildModeByte(ExtendedFileAttributes attributes, FileEntry entry)
+    {
+        byte modeByte = (byte)(attributes.RawAttributes & 0x0F);
+
+        if ((attributes.StandardAttributes & Domain.FileSystem.Model.FileAttributes.Directory) != 0) modeByte |= 0x80;
+        if ((attributes.StandardAttributes & Domain.FileSystem.Model.FileAttributes.ReadOnly) != 0) modeByte |= 0x40;
+        if ((attributes.StandardAttributes & Domain.FileSystem.Model.FileAttributes.Hidden) != 0) modeByte |= 0x10;
+
+        if ((modeByte & 0x0F) == 0)
+        {
+            modeByte |= entry.Attributes.IsAscii ? (byte)0x04 : (byte)0x01;
+        }
+
+        return modeByte;
     }
 
     private static DateTime ParseBcdDate(byte[] data, int offset)

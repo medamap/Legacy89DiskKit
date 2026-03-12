@@ -89,6 +89,7 @@ public class MsxDosFileSystem : IFileSystem
             (long)free * _secPerClus * _bytsPerSec,
             _secPerClus * _bytsPerSec,
             _rsvdSecCnt,
+            "MSX",
             "MSX"
         );
     }
@@ -159,7 +160,7 @@ public class MsxDosFileSystem : IFileSystem
         _fatManager.WriteFat(fat);
 
         var (name, ext) = ParseFileName(fileName);
-        var entry = new FileEntry(name, ext, data.Length, null, DateTime.Now, attributes, allocated[0]);
+        var entry = new FileEntry(name, ext, data.Length, null, DateTime.Now, attributes, allocated[0], null, null, null);
         AddDirectoryEntry(entry);
     }
 

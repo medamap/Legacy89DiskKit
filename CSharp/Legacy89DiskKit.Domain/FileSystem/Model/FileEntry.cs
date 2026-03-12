@@ -10,7 +10,10 @@ public record FileEntry(
     int StartCluster = 0,
     ushort? LoadAddress = null,
     ushort? EndAddress = null,
-    ushort? ExecutionAddress = null
+    ushort? ExecutionAddress = null,
+    byte[]? RawFileName = null,
+    byte[]? RawExtension = null,
+    IFileSystemEntryMetadata? FileSystemMetadata = null
 )
 {
     public string FullName => string.IsNullOrEmpty(Extension) ? FileName : $"{FileName}.{Extension}";

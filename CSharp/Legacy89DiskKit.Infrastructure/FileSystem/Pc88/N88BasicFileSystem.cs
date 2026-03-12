@@ -38,6 +38,7 @@ public class N88BasicFileSystem : IFileSystem
             (long)free * _config.ClusterSize,
             _config.ClusterSize,
             _config.ReservedClusters * (_config.ClusterSize / _config.SectorSize),
+            "PC88",
             "PC88"
         );
     }
@@ -154,7 +155,7 @@ public class N88BasicFileSystem : IFileSystem
 
         // Add dir entry
         var (name, ext) = ParseFileName(fileName);
-        var entry = new FileEntry(name, ext, data.Length, null, DateTime.Now, attributes, allocatedClusters[0]);
+        var entry = new FileEntry(name, ext, data.Length, null, DateTime.Now, attributes, allocatedClusters[0], null, null, null);
         AddDirectoryEntry(entry);
     }
 

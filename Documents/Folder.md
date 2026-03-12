@@ -1,57 +1,50 @@
-# フォルダ構造
+# Document Index
 
-## 概要
+This folder contains the project documents that are still useful for current development, reference work, or release handling.
 
-- フォルダ構造は基本的に DDD (ドメイン駆動設計) 準拠の設計を採用しています.
-- トップフォルダにはそれぞれのドメイン責任において決定されたフォルダが配置されます
-  - Application: ドメイン責任の Domain Model または Infrastructure にアクセスするための API やサービスが提供されます、Domain や Infrastructure へのアクセスは基本的には Application からアクセスされます
-  - Domain: ドメイン責任のビジネスロジックが配置されます(大抵はモデル定義またはインターフェイス定義がほとんどです)
-    - Model: ドメインモデルが配置されます
-    - Interface: ドメインインターフェイスが配置されます
-      - Repository: ドメインのリポジトリインターフェイスが配置されます
-      - Service: ドメインのサービスインターフェイスが配置されます
-      - State: ステートパターンの状態インターフェイス及び、ステートを表す列挙型が配置されます
-    - ValueObject: ドメインの値オブジェクトが配置されます
-    - Exception: ドメインの例外定義が配置されます
-    - Entity: ドメインのエンティティが配置されます
-    - Enum: ドメインの列挙型が配置されます
-    - その他必要に応じてカテゴリ分けした方が良いと判断された場合には、それに応じたフォルダを配置します
-  - Infrastructure: ドメイン責任のインフラストラクチャ層が配置されます(大抵はインターフェイスに対する実装がほとんどです)
-    - ほとんどが Domain Interface の実装となり、Domain と同様のフォルダ構造を採用します
+## Active Planning and Status
 
-## フォルダ分けの例
+Use these files first when you need the current project direction.
 
-```
-+ Legacy89DiskKit
-  + Documents
-    + D88_Format.md
-    + Hu-BASIC_Format.md
-    + Folder.md
-    + README.md
-  + CSharp (or Cpp)
-    + DiskImage
-      + Application
-        + DiskImageService.cs
-      + Domain
-        + Interface
-          + Container
-            + IDiskContainer.cs
-      + Infrastructure
-        + Container
-          + D88DiskContainer.cs (D88形式のディスクイメージを表すコンテナで、Domain Interface の IDiskContainer.cs を実装します)
-    + FileSystem
-      + Application
-        + FileSystemService.cs
-      + Domain
-        + Interface
-          + FileSystem
-            + IFileSystem.cs
-      + Infrastructure
-        + FileSystem
-          + HuBasicFileSystem.cs (Hu-BASICを表すファイルシステムで、Domain Interface の IFileSystem.cs を実装します)
-          + MsdosFileSystem.cs (MS-DOSを表すファイルシステムで、Domain Interface の IFileSystem.cs を実装します)
-```
+- `handoff/task.md`: current implementation checklist and deferred work
+- `ROADMAP.md`: broader long-term direction
+- `Technical_Vision.md`: high-level technical intent
+- `plans/RealImageTestPlan.md`: planned real-image verification work
+- `Release_Process.md`: release procedure
 
-- CSharp (または Cpp) 以下のフォルダ構造は、それぞれのドメイン責任においてこのようにDDD準拠の設計を採用している例を表しており、必ずしもこの通りに実装する必要はありません
-- ドメインを跨ぐアクセスは基本的には Application 層を介して行う必要があります
+## Reference Specifications
 
+These files remain valuable as implementation references, even if they were written at different times and in different styles.
+
+- `D88_Format.md`
+- `2D_Format_Specification.md`
+- `Hu-BASIC_Format.md`
+- `HuBasic_Format_Specification.md`
+- `N88Basic_Format.md`
+- `MSX_DOS_Format.md`
+- `FAT12_Format.md`
+- `L89_Format_Specification.md`
+- `CPM_Character_Encoding.md`
+- `CPM_Implementation_Design.md`
+- `N88Basic_vs_HuBasic_Analysis.md`
+- `MFM_FM_Recording_Tutorial.md`
+
+## Architecture and Future Work
+
+- `TODO_BootInfo_Refactoring.md`
+
+## Obsolete Documents
+
+Documents that were no longer part of the active documentation set were moved to:
+
+- `obsolete/2026-03-doc-audit/`
+
+These files are kept temporarily for review and possible later deletion. They should not be treated as the source of truth for current behavior.
+
+## Current Source of Truth
+
+If a document disagrees with the current implementation, use these in this order:
+
+1. current code and CLI help
+2. `handoff/task.md`
+3. the relevant format specification

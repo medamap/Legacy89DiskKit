@@ -1,6 +1,7 @@
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
+using Legacy89DiskKit.Domain.FileSystem.Interface.Layout;
 using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Models;
 using Legacy89DiskKit.Domain.FileSystem.Exception;
@@ -8,7 +9,7 @@ using DomainAttr = Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes;
 
 namespace Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
 
-public class HuBasicFileSystem : IFileSystem
+public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
 {
     private readonly IDiskContainer _diskContainer;
     private readonly HuBasicConfiguration _config;
@@ -40,6 +41,7 @@ public class HuBasicFileSystem : IFileSystem
             (long)free * _config.ClusterSize,
             _config.ClusterSize,
             _config.ReservedClusters * (_config.ClusterSize / _config.SectorSize),
+            "X1",
             "X1"
         );
     }
@@ -115,6 +117,9 @@ public class HuBasicFileSystem : IFileSystem
         if (FileExists(fileName))
             throw new FileSystemException($"File already exists: {fileName}");
 
+        if (data.Length > 0xFFFF)
+            throw new FileSystemException("Hu-BASIC files larger than 65535 bytes are not supported.");
+
         // Hu-BASIC ASCII files must end with 0x1A
         if (attributes.IsAscii && (data.Length == 0 || data[^1] != 0x1A))
         {
@@ -123,6 +128,9 @@ public class HuBasicFileSystem : IFileSystem
             newData[^1] = 0x1A;
             data = newData;
         }
+
+        if (data.Length > 0xFFFF)
+            throw new FileSystemException("Hu-BASIC files larger than 65535 bytes are not supported.");
 
         int clustersNeeded = (data.Length + _config.ClusterSize - 1) / _config.ClusterSize;
         if (clustersNeeded == 0) clustersNeeded = 1;
@@ -148,7 +156,22 @@ public class HuBasicFileSystem : IFileSystem
 
         // Create and add directory entry
         var (name, ext) = ParseFileName(fileName);
-        var entry = new FileEntry(name, ext, data.Length, null, DateTime.Now, attributes, allocatedClusters[0], loadAddress, (ushort?)(loadAddress + data.Length - 1), executionAddress);
+        var fileType = IsAscii(attributes) ? HuBasicFileType.Ascii : HuBasicFileType.Binary;
+        var metadata = new HuBasicFileMetadata(
+            fileType,
+            false,
+            false,
+            false,
+            false,
+            false,
+            (ushort)data.Length,
+            loadAddress,
+            executionAddress,
+            allocatedClusters[0],
+            attributes.RawAttributes
+        );
+
+        var entry = new FileEntry(name, ext, data.Length, null, DateTime.Now, attributes, allocatedClusters[0], loadAddress, (ushort?)(loadAddress + data.Length - 1), executionAddress, null, null, metadata);
         AddDirectoryEntry(entry);
     }
 
@@ -257,7 +280,7 @@ public class HuBasicFileSystem : IFileSystem
         return new ExtendedFileAttributes(
             DomainAttr.None, 
             (byte)(isAscii ? 0x04 : 0x01), // bit 2 for ASC, bit 0 for BIN
-            true, 
+            isAscii,
             "");
     }
 
@@ -288,6 +311,131 @@ public class HuBasicFileSystem : IFileSystem
     public byte[] ReadBootArea() 
     {
         return _diskContainer.ReadSector(0, 0, 1);
+    }
+
+    public DirectoryEntryLayout ReadDirectoryLayout()
+    {
+        var items = new List<DirectoryLayoutItem>();
+        var order = 0;
+
+        for (int s = 0; s < _config.DirectorySectors; s++)
+        {
+            var dirData = ReadDirectorySector(s);
+            for (int offset = 0; offset < _config.SectorSize; offset += 32)
+            {
+                byte mode = dirData[offset];
+                if (mode == 0xFF)
+                {
+                    return new DirectoryEntryLayout("Hu-BASIC", items);
+                }
+
+                if (mode == 0x00 || mode == 0xE5)
+                {
+                    continue;
+                }
+
+                var entryData = new byte[32];
+                Array.Copy(dirData, offset, entryData, 0, 32);
+                var entry = _dirParser.Parse(entryData);
+                var id = $"{s:D2}:{offset:D3}:{entry.FullName}";
+                var itemKind = IsVirtualLabelEntry(entry) ? DirectoryLayoutItemKind.VirtualLabel : DirectoryLayoutItemKind.FileEntry;
+                var virtualLabel = itemKind == DirectoryLayoutItemKind.VirtualLabel
+                    ? new VirtualDirectoryLabelEntry(
+                        entry.FileName,
+                        entry.Extension,
+                        entry.Attributes.RawAttributes,
+                        (entry.FileSystemMetadata as HuBasicFileMetadata)?.PasswordByte ?? 0x20,
+                        (ushort)entry.Size,
+                        entry.LoadAddress ?? 0,
+                        entry.EndAddress ?? 0,
+                        entry.ExecutionAddress ?? 0,
+                        entry.StartCluster
+                    )
+                    : null;
+
+                var item = new DirectoryLayoutItem(id, order++, itemKind, entry.FullName, entry, virtualLabel);
+                if (TryMergeVirtualLabelExtension(items, item))
+                {
+                    continue;
+                }
+
+                items.Add(item);
+            }
+        }
+
+        return new DirectoryEntryLayout("Hu-BASIC", items);
+    }
+
+    public void ApplyDirectoryLayout(DirectoryEntryLayout layout)
+    {
+        if (_diskContainer.IsReadOnly)
+        {
+            throw new InvalidOperationException("Disk is read-only");
+        }
+
+        var emptySector = new byte[_config.SectorSize];
+        Array.Fill(emptySector, (byte)0x00);
+        for (var sectorIndex = 0; sectorIndex < _config.DirectorySectors; sectorIndex++)
+        {
+            WriteDirectorySector(sectorIndex, emptySector.ToArray());
+        }
+
+        var orderedItems = layout.Items.OrderBy(item => item.Order).ToArray();
+        var entryCapacity = _config.DirectorySectors * (_config.SectorSize / 32);
+        if (orderedItems.Length >= entryCapacity)
+        {
+            throw new FileSystemException("Directory layout exceeds capacity");
+        }
+
+        var currentSector = 0;
+        var currentOffset = 0;
+        var sectorBuffer = new byte[_config.SectorSize];
+        Array.Fill(sectorBuffer, (byte)0x00);
+
+        foreach (var item in orderedItems)
+        {
+            if (currentOffset >= _config.SectorSize)
+            {
+                WriteDirectorySector(currentSector, sectorBuffer);
+                currentSector++;
+                currentOffset = 0;
+                sectorBuffer = new byte[_config.SectorSize];
+                Array.Fill(sectorBuffer, (byte)0x00);
+            }
+
+            var entry = item.Kind == DirectoryLayoutItemKind.VirtualLabel
+                ? CreateVirtualLabelFileEntry(item.VirtualLabel!)
+                : item.Entry!;
+            _dirParser.WriteToBuffer(sectorBuffer, currentOffset, entry);
+            currentOffset += 32;
+        }
+
+        if (currentOffset >= _config.SectorSize)
+        {
+            WriteDirectorySector(currentSector, sectorBuffer);
+            currentSector++;
+            currentOffset = 0;
+            sectorBuffer = new byte[_config.SectorSize];
+            Array.Fill(sectorBuffer, (byte)0x00);
+        }
+
+        if (currentSector < _config.DirectorySectors)
+        {
+            sectorBuffer[currentOffset] = 0xFF;
+            WriteDirectorySector(currentSector, sectorBuffer);
+            currentSector++;
+        }
+
+        for (; currentSector < _config.DirectorySectors; currentSector++)
+        {
+            var remaining = new byte[_config.SectorSize];
+            Array.Fill(remaining, (byte)0x00);
+            if (currentSector == _config.DirectorySectors - 1 || currentSector > 0)
+            {
+                remaining[0] = 0xFF;
+            }
+            WriteDirectorySector(currentSector, remaining);
+        }
     }
 
     public void WriteBootArea(byte[] data)
@@ -404,6 +552,124 @@ public class HuBasicFileSystem : IFileSystem
         throw new FileSystemException("Directory is full");
     }
 
+    private static bool IsAscii(ExtendedFileAttributes attributes)
+    {
+        return attributes.IsAscii || (attributes.RawAttributes & 0x0C) != 0;
+    }
+
+    private static bool IsVirtualLabelEntry(FileEntry entry)
+    {
+        if (entry.FileSystemMetadata is not HuBasicFileMetadata metadata)
+        {
+            return false;
+        }
+
+        if (metadata.FileType != HuBasicFileType.Ascii)
+        {
+            return false;
+        }
+
+        var looksDecorative = entry.FullName.All(ch => ch is '-' or '.' or ' ');
+        var hasSentinelAddresses = entry.LoadAddress == 0xFFFF &&
+                                   entry.ExecutionAddress == 0xFFFF &&
+                                   (entry.EndAddress == 0xFFFF || entry.Size == 0);
+        var suspiciousCluster = entry.StartCluster >= 0x7FFF;
+        var labelFlags = metadata.HasPassword && metadata.IsWriteProtected && !metadata.IsHidden && !metadata.IsVerify;
+
+        return (looksDecorative || suspiciousCluster || hasSentinelAddresses) &&
+               (labelFlags || suspiciousCluster || hasSentinelAddresses);
+    }
+
+    private static bool TryMergeVirtualLabelExtension(List<DirectoryLayoutItem> items, DirectoryLayoutItem item)
+    {
+        if (item.Kind != DirectoryLayoutItemKind.VirtualLabel || item.VirtualLabel == null || items.Count == 0)
+        {
+            return false;
+        }
+
+        var previous = items[^1];
+        if (previous.Kind != DirectoryLayoutItemKind.VirtualLabel || previous.VirtualLabel == null)
+        {
+            return false;
+        }
+
+        if (!CanMergeLabelEntries(previous.VirtualLabel, item.VirtualLabel))
+        {
+            return false;
+        }
+
+        var mergedLabel = previous.VirtualLabel with
+        {
+            Extension = item.VirtualLabel.FileName[1..]
+        };
+        items[^1] = previous with
+        {
+            DisplayName = BuildDisplayName(mergedLabel.FileName, mergedLabel.Extension),
+            VirtualLabel = mergedLabel
+        };
+        return true;
+    }
+
+    private static bool CanMergeLabelEntries(VirtualDirectoryLabelEntry previous, VirtualDirectoryLabelEntry current)
+    {
+        if (!string.IsNullOrEmpty(previous.Extension) || string.IsNullOrEmpty(previous.FileName))
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrEmpty(current.Extension) || string.IsNullOrEmpty(current.FileName))
+        {
+            return false;
+        }
+
+        if (!current.FileName.StartsWith(".", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return previous.RawModeByte == current.RawModeByte &&
+               previous.PasswordByte == current.PasswordByte &&
+               previous.Size == current.Size &&
+               previous.LoadAddress == current.LoadAddress &&
+               previous.EndAddress == current.EndAddress &&
+               previous.ExecutionAddress == current.ExecutionAddress &&
+               previous.StartCluster == current.StartCluster;
+    }
+
+    private static FileEntry CreateVirtualLabelFileEntry(VirtualDirectoryLabelEntry label)
+    {
+        var metadata = new HuBasicFileMetadata(
+            HuBasicFileType.Ascii,
+            true,
+            false,
+            false,
+            true,
+            false,
+            label.Size,
+            label.LoadAddress,
+            label.ExecutionAddress,
+            label.StartCluster,
+            label.RawModeByte,
+            label.PasswordByte
+        );
+
+        return new FileEntry(
+            label.FileName,
+            label.Extension,
+            label.Size,
+            null,
+            DateTime.Now,
+            new ExtendedFileAttributes(DomainAttr.ReadOnly, label.RawModeByte, true, "Hu-BASIC"),
+            label.StartCluster,
+            label.LoadAddress,
+            label.EndAddress,
+            label.ExecutionAddress,
+            null,
+            null,
+            metadata
+        );
+    }
+
     private (string name, string ext) ParseFileName(string fileName)
     {
         var parts = fileName.Split('.');
@@ -412,6 +678,11 @@ public class HuBasicFileSystem : IFileSystem
         string ext = parts.Length > 1 ? parts[1] : "";
         if (ext.Length > 3) ext = ext.Substring(0, 3);
         return (name, ext);
+    }
+
+    private static string BuildDisplayName(string fileName, string extension)
+    {
+        return string.IsNullOrEmpty(extension) ? fileName : $"{fileName}.{extension}";
     }
 
     private byte[] ReadDirectorySector(int sectorIndex)

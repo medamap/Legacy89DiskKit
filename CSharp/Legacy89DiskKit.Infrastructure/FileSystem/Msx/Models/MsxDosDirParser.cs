@@ -33,7 +33,10 @@ public class MsxDosDirParser
         ushort dateRaw = BitConverter.ToUInt16(data, 24);
         DateTime dateTime = ParseFatDateTime(dateRaw, timeRaw);
 
-        return new FileEntry(name, ext, size, dateTime, dateTime, extendedAttr, startCluster);
+        var nameBytes = data.Take(8).ToArray();
+        var extBytes = data.Skip(8).Take(3).ToArray();
+
+        return new FileEntry(name, ext, size, dateTime, dateTime, extendedAttr, startCluster, null, null, null, nameBytes, extBytes);
     }
 
     public void WriteToBuffer(byte[] buffer, int offset, FileEntry entry)
