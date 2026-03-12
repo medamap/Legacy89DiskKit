@@ -410,3 +410,5 @@ test*.txt
 # Ignore local disk images for testing
 images/
 !images/.gitkeep
+temp/
+out.txt
