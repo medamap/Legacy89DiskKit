@@ -91,3 +91,29 @@ dotnet build -c Release
 - **ディスクイメージの確認**: `hexdump -C disk.d88 | less`
 - **セクタダンプ**: `IDiskContainer.ReadSector()`でセクタ単位の確認
 - **ファイルシステム自動検出**: `FileSystemFactory.OpenFileSystemReadOnly()`の挙動確認
+
+## 現在進行中の作業: ディスクコピー機能実装
+
+### 現在の実装状況
+詳細な進捗状況は [Documents/Disk_Copy_Implementation_Status.md](Documents/Disk_Copy_Implementation_Status.md) を参照
+
+### 次に実装すべき項目（優先順）
+1. **ファイル名自動短縮機能** - 8文字制限ファイルシステム対応
+   - コピー先の制限: 8文字以下の場合、先頭5文字＋連番3桁（例: "LONGFILE.TXT" → "LONGF001.TXT"）
+   - 重複時の連番自動増加
+   - 実装場所: `IFileNameConverter` の拡張
+
+2. **複数ファイル一括コピー機能**
+   - 現在は1ファイルずつのみ対応
+   - CLI: `copy <source> <dest> FILE1.TXT FILE2.BIN FILE3.BAS --source-fs <type> --dest-fs <type>`
+
+3. **ディスク丸ごとコピー機能**
+   - 基本機能: セクタ単位での完全コピー
+   - CLI: `disk-copy <source-disk> <dest-disk>`
+   - ファイルシステムに依存しない物理コピー
+
+### 実装時の注意点
+- 空き容量チェック機能は既に実装済み
+- FileNameConverterクラスが既存、これを活用
+- ConflictResolutionでAutoRenameオプションを改良
+- 各機能実装後は必ずテストケースを追加
