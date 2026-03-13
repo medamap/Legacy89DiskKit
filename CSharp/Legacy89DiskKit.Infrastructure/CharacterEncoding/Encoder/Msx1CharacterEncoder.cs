@@ -6,6 +6,7 @@ namespace Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
 
 public class Msx1CharacterEncoder : ICharacterEncoder
 {
+    public string EncodingId => "MSX";
     public MachineType SupportedMachine => MachineType.MSX;
 
     public string DecodeText(byte[] data) => DecodeText(data, Environment.NewLine);

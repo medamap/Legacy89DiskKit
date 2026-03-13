@@ -6,6 +6,7 @@ namespace Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
 
 public class X1CharacterEncoder : ICharacterEncoder
 {
+    public string EncodingId => "X1";
     public MachineType SupportedMachine => MachineType.X1;
 
     // Mapping from X1 byte to UTF-8 string

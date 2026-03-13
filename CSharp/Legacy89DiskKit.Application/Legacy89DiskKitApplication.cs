@@ -2,6 +2,7 @@ using Legacy89DiskKit.Application.CharacterEncoding;
 using Legacy89DiskKit.Domain.Drive.Interface;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
+using Legacy89DiskKit.Domain.CharacterEncoding.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.Registry;
 using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.Domain.Fdc.Interface;
@@ -107,8 +108,15 @@ public static class Legacy89DiskKitApplication
     public static ICharacterEncoder ResolveEncoder(DiskFileSystemInfo fsInfo, string? encodingOverride = null)
     {
         var registry = CreateEncoderRegistry();
-        return registry.GetEncoder(encodingOverride ?? fsInfo.DefaultEncodingId)
-            ?? registry.GetEncoder(fsInfo.PlatformId)
-            ?? new ShiftJisCharacterEncoder();
+        return new CharacterEncodingResolver(registry).ResolveEncoder(fsInfo, encodingOverride);
+    }
+
+    /// <summary>
+    /// Resolves the supported logical character encoding profile for the specified filesystem info.
+    /// </summary>
+    public static CharacterEncodingProfile ResolveEncodingProfile(DiskFileSystemInfo fsInfo, string? encodingOverride = null)
+    {
+        var registry = CreateEncoderRegistry();
+        return new CharacterEncodingResolver(registry).ResolveProfile(fsInfo, encodingOverride);
     }
 }

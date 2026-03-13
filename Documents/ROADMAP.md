@@ -213,6 +213,7 @@ The current managed reference implementation now already proves this direction i
 - the supported `Application` surface can open images from in-memory buffers with explicit format selection
 - raw sector-image and D88/D77-style sector-container implementations already expose a shared read-only container metadata shape
 - the managed reference implementation now exposes a read-only parser-result shape for D88 images and a raw-image descriptor path using the same metadata family
+- the managed reference implementation now also exposes logical encoding identifiers and profile resolution separate from CLI-only wiring
 - both D88/D77-style sector-container media and raw sector-image media have concrete mounted-medium adapters
 - mounted media can already be bound into a minimal controller-facing path
 - the controller-facing path already includes a minimal command subset and timing-driven completion in the managed reference implementation
