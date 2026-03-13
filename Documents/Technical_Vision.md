@@ -86,6 +86,26 @@ The intended execution order is:
 
 This order keeps the lowest shared dependencies first and reduces the chance of redesigning filesystem logic before the lower-level portable rules are stable.
 
+## First Implementation Slice
+
+The first concrete implementation slice for `Legacy89DiskKit.Cpp` should be intentionally narrow.
+
+The recommended initial slice is:
+
+1. read-only disk container open
+2. low-level geometry and sector access
+3. stable in-memory image representation
+4. no host path discovery inside the core contract
+
+The purpose of this slice is to prove:
+
+- buffer-based image opening
+- deterministic container parsing behavior
+- explicit error and result handling at the core boundary
+- compatibility with future filesystem logic layered above it
+
+This first slice should avoid taking on filesystem mutation, host filesystem I/O, or CLI-facing formatting concerns.
+
 ## Boundaries to Preserve
 
 The future core should aim to keep:
@@ -141,6 +161,19 @@ The intended path is:
 4. preserve the public C ABI unless a future major-version change makes adjustment unavoidable
 
 This keeps native consumers attached to a stable contract while allowing the internal implementation to change.
+
+## Host-Side Responsibilities to Keep in Managed Layers
+
+The following responsibilities should remain outside the future portable core unless later evidence proves otherwise:
+
+- local file loading and saving by host path
+- command-line option parsing
+- CLI presentation, table formatting, and localized output
+- release and packaging orchestration
+- repository-specific sample lookup
+- managed bootstrap convenience for host applications
+
+The future core may support these workflows indirectly through caller-provided buffers and explicit adapters, but it should not require them as intrinsic responsibilities.
 
 ## CLI Transition Criteria
 

@@ -189,6 +189,15 @@ This order is preferred because:
 - encoding rules are portable logic with limited host coupling
 - filesystem logic depends on both container rules and encoding behavior
 
+Recommended first implementation slice:
+
+1. read-only disk container open
+2. low-level geometry and sector access
+3. stable in-memory image representation
+4. explicit result handling at the core boundary
+
+This slice should prove the portability boundary before filesystem mutation or host-path convenience is carried into the new core.
+
 ### Future Core Boundary
 
 The future `Legacy89DiskKit.Cpp` core should keep:
@@ -220,6 +229,8 @@ The future core should also leave these responsibilities to host layers:
 - artifact packaging and release verification orchestration
 - host-specific path discovery and sample-path shortcuts
 - user-facing document/help generation
+
+The future core should be allowed to serve these workflows only through caller-provided adapters rather than direct host assumptions.
 
 The desired portability boundary should be:
 

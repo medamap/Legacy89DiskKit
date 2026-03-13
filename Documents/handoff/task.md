@@ -149,12 +149,12 @@
             - [x] confirm the mandatory `v2.0.0` deliverables
             - [x] confirm the roadmap-only deliverables
             - [x] review `RELEASE_NOTES_v2.0.0.md`
-            - [ ] tag and release only after every required item above is complete
+            - [x] tag and release only after every required item above is complete
 
 - [ ] Phase 20: C++ Core Transition and Bare-Metal-Oriented Architecture
     - [x] Define `Legacy89DiskKit.Cpp` as the future portable core line.
     - [x] Separate "reference implementation" from "final portable implementation" in public documents.
-    - [ ] Identify the first C# subsystems to port:
+    - [x] Identify the first C# subsystems to port:
         - [x] disk container core
         - [x] character encoding core
         - [x] filesystem core
@@ -167,16 +167,26 @@
     - [x] Decide when the CLI should switch from calling C# application services to calling bindings over the future C++ core.
         - [x] keep the CLI on the managed `Application` surface until first-port subsystem parity exists behind bindings
         - [x] switch only after container, encoding, at least one filesystem family, and layout validation reach practical parity
-    - [ ] Execute Phase 20 on a dedicated branch:
+    - [x] Execute Phase 20 on a dedicated branch:
         - [x] create `feature/phase20-cpp-transition`
         - [x] define the `Legacy89DiskKit.Cpp` product line in public documents
         - [x] define C# as the reference implementation and C++ as the final portable implementation
         - [x] decide the first-port candidates and their execution order
         - [x] define the future core boundary around buffer-first and path-independent contracts
         - [x] define the `Legacy89DiskKit.Native` migration policy against the future C++ core
-    - [ ] Versioning policy for post-`v2.0.0` work:
+    - [x] Versioning policy for post-`v2.0.0` work:
         - [x] reserve `v2.0.1` for hotfix-only use if needed
         - [x] treat `Phase 20` as a likely `v2.1.0` candidate rather than a patch release
+    - [ ] Define the first implementation slice for `Legacy89DiskKit.Cpp`:
+        - [x] start with read-only disk container open
+        - [x] keep geometry and sector access in the first slice
+        - [x] require a stable in-memory image representation
+        - [ ] decide the first concrete class or module boundary to port from the current C# codebase
+    - [ ] Identify host-side responsibilities that must remain outside the future core:
+        - [x] local path I/O
+        - [x] CLI presentation and localization
+        - [x] release packaging and verification orchestration
+        - [x] managed bootstrap convenience
 
 - [ ] Phase 21: Embedded and Bare-Metal Direction
     - [ ] Define the target order for low-level deployment:
