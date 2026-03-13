@@ -325,6 +325,7 @@ Under this model:
 - a D88-backed mounted medium may satisfy the controller-facing contract through an emulated sector-oriented adapter
 - a future raw magnetic-stream source may satisfy that same controller-facing contract more directly
 - direct image access remains separate from the controller-oriented path even when both are backed by the same underlying image source
+- the sector-container family should treat D88-style and D77-style payloads as one broad runtime category with different container naming rather than as unrelated media classes
 
 ## Future Raw Magnetic Stream Direction
 
@@ -396,6 +397,11 @@ The intended long-term relationship is:
 - direct image APIs remain appropriate for tooling and filesystem workflows
 - the FDC-facing API becomes the emulator-facing contract
 - both D88-backed sources and future lower-level raw sources can sit behind that controller-oriented surface
+
+The first concrete mounted-medium implementations should therefore be planned in pairs:
+
+- `D88Backed...` adapters for the D88/D77-style sector-container family
+- `RawDiskBacked...` adapters for raw sector-image families such as `.2d`
 
 That is why the current managed/native bridge should not be treated as the final low-level solution.
 

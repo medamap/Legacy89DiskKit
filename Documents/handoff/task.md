@@ -195,6 +195,9 @@
         - [x] document an FDC-facing runtime surface for emulator integration as a separate future surface
         - [x] keep this split as an architectural constraint for the future C++ core
         - [x] describe the controller-facing surface in terms of register/state/IRQ/DRQ style behavior rather than filesystem convenience calls
+        - [ ] add the first concrete mounted-medium candidates for both sector-container and raw sector-image families:
+            - [ ] `D88Backed...` adapters for the D88/D77-style sector-container family
+            - [ ] `RawDiskBacked...` adapters for raw sector-image families such as `.2d`
     - [ ] Define the additional domain boundaries needed by the controller-oriented path:
         - [x] identify `Drive` as a separate concern from `FileSystem`
         - [x] identify `Fdc` as a separate concern from direct image access

@@ -352,6 +352,11 @@ The preferred layer split is:
 - `Domain` for drive/FDC/timing state and contracts
 - `Infrastructure` for D88-backed and future raw-backed medium adapters
 
+The first concrete medium-adapter candidates should be:
+
+- `D88Backed...` for the D88/D77-style sector-container family
+- `RawDiskBacked...` for raw sector-image families such as `.2d`
+
 The minimum future FDC-facing public contract should cover:
 
 - controller reset
