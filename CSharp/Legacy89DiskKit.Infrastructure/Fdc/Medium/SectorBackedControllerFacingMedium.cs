@@ -1,4 +1,5 @@
 using Legacy89DiskKit.Domain.Fdc.Interface;
+using Legacy89DiskKit.Domain.Fdc.Model;
 
 namespace Legacy89DiskKit.Infrastructure.Fdc.Medium;
 
@@ -135,7 +136,7 @@ public abstract class SectorBackedControllerFacingMedium : IControllerFacingMedi
                 ExecuteForceInterrupt();
                 break;
             default:
-                _status = 0x40;
+                _status = (byte)FdcStatusFlags.UnsupportedCommand;
                 _irq = true;
                 _drq = false;
                 ClearTransfer();
@@ -166,7 +167,7 @@ public abstract class SectorBackedControllerFacingMedium : IControllerFacingMedi
     {
         _pendingOperation = operation;
         _remainingDelay = CommandDelay;
-        _status = 0x01;
+        _status = (byte)FdcStatusFlags.Busy;
         _irq = false;
         _drq = false;
         ClearTransfer();
@@ -214,7 +215,7 @@ public abstract class SectorBackedControllerFacingMedium : IControllerFacingMedi
     {
         if (!SectorExistsCore(_track, _selectedSide, _sector))
         {
-            _status = 0x10;
+            _status = (byte)FdcStatusFlags.RecordNotFound;
             _irq = true;
             _drq = false;
             ClearTransfer();

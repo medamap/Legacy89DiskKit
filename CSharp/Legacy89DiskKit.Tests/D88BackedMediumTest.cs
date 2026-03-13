@@ -1,4 +1,5 @@
 using Legacy89DiskKit.Domain.Fdc.Interface;
+using Legacy89DiskKit.Domain.Fdc.Model;
 using Legacy89DiskKit.Domain.Drive.Interface;
 using Legacy89DiskKit.Infrastructure.Fdc;
 using Legacy89DiskKit.Infrastructure.DiskImage.Container;
@@ -40,6 +41,7 @@ public class D88BackedMediumTest
         medium.WriteCommand(0x80);
 
         Assert.True(medium.IsBusy);
+        Assert.Equal((byte)FdcStatusFlags.Busy, medium.ReadStatus());
         Assert.False(medium.IsIrqAsserted);
         Assert.False(medium.IsDrqAsserted);
 
@@ -74,7 +76,7 @@ public class D88BackedMediumTest
         Assert.True(medium.IsBusy);
         medium.Advance(TimeSpan.FromMilliseconds(1));
 
-        Assert.Equal(0x10, medium.ReadStatus());
+        Assert.Equal((byte)FdcStatusFlags.RecordNotFound, medium.ReadStatus());
         Assert.False(medium.IsBusy);
         Assert.True(medium.IsIrqAsserted);
         Assert.False(medium.IsDrqAsserted);
@@ -147,5 +149,20 @@ public class D88BackedMediumTest
 
         Assert.Equal(2, visible.SelectedDrive);
         Assert.Equal(1, visible.SelectedSide);
+    }
+
+    [Fact]
+    public void D88BackedControllerFacingMedium_ReturnsUnsupportedCommandStatus()
+    {
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        IControllerFacingMedium medium = new D88BackedControllerFacingMedium(container);
+
+        medium.Reset();
+        medium.WriteCommand(0xFF);
+
+        Assert.Equal((byte)FdcStatusFlags.UnsupportedCommand, medium.ReadStatus());
+        Assert.True(medium.IsIrqAsserted);
+        Assert.False(medium.IsDrqAsserted);
+        Assert.False(medium.IsBusy);
     }
 }
