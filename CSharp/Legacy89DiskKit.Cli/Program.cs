@@ -1,6 +1,7 @@
 using System.CommandLine;
 using System.Text;
 using Legacy89DiskKit.Application.CharacterEncoding;
+using Legacy89DiskKit.Application;
 using Legacy89DiskKit.Application.DiskImage;
 using Legacy89DiskKit.Application.FileSystem;
 using Legacy89DiskKit.Application.Services;
@@ -639,11 +640,7 @@ static bool IsBootSubcommand(string value)
 
 static DiskService CreateDiskService()
 {
-    var registry = new FileSystemRegistry();
-    registry.Register(new HuBasicFileSystemProvider());
-    registry.Register(new N88BasicFileSystemProvider());
-    registry.Register(new MsxDosFileSystemProvider());
-    return new DiskService(fsRegistry: registry);
+    return Legacy89DiskKitApplication.CreateDiskService();
 }
 
 static DiskType ParseDiskType(string diskTypeName)
@@ -670,17 +667,7 @@ static IFileSystem? RequireFileSystem(IFileSystem? fileSystem, IConsoleLocalizer
 
 static FileTransferService CreateFileTransferService(DiskFileSystemInfo fsInfo, string? encodingOverride)
 {
-    var registry = new EncoderRegistry();
-    registry.Register("X1", new X1CharacterEncoder());
-    registry.Register("SJIS", new ShiftJisCharacterEncoder());
-    registry.Register("Shift-JIS", new ShiftJisCharacterEncoder());
-    registry.Register("MSX", new ShiftJisCharacterEncoder());
-    registry.Register("PC88", new ShiftJisCharacterEncoder());
-
-    var encoder = registry.GetEncoder(encodingOverride ?? fsInfo.DefaultEncodingId)
-        ?? registry.GetEncoder(fsInfo.PlatformId)
-        ?? new ShiftJisCharacterEncoder();
-    return new FileTransferService(encoder);
+    return Legacy89DiskKitApplication.CreateFileTransferService(fsInfo, encodingOverride);
 }
 
 static void RenderFileList(FileListView view, IFileListLocalizer localizer)

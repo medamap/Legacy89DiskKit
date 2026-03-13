@@ -1,13 +1,10 @@
 using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace NativeInteropTestApp;
 
 class Program
 {
-    private const string LibPath = "/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/csharp/Legacy89DiskKit.NativeInterop/bin/Release/net9.0/osx-arm64/publish/Legacy89DiskKit.NativeInterop.dylib";
-
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
     public struct NativeFileSystemInfo
     {
@@ -34,39 +31,76 @@ class Program
         public ushort Attributes;
     }
 
-    [DllImport(LibPath, EntryPoint = "ldk_open_disk", CallingConvention = CallingConvention.Cdecl)]
-    public static extern int OpenDisk(string path, bool readOnly);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int OpenDiskDelegate(IntPtr path, bool readOnly);
 
-    [DllImport(LibPath, EntryPoint = "ldk_close_disk", CallingConvention = CallingConvention.Cdecl)]
-    public static extern int CloseDisk(int handle);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int CloseDiskDelegate(int handle);
 
-    [DllImport(LibPath, EntryPoint = "ldk_get_file_system_info", CallingConvention = CallingConvention.Cdecl)]
-    public static extern int GetFileSystemInfo(int handle, ref NativeFileSystemInfo info);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetFileSystemInfoDelegate(int handle, ref NativeFileSystemInfo info);
 
-    [DllImport(LibPath, EntryPoint = "ldk_get_files_count", CallingConvention = CallingConvention.Cdecl)]
-    public static extern int GetFilesCount(int handle, out int count);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetFilesCountDelegate(int handle, out int count);
 
-    [DllImport(LibPath, EntryPoint = "ldk_get_files", CallingConvention = CallingConvention.Cdecl)]
-    public static extern int GetFiles(int handle, IntPtr buffer, int capacity);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetFilesDelegate(int handle, IntPtr buffer, int capacity);
 
-    static void Main(string[] args)
+    static int Main(string[] args)
     {
-        Console.WriteLine("Native Interop Test Application");
-        
-        string testFile = "/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/images/disk_org/x1/CZ8FB01.d88";
-        Console.WriteLine($"Opening disk: {testFile}");
+        if (args.Length != 2)
+        {
+            Console.Error.WriteLine("Usage: NativeInteropTestApp <library-path> <disk-image-path>");
+            return 1;
+        }
 
-        int handle = OpenDisk(testFile, true);
+        string libPath = Path.GetFullPath(args[0]);
+        string diskImagePath = Path.GetFullPath(args[1]);
+
+        if (!File.Exists(libPath))
+        {
+            Console.Error.WriteLine($"Native library not found: {libPath}");
+            return 2;
+        }
+
+        if (!File.Exists(diskImagePath))
+        {
+            Console.Error.WriteLine($"Disk image not found: {diskImagePath}");
+            return 3;
+        }
+
+        IntPtr libraryHandle = NativeLibrary.Load(libPath);
+        var openDisk = LoadDelegate<OpenDiskDelegate>(libraryHandle, "ldk_open_disk");
+        var closeDisk = LoadDelegate<CloseDiskDelegate>(libraryHandle, "ldk_close_disk");
+        var getFileSystemInfo = LoadDelegate<GetFileSystemInfoDelegate>(libraryHandle, "ldk_get_file_system_info");
+        var getFilesCount = LoadDelegate<GetFilesCountDelegate>(libraryHandle, "ldk_get_files_count");
+        var getFiles = LoadDelegate<GetFilesDelegate>(libraryHandle, "ldk_get_files");
+
+        Console.WriteLine("Native Interop Test Application");
+        Console.WriteLine($"Opening disk: {diskImagePath}");
+
+        IntPtr diskPathPtr = Marshal.StringToCoTaskMemUTF8(diskImagePath);
+        int handle;
+        try
+        {
+            handle = openDisk(diskPathPtr, true);
+        }
+        finally
+        {
+            Marshal.FreeCoTaskMem(diskPathPtr);
+        }
+
         if (handle <= 0)
         {
             Console.WriteLine($"Failed to open disk. Error code: {handle}");
-            return;
+            NativeLibrary.Free(libraryHandle);
+            return 4;
         }
 
         Console.WriteLine($"Disk opened. Handle: {handle}");
 
         NativeFileSystemInfo info = new NativeFileSystemInfo();
-        int res = GetFileSystemInfo(handle, ref info);
+        int res = getFileSystemInfo(handle, ref info);
         if (res == 0)
         {
             Console.WriteLine($"--- File System Info ---");
@@ -81,7 +115,7 @@ class Program
         }
 
         int count;
-        res = GetFilesCount(handle, out count);
+        res = getFilesCount(handle, out count);
         if (res == 0)
         {
             Console.WriteLine($"Files count: {count}");
@@ -92,7 +126,7 @@ class Program
                 IntPtr buffer = Marshal.AllocHGlobal(structSize * count);
                 try
                 {
-                    int actualCount = GetFiles(handle, buffer, count);
+                    int actualCount = getFiles(handle, buffer, count);
                     Console.WriteLine($"Retrieved {actualCount} files:");
                     
                     for (int i = 0; i < actualCount; i++)
@@ -113,7 +147,15 @@ class Program
             Console.WriteLine($"Failed to get files count. Error code: {res}");
         }
 
-        CloseDisk(handle);
+        closeDisk(handle);
+        NativeLibrary.Free(libraryHandle);
         Console.WriteLine("Disk closed.");
+        return 0;
+    }
+
+    private static T LoadDelegate<T>(IntPtr libraryHandle, string exportName) where T : Delegate
+    {
+        var symbol = NativeLibrary.GetExport(libraryHandle, exportName);
+        return Marshal.GetDelegateForFunctionPointer<T>(symbol);
     }
 }
