@@ -198,6 +198,14 @@ Recommended first implementation slice:
 
 This slice should prove the portability boundary before filesystem mutation or host-path convenience is carried into the new core.
 
+Preferred first concrete extraction targets from the current C# implementation:
+
+1. raw-disk geometry detection and sector-offset logic now concentrated in `RawDiskContainer`
+2. D88 header parsing and track-sector parsing now concentrated in `D88DiskContainer`
+3. the minimal read-oriented container metadata contract built around `DiskType`, `SectorInfo`, and the read-focused portion of the current container interface
+
+The preferred immediate refactoring direction is to split buffer-based parsing from file-path loading and saving, and to keep read-only behavior ahead of write-path reconstruction.
+
 ### Future Core Boundary
 
 The future `Legacy89DiskKit.Cpp` core should keep:

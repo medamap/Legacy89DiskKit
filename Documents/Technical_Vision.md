@@ -106,6 +106,23 @@ The purpose of this slice is to prove:
 
 This first slice should avoid taking on filesystem mutation, host filesystem I/O, or CLI-facing formatting concerns.
 
+The preferred first concrete extraction targets from the current C# codebase are:
+
+1. raw-disk geometry detection and sector-offset calculation
+   - currently concentrated in `RawDiskContainer`
+2. D88 header parsing and track-sector parsing
+   - currently concentrated in `D88DiskContainer`
+3. the minimal container-side metadata contract
+   - `DiskType`
+   - `SectorInfo`
+   - the read-oriented portion of the current container contract
+
+The preferred near-term refactoring strategy is:
+
+- separate buffer-based parsing logic from file-path loading and saving
+- keep read-only container behavior ahead of write-path reconstruction
+- avoid treating the current `DiskService` path-based convenience flow as the future portable boundary
+
 ## Boundaries to Preserve
 
 The future core should aim to keep:
