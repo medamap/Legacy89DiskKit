@@ -138,8 +138,18 @@ The current managed reference implementation already demonstrates the first part
 - extracted Hu-BASIC allocation rules for reserved-cluster handling and 2HD holey-FAT scanning
 - extracted Hu-BASIC write-payload rules for ASCII EOF appending, cluster-count calculation, and terminal-flag generation
 - extracted Hu-BASIC file-name truncation and virtual-label detection/merge rules into reusable helpers
+- extracted Hu-BASIC write-transaction rules for FAT-chain application and directory-entry generation
 - concrete mounted-medium adapters for both D88/D77-style sector-container and raw sector-image families
 - a minimal mounted-medium to controller-facing binding path for future FDC-oriented workflows
+
+Taken together, these pieces now complete the managed reference version of the first implementation slice:
+
+- buffer-first read-only container opening
+- stable in-memory image representation
+- shared read-only metadata and parser-result contracts
+- logical encoding identity and extracted mapping data
+- the first Hu-BASIC filesystem-core rules split into reusable helpers
+- direct-image and narrow controller-facing access paths over the same mounted media
 
 ## Boundaries to Preserve
 

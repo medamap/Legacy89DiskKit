@@ -191,10 +191,12 @@
         - [x] extract Hu-BASIC allocation rules for reserved-cluster handling and 2HD holey-FAT scanning
         - [x] extract Hu-BASIC write-path rules for ASCII EOF appending, cluster-count calculation, and terminal-flag generation
         - [x] extract Hu-BASIC file-name truncation and virtual-label rules into reusable helpers
+        - [x] extract Hu-BASIC write-transaction rules for FAT-chain application and directory-entry generation
         - [x] decide the first concrete class or module boundary to port from the current C# codebase
             - [x] raw-disk geometry and sector-offset logic from `RawDiskContainer`
             - [x] D88 header and track-sector parsing from `D88DiskContainer`
             - [x] minimal read-oriented container metadata contract around `DiskType` and `SectorInfo`
+        - [x] complete the managed-reference version of the first implementation slice
     - [x] Identify host-side responsibilities that must remain outside the future core:
         - [x] local path I/O
         - [x] CLI presentation and localization

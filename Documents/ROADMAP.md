@@ -221,9 +221,12 @@ The current managed reference implementation now already proves this direction i
 - the managed reference implementation now also exposes reusable Hu-BASIC allocation helpers for reserved-cluster rules and 2HD holey-FAT scanning
 - the managed reference implementation now also exposes reusable Hu-BASIC write-path helpers for ASCII EOF appending, cluster-count calculation, and terminal-flag generation
 - the managed reference implementation now also exposes reusable Hu-BASIC naming and virtual-label rules separate from the filesystem shell
+- the managed reference implementation now also exposes reusable Hu-BASIC write-transaction helpers for FAT-chain application and directory-entry generation
 - both D88/D77-style sector-container media and raw sector-image media have concrete mounted-medium adapters
 - mounted media can already be bound into a minimal controller-facing path
 - the controller-facing path already includes a minimal command subset and timing-driven completion in the managed reference implementation
+
+This means the managed reference implementation has now completed the intended first implementation slice for the future `Legacy89DiskKit.Cpp` core. The next step is no longer to define the slice, but to begin translating the extracted contracts and pure-rule modules into the portable implementation line.
 
 ### Future Core Boundary
 
