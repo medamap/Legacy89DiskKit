@@ -307,7 +307,7 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
                 Array.Copy(dirData, offset, entryData, 0, 32);
                 var entry = _dirParser.Parse(entryData);
                 var id = $"{s:D2}:{offset:D3}:{entry.FullName}";
-                var itemKind = IsVirtualLabelEntry(entry) ? DirectoryLayoutItemKind.VirtualLabel : DirectoryLayoutItemKind.FileEntry;
+                var itemKind = HuBasicLabelRules.IsVirtualLabelEntry(entry) ? DirectoryLayoutItemKind.VirtualLabel : DirectoryLayoutItemKind.FileEntry;
                 var virtualLabel = itemKind == DirectoryLayoutItemKind.VirtualLabel
                     ? new VirtualDirectoryLabelEntry(
                         entry.FileName,
@@ -516,29 +516,6 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
         return attributes.IsAscii || (attributes.RawAttributes & 0x0C) != 0;
     }
 
-    private static bool IsVirtualLabelEntry(FileEntry entry)
-    {
-        if (entry.FileSystemMetadata is not HuBasicFileMetadata metadata)
-        {
-            return false;
-        }
-
-        if (metadata.FileType != HuBasicFileType.Ascii)
-        {
-            return false;
-        }
-
-        var looksDecorative = entry.FullName.All(ch => ch is '-' or '.' or ' ');
-        var hasSentinelAddresses = entry.LoadAddress == 0xFFFF &&
-                                   entry.ExecutionAddress == 0xFFFF &&
-                                   (entry.EndAddress == 0xFFFF || entry.Size == 0);
-        var suspiciousCluster = entry.StartCluster >= 0x7FFF;
-        var labelFlags = metadata.HasPassword && metadata.IsWriteProtected && !metadata.IsHidden && !metadata.IsVerify;
-
-        return (looksDecorative || suspiciousCluster || hasSentinelAddresses) &&
-               (labelFlags || suspiciousCluster || hasSentinelAddresses);
-    }
-
     private static bool TryMergeVirtualLabelExtension(List<DirectoryLayoutItem> items, DirectoryLayoutItem item)
     {
         if (item.Kind != DirectoryLayoutItemKind.VirtualLabel || item.VirtualLabel == null || items.Count == 0)
@@ -552,7 +529,7 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
             return false;
         }
 
-        if (!CanMergeLabelEntries(previous.VirtualLabel, item.VirtualLabel))
+        if (!HuBasicLabelRules.CanMergeLabelEntries(previous.VirtualLabel, item.VirtualLabel))
         {
             return false;
         }
@@ -567,32 +544,6 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
             VirtualLabel = mergedLabel
         };
         return true;
-    }
-
-    private static bool CanMergeLabelEntries(VirtualDirectoryLabelEntry previous, VirtualDirectoryLabelEntry current)
-    {
-        if (!string.IsNullOrEmpty(previous.Extension) || string.IsNullOrEmpty(previous.FileName))
-        {
-            return false;
-        }
-
-        if (!string.IsNullOrEmpty(current.Extension) || string.IsNullOrEmpty(current.FileName))
-        {
-            return false;
-        }
-
-        if (!current.FileName.StartsWith(".", StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        return previous.RawModeByte == current.RawModeByte &&
-               previous.PasswordByte == current.PasswordByte &&
-               previous.Size == current.Size &&
-               previous.LoadAddress == current.LoadAddress &&
-               previous.EndAddress == current.EndAddress &&
-               previous.ExecutionAddress == current.ExecutionAddress &&
-               previous.StartCluster == current.StartCluster;
     }
 
     private static FileEntry CreateVirtualLabelFileEntry(VirtualDirectoryLabelEntry label)
