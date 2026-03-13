@@ -1,6 +1,7 @@
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.DiskImage.Exception;
+using Legacy89DiskKit.Infrastructure.DiskImage.Raw;
 
 namespace Legacy89DiskKit.Infrastructure.DiskImage.Container;
 
@@ -11,11 +12,8 @@ public class RawDiskContainer : IDiskContainer
     private readonly bool _readOnly;
     private bool _hasChanges = false;
     
-    private readonly int _cylinders;
-    private readonly int _sides;
-    private readonly int _sectorsPerTrack;
-    private readonly int _bytesPerSector;
-    private readonly DiskType _diskType;
+    private readonly RawDiskGeometry _geometry;
+    private readonly RawSectorAddressCalculator _addressCalculator;
 
     public RawDiskContainer(string filePath, bool readOnly = true)
         : this(LoadDiskImage(filePath), filePath, readOnly)
@@ -36,7 +34,8 @@ public class RawDiskContainer : IDiskContainer
         _readOnly = readOnly;
         _diskData = (byte[])diskData.Clone();
         
-        (_cylinders, _sides, _sectorsPerTrack, _bytesPerSector, _diskType) = DetectGeometry(_diskData.Length);
+        _geometry = RawDiskGeometryDetector.Detect(_diskData.Length);
+        _addressCalculator = new RawSectorAddressCalculator(_geometry);
     }
 
     private static byte[] LoadDiskImage(string filePath)
@@ -52,19 +51,6 @@ public class RawDiskContainer : IDiskContainer
         }
 
         return File.ReadAllBytes(filePath);
-    }
-
-    private static (int c, int h, int spt, int bps, DiskType type) DetectGeometry(long size)
-    {
-        return size switch
-        {
-            327680 => (40, 2, 16, 256, DiskType.TwoD),    // X1/PC88 2D
-            655360 => (80, 2, 16, 256, DiskType.TwoDD),   // X1/PC88 2DD (256B)
-            737280 => (80, 2, 9, 512, DiskType.TwoDD),    // MSX/PC 2DD (512B)
-            1261568 => (77, 2, 8, 1024, DiskType.TwoHD),  // PC-98 2HD
-            1474560 => (80, 2, 18, 512, DiskType.TwoHD),  // PC 2HD
-            _ => (40, 2, 16, 256, DiskType.TwoD)           // Default to 2D but warn?
-        };
     }
 
     public static RawDiskContainer CreateNew(string filePath, DiskType type, int? sectorsPerTrack = null, ushort? sectorSize = null)
@@ -100,9 +86,9 @@ public class RawDiskContainer : IDiskContainer
     public byte[] ReadSector(int cylinder, int head, int sector, bool allowCorrupted)
     {
         ValidateAddress(cylinder, head, sector);
-        int offset = CalculateOffset(cylinder, head, sector);
-        byte[] sectorData = new byte[_bytesPerSector];
-        Array.Copy(_diskData, offset, sectorData, 0, _bytesPerSector);
+        int offset = _addressCalculator.CalculateOffset(cylinder, head, sector);
+        byte[] sectorData = new byte[_geometry.BytesPerSector];
+        Array.Copy(_diskData, offset, sectorData, 0, _geometry.BytesPerSector);
         return sectorData;
     }
 
@@ -110,30 +96,28 @@ public class RawDiskContainer : IDiskContainer
     {
         if (_readOnly) throw new DiskImageException("Disk image is read-only");
         ValidateAddress(cylinder, head, sector);
-        if (data.Length != _bytesPerSector)
-            throw new ArgumentException($"Sector size must be {_bytesPerSector} bytes");
+        if (data.Length != _geometry.BytesPerSector)
+            throw new ArgumentException($"Sector size must be {_geometry.BytesPerSector} bytes");
 
-        int offset = CalculateOffset(cylinder, head, sector);
-        Array.Copy(data, 0, _diskData, offset, _bytesPerSector);
+        int offset = _addressCalculator.CalculateOffset(cylinder, head, sector);
+        Array.Copy(data, 0, _diskData, offset, _geometry.BytesPerSector);
         _hasChanges = true;
     }
 
     public bool SectorExists(int cylinder, int head, int sector)
     {
-        return cylinder >= 0 && cylinder < _cylinders &&
-               head >= 0 && head < _sides &&
-               sector >= 1 && sector <= _sectorsPerTrack;
+        return _addressCalculator.SectorExists(cylinder, head, sector);
     }
 
     public IEnumerable<SectorInfo> GetAllSectors()
     {
-        for (int c = 0; c < _cylinders; c++)
+        for (int c = 0; c < _geometry.Cylinders; c++)
         {
-            for (int h = 0; h < _sides; h++)
+            for (int h = 0; h < _geometry.Sides; h++)
             {
-                for (int s = 1; s <= _sectorsPerTrack; s++)
+                for (int s = 1; s <= _geometry.SectorsPerTrack; s++)
                 {
-                    yield return new SectorInfo(c, h, s, _bytesPerSector, false, false);
+                    yield return new SectorInfo(c, h, s, _geometry.BytesPerSector, false, false);
                 }
             }
         }
@@ -153,11 +137,6 @@ public class RawDiskContainer : IDiskContainer
     /// </summary>
     public byte[] ToImageData() => (byte[])_diskData.Clone();
 
-    private int CalculateOffset(int cylinder, int head, int sector)
-    {
-        return ((cylinder * _sides + head) * _sectorsPerTrack + (sector - 1)) * _bytesPerSector;
-    }
-
     private void ValidateAddress(int cylinder, int head, int sector)
     {
         if (!SectorExists(cylinder, head, sector))
@@ -166,7 +145,7 @@ public class RawDiskContainer : IDiskContainer
 
     public string FilePath => _filePath;
     public bool IsReadOnly => _readOnly;
-    public DiskType DiskType => _diskType;
+    public DiskType DiskType => _geometry.DiskType;
 
     public void Dispose() 
     {
