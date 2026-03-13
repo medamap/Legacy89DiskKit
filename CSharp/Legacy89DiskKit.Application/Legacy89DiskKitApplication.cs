@@ -1,8 +1,11 @@
 using Legacy89DiskKit.Application.CharacterEncoding;
+using Legacy89DiskKit.Domain.Drive.Interface;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
 using Legacy89DiskKit.Domain.FileSystem.Interface.Registry;
 using Legacy89DiskKit.Domain.FileSystem.Model;
+using Legacy89DiskKit.Domain.Fdc.Interface;
+using Legacy89DiskKit.Domain.Timing.Interface;
 using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
@@ -38,6 +41,16 @@ public static class Legacy89DiskKitApplication
     public static FileSystem.DirectoryLayoutService CreateDirectoryLayoutService()
     {
         return new FileSystem.DirectoryLayoutService();
+    }
+
+    public static Drive.DriveMountService CreateDriveMountService()
+    {
+        return new Drive.DriveMountService();
+    }
+
+    public static Fdc.FdcAccessService CreateFdcAccessService(IFdcController controller, IControllerClock? clock = null)
+    {
+        return new Fdc.FdcAccessService(controller, clock);
     }
 
     /// <summary>
