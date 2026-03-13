@@ -61,6 +61,11 @@ public abstract class SectorBackedControllerFacingMedium : IControllerFacingMedi
         return _sector;
     }
 
+    public byte PeekDataRegister()
+    {
+        return _data;
+    }
+
     public byte ReadDataRegister()
     {
         var value = _data;

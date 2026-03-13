@@ -56,7 +56,7 @@ public class FdcMediumController : IFdcController
             _medium.ReadStatus(),
             _medium.ReadTrackRegister(),
             _medium.ReadSectorRegister(),
-            _medium.ReadDataRegister(),
+            _medium.PeekDataRegister(),
             0,
             0,
             _medium.IsIrqAsserted,

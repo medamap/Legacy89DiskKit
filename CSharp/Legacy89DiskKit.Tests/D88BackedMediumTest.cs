@@ -1,5 +1,6 @@
 using Legacy89DiskKit.Domain.Fdc.Interface;
 using Legacy89DiskKit.Domain.Drive.Interface;
+using Legacy89DiskKit.Infrastructure.Fdc;
 using Legacy89DiskKit.Infrastructure.DiskImage.Container;
 using Legacy89DiskKit.Infrastructure.Drive.Medium;
 using Legacy89DiskKit.Infrastructure.Fdc.Medium;
@@ -89,5 +90,25 @@ public class D88BackedMediumTest
         medium.WriteCommand(0x00);
         Assert.Equal(0, medium.ReadTrackRegister());
         Assert.True(medium.IsIrqAsserted);
+    }
+
+    [Fact]
+    public void FdcMediumController_GetVisibleState_DoesNotConsumeTransferData()
+    {
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        container.WriteSector(0, 0, 1, new byte[] { 0x5A, 0x6B, 0x7C });
+
+        var controller = new FdcMediumController(new D88BackedControllerFacingMedium(container));
+
+        controller.WriteRegister(Domain.Fdc.Model.FdcRegister.Track, 0);
+        controller.WriteRegister(Domain.Fdc.Model.FdcRegister.Sector, 1);
+        controller.WriteRegister(Domain.Fdc.Model.FdcRegister.CommandStatus, 0x80);
+
+        var visible = controller.GetVisibleState();
+
+        Assert.Equal(0x5A, visible.Data);
+        Assert.True(visible.Drq);
+        Assert.Equal(0x5A, controller.ReadRegister(Domain.Fdc.Model.FdcRegister.Data));
+        Assert.Equal(0x6B, controller.ReadRegister(Domain.Fdc.Model.FdcRegister.Data));
     }
 }

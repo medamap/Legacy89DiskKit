@@ -20,6 +20,8 @@ public interface IControllerFacingMedium
 
     byte ReadSectorRegister();
 
+    byte PeekDataRegister();
+
     byte ReadDataRegister();
 
     void WriteCommand(byte value);

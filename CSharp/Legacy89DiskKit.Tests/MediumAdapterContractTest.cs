@@ -112,6 +112,11 @@ public class MediumAdapterContractTest
             return _sector;
         }
 
+        public byte PeekDataRegister()
+        {
+            return _data;
+        }
+
         public byte ReadDataRegister()
         {
             return _data;
