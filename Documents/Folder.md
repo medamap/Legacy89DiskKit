@@ -11,6 +11,8 @@ Use these files first when you need the current project direction.
 - `Technical_Vision.md`: high-level technical intent
 - `plans/RealImageTestPlan.md`: planned real-image verification work
 - `Release_Process.md`: release procedure
+- `Phase20_Fdc_Raw_Notes.md`: decision notes for controller-facing and raw-direction discussions
+- `Glossary.md`: project terminology used across roadmap and migration work
 
 ## Reference Specifications
 
