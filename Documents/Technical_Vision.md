@@ -151,6 +151,16 @@ Taken together, these pieces now complete the managed reference version of the f
 - the first Hu-BASIC filesystem-core rules split into reusable helpers
 - direct-image and narrow controller-facing access paths over the same mounted media
 
+The repository now also contains an initial executable `Legacy89DiskKit.Cpp` prototype. That prototype currently proves:
+
+- portable result/status handling without exception-heavy boundaries
+- raw sector-image geometry detection and sector-offset logic
+- read-only D88 header and sector parsing
+- shared metadata and read-only parser-result shapes
+- logical character-encoding profile resolution
+
+This is still an early portability prototype rather than the final production core, but it is enough to establish that the first extracted contracts can already live outside the managed implementation.
+
 ## Boundaries to Preserve
 
 The future core should aim to keep:
@@ -420,6 +430,14 @@ The project should therefore be prepared for a pipeline where:
 
 For planning purposes, the project may reserve a future project-owned preservation container name and extension for this direction, but that should not be treated as a locked file-format specification until the capture and conversion requirements are better understood.
 
+The provisional `Legacy 89 Storage` and `.l89` identity should freeze only after:
+
+- the capture-ingestion workflow is fixed
+- the encoded-track payload model is fixed
+- the conversion semantics from sector-only and lower-level raw inputs are fixed
+- the required metadata, integrity, and format-version fields are fixed
+- at least one fixture corpus has been validated against the frozen identity
+
 The project should therefore evolve toward two compatible layers:
 
 - a direct image/container/filesystem access layer
@@ -441,6 +459,10 @@ The first concrete mounted-medium implementations should therefore be planned in
 The managed reference implementation now already includes these first adapter families so that the controller-facing architecture can be exercised before the first `Legacy89DiskKit.Cpp` port begins.
 
 That is why the current managed/native bridge should not be treated as the final low-level solution.
+
+Controller-fidelity work remains separate from this portability-first line. The narrow controller-facing contract is intended to provide controller-shaped information access now, while deeper MB8877-oriented behavior research proceeds independently on:
+
+- `codex/mb8877-fidelity-research`
 
 ## Long-Term Aim
 

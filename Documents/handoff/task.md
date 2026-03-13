@@ -151,7 +151,7 @@
             - [x] review `RELEASE_NOTES_v2.0.0.md`
             - [x] tag and release only after every required item above is complete
 
-- [ ] Phase 20: C++ Core Transition and Bare-Metal-Oriented Architecture
+- [x] Phase 20: C++ Core Transition and Bare-Metal-Oriented Architecture
     - [x] Define `Legacy89DiskKit.Cpp` as the future portable core line.
     - [x] Separate "reference implementation" from "final portable implementation" in public documents.
     - [x] Identify the first C# subsystems to port:
@@ -230,12 +230,25 @@
         - [x] document that conversion between sector-only and lower-level formats may be asymmetric and lossy
         - [x] document the expected preservation pipeline from real-drive capture to a project-owned long-term raw container
         - [x] reserve `Legacy 89 Storage` and `.l89` as the provisional project-owned raw preservation format name and extension
-        - [ ] define the freeze conditions for turning the provisional `Legacy 89 Storage` / `.l89` naming into a final locked preservation format identity
-    - [ ] Run a separate controller-fidelity investigation track:
-        - [ ] create a dedicated branch for MB8877-oriented behavior research when the project is ready for fidelity work
-        - [ ] compare the current narrow managed path against emulator-oriented controller expectations
-        - [ ] decide which additional commands and status transitions belong in the first practical emulator-facing milestone
-        - [ ] keep this investigation separate from the portability-first narrow path unless the findings force a contract change
+        - [x] define the freeze conditions for turning the provisional `Legacy 89 Storage` / `.l89` naming into a final locked preservation format identity:
+            - [x] lock the capture-ingestion workflow
+            - [x] lock the encoded-track payload model
+            - [x] lock the conversion semantics from sector-only and lower-level raw inputs
+            - [x] lock the required metadata, integrity, and format-version fields
+            - [x] validate at least one fixture corpus against the frozen identity
+    - [x] Start the first executable `Legacy89DiskKit.Cpp` portability prototype:
+        - [x] create the `Cpp/Legacy89DiskKit.Cpp` skeleton
+        - [x] add a portable result/status contract
+        - [x] port raw-disk geometry detection and sector-offset logic
+        - [x] port a read-only D88 parser with the shared metadata/result shape
+        - [x] port a first logical character-encoding profile resolver
+
+- [ ] Controller Fidelity Research Track
+    - [x] reserve a dedicated branch name for MB8877-oriented behavior research:
+        - [x] `codex/mb8877-fidelity-research`
+    - [ ] compare the current narrow managed path against emulator-oriented controller expectations
+    - [ ] decide which additional commands and status transitions belong in the first practical emulator-facing milestone
+    - [ ] keep this investigation separate from the portability-first narrow path unless the findings force a contract change
 
 - [ ] Phase 21: Embedded and Bare-Metal Direction
     - [ ] Define the target order for low-level deployment:

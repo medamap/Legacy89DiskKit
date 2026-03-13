@@ -228,6 +228,16 @@ The current managed reference implementation now already proves this direction i
 
 This means the managed reference implementation has now completed the intended first implementation slice for the future `Legacy89DiskKit.Cpp` core. The next step is no longer to define the slice, but to begin translating the extracted contracts and pure-rule modules into the portable implementation line.
 
+That translation has now started. The repository contains an initial `Legacy89DiskKit.Cpp` portability prototype with:
+
+- a standalone CMake-based build path
+- a portable result/status contract
+- raw-disk geometry detection and sector-offset logic
+- a read-only D88 parser that emits the same metadata/result family as the managed reference implementation
+- a first logical character-encoding profile resolver
+
+This prototype is intentionally narrow. It is not yet the production portable core, but it proves that the extracted contracts can already be carried into a non-managed implementation line.
+
 ### Future Core Boundary
 
 The future `Legacy89DiskKit.Cpp` core should keep:
@@ -443,6 +453,14 @@ That means the project should eventually define not only a runtime-facing raw su
 
 The project-owned raw preservation container direction now provisionally reserves the family name `Legacy 89 Storage` and the extension `.l89`, but the concrete file structure and final frozen identity should remain open until the capture, conversion, and replay requirements are better understood.
 
+The provisional identity should freeze only after all of the following are fixed:
+
+- the capture-ingestion workflow
+- the encoded-track payload model
+- the conversion semantics from sector-only and lower-level raw inputs
+- the required metadata, integrity, and format-version fields
+- at least one validated fixture corpus against the frozen identity
+
 The embedded and bare-metal direction should remain downstream of `Phase 20`. Do not start board-specific or hardware-specific implementation work until the C++ core boundary and migration policy are decision-complete.
 
 ## Recommended v2.0.0 Scope
@@ -516,3 +534,7 @@ Use this simple rule:
 - `v2.x+`: the implementation strategy starts bending toward a portable C++ core and eventual bare-metal viability
 
 That is why `v2.0.0` is justified even if not every future target is fully complete on the same day.
+
+Controller-fidelity work remains a separate track from this portability-first line. The narrow controller-facing contract is meant to expose controller-shaped information access now, while MB8877-oriented behavior research proceeds independently on a dedicated branch:
+
+- `codex/mb8877-fidelity-research`
