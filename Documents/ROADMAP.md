@@ -211,6 +211,7 @@ The current managed reference implementation now already proves this direction i
 - raw-disk geometry and sector-offset logic have been separated into pure helper modules
 - D88 header and track-sector parsing have been separated from the container shell
 - the supported `Application` surface can open images from in-memory buffers with explicit format selection
+- raw sector-image and D88/D77-style sector-container implementations already expose a shared read-only container metadata shape
 - both D88/D77-style sector-container media and raw sector-image media have concrete mounted-medium adapters
 - mounted media can already be bound into a minimal controller-facing path
 - the controller-facing path already includes a minimal command subset and timing-driven completion in the managed reference implementation

@@ -83,6 +83,20 @@ public class RawDiskContainer : IDiskContainer
 
     public byte[] ReadSector(int cylinder, int head, int sector) => ReadSector(cylinder, head, sector, false);
 
+    public DiskContainerMetadata GetMetadata()
+    {
+        return new DiskContainerMetadata(
+            ImageFormat: "raw-sector-image",
+            DiskType: _geometry.DiskType,
+            Geometry: new DiskGeometryInfo(
+                _geometry.Cylinders,
+                _geometry.Sides,
+                _geometry.SectorsPerTrack,
+                _geometry.BytesPerSector),
+            IsWriteProtected: _readOnly,
+            DeclaredImageSize: _diskData.LongLength);
+    }
+
     public byte[] ReadSector(int cylinder, int head, int sector, bool allowCorrupted)
     {
         ValidateAddress(cylinder, head, sector);

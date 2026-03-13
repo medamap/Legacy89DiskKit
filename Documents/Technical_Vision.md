@@ -128,6 +128,7 @@ The current managed reference implementation already demonstrates the first part
 - buffer-based disk opening through the supported `Application` surface
 - extracted raw-disk geometry and sector-offset logic
 - extracted D88 header and track-sector parsing
+- a shared read-only container metadata contract spanning raw sector-image and D88/D77-style sector-container implementations
 - concrete mounted-medium adapters for both D88/D77-style sector-container and raw sector-image families
 - a minimal mounted-medium to controller-facing binding path for future FDC-oriented workflows
 

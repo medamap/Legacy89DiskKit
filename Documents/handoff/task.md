@@ -181,6 +181,7 @@
         - [x] start with read-only disk container open
         - [x] keep geometry and sector access in the first slice
         - [x] require a stable in-memory image representation
+        - [x] require a shared read-only container metadata contract across the first supported container families
         - [x] decide the first concrete class or module boundary to port from the current C# codebase
             - [x] raw-disk geometry and sector-offset logic from `RawDiskContainer`
             - [x] D88 header and track-sector parsing from `D88DiskContainer`

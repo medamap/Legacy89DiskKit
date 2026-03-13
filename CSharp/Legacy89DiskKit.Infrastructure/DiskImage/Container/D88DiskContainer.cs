@@ -128,6 +128,17 @@ public class D88DiskContainer : IDiskContainer, IDisposable
         return d88Sector.Data;
     }
 
+    public DiskContainerMetadata GetMetadata()
+    {
+        var geometry = GetGeometry();
+        return new DiskContainerMetadata(
+            ImageFormat: "d88-sector-container",
+            DiskType: _header.MediaType,
+            Geometry: geometry,
+            IsWriteProtected: _header.WriteProtect || _isReadOnly,
+            DeclaredImageSize: _header.DiskSize);
+    }
+
     public byte[] ReadSector(int cylinder, int head, int sector, bool allowCorrupted)
     {
         return ReadSector(cylinder, head, sector);
@@ -153,6 +164,29 @@ public class D88DiskContainer : IDiskContainer, IDisposable
     {
         return _sectors.Values.Select(s => new SectorInfo(
             s.Cylinder, s.Head, s.Sector, s.ActualSize, s.Deleted, s.Status != 0));
+    }
+
+    private DiskGeometryInfo GetGeometry()
+    {
+        var sectors = _sectors.Values.ToList();
+        if (sectors.Count == 0)
+        {
+            return new DiskGeometryInfo(
+                Cylinders: _header.MediaType == DiskType.TwoHD ? 77 : 40,
+                Heads: 2,
+                SectorsPerTrack: GetMaxSectorsPerTrack(_header.MediaType),
+                BytesPerSector: _header.MediaType == DiskType.TwoHD ? 1024 : 256);
+        }
+
+        return new DiskGeometryInfo(
+            Cylinders: sectors.Max(s => (int)s.Cylinder) + 1,
+            Heads: sectors.Max(s => (int)s.Head) + 1,
+            SectorsPerTrack: sectors
+                .GroupBy(s => (s.Cylinder, s.Head))
+                .Select(g => g.Count())
+                .DefaultIfEmpty(0)
+                .Max(),
+            BytesPerSector: sectors.Max(s => (int)s.ActualSize));
     }
 
     public void Save() => SaveAs(_filePath);
