@@ -310,6 +310,36 @@ Design guidance:
 - keep ownership, error codes, and ABI rules explicit
 - avoid treating the current C# native interop layer as the final bare-metal solution
 
+### 8. Direct Image Access and Future FDC-Facing Access
+
+The long-term runtime model should distinguish between:
+
+- direct image/container/filesystem access
+- controller-oriented access for emulator integration
+
+The direct image path remains important for tooling, filesystem operations, and disk inspection.
+
+The controller-oriented path matters because emulator integrations often expect a floppy-controller-style interface rather than a host-side filesystem API. A future runtime surface should therefore be able to expose D88-backed data through an FDC-facing contract even when the underlying source remains sector-based.
+
+### 9. Future Raw Magnetic Stream Support
+
+The architecture should also leave room for a later raw magnetic-stream source format.
+
+That future direction is expected to represent controller-visible magnetic data rather than only decoded sectors, and may eventually include:
+
+- inter-sector gaps
+- noise
+- malformed or timing-sensitive structures
+- physical copy-protection behaviors
+
+This does not make raw magnetic-stream support a current release target. It does mean the future core should avoid assuming that every disk source is permanently reducible to a clean side/cylinder/sector table.
+
+The preferred long-term shape is:
+
+- direct image access as one stable surface
+- FDC-facing access as another stable surface
+- raw magnetic-stream sources added later beneath the FDC-facing surface without forcing them through a purely sector-decoded model first
+
 The embedded and bare-metal direction should remain downstream of `Phase 20`. Do not start board-specific or hardware-specific implementation work until the C++ core boundary and migration policy are decision-complete.
 
 ## Recommended v2.0.0 Scope

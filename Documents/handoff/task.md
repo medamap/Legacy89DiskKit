@@ -190,6 +190,14 @@
         - [x] CLI presentation and localization
         - [x] release packaging and verification orchestration
         - [x] managed bootstrap convenience
+    - [ ] Record the future runtime split between direct image access and controller-oriented access:
+        - [x] document direct image/container/filesystem access as one future surface
+        - [x] document an FDC-facing runtime surface for emulator integration as a separate future surface
+        - [x] keep this split as an architectural constraint for the future C++ core
+    - [ ] Record the future raw magnetic-stream direction:
+        - [x] note that future sources may represent controller-visible magnetic data rather than only decoded sectors
+        - [x] reserve room for gaps, noise, timing-sensitive structures, and protection-relevant behavior
+        - [x] keep raw magnetic-stream support out of the immediate implementation slice
 
 - [ ] Phase 21: Embedded and Bare-Metal Direction
     - [ ] Define the target order for low-level deployment:

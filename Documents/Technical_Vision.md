@@ -231,6 +231,50 @@ Before true bare-metal work starts, the project should have:
 - explicit encoding contracts
 - a host-agnostic error model
 
+## Disk Image API vs FDC-Facing API
+
+The long-term architecture should not assume that every consumer wants direct filesystem-aware or image-container-aware access only.
+
+Two distinct access surfaces are expected to matter in the future:
+
+1. direct disk image access
+   - open a disk image or in-memory image payload
+   - inspect or modify container and filesystem data
+   - read sectors and higher-level metadata directly
+2. FDC-facing access
+   - emulate controller-visible behavior
+   - expose sector-oriented or later flux-oriented behavior through an FDC-style contract
+   - let emulator integrations obtain data as if it had been delivered through a controller path rather than through a host-side convenience API
+
+This distinction matters because many emulator integrations do not consume a host filesystem API. They interact with a floppy disk controller model and expect data through controller semantics.
+
+## Future Raw Magnetic Stream Direction
+
+The current project centers on sector-based disk image containers such as D88 and raw sector images.
+
+In the longer term, the architecture should allow a lower-level raw magnetic-stream format where the stored payload represents controller-visible magnetic data rather than only decoded sectors.
+
+That future raw direction may include:
+
+- inter-sector gaps
+- timing-sensitive layout details
+- noise or intentionally malformed structures
+- copy-protection-relevant physical behaviors
+- data that is meaningful to an FDC path even when it is not cleanly representable as ordinary sectors
+
+This is not a near-term implementation target, but it is an important architectural constraint:
+
+- do not assume that every future disk source is just a clean side/cylinder/sector table
+- do not define the future native or C++ core in a way that makes an FDC-facing access surface impossible
+- keep room for a later controller-oriented data path beside the direct image-access path
+
+The project should therefore evolve toward two compatible layers:
+
+- a direct image/container/filesystem access layer
+- a future FDC-facing runtime layer
+
+For D88-backed workflows, the future FDC-facing layer may still serve data derived from sector images while presenting that data through a controller-oriented API. For true raw magnetic-stream sources, the same FDC-facing layer should later be able to expose controller-visible behavior without forcing the data into a purely sector-decoded abstraction first.
+
 That is why the current managed/native bridge should not be treated as the final low-level solution.
 
 ## Long-Term Aim
