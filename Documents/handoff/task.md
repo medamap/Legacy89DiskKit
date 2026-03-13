@@ -233,3 +233,16 @@
     - [ ] Define the minimum proof-of-concept target after the C++ core exists.
     - [ ] Keep board-specific or hardware-specific work out of the `v2.0.0` release gate.
     - [ ] Keep `Phase 21` downstream of the `Phase 20` migration-boundary work.
+
+- [ ] Future Packaging Follow-Up
+    - [ ] Revisit `Legacy89DiskKit.CSharp` packaging once the supported managed surface is stable enough for public package publication.
+    - [ ] If managed packaging becomes appropriate:
+        - [ ] define the `Legacy89DiskKit.CSharp` package boundary
+        - [ ] define package metadata, README, license, and repository metadata for `dotnet pack`
+        - [ ] create and configure a NuGet.org publisher account when publication work actually begins
+        - [ ] create and store a NuGet publish API key only when package publication is ready
+        - [ ] document the local `pack` and `push` workflow
+    - [ ] Revisit JavaScript ecosystem packaging only after one of these becomes real:
+        - [ ] a usable `Legacy89DiskKit.Wasm` runtime surface
+        - [ ] a stable native bridge suitable for Node-side wrapping
+    - [ ] Treat future npm publication as a wrapper or host binding problem rather than as direct C# package publication.
