@@ -166,3 +166,64 @@ The separate investigation track can then answer:
 - which status transitions must become more historically accurate
 - which timing behaviors are required in practice rather than only in theory
 - how far D88-backed and future raw-backed paths can share the same controller contract before media-specific divergence is needed
+
+## Reference Architecture Patterns
+
+Recent external research reinforced that two controller-implementation families are worth studying, while keeping code-reuse boundaries strict.
+
+One family uses:
+
+- an internal layered state machine
+- explicit timing progression
+- track- or bit-oriented live processing
+- controller-visible IRQ and DRQ behavior
+
+Another family uses:
+
+- delayed event scheduling
+- sector-oriented disk backends
+- host-managed callbacks for seek, transfer, and completion timing
+
+The project should not copy framework-specific classes or non-project code from either family. What matters is the architectural lesson:
+
+- keep the controller core state-oriented
+- keep timing progression abstract
+- allow host-side adapters to drive the same core through ticks or delayed callbacks
+
+## Intended Controller Core Shape
+
+The long-term controller-facing design should therefore evolve toward:
+
+1. a controller core that owns command interpretation and state transitions
+2. a timing abstraction that can be driven by either step-based progression or delayed host events
+3. media adapters that can expose sector-backed data early and lower-level raw-backed behavior later
+
+This means the current narrow managed path remains valid as the short-term architectural proof:
+
+- mounted media
+- register-shaped access
+- explicit timing advancement
+- IRQ/DRQ visibility
+- sector-derived data delivery
+
+Future higher-fidelity work should extend this path rather than replace it with a filesystem-convenience model.
+
+## Licensing and Implementation Guardrails
+
+The following guardrails should remain explicit:
+
+- permissively licensed controller references may inform algorithm shape and state progression
+- framework-specific classes and host-framework dependencies must not be carried into this project
+- nearby emulator implementations may inform event cadence and public interaction shape, but their code must not be copied
+- compatibility-wrapper experiments outside this repository may be informative, but they are not behavioral ground truth
+
+## Early Fidelity Milestone
+
+The first controller-fidelity milestone should stay narrow:
+
+1. restore and seek
+2. read sector
+3. IRQ and DRQ visibility
+4. write-oriented and richer command families later
+
+This matches the current portability-first direction and keeps controller research aligned with practical emulator integration.
