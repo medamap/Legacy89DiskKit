@@ -28,7 +28,10 @@ public class RawDiskBackedMediumTest
     public void RawDiskBackedControllerFacingMedium_CanServeReadSectorLikeFlow()
     {
         using var container = RawDiskContainer.CreateNewInMemory(Domain.DiskImage.Model.DiskType.TwoD);
-        container.WriteSector(0, 0, 1, CreateSector(256, 0x7E));
+        var sector = CreateSector(256, 0x7E);
+        sector[1] = 0x3C;
+        sector[2] = 0x11;
+        container.WriteSector(0, 0, 1, sector);
 
         IControllerFacingMedium medium = new RawDiskBackedControllerFacingMedium(container);
 
@@ -44,6 +47,11 @@ public class RawDiskBackedMediumTest
         Assert.True(medium.IsIrqAsserted);
         Assert.True(medium.IsDrqAsserted);
         Assert.Equal(0x7E, medium.ReadDataRegister());
+        Assert.True(medium.IsDrqAsserted);
+        Assert.Equal(0x3C, medium.ReadDataRegister());
+        Assert.True(medium.IsDrqAsserted);
+        Assert.Equal(0x11, medium.ReadDataRegister());
+        Assert.True(medium.IsDrqAsserted);
     }
 
     [Fact]
@@ -61,6 +69,29 @@ public class RawDiskBackedMediumTest
         Assert.Equal(0x10, medium.ReadStatus());
         Assert.True(medium.IsIrqAsserted);
         Assert.False(medium.IsDrqAsserted);
+    }
+
+    [Fact]
+    public void RawDiskBackedControllerFacingMedium_CanRestoreSeekAndForceInterrupt()
+    {
+        using var container = RawDiskContainer.CreateNewInMemory(Domain.DiskImage.Model.DiskType.TwoD);
+        IControllerFacingMedium medium = new RawDiskBackedControllerFacingMedium(container);
+
+        medium.Reset();
+        medium.WriteTrackRegister(4);
+        medium.WriteDataRegister(2);
+        medium.WriteCommand(0x10);
+
+        Assert.Equal(2, medium.ReadTrackRegister());
+        Assert.True(medium.IsIrqAsserted);
+
+        medium.WriteCommand(0xD0);
+        Assert.False(medium.IsIrqAsserted);
+
+        medium.WriteTrackRegister(8);
+        medium.WriteCommand(0x00);
+        Assert.Equal(0, medium.ReadTrackRegister());
+        Assert.True(medium.IsIrqAsserted);
     }
 
     private static byte[] CreateSector(int size, byte firstByte)

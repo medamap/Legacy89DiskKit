@@ -28,7 +28,7 @@ public class D88BackedMediumTest
     public void D88BackedControllerFacingMedium_CanServeReadSectorLikeFlow()
     {
         using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
-        container.WriteSector(0, 0, 1, new byte[] { 0x5A, 0x00, 0x00 });
+        container.WriteSector(0, 0, 1, new byte[] { 0x5A, 0x6B, 0x7C });
 
         IControllerFacingMedium medium = new D88BackedControllerFacingMedium(container);
 
@@ -44,6 +44,11 @@ public class D88BackedMediumTest
         Assert.True(medium.IsIrqAsserted);
         Assert.True(medium.IsDrqAsserted);
         Assert.Equal(0x5A, medium.ReadDataRegister());
+        Assert.True(medium.IsDrqAsserted);
+        Assert.Equal(0x6B, medium.ReadDataRegister());
+        Assert.True(medium.IsDrqAsserted);
+        Assert.Equal(0x7C, medium.ReadDataRegister());
+        Assert.False(medium.IsDrqAsserted);
     }
 
     [Fact]
@@ -61,5 +66,28 @@ public class D88BackedMediumTest
         Assert.Equal(0x10, medium.ReadStatus());
         Assert.True(medium.IsIrqAsserted);
         Assert.False(medium.IsDrqAsserted);
+    }
+
+    [Fact]
+    public void D88BackedControllerFacingMedium_CanRestoreSeekAndForceInterrupt()
+    {
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        IControllerFacingMedium medium = new D88BackedControllerFacingMedium(container);
+
+        medium.Reset();
+        medium.WriteTrackRegister(7);
+        medium.WriteDataRegister(3);
+        medium.WriteCommand(0x1F);
+
+        Assert.Equal(3, medium.ReadTrackRegister());
+        Assert.True(medium.IsIrqAsserted);
+
+        medium.WriteCommand(0xD0);
+        Assert.False(medium.IsIrqAsserted);
+
+        medium.WriteTrackRegister(9);
+        medium.WriteCommand(0x00);
+        Assert.Equal(0, medium.ReadTrackRegister());
+        Assert.True(medium.IsIrqAsserted);
     }
 }
