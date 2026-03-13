@@ -152,19 +152,21 @@
             - [ ] tag and release only after every required item above is complete
 
 - [ ] Phase 20: C++ Core Transition and Bare-Metal-Oriented Architecture
-    - [ ] Define `Legacy89DiskKit.Cpp` as the future portable core line.
-    - [ ] Separate "reference implementation" from "final portable implementation" in public documents.
+    - [x] Define `Legacy89DiskKit.Cpp` as the future portable core line.
+    - [x] Separate "reference implementation" from "final portable implementation" in public documents.
     - [ ] Identify the first C# subsystems to port:
-        - [ ] disk container core
-        - [ ] character encoding core
-        - [ ] filesystem core
-    - [ ] Push path-dependent and host-dependent behavior out of the future core boundary.
-    - [ ] Prefer buffer-based and path-independent APIs where feasible.
-    - [ ] Reduce reliance on exception-heavy contracts at the future portability boundary.
-    - [ ] Define how `Legacy89DiskKit.Native` will relate to `Legacy89DiskKit.Cpp` during migration:
-        - [ ] bridge layer over C# first
-        - [ ] replacement or shared ABI over C++ later
-    - [ ] Decide when the CLI should switch from calling C# application services to calling bindings over the future C++ core.
+        - [x] disk container core
+        - [x] character encoding core
+        - [x] filesystem core
+    - [x] Push path-dependent and host-dependent behavior out of the future core boundary.
+    - [x] Prefer buffer-based and path-independent APIs where feasible.
+    - [x] Reduce reliance on exception-heavy contracts at the future portability boundary.
+    - [x] Define how `Legacy89DiskKit.Native` will relate to `Legacy89DiskKit.Cpp` during migration:
+        - [x] bridge layer over C# first
+        - [x] replacement or shared ABI over C++ later
+    - [x] Decide when the CLI should switch from calling C# application services to calling bindings over the future C++ core.
+        - [x] keep the CLI on the managed `Application` surface until first-port subsystem parity exists behind bindings
+        - [x] switch only after container, encoding, at least one filesystem family, and layout validation reach practical parity
     - [ ] Execute Phase 20 on a dedicated branch:
         - [x] create `feature/phase20-cpp-transition`
         - [x] define the `Legacy89DiskKit.Cpp` product line in public documents

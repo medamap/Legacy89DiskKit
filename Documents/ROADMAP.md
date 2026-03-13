@@ -213,6 +213,14 @@ The future core should exclude:
 - managed bootstrap wiring
 - repository-specific sample image handling
 
+The future core should also leave these responsibilities to host layers:
+
+- command-line parsing and option policy
+- terminal and table rendering
+- artifact packaging and release verification orchestration
+- host-specific path discovery and sample-path shortcuts
+- user-facing document/help generation
+
 The desired portability boundary should be:
 
 - buffer-first
@@ -220,6 +228,13 @@ The desired portability boundary should be:
 - explicit about ownership
 - explicit about result or status handling
 - independent of console or GUI concerns
+
+The preferred future core API style is:
+
+- buffer-oriented rather than path-mandatory
+- explicit about logical encoder names
+- compatible with serializable metadata/result models
+- conservative about exception-heavy control flow at the portability boundary
 
 ### Native Migration Direction
 
@@ -237,6 +252,24 @@ The preferred migration rule is:
 - preserve the documented `ldk_*` contract where practical
 - change internals first
 - change the C ABI only if necessary and only at a future major-version boundary
+
+### CLI Transition Gate
+
+The CLI should remain on the managed `Application` surface until the future C++ path is strong enough to replace it without shrinking the supported public behavior.
+
+The preferred transition sequence is:
+
+1. establish parity for the first-port subsystems beneath a managed binding layer
+2. validate representative workflows against the bound C++ path
+3. switch the CLI only after those workflows are stable enough to become the default implementation path
+
+The minimum gate for that switch should include:
+
+- disk container open and geometry behavior
+- encoding conversion parity
+- at least one filesystem family with practical parity for list, read, write, create, and format flows
+- layout export and validation behavior that preserves the current documented contract
+- smoke coverage for both managed and native-facing paths
 
 ### 7. Bare-Metal and Embedded Direction
 

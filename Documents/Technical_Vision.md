@@ -105,6 +105,15 @@ The future core should avoid:
 - localization concerns
 - managed bootstrap wiring as part of the core contract
 
+The future core should also avoid treating these host-side concerns as core responsibilities:
+
+- local file discovery
+- command-line argument parsing
+- terminal rendering
+- release packaging rules
+- repository-specific sample-path assumptions
+- user-facing document and help generation
+
 The target public shape for the future core is:
 
 - buffer-first
@@ -112,6 +121,13 @@ The target public shape for the future core is:
 - explicit about ownership
 - explicit about status or result handling
 - suitable for reuse from native, managed, and runtime-hosted environments
+
+The preferred contract style is:
+
+- accept in-memory buffers or caller-provided abstractions rather than mandatory local paths
+- prefer result-bearing APIs over exception-heavy control flow at the portability boundary
+- keep encoding choice explicit by logical encoder name
+- keep serializable models stable enough for managed, native, and future WASM hosts
 
 ## Native Bridge Migration
 
@@ -125,6 +141,27 @@ The intended path is:
 4. preserve the public C ABI unless a future major-version change makes adjustment unavoidable
 
 This keeps native consumers attached to a stable contract while allowing the internal implementation to change.
+
+## CLI Transition Criteria
+
+The CLI should not switch directly to a future C++ core at the first sign of a working prototype.
+
+The intended sequence is:
+
+1. keep the CLI on the managed `Application` layer while `Legacy89DiskKit.Cpp` reaches parity for the first-port subsystems
+2. add managed bindings over the emerging C++ core
+3. verify that the bound C++ path preserves the documented behavior for representative workflows
+4. switch the CLI only after the C++-backed path is stable enough to replace the current managed implementation for the supported surface
+
+The minimum transition gate should include:
+
+- container open and basic geometry handling
+- encoding conversion parity
+- at least one filesystem family reaching practical parity for list, read, write, create, and format flows
+- layout export and validation behavior that does not regress the documented managed surface
+- native and managed smoke coverage using the same public contract assumptions
+
+Until those conditions are satisfied, the CLI should remain a host application over the managed reference implementation.
 
 ## Embedded and Bare-Metal Direction
 
