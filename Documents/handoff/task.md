@@ -156,8 +156,8 @@
     - [ ] Separate "reference implementation" from "final portable implementation" in public documents.
     - [ ] Identify the first C# subsystems to port:
         - [ ] disk container core
-        - [ ] filesystem core
         - [ ] character encoding core
+        - [ ] filesystem core
     - [ ] Push path-dependent and host-dependent behavior out of the future core boundary.
     - [ ] Prefer buffer-based and path-independent APIs where feasible.
     - [ ] Reduce reliance on exception-heavy contracts at the future portability boundary.
@@ -167,14 +167,14 @@
     - [ ] Decide when the CLI should switch from calling C# application services to calling bindings over the future C++ core.
     - [ ] Execute Phase 20 on a dedicated branch:
         - [x] create `feature/phase20-cpp-transition`
-        - [ ] define the `Legacy89DiskKit.Cpp` product line in public documents
-        - [ ] define C# as the reference implementation and C++ as the final portable implementation
-        - [ ] decide the first-port candidates and their execution order
-        - [ ] define the future core boundary around buffer-first and path-independent contracts
-        - [ ] define the `Legacy89DiskKit.Native` migration policy against the future C++ core
+        - [x] define the `Legacy89DiskKit.Cpp` product line in public documents
+        - [x] define C# as the reference implementation and C++ as the final portable implementation
+        - [x] decide the first-port candidates and their execution order
+        - [x] define the future core boundary around buffer-first and path-independent contracts
+        - [x] define the `Legacy89DiskKit.Native` migration policy against the future C++ core
     - [ ] Versioning policy for post-`v2.0.0` work:
-        - [ ] reserve `v2.0.1` for hotfix-only use if needed
-        - [ ] treat `Phase 20` as a likely `v2.1.0` candidate rather than a patch release
+        - [x] reserve `v2.0.1` for hotfix-only use if needed
+        - [x] treat `Phase 20` as a likely `v2.1.0` candidate rather than a patch release
 
 - [ ] Phase 21: Embedded and Bare-Metal Direction
     - [ ] Define the target order for low-level deployment:

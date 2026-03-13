@@ -177,6 +177,67 @@ Immediate `Phase 20` execution order:
 4. define which host and path concerns must stay outside the future core boundary
 5. define how `Legacy89DiskKit.Native` transitions from a C# bridge ABI to a future C++-backed ABI
 
+Recommended first-port execution order:
+
+1. disk container core
+2. character encoding core
+3. filesystem parsing and write rules
+
+This order is preferred because:
+
+- container behavior is the lowest shared dependency
+- encoding rules are portable logic with limited host coupling
+- filesystem logic depends on both container rules and encoding behavior
+
+### Future Core Boundary
+
+The future `Legacy89DiskKit.Cpp` core should keep:
+
+- disk image container parsing and low-level geometry rules
+- filesystem detection and explicit filesystem selection rules
+- directory parsing
+- file read and write rules
+- FAT and allocation logic
+- boot metadata parsing and write rules where they are filesystem-level rather than host-level
+- encoding conversion rules
+- layout validation and transformation core logic
+- stable metadata and DTO-like result models
+
+The future core should exclude:
+
+- local file path discovery and path-based convenience APIs as required interfaces
+- CLI presentation and formatting
+- release automation
+- host-specific dependency setup
+- localization and user-facing help text
+- managed bootstrap wiring
+- repository-specific sample image handling
+
+The desired portability boundary should be:
+
+- buffer-first
+- path-independent
+- explicit about ownership
+- explicit about result or status handling
+- independent of console or GUI concerns
+
+### Native Migration Direction
+
+`Legacy89DiskKit.Native` should evolve in two stages:
+
+1. current state
+   - documented bridge ABI backed by the C# reference implementation
+2. future state
+   - the same public ABI backed by `Legacy89DiskKit.Cpp`, or a compatibility-preserving replacement ABI if a strict carry-over proves impossible
+
+Until the C++ core exists, native consumers should treat the current ABI as stable at the C boundary but not as proof of final internal implementation structure.
+
+The preferred migration rule is:
+
+- preserve the documented `ldk_*` contract where practical
+- change internals first
+- change the C ABI only if necessary and only at a future major-version boundary
+
 ### 7. Bare-Metal and Embedded Direction
 
 The long-term ambition includes board-level and bare-metal-oriented targets.
@@ -229,6 +290,11 @@ Primary candidates:
 - better release automation
 - richer CLI help and localization
 - filesystem-specific attribute editing and boot editing
+
+Version guidance:
+
+- `v2.0.1` should be reserved for post-release fixes if needed
+- the `Phase 20` transition work is a likely `v2.1.0` candidate rather than a patch release
 
 ### v3.x: Broader Runtime Reach
 

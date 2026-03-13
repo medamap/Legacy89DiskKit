@@ -75,8 +75,16 @@ The first tasks are:
 The intended first-port candidates are:
 
 - disk container core
-- filesystem parsing and write rules
 - character encoding core
+- filesystem parsing and write rules
+
+The intended execution order is:
+
+1. disk container core
+2. character encoding core
+3. filesystem parsing and write rules
+
+This order keeps the lowest shared dependencies first and reduces the chance of redesigning filesystem logic before the lower-level portable rules are stable.
 
 ## Boundaries to Preserve
 
@@ -96,6 +104,27 @@ The future core should avoid:
 - host-specific release automation
 - localization concerns
 - managed bootstrap wiring as part of the core contract
+
+The target public shape for the future core is:
+
+- buffer-first
+- path-independent
+- explicit about ownership
+- explicit about status or result handling
+- suitable for reuse from native, managed, and runtime-hosted environments
+
+## Native Bridge Migration
+
+`Legacy89DiskKit.Native` should be treated as the migration bridge, not as the final low-level implementation.
+
+The intended path is:
+
+1. keep the documented `ldk_*` ABI backed by the C# reference implementation
+2. build `Legacy89DiskKit.Cpp` beneath that portability contract
+3. move the native ABI backing implementation from C# to C++ where practical
+4. preserve the public C ABI unless a future major-version change makes adjustment unavoidable
+
+This keeps native consumers attached to a stable contract while allowing the internal implementation to change.
 
 ## Embedded and Bare-Metal Direction
 
