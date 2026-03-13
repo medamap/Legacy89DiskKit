@@ -67,4 +67,16 @@ public static class HuBasicFatRules
 
         return new HuBasicFatChainResult(chain, terminalFlag);
     }
+
+    public static void ApplyChain(byte[] fatData, IReadOnlyList<int> clusters, int terminalFlag)
+    {
+        if (fatData == null) throw new ArgumentNullException(nameof(fatData));
+        if (clusters == null) throw new ArgumentNullException(nameof(clusters));
+
+        for (int i = 0; i < clusters.Count; i++)
+        {
+            int next = i == clusters.Count - 1 ? terminalFlag : clusters[i + 1];
+            SetEntry(fatData, clusters[i], next);
+        }
+    }
 }

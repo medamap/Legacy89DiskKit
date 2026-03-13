@@ -38,4 +38,16 @@ public class HuBasicFatRulesTest
 
         Assert.Equal(0x8F, HuBasicFatRules.GetEntry(fat, 9));
     }
+
+    [Fact]
+    public void ApplyChain_WritesTerminalFlagToLastCluster()
+    {
+        var fat = new byte[16];
+
+        HuBasicFatRules.ApplyChain(fat, new[] { 2, 3, 4 }, 0x82);
+
+        Assert.Equal(3, HuBasicFatRules.GetEntry(fat, 2));
+        Assert.Equal(4, HuBasicFatRules.GetEntry(fat, 3));
+        Assert.Equal(0x82, HuBasicFatRules.GetEntry(fat, 4));
+    }
 }

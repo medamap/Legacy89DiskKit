@@ -115,32 +115,11 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
         // Update FAT
         var fat = _fatManager.ReadFat();
         int terminalFlag = HuBasicWriteRules.GetTerminalFlagForLength(data.Length, _config);
-
-        for (int i = 0; i < allocatedClusters.Count; i++)
-        {
-            int next = (i == allocatedClusters.Count - 1) ? terminalFlag : allocatedClusters[i + 1];
-            _fatManager.SetFatEntry(fat, allocatedClusters[i], next);
-        }
+        HuBasicFatRules.ApplyChain(fat, allocatedClusters, terminalFlag);
         _fatManager.WriteFat(fat);
 
         // Create and add directory entry
-        var (name, ext) = HuBasicNameRules.ParseFileName(fileName);
-        var fileType = IsAscii(attributes) ? HuBasicFileType.Ascii : HuBasicFileType.Binary;
-        var metadata = new HuBasicFileMetadata(
-            fileType,
-            false,
-            false,
-            false,
-            false,
-            false,
-            (ushort)data.Length,
-            loadAddress,
-            executionAddress,
-            allocatedClusters[0],
-            attributes.RawAttributes
-        );
-
-        var entry = new FileEntry(name, ext, data.Length, null, DateTime.Now, attributes, allocatedClusters[0], loadAddress, (ushort?)(loadAddress + data.Length - 1), executionAddress, null, null, metadata);
+        var entry = HuBasicDirectoryRules.CreateFileEntryForWrite(fileName, data, attributes, allocatedClusters[0], loadAddress, executionAddress);
         AddDirectoryEntry(entry);
     }
 
