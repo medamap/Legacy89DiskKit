@@ -334,6 +334,23 @@ That future direction is expected to represent controller-visible magnetic data 
 
 This does not make raw magnetic-stream support a current release target. It does mean the future core should avoid assuming that every disk source is permanently reducible to a clean side/cylinder/sector table.
 
+The preferred future direction is to distinguish two lower-level preservation tiers:
+
+1. encoded track data
+   - FM- and MFM-level track payloads
+   - per-track storage with media and timing metadata
+   - suitable for preserving unusual track organization and many non-standard physical layouts
+2. lower-level sampled or timing-oriented raw signal data
+   - reserved for cases where encoded-track preservation is still not enough
+   - relevant to stronger controller-visible or protection-relevant behavior
+
+The first tier should be considered before any lower-level signal capture work because it offers a better balance between fidelity and practical handling.
+
+The architecture should also assume asymmetric conversion:
+
+- sector-only sources may be importable into an encoded-track container
+- converting back from encoded or signal-oriented sources into sector-only formats may lose information or become impossible for some inputs
+
 The preferred long-term shape is:
 
 - direct image access as one stable surface

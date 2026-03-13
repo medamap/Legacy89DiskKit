@@ -268,6 +268,27 @@ This is not a near-term implementation target, but it is an important architectu
 - do not define the future native or C++ core in a way that makes an FDC-facing access surface impossible
 - keep room for a later controller-oriented data path beside the direct image-access path
 
+The intended future magnetic-stream container should be capable of storing encoded track-level data rather than only decoded sector payloads.
+
+The expected characteristics of that future format are:
+
+- per-image header metadata for media and timing assumptions
+- per-track payloads rather than filesystem-oriented records
+- support for FM- and MFM-level encoded data
+- room for drive-relevant properties such as rotational assumptions and transfer characteristics
+- the ability to preserve structures that are lost when an image is reduced to ordinary sectors
+
+This future format is expected to be useful for:
+
+- special physical formats with unusual sector layout
+- preservation of gap structure and non-standard track organization
+- controller-oriented emulation paths
+- later experimentation with protection-relevant physical behavior
+
+The project should also assume that a future encoded-track container may be convertible from ordinary sector images in one direction, while reverse conversion back into sector-only formats may be lossy or impossible for some sources.
+
+In addition, the long-term direction should leave room for an even lower level than encoded tracks: sampled or timing-oriented raw signal data captured from real drives. That layer is expected to matter only for cases where track-level encoding is still not enough to preserve controller-visible behavior.
+
 The project should therefore evolve toward two compatible layers:
 
 - a direct image/container/filesystem access layer

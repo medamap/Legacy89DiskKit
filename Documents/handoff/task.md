@@ -198,6 +198,8 @@
         - [x] note that future sources may represent controller-visible magnetic data rather than only decoded sectors
         - [x] reserve room for gaps, noise, timing-sensitive structures, and protection-relevant behavior
         - [x] keep raw magnetic-stream support out of the immediate implementation slice
+        - [x] distinguish encoded-track preservation from lower-level sampled or timing-oriented signal preservation
+        - [x] document that conversion between sector-only and lower-level formats may be asymmetric and lossy
 
 - [ ] Phase 21: Embedded and Bare-Metal Direction
     - [ ] Define the target order for low-level deployment:
