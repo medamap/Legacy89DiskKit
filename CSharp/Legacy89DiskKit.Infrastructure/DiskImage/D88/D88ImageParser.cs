@@ -6,6 +6,29 @@ namespace Legacy89DiskKit.Infrastructure.DiskImage.D88;
 
 public static class D88ImageParser
 {
+    public static ReadOnlyDiskImageLayout ParseImage(byte[] imageData)
+    {
+        var header = ParseHeader(imageData);
+        var sectors = ParseSectors(imageData, header);
+        var metadata = CreateMetadata(header, sectors.Values);
+        var blocks = sectors.Values
+            .OrderBy(s => s.Cylinder)
+            .ThenBy(s => s.Head)
+            .ThenBy(s => s.Sector)
+            .Select(s => new SectorDataBlock(
+                new SectorInfo(
+                    s.Cylinder,
+                    s.Head,
+                    s.Sector,
+                    s.ActualSize,
+                    s.Deleted,
+                    s.Status != 0),
+                (byte[])s.Data.Clone()))
+            .ToList();
+
+        return new ReadOnlyDiskImageLayout(metadata, blocks);
+    }
+
     public static D88Header ParseHeader(byte[] imageData)
     {
         using var stream = new MemoryStream(imageData);
@@ -58,6 +81,29 @@ public static class D88ImageParser
         }
 
         return sectors;
+    }
+
+    public static DiskContainerMetadata CreateMetadata(D88Header header, IEnumerable<D88SectorData> sectors)
+    {
+        var sectorList = sectors.ToList();
+        var geometry = sectorList.Count == 0
+            ? CreateDefaultGeometry(header.MediaType)
+            : new DiskGeometryInfo(
+                Cylinders: sectorList.Max(s => (int)s.Cylinder) + 1,
+                Heads: sectorList.Max(s => (int)s.Head) + 1,
+                SectorsPerTrack: sectorList
+                    .GroupBy(s => (s.Cylinder, s.Head))
+                    .Select(g => g.Count())
+                    .DefaultIfEmpty(0)
+                    .Max(),
+                BytesPerSector: sectorList.Max(s => (int)s.ActualSize));
+
+        return new DiskContainerMetadata(
+            ImageFormat: "d88-sector-container",
+            DiskType: header.MediaType,
+            Geometry: geometry,
+            IsWriteProtected: header.WriteProtect,
+            DeclaredImageSize: header.DiskSize);
     }
 
     private static void ParseTrack(
@@ -124,5 +170,15 @@ public static class D88ImageParser
                 break;
             }
         }
+    }
+
+    private static DiskGeometryInfo CreateDefaultGeometry(DiskType diskType)
+    {
+        return diskType switch
+        {
+            DiskType.TwoHD => new DiskGeometryInfo(77, 2, 26, 1024),
+            DiskType.TwoDD => new DiskGeometryInfo(40, 2, 16, 256),
+            _ => new DiskGeometryInfo(40, 2, 16, 256)
+        };
     }
 }

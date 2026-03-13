@@ -8,4 +8,11 @@ public sealed record RawDiskGeometry(
     int SectorsPerTrack,
     int BytesPerSector,
     DiskType DiskType
-);
+)
+{
+    public DiskGeometryInfo ToDiskGeometryInfo() => new(
+        Cylinders,
+        Sides,
+        SectorsPerTrack,
+        BytesPerSector);
+}

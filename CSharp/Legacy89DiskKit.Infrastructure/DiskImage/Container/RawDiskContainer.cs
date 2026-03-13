@@ -85,16 +85,8 @@ public class RawDiskContainer : IDiskContainer
 
     public DiskContainerMetadata GetMetadata()
     {
-        return new DiskContainerMetadata(
-            ImageFormat: "raw-sector-image",
-            DiskType: _geometry.DiskType,
-            Geometry: new DiskGeometryInfo(
-                _geometry.Cylinders,
-                _geometry.Sides,
-                _geometry.SectorsPerTrack,
-                _geometry.BytesPerSector),
-            IsWriteProtected: _readOnly,
-            DeclaredImageSize: _diskData.LongLength);
+        var metadata = RawDiskImageDescriptor.Describe(_diskData);
+        return metadata with { IsWriteProtected = metadata.IsWriteProtected || _readOnly };
     }
 
     public byte[] ReadSector(int cylinder, int head, int sector, bool allowCorrupted)

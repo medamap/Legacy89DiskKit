@@ -129,6 +129,7 @@ The current managed reference implementation already demonstrates the first part
 - extracted raw-disk geometry and sector-offset logic
 - extracted D88 header and track-sector parsing
 - a shared read-only container metadata contract spanning raw sector-image and D88/D77-style sector-container implementations
+- a portable read-only parser-result shape for D88 images plus a raw-image descriptor path for the same metadata family
 - concrete mounted-medium adapters for both D88/D77-style sector-container and raw sector-image families
 - a minimal mounted-medium to controller-facing binding path for future FDC-oriented workflows
 

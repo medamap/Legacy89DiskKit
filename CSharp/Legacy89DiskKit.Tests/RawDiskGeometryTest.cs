@@ -43,4 +43,21 @@ public class RawDiskGeometryTest
 
         Assert.Contains("Invalid sector address", ex.Message);
     }
+
+    [Fact]
+    public void RawDiskImageDescriptor_CanBuildPortableMetadata()
+    {
+        var imageData = new byte[327680];
+
+        var metadata = RawDiskImageDescriptor.Describe(imageData);
+
+        Assert.Equal("raw-sector-image", metadata.ImageFormat);
+        Assert.Equal(DiskType.TwoD, metadata.DiskType);
+        Assert.Equal(40, metadata.Geometry.Cylinders);
+        Assert.Equal(2, metadata.Geometry.Heads);
+        Assert.Equal(16, metadata.Geometry.SectorsPerTrack);
+        Assert.Equal(256, metadata.Geometry.BytesPerSector);
+        Assert.False(metadata.IsWriteProtected);
+        Assert.Equal(327680, metadata.DeclaredImageSize);
+    }
 }
