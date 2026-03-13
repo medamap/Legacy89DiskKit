@@ -184,6 +184,7 @@
         - [x] require a shared read-only container metadata contract across the first supported container families
         - [x] require a read-only parser-result shape that can describe D88 images and raw sector-image metadata without host-path assumptions
         - [x] establish logical encoding identifiers and profile resolution separate from CLI-only encoder wiring
+        - [x] start extracting platform-specific encoding tables into reusable pure data, beginning with the X1 character map
         - [x] decide the first concrete class or module boundary to port from the current C# codebase
             - [x] raw-disk geometry and sector-offset logic from `RawDiskContainer`
             - [x] D88 header and track-sector parsing from `D88DiskContainer`

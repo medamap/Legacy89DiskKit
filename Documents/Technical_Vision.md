@@ -131,6 +131,7 @@ The current managed reference implementation already demonstrates the first part
 - a shared read-only container metadata contract spanning raw sector-image and D88/D77-style sector-container implementations
 - a portable read-only parser-result shape for D88 images plus a raw-image descriptor path for the same metadata family
 - a logical character-encoding identity and profile resolution path above the concrete managed encoders
+- the first platform-specific mapping table extraction by moving the X1 character map into reusable pure data
 - concrete mounted-medium adapters for both D88/D77-style sector-container and raw sector-image families
 - a minimal mounted-medium to controller-facing binding path for future FDC-oriented workflows
 
