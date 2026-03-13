@@ -24,13 +24,19 @@ This release makes the CLI the primary end-user artifact and defines the public 
 - `Legacy89DiskKit.Cli` defined as the end-user command-line tool
 - `Legacy89DiskKit.CSharp` defined as the supported managed integration surface
 - `Legacy89DiskKit.Native` defined as the documented native bridge line over the current managed reference implementation
-- `Legacy89DiskKit.Wasm` defined as a planned browser/runtime line
+- `Legacy89DiskKit.Wasm` defined as a documented browser-first and WASI-capable API direction for future work
 
 ### Native Bridge Companion
 
 - documented `ldk_*` C ABI with a public header
 - host-platform verified native companion release flow
 - explicit bridge-layer positioning for future `Legacy89DiskKit.Cpp` work
+
+### WASM Direction
+
+- documented-only `Legacy89DiskKit.Wasm` line for `v2.0.0`
+- path-independent and buffer-first API direction
+- browser-first runtime model with WASI-capable design where practical
 
 ### Current CLI Capabilities
 
@@ -57,7 +63,9 @@ This release makes the CLI the primary end-user artifact and defines the public 
 
 - the native bridge is still implemented by the current managed/native-interop layer
 - native verification is host-platform-first in `v2.0.0`
+- additional native targets beyond the current host may remain unverified
 - Native AOT is not the required release path for this version
+- `Legacy89DiskKit.Wasm` is defined in documentation only and does not ship as a `v2.0.0` build artifact
 - some advanced CLI editing features remain roadmap items
 
 ## Verification

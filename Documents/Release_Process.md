@@ -10,7 +10,7 @@ The `v2.0.0` release line is centered on one hard shipping requirement:
 
 The C# library remains supported and documented, but it is not the packaging gate for `v2.0.0`.
 `Legacy89DiskKit.Native` is a companion deliverable for `v2.0.0`, with a documented C ABI and host-platform verification.
-WASM remains a roadmap target, not a mandatory `v2.0.0` release artifact.
+`Legacy89DiskKit.Wasm` is documented in `v2.0.0` as a browser-first, path-independent API direction, but it is not a release artifact.
 
 ## Versioning
 
@@ -53,6 +53,7 @@ git merge develop --no-ff -m "Merge branch 'develop' for vX.Y.Z release"
 - a separate packaged C# library release channel
 - fully verified multi-platform Native artifacts
 - fully released WASM artifacts
+- a WASM prototype project
 
 ## CLI Publish Strategy
 
@@ -128,6 +129,8 @@ The native release script:
 
 The public product identity is `Legacy89DiskKit.Native`, even though the current implementation project remains `Legacy89DiskKit.NativeInterop`.
 
+For `v2.0.0`, native verification is closed by documenting verified and unverified targets explicitly. Host-platform verification is mandatory. Broader target coverage is desirable but not a release blocker.
+
 ## Pre-Release Document Updates
 
 Update the following before tagging:
@@ -136,11 +139,13 @@ Update the following before tagging:
 - `Documents/ROADMAP.md`
 - `Documents/handoff/task.md`
 - `RELEASE_NOTES_vX.Y.Z.md`
+- `Documents/Wasm_Integration_Guide.md`
 
 Requirements:
 
 - README must describe the real CLI public surface
 - README must describe the real native bridge identity and support policy
+- README must describe WASM as documented-only for `v2.0.0`
 - release process must match the actual project layout
 - roadmap must reflect the current product model
 - handoff task list must remain the execution backlog
@@ -157,7 +162,7 @@ For `v2.0.0`, the release note should explicitly explain:
 - the standalone distribution goal
 - the role of the C# library
 - the documented Native bridge layer and its host-platform verification model
-- the planned but non-blocking WASM line
+- the documented but non-shipping WASM line
 - major user-visible CLI capabilities and limits
 
 ## Script Inputs and Paths
@@ -259,6 +264,35 @@ The effective script behavior is equivalent to:
 ```bash
 dotnet publish CSharp/Legacy89DiskKit.NativeInterop/Legacy89DiskKit.NativeInterop.csproj -c Release -r <host-rid> -p:PublishAot=true -p:NativeLib=Shared -o publish/vX.Y.Z/native/<host-rid>/build
 ```
+
+## Final v2.0.0 Closure Checklist
+
+Complete these in order before tagging:
+
+1. update `RELEASE_NOTES_v2.0.0.md`
+2. run `./scripts/release-cli.sh 2.0.0`
+3. run `./scripts/release-native.sh 2.0.0`
+4. confirm CLI smoke checks passed
+5. confirm native smoke checks passed
+6. confirm README, release process, and integration guides are aligned
+7. confirm `Documents/handoff/task.md` marks all required `Phase 19` items complete
+8. only then create the tag and release
+
+Mandatory `v2.0.0` deliverables:
+
+- standalone CLI archives for the official CLI matrix
+- documented C# public surface
+- public native header and guide
+- host-platform verified native companion artifact
+- documented WASM API direction
+- release scripts and final release notes
+
+Not blockers for `v2.0.0`:
+
+- a WASM prototype project
+- full multi-platform native bridge verification
+- first `Legacy89DiskKit.Cpp` implementation work
+- bare-metal proof-of-concept targets
 
 The staged package then exposes the library under the public product name `Legacy89DiskKit.Native.*` together with:
 

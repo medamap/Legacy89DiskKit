@@ -9,11 +9,13 @@ The project is moving toward a `v2.0.0` product model with four named lines:
 - `Legacy89DiskKit.Native`: documented native bridge companion
 - `Legacy89DiskKit.Wasm`: planned browser/runtime line
 
-Today, the only release-critical artifact is the CLI. The C# library remains supported for integration work. Native and WASM are defined roadmap targets, not current release-gate deliverables.
+Today, the CLI is the primary release-critical artifact. The C# library remains supported for integration work. The native bridge is a documented companion deliverable with host-platform verification. WASM is a documented future line for `v2.0.0`, not a shipped artifact.
 
 For managed integration, the supported public surface is centered on `Legacy89DiskKit.Application`. `Domain` models may be used as result and work objects. Direct `Infrastructure` usage remains possible for advanced experimentation, but it is not part of the supported compatibility contract.
 
 For native integration, the public bridge contract is the documented `ldk_*` C ABI under the `Legacy89DiskKit.Native` product identity. The current implementation is still backed by the managed/native-interop bridge and is not the final portable bare-metal core.
+
+For WASM planning, the current `v2.0.0` contract is documented-only and browser-first, with a path-independent and buffer-first API direction. No WASM artifact is required for `v2.0.0`.
 
 The current CLI focuses on practical disk inspection and editing workflows for:
 
@@ -89,6 +91,12 @@ Native companion release automation:
 
 The native bridge currently guarantees host-platform verification and a documented C ABI. Broader native platform support remains an intended direction, but may still be unverified on the current release host.
 
+Current `v2.0.0` native verification status:
+
+- verified: host platform
+- attempted but not yet verified: additional same-OS targets may still fail on the current release host
+- not required for the `v2.0.0` gate: full multi-platform native bridge verification
+
 ## Minimal Examples
 
 ### List files and disk summary
@@ -154,6 +162,7 @@ dotnet CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll \
 - [Release process](Documents/Release_Process.md)
 - [C# integration guide](Documents/CSharp_Integration_Guide.md)
 - [Native integration guide](Documents/Native_Integration_Guide.md)
+- [WASM integration guide](Documents/Wasm_Integration_Guide.md)
 - [Current project task list](Documents/handoff/task.md)
 - [Roadmap](Documents/ROADMAP.md)
 - [Hu-BASIC disk format specification](Documents/HuBasic_Format_Specification.md)

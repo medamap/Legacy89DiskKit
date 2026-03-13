@@ -123,14 +123,14 @@
             - [x] standalone CLI release path documented
             - [x] local release script verified
             - [x] release note gating in place
-            - [ ] final release smoke check on release candidate version
-        - [ ] C# library definition
+            - [x] final release smoke check on release candidate version
+        - [x] C# library definition
             - [x] define the supported role of `Legacy89DiskKit.CSharp`
             - [x] identify and document the preferred public entrypoints
             - [x] decide whether a facade layer or package boundary is required before `v2.0.0`
             - [x] add developer-facing usage documentation for host C# applications
             - [x] identify which C# subsystems form the reference baseline for future C++ porting
-        - [ ] Native library formalization
+        - [x] Native library formalization
             - [x] define whether `Legacy89DiskKit.NativeInterop` becomes `Legacy89DiskKit.Native` or remains an internal implementation name
             - [x] define the supported native ABI surface
             - [x] provide a public C header for native consumers
@@ -139,16 +139,16 @@
             - [x] keep the ABI shape compatible with a future independent C++ core
             - [x] add a host-platform native release script
             - [x] replace hardcoded smoke harness paths with parameterized inputs
-            - [ ] verify whether additional native target hosts can be published beyond the current host
-        - [ ] WASM definition
-            - [ ] define the intended WASM runtime model
-            - [ ] define a path-independent API shape suitable for browser or WASI use
-            - [ ] identify the reusable services that can be exposed without CLI assumptions
-            - [ ] decide whether `Legacy89DiskKit.Wasm` is documented-only or requires a prototype project before `v2.0.0`
+            - [x] verify whether additional native target hosts can be published beyond the current host
+        - [x] WASM definition
+            - [x] define the intended WASM runtime model
+            - [x] define a path-independent API shape suitable for browser or WASI use
+            - [x] identify the reusable services that can be exposed without CLI assumptions
+            - [x] decide whether `Legacy89DiskKit.Wasm` is documented-only or requires a prototype project before `v2.0.0`
         - [ ] Final release closure
-            - [ ] confirm the mandatory `v2.0.0` deliverables
-            - [ ] confirm the roadmap-only deliverables
-            - [ ] review `RELEASE_NOTES_v2.0.0.md`
+            - [x] confirm the mandatory `v2.0.0` deliverables
+            - [x] confirm the roadmap-only deliverables
+            - [x] review `RELEASE_NOTES_v2.0.0.md`
             - [ ] tag and release only after every required item above is complete
 
 - [ ] Phase 20: C++ Core Transition and Bare-Metal-Oriented Architecture

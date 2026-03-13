@@ -73,8 +73,15 @@ For `v2.0.0`, the public native contract is documented and packaged as a compani
 
 Current verification status:
 
-- host-platform native artifact verification is required
+- host-platform native artifact verification is required and currently verified
+- additional same-OS cross-arch verification may be attempted where practical
 - broader native platform support remains an intended direction, but may not be fully verified on every release host
+
+Current `v2.0.0` expectation:
+
+- verified: current release host
+- unverified but intended: additional native targets outside the current host verification path
+- not a `v2.0.0` blocker: full multi-platform native bridge verification
 
 The current native line should therefore be treated as:
 

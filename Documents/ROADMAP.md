@@ -131,6 +131,13 @@ Required:
 - identify what shared application/domain logic can be reused without CLI assumptions
 - decide whether `Legacy89DiskKit.Wasm` is documented-only in `v2.0.0` or requires a minimal prototype project
 
+Current intended direction:
+
+- `Legacy89DiskKit.Wasm` is documented-only in `v2.0.0`
+- the API direction is browser-first with a WASI-capable design where practical
+- the public shape should be path-independent and buffer-first
+- no `v2.0.0` build artifact is required
+
 ### 5. Release Pipeline and Documentation Closure
 
 The packaging model and public story must stay consistent across the repository.
@@ -187,7 +194,7 @@ The safest `v2.0.0` scope is:
 - standalone CLI release for four platforms
 - current C# library retained, documented, and treated as the reference implementation
 - native library scope documented, with the current interop layer assessed against a formal shipping checklist
-- WASM scope documented as an active next target, with a defined API direction but not required to ship fully in `v2.0.0`
+- WASM scope documented as an active next target, with a defined API direction but not required to ship in `v2.0.0`
 - future C++ core and bare-metal direction documented, but not required to ship in `v2.0.0`
 
 In other words:
