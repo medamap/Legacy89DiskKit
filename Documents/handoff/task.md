@@ -252,6 +252,9 @@
 
 - [ ] Phase 21: Embedded and Bare-Metal Direction
     - [ ] Define the target order for low-level deployment:
+        - [ ] emulator-hosted integration first
+            - [ ] CSCP-style event-driven host adapter as the first concrete host-integration target
+            - [ ] xmil-web-style host adapter as the second concrete host-integration target
         - [ ] desktop/server native hosts
         - [ ] Linux-based embedded boards
         - [ ] WASM/runtime-hosted environments
@@ -262,7 +265,16 @@
         - [ ] explicit encoding contracts
         - [ ] host-agnostic error model
     - [ ] Identify which current services are unsuitable for bare-metal and must remain host-side only.
+    - [ ] Keep host integration split into:
+        - [ ] a shared narrow controller/core contract
+        - [ ] host-specific thin adapters instead of a universal adapter
+    - [ ] Document the first host-adapter expectations:
+        - [ ] event-driven host callback integration
+        - [ ] step/tick-driven host integration
+        - [ ] mount/unmount, ready, drive-select, side-select, IRQ/DRQ bridge responsibilities
     - [ ] Define the minimum proof-of-concept target after the C++ core exists.
+        - [ ] first proof target should be emulator-facing read-only controller integration
+        - [ ] keep write support and fidelity-heavy behavior out of the first proof target
     - [ ] Keep board-specific or hardware-specific work out of the `v2.0.0` release gate.
     - [ ] Keep `Phase 21` downstream of the `Phase 20` migration-boundary work.
 

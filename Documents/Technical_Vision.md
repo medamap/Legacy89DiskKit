@@ -269,6 +269,20 @@ Before true bare-metal work starts, the project should have:
 - explicit encoding contracts
 - a host-agnostic error model
 
+The first practical integration target after the portable core boundary should be an emulator host, not a custom board. That gives the project a visible and debuggable proving ground for the controller-facing contract before lower-level deployment work begins.
+
+The intended host-integration shape is:
+
+- one shared narrow controller/core contract
+- one thin adapter per host environment
+- no universal host adapter assumption
+
+In practice this means:
+
+- event-driven emulator hosts should be able to drive the core through delayed callbacks or scheduled advancement
+- step-driven hosts should be able to drive the same core through explicit ticking
+- host adapters should translate mount state, selected drive, selected side, IRQ/DRQ visibility, and timing progression into the common controller-facing contract
+
 ## Disk Image API vs FDC-Facing API
 
 The long-term architecture should not assume that every consumer wants direct filesystem-aware or image-container-aware access only.

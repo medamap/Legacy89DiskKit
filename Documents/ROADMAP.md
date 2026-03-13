@@ -463,6 +463,27 @@ The provisional identity should freeze only after all of the following are fixed
 
 The embedded and bare-metal direction should remain downstream of `Phase 20`. Do not start board-specific or hardware-specific implementation work until the C++ core boundary and migration policy are decision-complete.
 
+The first concrete integration target for this direction should be emulator-hosted rather than board-hosted. This keeps the feedback loop fast while preserving the same controller-shaped contract that later embedded and bare-metal work will need.
+
+The preferred order is:
+
+1. emulator-hosted integration
+   - first an event-driven host adapter
+   - then a second host adapter with a different emulator-side integration style
+2. desktop and server native hosts
+3. Linux-based embedded boards
+4. WASM/runtime-hosted experiments where appropriate
+5. true bare-metal or custom-board targets
+
+The architectural goal is not a universal host adapter. The goal is a shared narrow controller/core contract that can support multiple thin host-specific adapters.
+
+That means:
+
+- the core contract should remain host-agnostic
+- timing progression should be host-driven through explicit tick or callback-style advancement
+- each emulator or hardware environment should get its own thin integration adapter
+- host adapters should translate drive selection, side selection, mount state, IRQ/DRQ visibility, and timing advancement into the shared controller/core contract
+
 ## Recommended v2.0.0 Scope
 
 The safest `v2.0.0` scope is:
