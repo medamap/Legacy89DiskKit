@@ -48,6 +48,11 @@ public static class Legacy89DiskKitApplication
         return new Drive.DriveMountService();
     }
 
+    public static Drive.MountedMediumBindingService CreateMountedMediumBindingService()
+    {
+        return new Drive.MountedMediumBindingService();
+    }
+
     public static Fdc.FdcAccessService CreateFdcAccessService(IFdcController controller, IControllerClock? clock = null)
     {
         return new Fdc.FdcAccessService(controller, clock);
