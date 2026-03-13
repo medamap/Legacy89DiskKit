@@ -125,11 +125,11 @@
             - [x] release note gating in place
             - [ ] final release smoke check on release candidate version
         - [ ] C# library definition
-            - [ ] define the supported role of `Legacy89DiskKit.CSharp`
-            - [ ] identify and document the preferred public entrypoints
-            - [ ] decide whether a facade layer or package boundary is required before `v2.0.0`
-            - [ ] add developer-facing usage documentation for host C# applications
-            - [ ] identify which C# subsystems form the reference baseline for future C++ porting
+            - [x] define the supported role of `Legacy89DiskKit.CSharp`
+            - [x] identify and document the preferred public entrypoints
+            - [x] decide whether a facade layer or package boundary is required before `v2.0.0`
+            - [x] add developer-facing usage documentation for host C# applications
+            - [x] identify which C# subsystems form the reference baseline for future C++ porting
         - [ ] Native library formalization
             - [ ] define whether `Legacy89DiskKit.NativeInterop` becomes `Legacy89DiskKit.Native` or remains an internal implementation name
             - [ ] define the supported native ABI surface

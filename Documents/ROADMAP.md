@@ -90,6 +90,13 @@ Required:
 - decide whether a dedicated facade package or namespace is required before `v2.0.0`
 - identify which subsystems are stable enough to serve as the future porting baseline for C++ and bare-metal work
 
+Current intended direction:
+
+- the supported managed surface is centered on `Legacy89DiskKit.Application`
+- `Domain` models are allowed as public result and work types
+- direct `Infrastructure` usage remains possible, but unsupported
+- the current managed bootstrap should provide the same default wiring currently assembled by the CLI
+
 ### 3. Native Library Formalization
 
 The repository already contains a native interop prototype, but it is not yet a clearly shipped product line. In the long term, this layer should be treated as the bridge between the C# reference implementation and a future independent C++ core.

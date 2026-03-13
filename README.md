@@ -11,6 +11,8 @@ The project is moving toward a `v2.0.0` product model with four named lines:
 
 Today, the only release-critical artifact is the CLI. The C# library remains supported for integration work. Native and WASM are defined roadmap targets, not current release-gate deliverables.
 
+For managed integration, the supported public surface is centered on `Legacy89DiskKit.Application`. `Domain` models may be used as result and work objects. Direct `Infrastructure` usage remains possible for advanced experimentation, but it is not part of the supported compatibility contract.
+
 The current CLI focuses on practical disk inspection and editing workflows for:
 
 - Hu-BASIC disks used by Sharp X1 systems
@@ -140,6 +142,7 @@ dotnet CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll \
 ## Living Documents
 
 - [Release process](Documents/Release_Process.md)
+- [C# integration guide](Documents/CSharp_Integration_Guide.md)
 - [Current project task list](Documents/handoff/task.md)
 - [Roadmap](Documents/ROADMAP.md)
 - [Hu-BASIC disk format specification](Documents/HuBasic_Format_Specification.md)
