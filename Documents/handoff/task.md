@@ -200,6 +200,8 @@
         - [x] keep raw magnetic-stream support out of the immediate implementation slice
         - [x] distinguish encoded-track preservation from lower-level sampled or timing-oriented signal preservation
         - [x] document that conversion between sector-only and lower-level formats may be asymmetric and lossy
+        - [x] document the expected preservation pipeline from real-drive capture to a project-owned long-term raw container
+        - [ ] decide when to reserve a concrete project-owned raw preservation format name and extension
 
 - [ ] Phase 21: Embedded and Bare-Metal Direction
     - [ ] Define the target order for low-level deployment:

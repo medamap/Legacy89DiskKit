@@ -357,6 +357,16 @@ The preferred long-term shape is:
 - FDC-facing access as another stable surface
 - raw magnetic-stream sources added later beneath the FDC-facing surface without forcing them through a purely sector-decoded model first
 
+The long-term preservation workflow should also assume:
+
+1. real hardware capture through an FDC-visible path
+2. possible use of an intermediate raw capture representation during acquisition
+3. later conversion into a project-owned long-term preservation container
+
+That means the project should eventually define not only a runtime-facing raw surface, but also a preservation-oriented raw container owned by the project itself.
+
+The eventual project-owned raw preservation container may use a dedicated project extension, but that extension and concrete file structure should remain provisional until the capture, conversion, and replay requirements are better understood.
+
 The embedded and bare-metal direction should remain downstream of `Phase 20`. Do not start board-specific or hardware-specific implementation work until the C++ core boundary and migration policy are decision-complete.
 
 ## Recommended v2.0.0 Scope

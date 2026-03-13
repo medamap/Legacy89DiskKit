@@ -289,6 +289,23 @@ The project should also assume that a future encoded-track container may be conv
 
 In addition, the long-term direction should leave room for an even lower level than encoded tracks: sampled or timing-oriented raw signal data captured from real drives. That layer is expected to matter only for cases where track-level encoding is still not enough to preserve controller-visible behavior.
 
+The expected preservation workflow is also important:
+
+1. capture controller-visible magnetic information from a real drive path
+2. store that capture in an existing raw-oriented working format if needed
+3. convert the captured result into a project-owned preservation format
+4. use the project-owned format as the long-term archival and interchange target
+
+This means the future raw direction is not only about runtime playback. It is also about preservation workflow design.
+
+The project should therefore be prepared for a pipeline where:
+
+- real-hardware capture is performed through an FDC-oriented path
+- a temporary or intermediate raw representation may exist during acquisition
+- the long-term project format is distinct from the temporary capture representation
+
+For planning purposes, the project may reserve a future project-owned preservation container name and extension for this direction, but that should not be treated as a locked file-format specification until the capture and conversion requirements are better understood.
+
 The project should therefore evolve toward two compatible layers:
 
 - a direct image/container/filesystem access layer
