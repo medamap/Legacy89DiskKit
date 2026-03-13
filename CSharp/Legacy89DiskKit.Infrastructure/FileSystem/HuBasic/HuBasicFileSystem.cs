@@ -99,20 +99,12 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
         if (data.Length > 0xFFFF)
             throw new FileSystemException("Hu-BASIC files larger than 65535 bytes are not supported.");
 
-        // Hu-BASIC ASCII files must end with 0x1A
-        if (attributes.IsAscii && (data.Length == 0 || data[^1] != 0x1A))
-        {
-            var newData = new byte[data.Length + 1];
-            Array.Copy(data, newData, data.Length);
-            newData[^1] = 0x1A;
-            data = newData;
-        }
+        data = HuBasicWriteRules.PrepareWritePayload(data, attributes);
 
         if (data.Length > 0xFFFF)
             throw new FileSystemException("Hu-BASIC files larger than 65535 bytes are not supported.");
 
-        int clustersNeeded = (data.Length + _config.ClusterSize - 1) / _config.ClusterSize;
-        if (clustersNeeded == 0) clustersNeeded = 1;
+        int clustersNeeded = HuBasicWriteRules.GetClustersNeeded(data.Length, _config);
 
         var allocatedClusters = AllocateClusters(clustersNeeded);
         if (allocatedClusters.Count < clustersNeeded)
@@ -122,9 +114,7 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
 
         // Update FAT
         var fat = _fatManager.ReadFat();
-        int sectorsInLastCluster = ((data.Length + _config.SectorSize - 1) / _config.SectorSize) % (_config.ClusterSize / _config.SectorSize);
-        if (sectorsInLastCluster == 0) sectorsInLastCluster = _config.ClusterSize / _config.SectorSize;
-        int terminalFlag = 0x7F + sectorsInLastCluster;
+        int terminalFlag = HuBasicWriteRules.GetTerminalFlagForLength(data.Length, _config);
 
         for (int i = 0; i < allocatedClusters.Count; i++)
         {

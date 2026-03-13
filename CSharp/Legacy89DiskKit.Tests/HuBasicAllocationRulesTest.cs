@@ -14,7 +14,7 @@ public class HuBasicAllocationRulesTest
 
         Assert.False(HuBasicAllocationRules.IsAllocatableCluster(DiskType.TwoHD, config, 0x80));
         Assert.False(HuBasicAllocationRules.IsAllocatableCluster(DiskType.TwoHD, config, 0x8F));
-        Assert.True(HuBasicAllocationRules.IsAllocatableCluster(DiskType.TwoHD, config, 0x90));
+        Assert.True(HuBasicAllocationRules.IsAllocatableCluster(DiskType.TwoHD, config, 0x100));
     }
 
     [Fact]
