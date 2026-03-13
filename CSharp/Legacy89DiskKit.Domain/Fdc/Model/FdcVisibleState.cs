@@ -10,6 +10,7 @@ public sealed record FdcVisibleState(
     byte Data,
     int SelectedDrive,
     int SelectedSide,
+    bool Busy,
     bool Irq,
     bool Drq
 );

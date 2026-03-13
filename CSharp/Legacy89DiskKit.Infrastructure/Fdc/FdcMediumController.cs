@@ -3,7 +3,7 @@ using Legacy89DiskKit.Domain.Fdc.Model;
 
 namespace Legacy89DiskKit.Infrastructure.Fdc;
 
-public class FdcMediumController : IFdcController
+public class FdcMediumController : IFdcController, ITimedFdcController
 {
     private readonly IControllerFacingMedium _medium;
     private readonly int _selectedDrive;
@@ -61,8 +61,14 @@ public class FdcMediumController : IFdcController
             _medium.PeekDataRegister(),
             _selectedDrive,
             _medium.SelectedSide,
+            _medium.IsBusy,
             _medium.IsIrqAsserted,
             _medium.IsDrqAsserted
         );
+    }
+
+    public void Advance(TimeSpan delta)
+    {
+        _medium.Advance(delta);
     }
 }

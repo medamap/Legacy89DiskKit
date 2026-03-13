@@ -45,5 +45,10 @@ public class FdcAccessService
         }
 
         _clock.Advance(delta);
+
+        if (_controller is ITimedFdcController timedController)
+        {
+            timedController.Advance(delta);
+        }
     }
 }

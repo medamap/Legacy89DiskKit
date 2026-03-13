@@ -42,9 +42,16 @@ public class RawDiskBackedMediumTest
         medium.WriteSectorRegister(1);
         medium.WriteCommand(0x80);
 
+        Assert.True(medium.IsBusy);
+        Assert.False(medium.IsIrqAsserted);
+        Assert.False(medium.IsDrqAsserted);
+
+        medium.Advance(TimeSpan.FromMilliseconds(1));
+
         Assert.Equal("raw-sector-image", medium.MediumKind);
         Assert.True(medium.IsReady);
         Assert.False(medium.IsWriteProtected);
+        Assert.False(medium.IsBusy);
         Assert.True(medium.IsIrqAsserted);
         Assert.True(medium.IsDrqAsserted);
         Assert.Equal(0x7E, medium.ReadDataRegister());
@@ -67,7 +74,11 @@ public class RawDiskBackedMediumTest
         medium.WriteSectorRegister(99);
         medium.WriteCommand(0x80);
 
+        Assert.True(medium.IsBusy);
+        medium.Advance(TimeSpan.FromMilliseconds(1));
+
         Assert.Equal(0x10, medium.ReadStatus());
+        Assert.False(medium.IsBusy);
         Assert.True(medium.IsIrqAsserted);
         Assert.False(medium.IsDrqAsserted);
     }
@@ -83,7 +94,11 @@ public class RawDiskBackedMediumTest
         medium.WriteDataRegister(2);
         medium.WriteCommand(0x10);
 
+        Assert.True(medium.IsBusy);
+        medium.Advance(TimeSpan.FromMilliseconds(1));
+
         Assert.Equal(2, medium.ReadTrackRegister());
+        Assert.False(medium.IsBusy);
         Assert.True(medium.IsIrqAsserted);
 
         medium.WriteCommand(0xD0);
@@ -91,7 +106,10 @@ public class RawDiskBackedMediumTest
 
         medium.WriteTrackRegister(8);
         medium.WriteCommand(0x00);
+        Assert.True(medium.IsBusy);
+        medium.Advance(TimeSpan.FromMilliseconds(1));
         Assert.Equal(0, medium.ReadTrackRegister());
+        Assert.False(medium.IsBusy);
         Assert.True(medium.IsIrqAsserted);
     }
 
@@ -108,6 +126,9 @@ public class RawDiskBackedMediumTest
         controller.WriteRegister(Domain.Fdc.Model.FdcRegister.Track, 0);
         controller.WriteRegister(Domain.Fdc.Model.FdcRegister.Sector, 1);
         controller.WriteRegister(Domain.Fdc.Model.FdcRegister.CommandStatus, 0x80);
+
+        Assert.True(controller.GetVisibleState().Busy);
+        controller.Advance(TimeSpan.FromMilliseconds(1));
 
         var visible = controller.GetVisibleState();
 

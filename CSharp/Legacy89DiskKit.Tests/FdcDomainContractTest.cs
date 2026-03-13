@@ -33,6 +33,7 @@ public class FdcDomainContractTest
         Assert.Equal(0x12, visible.Track);
         Assert.Equal(0x34, visible.Sector);
         Assert.Equal(0x56, visible.Data);
+        Assert.False(visible.Busy);
         Assert.False(visible.Irq);
         Assert.False(visible.Drq);
     }
@@ -85,6 +86,7 @@ public class FdcDomainContractTest
                 _registers[FdcRegister.Data],
                 0,
                 0,
+                false,
                 false,
                 false
             );

@@ -79,6 +79,8 @@ public class MediumAdapterContractTest
 
         public int SelectedSide { get; private set; }
 
+        public bool IsBusy => false;
+
         public bool IsIrqAsserted => false;
 
         public bool IsDrqAsserted => false;
@@ -88,6 +90,10 @@ public class MediumAdapterContractTest
             _track = 0;
             _sector = 0;
             _data = 0;
+        }
+
+        public void Advance(TimeSpan delta)
+        {
         }
 
         public void SelectSide(int side)

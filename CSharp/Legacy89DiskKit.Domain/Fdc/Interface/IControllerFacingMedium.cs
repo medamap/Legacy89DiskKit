@@ -10,7 +10,11 @@ public interface IControllerFacingMedium
 
     int SelectedSide { get; }
 
+    bool IsBusy { get; }
+
     void Reset();
+
+    void Advance(TimeSpan delta);
 
     void SelectSide(int side);
 

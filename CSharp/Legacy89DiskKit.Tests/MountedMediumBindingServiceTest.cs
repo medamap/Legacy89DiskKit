@@ -1,4 +1,5 @@
 using Legacy89DiskKit.Application;
+using Legacy89DiskKit.Domain.Fdc.Interface;
 using Legacy89DiskKit.Domain.Fdc.Model;
 using Legacy89DiskKit.Infrastructure.DiskImage.Container;
 using Legacy89DiskKit.Infrastructure.Fdc;
@@ -57,6 +58,7 @@ public class MountedMediumBindingServiceTest
         accessService.WriteRegister(FdcRegister.Track, 0);
         accessService.WriteRegister(FdcRegister.Sector, 1);
         accessService.WriteRegister(FdcRegister.CommandStatus, 0x80);
+        controller.Advance(TimeSpan.FromMilliseconds(1));
 
         Assert.Equal(0x6C, accessService.ReadRegister(FdcRegister.Data));
     }
@@ -71,10 +73,12 @@ public class MountedMediumBindingServiceTest
         var binding = bindingService.CreateFromContainer(container);
         binding.ControllerFacingMedium!.SelectSide(1);
         var controller = bindingService.CreateController(binding, 3);
+        var timedController = Assert.IsAssignableFrom<ITimedFdcController>(controller);
 
         controller.WriteRegister(FdcRegister.Track, 0);
         controller.WriteRegister(FdcRegister.Sector, 1);
         controller.WriteRegister(FdcRegister.CommandStatus, 0x80);
+        timedController.Advance(TimeSpan.FromMilliseconds(1));
 
         var visible = controller.GetVisibleState();
 

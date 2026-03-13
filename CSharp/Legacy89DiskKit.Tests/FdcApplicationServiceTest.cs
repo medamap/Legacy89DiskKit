@@ -44,6 +44,7 @@ public class FdcApplicationServiceTest
         Assert.True(service.SupportsTimingAdvance);
         Assert.Equal(0x22, visible.Track);
         Assert.Equal(0x33, visible.Sector);
+        Assert.False(visible.Busy);
         Assert.Equal(TimeSpan.FromMilliseconds(4), clock.Elapsed);
     }
 
@@ -104,6 +105,7 @@ public class FdcApplicationServiceTest
                 _registers[FdcRegister.Data],
                 0,
                 0,
+                false,
                 false,
                 false
             );

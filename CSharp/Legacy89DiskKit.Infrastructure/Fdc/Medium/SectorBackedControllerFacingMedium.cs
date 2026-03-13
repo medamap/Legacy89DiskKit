@@ -4,6 +4,16 @@ namespace Legacy89DiskKit.Infrastructure.Fdc.Medium;
 
 public abstract class SectorBackedControllerFacingMedium : IControllerFacingMedium
 {
+    private enum PendingOperation
+    {
+        None,
+        Restore,
+        Seek,
+        ReadSector
+    }
+
+    private static readonly TimeSpan CommandDelay = TimeSpan.FromMilliseconds(1);
+
     private byte _status;
     private byte _track;
     private byte _sector = 1;
@@ -13,6 +23,9 @@ public abstract class SectorBackedControllerFacingMedium : IControllerFacingMedi
     private bool _drq;
     private byte[] _transferBuffer = [];
     private int _transferIndex;
+    private PendingOperation _pendingOperation;
+    private TimeSpan _remainingDelay;
+    private byte _pendingSeekTrack;
 
     public abstract string MediumKind { get; }
 
@@ -21,6 +34,8 @@ public abstract class SectorBackedControllerFacingMedium : IControllerFacingMedi
     public abstract bool IsWriteProtected { get; }
 
     public int SelectedSide => _selectedSide;
+
+    public bool IsBusy => _pendingOperation != PendingOperation.None;
 
     public bool IsIrqAsserted => _irq;
 
@@ -36,6 +51,25 @@ public abstract class SectorBackedControllerFacingMedium : IControllerFacingMedi
         _irq = false;
         _drq = false;
         ClearTransfer();
+        _pendingOperation = PendingOperation.None;
+        _remainingDelay = TimeSpan.Zero;
+        _pendingSeekTrack = 0;
+    }
+
+    public void Advance(TimeSpan delta)
+    {
+        if (_pendingOperation == PendingOperation.None || delta <= TimeSpan.Zero)
+        {
+            return;
+        }
+
+        _remainingDelay -= delta;
+        if (_remainingDelay > TimeSpan.Zero)
+        {
+            return;
+        }
+
+        CompletePendingOperation();
     }
 
     public void SelectSide(int side)
@@ -84,17 +118,18 @@ public abstract class SectorBackedControllerFacingMedium : IControllerFacingMedi
     {
         if ((value & 0xF0) == 0x80)
         {
-            ExecuteReadSector();
+            StartPendingOperation(PendingOperation.ReadSector);
             return;
         }
 
         switch (value)
         {
             case <= 0x0F:
-                ExecuteRestore();
+                StartPendingOperation(PendingOperation.Restore);
                 break;
             case >= 0x10 and <= 0x1F:
-                ExecuteSeek();
+                _pendingSeekTrack = _data;
+                StartPendingOperation(PendingOperation.Seek);
                 break;
             case 0xD0:
                 ExecuteForceInterrupt();
@@ -127,22 +162,42 @@ public abstract class SectorBackedControllerFacingMedium : IControllerFacingMedi
 
     protected abstract byte[] ReadSectorCore(int track, int side, int sector);
 
-    private void ExecuteRestore()
+    private void StartPendingOperation(PendingOperation operation)
     {
-        _track = 0;
-        _status = 0;
-        _irq = true;
+        _pendingOperation = operation;
+        _remainingDelay = CommandDelay;
+        _status = 0x01;
+        _irq = false;
         _drq = false;
         ClearTransfer();
     }
 
-    private void ExecuteSeek()
+    private void CompletePendingOperation()
     {
-        _track = _data;
-        _status = 0;
-        _irq = true;
-        _drq = false;
-        ClearTransfer();
+        var operation = _pendingOperation;
+        _pendingOperation = PendingOperation.None;
+        _remainingDelay = TimeSpan.Zero;
+
+        switch (operation)
+        {
+            case PendingOperation.Restore:
+                _track = 0;
+                _status = 0;
+                _irq = true;
+                _drq = false;
+                ClearTransfer();
+                break;
+            case PendingOperation.Seek:
+                _track = _pendingSeekTrack;
+                _status = 0;
+                _irq = true;
+                _drq = false;
+                ClearTransfer();
+                break;
+            case PendingOperation.ReadSector:
+                CompleteReadSector();
+                break;
+        }
     }
 
     private void ExecuteForceInterrupt()
@@ -151,9 +206,11 @@ public abstract class SectorBackedControllerFacingMedium : IControllerFacingMedi
         _irq = false;
         _drq = false;
         ClearTransfer();
+        _pendingOperation = PendingOperation.None;
+        _remainingDelay = TimeSpan.Zero;
     }
 
-    private void ExecuteReadSector()
+    private void CompleteReadSector()
     {
         if (!SectorExistsCore(_track, _selectedSide, _sector))
         {
