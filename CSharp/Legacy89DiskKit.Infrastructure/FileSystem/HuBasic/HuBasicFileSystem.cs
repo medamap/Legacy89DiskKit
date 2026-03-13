@@ -124,7 +124,7 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
         _fatManager.WriteFat(fat);
 
         // Create and add directory entry
-        var (name, ext) = ParseFileName(fileName);
+        var (name, ext) = HuBasicNameRules.ParseFileName(fileName);
         var fileType = IsAscii(attributes) ? HuBasicFileType.Ascii : HuBasicFileType.Binary;
         var metadata = new HuBasicFileMetadata(
             fileType,
@@ -184,7 +184,7 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
 
                 if (entry.FullName.Equals(oldName, StringComparison.OrdinalIgnoreCase))
                 {
-                    var (name, ext) = ParseFileName(newName);
+                    var (name, ext) = HuBasicNameRules.ParseFileName(newName);
                     var updatedEntry = entry with { FileName = name, Extension = ext };
                     _dirParser.WriteToBuffer(dirData, offset, updatedEntry);
                     modified = true;
@@ -563,7 +563,7 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
         };
         items[^1] = previous with
         {
-            DisplayName = BuildDisplayName(mergedLabel.FileName, mergedLabel.Extension),
+            DisplayName = HuBasicNameRules.BuildDisplayName(mergedLabel.FileName, mergedLabel.Extension),
             VirtualLabel = mergedLabel
         };
         return true;
@@ -629,20 +629,7 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
         );
     }
 
-    private (string name, string ext) ParseFileName(string fileName)
-    {
-        var parts = fileName.Split('.');
-        string name = parts[0];
-        if (name.Length > 13) name = name.Substring(0, 13);
-        string ext = parts.Length > 1 ? parts[1] : "";
-        if (ext.Length > 3) ext = ext.Substring(0, 3);
-        return (name, ext);
-    }
-
-    private static string BuildDisplayName(string fileName, string extension)
-    {
-        return string.IsNullOrEmpty(extension) ? fileName : $"{fileName}.{extension}";
-    }
+    
 
     private byte[] ReadDirectorySector(int sectorIndex)
     {
