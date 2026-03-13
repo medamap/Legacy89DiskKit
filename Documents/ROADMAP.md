@@ -321,6 +321,16 @@ The direct image path remains important for tooling, filesystem operations, and 
 
 The controller-oriented path matters because emulator integrations often expect a floppy-controller-style interface rather than a host-side filesystem API. A future runtime surface should therefore be able to expose D88-backed data through an FDC-facing contract even when the underlying source remains sector-based.
 
+The preferred direction for that future FDC-facing contract is a controller-style model with:
+
+- command and status register behavior
+- track, sector, and data register state
+- drive and side selection state
+- IRQ and DRQ style signaling
+- controller-driven sequencing rather than direct filesystem convenience calls
+
+That means emulator-oriented integration should be treated as a controller-facing runtime problem, not merely as another form of direct sector helper API.
+
 ### 9. Future Raw Magnetic Stream Support
 
 The architecture should also leave room for a later raw magnetic-stream source format.

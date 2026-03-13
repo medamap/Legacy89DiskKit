@@ -248,6 +248,18 @@ Two distinct access surfaces are expected to matter in the future:
 
 This distinction matters because many emulator integrations do not consume a host filesystem API. They interact with a floppy disk controller model and expect data through controller semantics.
 
+The future FDC-facing surface should therefore be designed around a classic floppy-controller interaction model rather than around convenience filesystem calls.
+
+The expected contract shape is closer to:
+
+- command and status register behavior
+- track, sector, and data register state
+- drive and side selection state
+- IRQ and DRQ style signaling semantics
+- controller-driven read and write sequencing
+
+This does not require a chip-perfect implementation in the earliest phase, but it does mean the architectural direction should remain compatible with a controller model of that class.
+
 ## Future Raw Magnetic Stream Direction
 
 The current project centers on sector-based disk image containers such as D88 and raw sector images.
@@ -312,6 +324,12 @@ The project should therefore evolve toward two compatible layers:
 - a future FDC-facing runtime layer
 
 For D88-backed workflows, the future FDC-facing layer may still serve data derived from sector images while presenting that data through a controller-oriented API. For true raw magnetic-stream sources, the same FDC-facing layer should later be able to expose controller-visible behavior without forcing the data into a purely sector-decoded abstraction first.
+
+The intended long-term relationship is:
+
+- direct image APIs remain appropriate for tooling and filesystem workflows
+- the FDC-facing API becomes the emulator-facing contract
+- both D88-backed sources and future lower-level raw sources can sit behind that controller-oriented surface
 
 That is why the current managed/native bridge should not be treated as the final low-level solution.
 

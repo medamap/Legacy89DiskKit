@@ -194,6 +194,7 @@
         - [x] document direct image/container/filesystem access as one future surface
         - [x] document an FDC-facing runtime surface for emulator integration as a separate future surface
         - [x] keep this split as an architectural constraint for the future C++ core
+        - [x] describe the controller-facing surface in terms of register/state/IRQ/DRQ style behavior rather than filesystem convenience calls
     - [ ] Record the future raw magnetic-stream direction:
         - [x] note that future sources may represent controller-visible magnetic data rather than only decoded sectors
         - [x] reserve room for gaps, noise, timing-sensitive structures, and protection-relevant behavior
