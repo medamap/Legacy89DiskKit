@@ -47,6 +47,20 @@ public class ManagedPublicSurfaceTest
     }
 
     [Fact]
+    public void ManagedBootstrap_CanOpenKnownSampleFromBufferWithExplicitFormat()
+    {
+        using var service = Legacy89DiskKitApplication.CreateDiskService();
+        var imagePath = GetRepoPath("images/disk_org/x1/X1turboIIIDemo.d88");
+        var imageData = File.ReadAllBytes(imagePath);
+
+        service.OpenDisk(imageData, "d88");
+
+        var fileSystem = Assert.IsAssignableFrom<Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem.IFileSystem>(service.FileSystem);
+        var files = fileSystem.GetFiles().ToList();
+        Assert.NotEmpty(files);
+    }
+
+    [Fact]
     public void ManagedBootstrap_CanCreateAndFormatHuBasicDisk()
     {
         var imagePath = Path.Combine(Path.GetTempPath(), $"ldk-managed-{Guid.NewGuid():N}.d88");

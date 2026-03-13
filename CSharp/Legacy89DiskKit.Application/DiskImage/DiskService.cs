@@ -38,6 +38,15 @@ public class DiskService : IDisposable
         _currentFileSystem = _fsRegistry.DetectAndCreate(_currentContainer);
         return _currentContainer;
     }
+
+    public IDiskContainer OpenDisk(byte[] imageData, string imageFormat, bool readOnly = true)
+    {
+        CloseDisk();
+        _currentContainer = _containerFactory.Open(imageData, imageFormat, readOnly);
+        _currentFileSystem = _fsRegistry.DetectAndCreate(_currentContainer);
+        return _currentContainer;
+    }
+
     public IDiskContainer CreateDisk(string filePath, Legacy89DiskKit.Domain.DiskImage.Model.DiskType diskType, string diskName = "")
     {
         CloseDisk();
