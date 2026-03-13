@@ -293,6 +293,13 @@ The preferred early contract style is:
 
 The earliest controller-facing API does not need to model every historical chip quirk. It does need to preserve the architectural shape of a controller-driven interaction model so that emulator integrations do not depend on direct filesystem convenience calls.
 
+The managed reference implementation now already proves that shape in a deliberately narrow form:
+
+- mounted media can be bound into drive-aware controller access
+- sector-backed media can expose a minimal controller-style command subset
+- visible controller state can be observed without consuming transfer data
+- transfer completion can be driven through explicit timing progression rather than through an always-immediate path
+
 ## Additional Domain Boundaries for the FDC Direction
 
 The controller-oriented direction should not be treated as merely an extension of the existing filesystem domain.

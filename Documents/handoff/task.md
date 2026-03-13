@@ -209,6 +209,7 @@
         - [x] require drive and side selection
         - [x] require IRQ/DRQ-visible outputs
         - [x] require explicit timing progression without mandatory host-path assumptions
+        - [x] prove the narrow managed path with mounted-medium binding, a minimal command subset, drive/side-visible state, and timing-driven completion
     - [x] Record the future raw magnetic-stream direction:
         - [x] note that future sources may represent controller-visible magnetic data rather than only decoded sectors
         - [x] reserve room for gaps, noise, timing-sensitive structures, and protection-relevant behavior

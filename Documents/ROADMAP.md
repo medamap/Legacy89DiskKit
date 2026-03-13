@@ -213,6 +213,7 @@ The current managed reference implementation now already proves this direction i
 - the supported `Application` surface can open images from in-memory buffers with explicit format selection
 - both D88/D77-style sector-container media and raw sector-image media have concrete mounted-medium adapters
 - mounted media can already be bound into a minimal controller-facing path
+- the controller-facing path already includes a minimal command subset and timing-driven completion in the managed reference implementation
 
 ### Future Core Boundary
 
