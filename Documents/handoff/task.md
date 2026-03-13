@@ -177,7 +177,7 @@
     - [x] Versioning policy for post-`v2.0.0` work:
         - [x] reserve `v2.0.1` for hotfix-only use if needed
         - [x] treat `Phase 20` as a likely `v2.1.0` candidate rather than a patch release
-    - [ ] Define the first implementation slice for `Legacy89DiskKit.Cpp`:
+    - [x] Define the first implementation slice for `Legacy89DiskKit.Cpp`:
         - [x] start with read-only disk container open
         - [x] keep geometry and sector access in the first slice
         - [x] require a stable in-memory image representation
@@ -185,31 +185,31 @@
             - [x] raw-disk geometry and sector-offset logic from `RawDiskContainer`
             - [x] D88 header and track-sector parsing from `D88DiskContainer`
             - [x] minimal read-oriented container metadata contract around `DiskType` and `SectorInfo`
-    - [ ] Identify host-side responsibilities that must remain outside the future core:
+    - [x] Identify host-side responsibilities that must remain outside the future core:
         - [x] local path I/O
         - [x] CLI presentation and localization
         - [x] release packaging and verification orchestration
         - [x] managed bootstrap convenience
-    - [ ] Record the future runtime split between direct image access and controller-oriented access:
+    - [x] Record the future runtime split between direct image access and controller-oriented access:
         - [x] document direct image/container/filesystem access as one future surface
         - [x] document an FDC-facing runtime surface for emulator integration as a separate future surface
         - [x] keep this split as an architectural constraint for the future C++ core
         - [x] describe the controller-facing surface in terms of register/state/IRQ/DRQ style behavior rather than filesystem convenience calls
-        - [ ] add the first concrete mounted-medium candidates for both sector-container and raw sector-image families:
-            - [ ] `D88Backed...` adapters for the D88/D77-style sector-container family
-            - [ ] `RawDiskBacked...` adapters for raw sector-image families such as `.2d`
-    - [ ] Define the additional domain boundaries needed by the controller-oriented path:
+        - [x] add the first concrete mounted-medium candidates for both sector-container and raw sector-image families:
+            - [x] `D88Backed...` adapters for the D88/D77-style sector-container family
+            - [x] `RawDiskBacked...` adapters for raw sector-image families such as `.2d`
+    - [x] Define the additional domain boundaries needed by the controller-oriented path:
         - [x] identify `Drive` as a separate concern from `FileSystem`
         - [x] identify `Fdc` as a separate concern from direct image access
         - [x] treat timing first as a smaller controller-oriented abstraction rather than a large standalone domain
         - [x] assign Application, Domain, and Infrastructure responsibilities for the future FDC direction
-    - [ ] Define the minimum public contract for the future FDC-facing API:
+    - [x] Define the minimum public contract for the future FDC-facing API:
         - [x] require controller reset and register-oriented command/status access
         - [x] require track/sector/data register state
         - [x] require drive and side selection
         - [x] require IRQ/DRQ-visible outputs
         - [x] require explicit timing progression without mandatory host-path assumptions
-    - [ ] Record the future raw magnetic-stream direction:
+    - [x] Record the future raw magnetic-stream direction:
         - [x] note that future sources may represent controller-visible magnetic data rather than only decoded sectors
         - [x] reserve room for gaps, noise, timing-sensitive structures, and protection-relevant behavior
         - [x] keep raw magnetic-stream support out of the immediate implementation slice

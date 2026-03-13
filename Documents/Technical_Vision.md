@@ -123,6 +123,14 @@ The preferred near-term refactoring strategy is:
 - keep read-only container behavior ahead of write-path reconstruction
 - avoid treating the current `DiskService` path-based convenience flow as the future portable boundary
 
+The current managed reference implementation already demonstrates the first part of this portability boundary:
+
+- buffer-based disk opening through the supported `Application` surface
+- extracted raw-disk geometry and sector-offset logic
+- extracted D88 header and track-sector parsing
+- concrete mounted-medium adapters for both D88/D77-style sector-container and raw sector-image families
+- a minimal mounted-medium to controller-facing binding path for future FDC-oriented workflows
+
 ## Boundaries to Preserve
 
 The future core should aim to keep:
@@ -402,6 +410,8 @@ The first concrete mounted-medium implementations should therefore be planned in
 
 - `D88Backed...` adapters for the D88/D77-style sector-container family
 - `RawDiskBacked...` adapters for raw sector-image families such as `.2d`
+
+The managed reference implementation now already includes these first adapter families so that the controller-facing architecture can be exercised before the first `Legacy89DiskKit.Cpp` port begins.
 
 That is why the current managed/native bridge should not be treated as the final low-level solution.
 

@@ -206,6 +206,14 @@ Preferred first concrete extraction targets from the current C# implementation:
 
 The preferred immediate refactoring direction is to split buffer-based parsing from file-path loading and saving, and to keep read-only behavior ahead of write-path reconstruction.
 
+The current managed reference implementation now already proves this direction in practice:
+
+- raw-disk geometry and sector-offset logic have been separated into pure helper modules
+- D88 header and track-sector parsing have been separated from the container shell
+- the supported `Application` surface can open images from in-memory buffers with explicit format selection
+- both D88/D77-style sector-container media and raw sector-image media have concrete mounted-medium adapters
+- mounted media can already be bound into a minimal controller-facing path
+
 ### Future Core Boundary
 
 The future `Legacy89DiskKit.Cpp` core should keep:
@@ -356,6 +364,8 @@ The first concrete medium-adapter candidates should be:
 
 - `D88Backed...` for the D88/D77-style sector-container family
 - `RawDiskBacked...` for raw sector-image families such as `.2d`
+
+These first concrete adapter families already exist in the managed reference implementation and now serve as the baseline shape for future `Legacy89DiskKit.Cpp` porting work.
 
 The minimum future FDC-facing public contract should cover:
 
