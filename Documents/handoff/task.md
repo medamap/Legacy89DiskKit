@@ -217,8 +217,8 @@
         - [x] distinguish encoded-track preservation from lower-level sampled or timing-oriented signal preservation
         - [x] document that conversion between sector-only and lower-level formats may be asymmetric and lossy
         - [x] document the expected preservation pipeline from real-drive capture to a project-owned long-term raw container
-        - [ ] decide when to reserve a concrete project-owned raw preservation format name and extension
-        - [x] keep `Legacy 89 Storage` and `.l89` as provisional candidates rather than final locked identifiers
+        - [x] reserve `Legacy 89 Storage` and `.l89` as the provisional project-owned raw preservation format name and extension
+        - [ ] define the freeze conditions for turning the provisional `Legacy 89 Storage` / `.l89` naming into a final locked preservation format identity
     - [ ] Run a separate controller-fidelity investigation track:
         - [ ] create a dedicated branch for MB8877-oriented behavior research when the project is ready for fidelity work
         - [ ] compare the current narrow managed path against emulator-oriented controller expectations

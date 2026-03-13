@@ -82,11 +82,11 @@ Examples include:
 
 ## Legacy 89 Storage
 
-The current provisional family-name candidate for a future project-owned long-term raw preservation container.
+The current provisionally reserved family name for a future project-owned long-term raw preservation container.
 
-The current provisional extension candidate is `.l89`.
+The current provisionally reserved extension candidate is `.l89`.
 
-This naming is not locked yet.
+This naming is not locked yet as a final immutable format identity.
 
 ## Lossless
 

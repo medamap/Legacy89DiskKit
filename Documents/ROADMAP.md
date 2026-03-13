@@ -428,7 +428,7 @@ The long-term preservation workflow should also assume:
 
 That means the project should eventually define not only a runtime-facing raw surface, but also a preservation-oriented raw container owned by the project itself.
 
-The eventual project-owned raw preservation container may use a dedicated project extension, but that extension and concrete file structure should remain provisional until the capture, conversion, and replay requirements are better understood.
+The project-owned raw preservation container direction now provisionally reserves the family name `Legacy 89 Storage` and the extension `.l89`, but the concrete file structure and final frozen identity should remain open until the capture, conversion, and replay requirements are better understood.
 
 The embedded and bare-metal direction should remain downstream of `Phase 20`. Do not start board-specific or hardware-specific implementation work until the C++ core boundary and migration policy are decision-complete.
 

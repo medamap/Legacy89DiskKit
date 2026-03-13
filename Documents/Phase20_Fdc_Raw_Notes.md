@@ -89,14 +89,14 @@ The project-owned preservation container should remain independent from any temp
 
 ## Provisional Project-Owned Raw Container Naming
 
-Current provisional direction:
+Current provisional reservation:
 
-- family name candidate: `Legacy 89 Storage`
-- extension candidate: `.l89`
+- reserved family-name direction: `Legacy 89 Storage`
+- reserved extension direction: `.l89`
 
-This naming is not locked yet. It is a working direction only.
+This naming is provisionally reserved for the project-owned long-term preservation container line, but it is not yet frozen as an immutable specification identity.
 
-At the current stage, this is still the preferred provisional naming direction unless future capture or replay requirements force a different shape.
+At the current stage, this remains the preferred naming direction unless future capture, conversion, or replay requirements force a different shape.
 
 The name is preferred because it can cover:
 
@@ -112,7 +112,7 @@ The agreed near-term order is:
 2. keep the first C++ slice read-only
 3. use a minimal controller command subset first
 4. defer fidelity-heavy controller research to a dedicated future track
-5. keep the raw preservation format name provisional until capture and replay requirements are better understood
+5. keep the final preservation format identity unfrozen until capture and replay requirements are better understood
 
 ## Clarified Meanings
 
@@ -145,7 +145,7 @@ It does not mean full historical controller fidelity.
 
 These questions remain open:
 
-- when the project-owned raw preservation format name and extension should be frozen
+- what exact freeze conditions must be satisfied before the provisionally reserved `Legacy 89 Storage` / `.l89` identity becomes final
 - how much MB8877-compatible behavior should be required for the first practical emulator-facing milestone
 - whether the first encoded-track preservation step is sufficient before lower-level raw signal storage is introduced
 - what concrete proof-of-concept should define the first embedded or bare-metal milestone
