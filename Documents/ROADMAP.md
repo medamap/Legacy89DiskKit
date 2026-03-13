@@ -1,242 +1,255 @@
-# Legacy89DiskKit ロードマップ
+# Legacy89DiskKit Roadmap
 
-## 🌟 ビジョン
+## Vision
 
-Legacy89DiskKitは、1980〜90年代のレトロコンピュータのディスクフォーマットを扱うライブラリとして始まりましたが、将来的には**あらゆるプラットフォームで動作する汎用レトロディスク管理システム**へと進化させていきます。
+Legacy89DiskKit is evolving from a C# retro disk library into a product family with clearly separated deliverables:
 
-## 📊 現在の状況 (v1.5.0)
+- a standalone CLI for end users
+- a C# library for desktop and server integrations
+- a native library for lower-level or embedded use
+- a WebAssembly target for browser and portable runtime scenarios
+- a future C++ core for low-level portability and bare-metal-oriented targets
 
-- ✅ C#による完全なDDD実装
-- ✅ 6つのファイルシステム対応（Hu-BASIC, N88-BASIC, FAT12, MSX-DOS, CP/M, CDOS）
-- ✅ インタラクティブシェル機能
-- ✅ マルチプラットフォームCLI（Windows/Linux/macOS）
+The next major milestone is not just feature growth. It is a packaging and product-definition reset.
 
-## 🚀 ロードマップ
+## Current Position
 
-### Phase 1: C++移植 (2025 Q1-Q2)
+The repository is currently in a post-`v1.6.0` transition state.
 
-#### 目標
-現在のC#実装をC++に移植し、組み込み環境での利用を可能にする
+Completed and available today:
 
-#### マイルストーン
-1. **コア機能の移植** (1.5ヶ月)
-   - ディスクコンテナ（D88/DSK）の実装
-   - 基本的なファイルシステムインターフェース
-   - エラーハンドリング機構
+- C# domain/application/infrastructure implementation
+- filesystem support centered on Hu-BASIC, N88-BASIC, MSX-DOS, FAT12, CP/M, and CDOS
+- a modern CLI project with structured commands
+- layout-aware listing and directory-order editing for Hu-BASIC
+- explicit disk creation and formatting from the CLI
 
-2. **ファイルシステム実装** (2ヶ月)
-   - Hu-BASIC（最初のターゲット）
-   - CP/M（シンプルな構造）
-   - 他のファイルシステムを順次追加
+Still unstable or incomplete for release packaging:
 
-3. **最適化とテスト** (0.5ヶ月)
-   - メモリフットプリント最小化
-   - パフォーマンスチューニング
-   - クロスプラットフォームビルド確立
+- cross-platform standalone CLI publishing
+- release automation for current project structure
+- consistent public packaging boundaries between CLI, C# library, native library, and future WASM artifacts
 
-#### 期待される成果
-- ヘッダーオンリーライブラリ
-- 組み込み環境（Arduino/ESP32）での動作
-- Pythonバインディング
+## v2.0.0 Goal
 
-### Phase 2: WebAssembly対応 (2025 Q3)
+`v2.0.0` should mark the point where Legacy89DiskKit has a stable public packaging model.
 
-#### 目標
-C++/Rust実装をWebAssemblyにコンパイルし、ブラウザや組み込み環境で実行
+It should mean:
 
-#### マイルストーン
-1. **WASM化** (1ヶ月)
-   - Emscriptenによるビルド環境構築
-   - または、Rustでの再実装
-   - WASM最適化（wasm-opt）
+- the CLI is intentionally distributed as a standalone end-user binary
+- the C# library remains a supported reusable development target and reference implementation
+- native and WASM deliverables have defined scope, even if they are still partial
+- the future C++ core direction is documented as the long-term path toward embedded and bare-metal deployment
+- the release process, README, and roadmap all describe the same product shape
 
-2. **ブラウザ統合** (0.5ヶ月)
-   - JavaScriptバインディング
-   - Web UIのプロトタイプ
-   - File API統合
+## v2.0.0 Required Work
 
-3. **組み込みWASMランタイム** (0.5ヶ月)
-   - WASM3の評価
-   - 基本的な動作確認
+The `v2.0.0` path should be executed as a sequential readiness checklist.
 
-### Phase 3: ラズパイベアメタル対応 (2025 Q4)
+The intended order is:
 
-#### 目標
-Raspberry Pi（特にPico/RP2040）でのベアメタル実行
+1. stabilize the standalone CLI release path
+2. define and document the supported C# library surface as the current reference implementation
+3. formalize the native library boundary and shipping expectations as the bridge layer
+4. define the WASM-facing API shape and scope
+5. close the remaining packaging and documentation gates
+6. prepare the post-`v2.0.0` transition toward a C++ core and bare-metal-oriented targets
 
-#### マイルストーン
-1. **RP2040移植** (1ヶ月)
-   - SDカードドライバ統合
-   - SPI/UART通信実装
-   - 基本的なファイルシステム操作
+`v2.0.0` is ready only when every required item in that sequence is complete.
 
-2. **FDDエミュレータ** (1.5ヶ月)
-   - GPIOでのFDD信号生成
-   - リアルタイムセクタ読み込み
-   - 複数ドライブ対応
+### 1. CLI Packaging Reset
 
-3. **WASM on RP2040** (1.5ヶ月)
-   - WASM3統合
-   - ホスト関数実装
-   - パフォーマンス最適化
+The CLI should become the first-class end-user deliverable.
 
-### Phase 4: L89形式対応（時期未定）
+Required:
 
-#### 目標
-オリジナルMFM/FM記録フォーマットの実装
+- lock the official CLI release matrix
+  - Windows x64
+  - Linux x64
+  - macOS x64
+  - macOS arm64
+- keep standalone execution without requiring `dotnet`
+- lock the supported publish path
+  - self-contained single-file is the current baseline
+  - Native AOT remains optional until it is stable enough to replace or supplement the baseline
+- keep local release automation as the current source of truth
+- verify the release script and artifact layout for the official matrix
 
-#### 機能
-1. **L89形式の実装**
-   - MFM/FMビットストリーム記録
-   - Zstandard圧縮対応
-   - JSONメタデータ
-   - プロテクション情報保存
+This is the highest-priority `v2.0.0` requirement.
 
-2. **メディアコンバート機能**
-   - 2D → L89変換
-   - D88 → L89変換
-   - DSK → L89変換
-   - セクタデータからMFMエンコード
+### 2. C# Library Definition
 
-3. **将来的な拡張**
-   - FDX/HFE → L89変換（実機データ取得後）
-   - L89対応エミュレータとの連携
+The C# library should remain a supported integration target, but it also needs to be treated as the current reference implementation for future non-.NET ports.
 
-### Phase 5: 高度な機能 (2026 Q1-Q2)
+Required:
 
-#### 目標
-より高度な使用例への対応
+- define the intended public role of `Legacy89DiskKit.CSharp`
+- identify the preferred entrypoints for host applications
+- reduce ambiguity between low-level internal layers and supported application-facing services
+- document how a C# consumer should open disks, access file systems, transfer files, and perform layout operations
+- decide whether a dedicated facade package or namespace is required before `v2.0.0`
+- identify which subsystems are stable enough to serve as the future porting baseline for C++ and bare-metal work
 
-#### 機能案
-1. **ネットワーク機能**
-   - WiFi経由のディスクサーバー（ESP32/PicoW）
-   - リモートディスクマウント
-   - WebDAV統合
+Current intended direction:
 
-2. **リアルタイム変換**
-   - フォーマット間の自動変換
-   - 文字コード自動変換
-   - ディスクイメージ最適化
+- the supported managed surface is centered on `Legacy89DiskKit.Application`
+- `Domain` models are allowed as public result and work types
+- direct `Infrastructure` usage remains possible, but unsupported
+- the current managed bootstrap should provide the same default wiring currently assembled by the CLI
 
-3. **AI/ML統合**
-   - 破損データの自動修復
-   - ファイルタイプの自動認識
-   - 異常検知
+### 3. Native Library Formalization
 
-### Phase 6: エコシステム拡大 (2026 Q3-)
+The repository already contains a native interop prototype, but it is not yet a clearly shipped product line. In the long term, this layer should be treated as the bridge between the C# reference implementation and a future independent C++ core.
 
-#### 目標
-コミュニティ駆動の発展
+Required:
 
-#### 計画
-1. **プラグインシステム**
-   - 新しいファイルシステムの追加が容易に
-   - カスタムフィルター/変換器
-   - サードパーティ拡張
+- rename or frame the current native line as `Legacy89DiskKit.Native`
+- define the supported ABI surface and lifecycle rules
+- provide a public header and usage contract for external native callers
+- define what platforms and artifact forms are expected for native consumers
+- decide whether Native remains documented-only in `v2.0.0` or becomes a packaged companion artifact
+- keep the API shape compatible with a future replacement of the C# implementation by a true C++ core
 
-2. **GUI アプリケーション**
-   - デスクトップ版（Qt/Dear ImGui）
-   - モバイル版（Flutter/React Native）
-   - Web版（Blazor/React）
+Current intended direction:
 
-3. **教育コンテンツ**
-   - インタラクティブチュートリアル
-   - ファイルシステム可視化ツール
-   - レトロコンピューティング教材
+- the public product identity is `Legacy89DiskKit.Native`
+- the current implementation project may remain `Legacy89DiskKit.NativeInterop` internally
+- `v2.0.0` should ship a documented native bridge contract plus host-platform verified companion artifact
+- broader native platform verification remains desirable, but does not replace the requirement for a documented stable C ABI
 
-## 🛠️ 技術スタック計画
+### 4. WASM Definition
 
-### 言語別ターゲット
+WASM is still a roadmap line and currently lacks a dedicated implementation target.
 
-| 言語 | 用途 | 優先度 |
-|------|------|--------|
-| C# | デスクトップ/サーバー | 現在 |
-| C++ | 組み込み/高性能 | 高 |
-| Rust | WASM/安全性重視 | 中 |
-| Python | スクリプティング/ML | 中 |
-| TypeScript | Web UI | 低 |
-| Go | マイクロサービス | 低 |
+Required:
 
-### プラットフォーム対応計画
+- define the intended runtime model
+  - browser-facing
+  - WASI-facing
+  - or both
+- define the API shape that does not depend on local filesystem paths
+- identify what shared application/domain logic can be reused without CLI assumptions
+- decide whether `Legacy89DiskKit.Wasm` is documented-only in `v2.0.0` or requires a minimal prototype project
 
-| プラットフォーム | Phase | 用途 |
-|------------------|-------|------|
-| Windows/Linux/Mac | 完了 | デスクトップCLI |
-| Raspberry Pi OS | Phase 1 | フルLinux環境 |
-| Arduino Mega | Phase 1 | SDカード読み込み |
-| ESP32 | Phase 2 | WiFiディスクサーバー |
-| RP2040 (Pico) | Phase 3 | FDDエミュレータ |
-| STM32 | Phase 3 | 高性能エミュレータ |
-| ブラウザ | Phase 2 | オンラインツール |
-| Android/iOS | Phase 5 | モバイルアプリ |
+Current intended direction:
 
-## 📈 成功指標
+- `Legacy89DiskKit.Wasm` is documented-only in `v2.0.0`
+- the API direction is browser-first with a WASI-capable design where practical
+- the public shape should be path-independent and buffer-first
+- no `v2.0.0` build artifact is required
 
-### 技術的指標
-- メモリ使用量: < 256KB (組み込み版)
-- 起動時間: < 100ms
-- セクタ読み込み: < 1ms
-- テストカバレッジ: > 90%
+### 5. Release Pipeline and Documentation Closure
 
-### コミュニティ指標
-- GitHub Stars: 1000+
-- コントリビューター: 20+
-- 対応機種: 30+
-- 月間ダウンロード: 10,000+
+The packaging model and public story must stay consistent across the repository.
 
-## 🤝 コントリビューション募集分野
+Required:
 
-1. **ファイルシステム実装**
-   - FM-7 DOS
-   - MZ-80 DOS
-   - その他のマイナー機種
+- keep README compact and release-facing
+- keep `Documents/handoff/task.md` as the execution backlog
+- keep this roadmap focused on product direction
+- keep `Documents/Release_Process.md` aligned with the script-based flow
+- define which deliverables are mandatory in `v2.0.0`
+- define which deliverables remain roadmap targets only
+- prepare final release notes and tagging criteria
 
-2. **ハードウェア連携**
-   - 実FDDとの接続
-   - カセットテープ対応
-   - 専用ハードウェア設計
+### 6. Post-v2 Core Transition
 
-3. **ドキュメント**
-   - 各国語翻訳
-   - 動画チュートリアル
-   - 技術解説記事
+After `v2.0.0`, the project should begin shifting from a C#-centered implementation to a C++-centered portability strategy.
 
-## 📅 リリース計画
+Required follow-up direction:
 
-| バージョン | 時期 | 主な機能 |
-|-----------|------|----------|
-| v1.6.0 | 2025 Q2 | ✅ 2D形式対応（完了） |
-| v1.7.0 | 2025 Q3 | ブート情報ドメイン分離 |
-| v1.8.0 | 未定 | L89形式の実装 |
-| v1.9.0 | 未定 | 2D/D88/DSK→L89コンバート機能 |
-| v2.0.0 | 2025 Q4 | C++版リリース |
-| v2.1.0 | 2026 Q1 | WASM対応 |
-| v3.0.0 | 2026 Q2 | RP2040対応 |
-| v3.1.0 | 2026 Q3 | ネットワーク機能 |
-| v4.0.0 | 2026 Q4 | プラグインシステム |
+- define `Legacy89DiskKit.Cpp` as the future portable core line
+- identify which parts of the current C# implementation should be ported first
+  - disk container core
+  - filesystem core
+  - character encoding core
+- keep path-dependent CLI and host concerns outside the future core boundary
+- move toward buffer-based and path-independent service contracts where practical
+- use the C# implementation as the reference behavior during the transition
 
-## 🌈 夢の機能（いつか実現したい）
+### 7. Bare-Metal and Embedded Direction
 
-- **タイムマシンモード**: ディスクの変更履歴を記録・再生
-- **AR/VR対応**: 仮想空間でのフロッピーディスク操作
-- **ブロックチェーン**: ディスクイメージの真正性保証
-- **量子コンピュータ**: 破損データの量子修復（？）
-- **脳波インターフェース**: 思考でディスク操作（？？）
+The long-term ambition includes board-level and bare-metal-oriented targets.
 
-## 💭 最後に
+This is not a `v2.0.0` gate, but it should guide architecture choices now.
 
-このロードマップは、技術的な実現可能性と夢を両立させたものです。
-レトロコンピューティングの保存と、最新技術の融合を目指します。
+Target direction:
 
-「過去を大切にしながら、未来を創造する」
+- desktop and server native hosts first
+- Linux-based embedded boards such as Raspberry Pi next
+- browser/WASM and portable runtime scenarios in parallel where useful
+- true bare-metal or board-specific ports only after the C++ core is mature
 
-それがLegacy89DiskKitの理念です。
+Design guidance:
 
----
+- prefer buffer-based APIs over local-path-only APIs
+- keep encoding and filesystem logic isolated from OS concerns
+- keep ownership, error codes, and ABI rules explicit
+- avoid treating the current C# native interop layer as the final bare-metal solution
 
-*このロードマップは定期的に更新されます。最新情報は[GitHubリポジトリ](https://github.com/medamap/Legacy89DiskKit)をご確認ください。*
+## Recommended v2.0.0 Scope
 
-## 📖 関連ドキュメント
+The safest `v2.0.0` scope is:
 
-- [技術ビジョン](Technical_Vision.md) - なぜマルチプラットフォーム化が重要なのか
-- [ブート情報リファクタリング計画](TODO_BootInfo_Refactoring.md) - 次期アーキテクチャ改善
+- standalone CLI release for four platforms
+- current C# library retained, documented, and treated as the reference implementation
+- native library scope documented, with the current interop layer assessed against a formal shipping checklist
+- WASM scope documented as an active next target, with a defined API direction but not required to ship in `v2.0.0`
+- future C++ core and bare-metal direction documented, but not required to ship in `v2.0.0`
+
+In other words:
+
+- CLI packaging must ship
+- C# library must remain usable and reference-worthy
+- native/WASM must be defined
+- C++/bare-metal direction must be explicit
+- native/WASM/C++ do not all need production completeness on day one
+
+## After v2.0.0
+
+### v2.x: Packaging and Runtime Expansion
+
+Primary candidates:
+
+- native library cleanup and supported API surface definition
+- WebAssembly build target and minimal browser/runtime integration
+- start the `Legacy89DiskKit.Cpp` portability plan
+- better release automation
+- richer CLI help and localization
+- filesystem-specific attribute editing and boot editing
+
+### v3.x: Broader Runtime Reach
+
+Possible directions:
+
+- mature the C++ core into the primary portable implementation
+- stronger native embedding story
+- browser-first tooling
+- small-footprint and embedded scenarios
+- board-specific and bare-metal deployment experiments
+- conversion workflows between image/container families
+
+## Deferred but Important Items
+
+These remain valuable, but they are not the best `v2.0.0` gate items:
+
+- full boot read/write CLI coverage
+- filesystem-specific attribute editing from CLI
+- layout plan direct metadata editing
+- external language packs
+- broader cross-filesystem layout editing
+- deeper real-image verification matrix expansion
+- C++ core migration work beyond the first documented transition stage
+- bare-metal-target-specific hardware adaptation work
+
+These should stay in the handoff task list rather than driving the version boundary alone.
+
+## Release Intent Summary
+
+Use this simple rule:
+
+- `v1.x`: feature growth during architectural transition
+- `v2.0.0`: packaging model and deliverable structure become intentional and sequentially verifiable
+- `v2.x+`: the implementation strategy starts bending toward a portable C++ core and eventual bare-metal viability
+
+That is why `v2.0.0` is justified even if not every future target is fully complete on the same day.

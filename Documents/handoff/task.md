@@ -68,10 +68,11 @@
     - [x] Add CLI `--encoding` option and update `list` command
     - [x] Implement `inject` (copy-to-disk) command with normalization support
 
-- [ ] Phase 17: Advanced File Listing & Attribute Representation
-    - [ ] Implement symbolic attribute display (e.g., `PBAGSIH`) with placeholder `-`.
-    - [ ] Show platform-specific metadata in `list` command (Hex addresses for Hu-BASIC).
-    - [ ] Design and implement filesystem-aware attribute manipulation (per-FS flags).
+- [x] Phase 17: Advanced File Listing & Attribute Representation
+    - [x] Move file-list presentation concerns into the CLI presentation layer.
+    - [x] Implement Hu-BASIC-oriented list formatting with symbolic flags, address columns, notes, and legends.
+    - [x] Preserve directory entry order and expose layout-aware listing for Hu-BASIC.
+    - [ ] Design and implement filesystem-aware attribute manipulation from the CLI (per-FS flags).
 
 - [ ] Phase 18: CLI Disk Creation, Option Policy, and Deferred CLI Roadmap
     - [x] Add `disk create` CLI entrypoint for new image creation (`.d88`, `.2d`, `.dsk`) with explicit `--disk-type` and `--file-system`.
@@ -95,3 +96,87 @@
         - [ ] External language packs under `~/.legacy89/languages/*`
         - [ ] Cross-filesystem `layout export/validate/apply`
         - [ ] More complete help localization and examples
+
+- [ ] Phase 19: v2.0.0 Packaging Reset and Deliverable Definition
+    - [x] Define `v2.0.0` as the packaging and product-boundary milestone rather than a feature-only release.
+    - [x] Make the CLI the first-class end-user artifact with standalone distribution as the target experience.
+    - [x] Decide the supported CLI publish strategy:
+        - [x] self-contained single-file
+        - [ ] native AOT per platform
+        - [x] or a documented hybrid approach
+    - [x] Establish the official CLI release matrix:
+        - [x] Windows x64
+        - [x] Linux x64
+        - [x] macOS x64
+        - [x] macOS arm64
+    - [x] Update release tooling and procedures to the current `CSharp/Legacy89DiskKit.Cli` project structure.
+    - [x] Refresh release notes workflow for `v2.x`.
+    - [x] Establish local release automation as the current source of truth:
+        - [x] `scripts/release-cli.sh <version>`
+        - [x] normalized `publish/vX.Y.Z/` output layout
+        - [x] normalized `release/vX.Y.Z/` archive layout
+        - [x] host smoke checks and release-note gating
+    - [ ] Keep GitHub Actions deferred until the local release flow is stable enough to mirror.
+    - [x] Align README, roadmap, and release process documents with the `v2.0.0` packaging model.
+    - [ ] Complete the `v2.0.0` readiness checklist in this order:
+        - [x] CLI packaging path
+            - [x] standalone CLI release path documented
+            - [x] local release script verified
+            - [x] release note gating in place
+            - [x] final release smoke check on release candidate version
+        - [x] C# library definition
+            - [x] define the supported role of `Legacy89DiskKit.CSharp`
+            - [x] identify and document the preferred public entrypoints
+            - [x] decide whether a facade layer or package boundary is required before `v2.0.0`
+            - [x] add developer-facing usage documentation for host C# applications
+            - [x] identify which C# subsystems form the reference baseline for future C++ porting
+        - [x] Native library formalization
+            - [x] define whether `Legacy89DiskKit.NativeInterop` becomes `Legacy89DiskKit.Native` or remains an internal implementation name
+            - [x] define the supported native ABI surface
+            - [x] provide a public C header for native consumers
+            - [x] document string encoding, status codes, handle lifecycle, and ownership rules
+            - [x] decide whether Native is documented-only or also shipped as a release artifact in `v2.0.0`
+            - [x] keep the ABI shape compatible with a future independent C++ core
+            - [x] add a host-platform native release script
+            - [x] replace hardcoded smoke harness paths with parameterized inputs
+            - [x] verify whether additional native target hosts can be published beyond the current host
+        - [x] WASM definition
+            - [x] define the intended WASM runtime model
+            - [x] define a path-independent API shape suitable for browser or WASI use
+            - [x] identify the reusable services that can be exposed without CLI assumptions
+            - [x] decide whether `Legacy89DiskKit.Wasm` is documented-only or requires a prototype project before `v2.0.0`
+        - [ ] Final release closure
+            - [x] confirm the mandatory `v2.0.0` deliverables
+            - [x] confirm the roadmap-only deliverables
+            - [x] review `RELEASE_NOTES_v2.0.0.md`
+            - [ ] tag and release only after every required item above is complete
+
+- [ ] Phase 20: C++ Core Transition and Bare-Metal-Oriented Architecture
+    - [ ] Define `Legacy89DiskKit.Cpp` as the future portable core line.
+    - [ ] Separate "reference implementation" from "final portable implementation" in public documents.
+    - [ ] Identify the first C# subsystems to port:
+        - [ ] disk container core
+        - [ ] filesystem core
+        - [ ] character encoding core
+    - [ ] Push path-dependent and host-dependent behavior out of the future core boundary.
+    - [ ] Prefer buffer-based and path-independent APIs where feasible.
+    - [ ] Reduce reliance on exception-heavy contracts at the future portability boundary.
+    - [ ] Define how `Legacy89DiskKit.Native` will relate to `Legacy89DiskKit.Cpp` during migration:
+        - [ ] bridge layer over C# first
+        - [ ] replacement or shared ABI over C++ later
+    - [ ] Decide when the CLI should switch from calling C# application services to calling bindings over the future C++ core.
+
+- [ ] Phase 21: Embedded and Bare-Metal Direction
+    - [ ] Define the target order for low-level deployment:
+        - [ ] desktop/server native hosts
+        - [ ] Linux-based embedded boards
+        - [ ] WASM/runtime-hosted environments
+        - [ ] true bare-metal targets
+    - [ ] Document the constraints that must be satisfied before true bare-metal work starts:
+        - [ ] path-independent core
+        - [ ] explicit ownership and ABI rules
+        - [ ] explicit encoding contracts
+        - [ ] host-agnostic error model
+    - [ ] Identify which current services are unsuitable for bare-metal and must remain host-side only.
+    - [ ] Define the minimum proof-of-concept target after the C++ core exists.
+    - [ ] Keep board-specific or hardware-specific work out of the `v2.0.0` release gate.
