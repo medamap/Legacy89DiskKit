@@ -68,10 +68,11 @@
     - [x] Add CLI `--encoding` option and update `list` command
     - [x] Implement `inject` (copy-to-disk) command with normalization support
 
-- [ ] Phase 17: Advanced File Listing & Attribute Representation
-    - [ ] Implement symbolic attribute display (e.g., `PBAGSIH`) with placeholder `-`.
-    - [ ] Show platform-specific metadata in `list` command (Hex addresses for Hu-BASIC).
-    - [ ] Design and implement filesystem-aware attribute manipulation (per-FS flags).
+- [x] Phase 17: Advanced File Listing & Attribute Representation
+    - [x] Move file-list presentation concerns into the CLI presentation layer.
+    - [x] Implement Hu-BASIC-oriented list formatting with symbolic flags, address columns, notes, and legends.
+    - [x] Preserve directory entry order and expose layout-aware listing for Hu-BASIC.
+    - [ ] Design and implement filesystem-aware attribute manipulation from the CLI (per-FS flags).
 
 - [ ] Phase 18: CLI Disk Creation, Option Policy, and Deferred CLI Roadmap
     - [x] Add `disk create` CLI entrypoint for new image creation (`.d88`, `.2d`, `.dsk`) with explicit `--disk-type` and `--file-system`.
@@ -95,3 +96,52 @@
         - [ ] External language packs under `~/.legacy89/languages/*`
         - [ ] Cross-filesystem `layout export/validate/apply`
         - [ ] More complete help localization and examples
+
+- [ ] Phase 19: v2.0.0 Packaging Reset and Deliverable Definition
+    - [x] Define `v2.0.0` as the packaging and product-boundary milestone rather than a feature-only release.
+    - [x] Make the CLI the first-class end-user artifact with standalone distribution as the target experience.
+    - [x] Decide the supported CLI publish strategy:
+        - [x] self-contained single-file
+        - [ ] native AOT per platform
+        - [x] or a documented hybrid approach
+    - [x] Establish the official CLI release matrix:
+        - [x] Windows x64
+        - [x] Linux x64
+        - [x] macOS x64
+        - [x] macOS arm64
+    - [x] Update release tooling and procedures to the current `CSharp/Legacy89DiskKit.Cli` project structure.
+    - [x] Refresh release notes workflow for `v2.x`.
+    - [x] Establish local release automation as the current source of truth:
+        - [x] `scripts/release-cli.sh <version>`
+        - [x] normalized `publish/vX.Y.Z/` output layout
+        - [x] normalized `release/vX.Y.Z/` archive layout
+        - [x] host smoke checks and release-note gating
+    - [ ] Keep GitHub Actions deferred until the local release flow is stable enough to mirror.
+    - [x] Align README, roadmap, and release process documents with the `v2.0.0` packaging model.
+    - [ ] Complete the `v2.0.0` readiness checklist in this order:
+        - [x] CLI packaging path
+            - [x] standalone CLI release path documented
+            - [x] local release script verified
+            - [x] release note gating in place
+            - [ ] final release smoke check on release candidate version
+        - [ ] C# library definition
+            - [ ] define the supported role of `Legacy89DiskKit.CSharp`
+            - [ ] identify and document the preferred public entrypoints
+            - [ ] decide whether a facade layer or package boundary is required before `v2.0.0`
+            - [ ] add developer-facing usage documentation for host C# applications
+        - [ ] Native library formalization
+            - [ ] define whether `Legacy89DiskKit.NativeInterop` becomes `Legacy89DiskKit.Native` or remains an internal implementation name
+            - [ ] define the supported native ABI surface
+            - [ ] provide a public C header for native consumers
+            - [ ] document string encoding, status codes, handle lifecycle, and ownership rules
+            - [ ] decide whether Native is documented-only or also shipped as a release artifact in `v2.0.0`
+        - [ ] WASM definition
+            - [ ] define the intended WASM runtime model
+            - [ ] define a path-independent API shape suitable for browser or WASI use
+            - [ ] identify the reusable services that can be exposed without CLI assumptions
+            - [ ] decide whether `Legacy89DiskKit.Wasm` is documented-only or requires a prototype project before `v2.0.0`
+        - [ ] Final release closure
+            - [ ] confirm the mandatory `v2.0.0` deliverables
+            - [ ] confirm the roadmap-only deliverables
+            - [ ] review `RELEASE_NOTES_v2.0.0.md`
+            - [ ] tag and release only after every required item above is complete
