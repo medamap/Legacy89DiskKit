@@ -260,6 +260,31 @@ The expected contract shape is closer to:
 
 This does not require a chip-perfect implementation in the earliest phase, but it does mean the architectural direction should remain compatible with a controller model of that class.
 
+## Minimum FDC-Facing Public Contract
+
+The future controller-facing API should start from a minimal, transportable contract rather than from a full emulator-specific implementation.
+
+The minimum contract should be able to represent:
+
+- controller reset
+- register-oriented command submission
+- register-oriented status reads
+- track, sector, and data register reads and writes
+- drive selection and side selection
+- media-ready and write-protect style state
+- IRQ and DRQ visible outputs
+- stepwise progression driven by an explicit timing or clock abstraction
+
+The preferred early contract style is:
+
+- command/status/data abstractions first
+- event or poll-friendly IRQ/DRQ visibility
+- explicit drive attachment or mounting
+- no mandatory dependency on a host filesystem path
+- compatibility with both D88-backed media and future lower-level raw media
+
+The earliest controller-facing API does not need to model every historical chip quirk. It does need to preserve the architectural shape of a controller-driven interaction model so that emulator integrations do not depend on direct filesystem convenience calls.
+
 ## Additional Domain Boundaries for the FDC Direction
 
 The controller-oriented direction should not be treated as merely an extension of the existing filesystem domain.

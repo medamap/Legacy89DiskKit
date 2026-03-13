@@ -200,6 +200,12 @@
         - [x] identify `Fdc` as a separate concern from direct image access
         - [x] treat timing first as a smaller controller-oriented abstraction rather than a large standalone domain
         - [x] assign Application, Domain, and Infrastructure responsibilities for the future FDC direction
+    - [ ] Define the minimum public contract for the future FDC-facing API:
+        - [x] require controller reset and register-oriented command/status access
+        - [x] require track/sector/data register state
+        - [x] require drive and side selection
+        - [x] require IRQ/DRQ-visible outputs
+        - [x] require explicit timing progression without mandatory host-path assumptions
     - [ ] Record the future raw magnetic-stream direction:
         - [x] note that future sources may represent controller-visible magnetic data rather than only decoded sectors
         - [x] reserve room for gaps, noise, timing-sensitive structures, and protection-relevant behavior

@@ -352,6 +352,22 @@ The preferred layer split is:
 - `Domain` for drive/FDC/timing state and contracts
 - `Infrastructure` for D88-backed and future raw-backed medium adapters
 
+The minimum future FDC-facing public contract should cover:
+
+- controller reset
+- register-oriented command and status access
+- track/sector/data register access
+- drive and side selection
+- media-ready and write-protect style state
+- IRQ and DRQ visibility
+- explicit timing progression through a clock or scheduler abstraction
+
+The early contract should stay transportable:
+
+- no mandatory host path I/O
+- suitable for both D88-backed and future raw-backed media
+- shaped for emulator integration rather than filesystem convenience
+
 ### 9. Future Raw Magnetic Stream Support
 
 The architecture should also leave room for a later raw magnetic-stream source format.
