@@ -9,7 +9,8 @@ The `v2.0.0` release line is centered on one hard shipping requirement:
 - `Legacy89DiskKit.Cli` must ship as a reliable standalone binary
 
 The C# library remains supported and documented, but it is not the packaging gate for `v2.0.0`.
-Native and WASM lines are defined roadmap targets, not mandatory `v2.0.0` release artifacts.
+`Legacy89DiskKit.Native` is a companion deliverable for `v2.0.0`, with a documented C ABI and host-platform verification.
+WASM remains a roadmap target, not a mandatory `v2.0.0` release artifact.
 
 ## Versioning
 
@@ -43,11 +44,14 @@ git merge develop --no-ff -m "Merge branch 'develop' for vX.Y.Z release"
   - Linux x64
   - macOS x64
   - macOS arm64
+- a documented `Legacy89DiskKit.Native` C ABI
+- a public native header
+- host-platform verified native companion artifact
 
 ### Not required to block `v2.0.0`
 
 - a separate packaged C# library release channel
-- fully released Native library artifacts
+- fully verified multi-platform Native artifacts
 - fully released WASM artifacts
 
 ## CLI Publish Strategy
@@ -93,6 +97,37 @@ pwsh ./scripts/release-cli.ps1 -Version X.Y.Z
 
 GitHub Actions is intentionally deferred. If CI/CD is added later, it should call or mirror the same local release flow.
 
+## Native Companion Release Automation
+
+The current source of truth for the native companion bridge release is:
+
+```bash
+./scripts/release-native.sh X.Y.Z
+```
+
+Example:
+
+```bash
+./scripts/release-native.sh 2.0.0
+```
+
+An optional Windows companion script exists:
+
+```powershell
+pwsh ./scripts/release-native.ps1 -Version X.Y.Z
+```
+
+The native release script:
+
+1. validates the semantic version input
+2. checks that `RELEASE_NOTES_vX.Y.Z.md` exists
+3. publishes the host-platform native bridge artifact
+4. stages the public header with the native library
+5. runs the host smoke harness
+6. creates a normalized native archive under `release/vX.Y.Z/`
+
+The public product identity is `Legacy89DiskKit.Native`, even though the current implementation project remains `Legacy89DiskKit.NativeInterop`.
+
 ## Pre-Release Document Updates
 
 Update the following before tagging:
@@ -105,6 +140,7 @@ Update the following before tagging:
 Requirements:
 
 - README must describe the real CLI public surface
+- README must describe the real native bridge identity and support policy
 - release process must match the actual project layout
 - roadmap must reflect the current product model
 - handoff task list must remain the execution backlog
@@ -120,7 +156,8 @@ For `v2.0.0`, the release note should explicitly explain:
 - the CLI-first packaging model
 - the standalone distribution goal
 - the role of the C# library
-- the planned but non-blocking Native and WASM lines
+- the documented Native bridge layer and its host-platform verification model
+- the planned but non-blocking WASM line
 - major user-visible CLI capabilities and limits
 
 ## Script Inputs and Paths
@@ -134,6 +171,17 @@ The local release script expects:
   - `CSharp/Legacy89DiskKit.Tests/Legacy89DiskKit.Tests.csproj`
 - release notes:
   - `RELEASE_NOTES_vX.Y.Z.md`
+- host smoke-test sample image:
+  - `images/disk_org/x1/X1turboIIIDemo.d88`
+
+The native release script expects:
+
+- native project:
+  - `CSharp/Legacy89DiskKit.NativeInterop/Legacy89DiskKit.NativeInterop.csproj`
+- smoke harness:
+  - `CSharp/NativeInteropTestApp/NativeInteropTestApp.csproj`
+- public header:
+  - `include/legacy89diskkit_native.h`
 - host smoke-test sample image:
   - `images/disk_org/x1/X1turboIIIDemo.d88`
 
@@ -156,6 +204,7 @@ Archive names:
 - `Legacy89DiskKit.Cli-vX.Y.Z-linux-x64.tar.gz`
 - `Legacy89DiskKit.Cli-vX.Y.Z-osx-x64.tar.gz`
 - `Legacy89DiskKit.Cli-vX.Y.Z-osx-arm64.tar.gz`
+- `Legacy89DiskKit.Native-vX.Y.Z-<host-rid>.zip|tar.gz`
 
 ## Smoke Checks
 
@@ -174,6 +223,15 @@ Also verify that documented options match the actual CLI:
 - `--disk-type/-d`
 - `--name/-n`
 
+For the native companion bridge, verify at minimum:
+
+- the public header is packaged with the native artifact
+- the host smoke harness can open a sample image
+- filesystem info retrieval works
+- file count retrieval works
+- file enumeration works
+- the disk handle closes cleanly
+
 ## Manual Publish Reference
 
 The local release script uses self-contained single-file publishing with:
@@ -191,6 +249,20 @@ dotnet publish CSharp/Legacy89DiskKit.Cli/Legacy89DiskKit.Cli.csproj -c Release 
 dotnet publish CSharp/Legacy89DiskKit.Cli/Legacy89DiskKit.Cli.csproj -c Release -r osx-x64 --self-contained true -p:PublishSingleFile=true -p:PublishAot=false -o publish/vX.Y.Z/osx-x64
 dotnet publish CSharp/Legacy89DiskKit.Cli/Legacy89DiskKit.Cli.csproj -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true -p:PublishAot=false -o publish/vX.Y.Z/osx-arm64
 ```
+
+## Manual Native Publish Reference
+
+The native companion uses NativeAOT shared-library publishing for the verified host platform.
+
+The effective script behavior is equivalent to:
+
+```bash
+dotnet publish CSharp/Legacy89DiskKit.NativeInterop/Legacy89DiskKit.NativeInterop.csproj -c Release -r <host-rid> -p:PublishAot=true -p:NativeLib=Shared -o publish/vX.Y.Z/native/<host-rid>/build
+```
+
+The staged package then exposes the library under the public product name `Legacy89DiskKit.Native.*` together with:
+
+- `include/legacy89diskkit_native.h`
 
 ## Tagging
 
@@ -228,7 +300,8 @@ gh release upload vX.Y.Z \
   release/vX.Y.Z/Legacy89DiskKit.Cli-vX.Y.Z-win-x64.zip \
   release/vX.Y.Z/Legacy89DiskKit.Cli-vX.Y.Z-linux-x64.tar.gz \
   release/vX.Y.Z/Legacy89DiskKit.Cli-vX.Y.Z-osx-x64.tar.gz \
-  release/vX.Y.Z/Legacy89DiskKit.Cli-vX.Y.Z-osx-arm64.tar.gz
+  release/vX.Y.Z/Legacy89DiskKit.Cli-vX.Y.Z-osx-arm64.tar.gz \
+  <native-archive-path>
 ```
 
 ## `v2.0.0` Gate Checklist
@@ -237,6 +310,8 @@ Do not tag `v2.0.0` until all of these are true:
 
 - local release automation is in place and verified
 - CLI publishes as self-contained single-file for the official matrix
+- native bridge ABI is documented and packaged with a public header
+- host-platform native companion artifact is verified with the smoke harness
 - release packaging commands are verified against the current project structure
 - README matches the real CLI public surface
 - roadmap and handoff task list both describe `v2.0.0` consistently

@@ -131,12 +131,15 @@
             - [x] add developer-facing usage documentation for host C# applications
             - [x] identify which C# subsystems form the reference baseline for future C++ porting
         - [ ] Native library formalization
-            - [ ] define whether `Legacy89DiskKit.NativeInterop` becomes `Legacy89DiskKit.Native` or remains an internal implementation name
-            - [ ] define the supported native ABI surface
-            - [ ] provide a public C header for native consumers
-            - [ ] document string encoding, status codes, handle lifecycle, and ownership rules
-            - [ ] decide whether Native is documented-only or also shipped as a release artifact in `v2.0.0`
-            - [ ] keep the ABI shape compatible with a future independent C++ core
+            - [x] define whether `Legacy89DiskKit.NativeInterop` becomes `Legacy89DiskKit.Native` or remains an internal implementation name
+            - [x] define the supported native ABI surface
+            - [x] provide a public C header for native consumers
+            - [x] document string encoding, status codes, handle lifecycle, and ownership rules
+            - [x] decide whether Native is documented-only or also shipped as a release artifact in `v2.0.0`
+            - [x] keep the ABI shape compatible with a future independent C++ core
+            - [x] add a host-platform native release script
+            - [x] replace hardcoded smoke harness paths with parameterized inputs
+            - [ ] verify whether additional native target hosts can be published beyond the current host
         - [ ] WASM definition
             - [ ] define the intended WASM runtime model
             - [ ] define a path-independent API shape suitable for browser or WASI use

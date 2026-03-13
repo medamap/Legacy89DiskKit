@@ -110,6 +110,13 @@ Required:
 - decide whether Native remains documented-only in `v2.0.0` or becomes a packaged companion artifact
 - keep the API shape compatible with a future replacement of the C# implementation by a true C++ core
 
+Current intended direction:
+
+- the public product identity is `Legacy89DiskKit.Native`
+- the current implementation project may remain `Legacy89DiskKit.NativeInterop` internally
+- `v2.0.0` should ship a documented native bridge contract plus host-platform verified companion artifact
+- broader native platform verification remains desirable, but does not replace the requirement for a documented stable C ABI
+
 ### 4. WASM Definition
 
 WASM is still a roadmap line and currently lacks a dedicated implementation target.

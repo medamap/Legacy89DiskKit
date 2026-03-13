@@ -6,12 +6,14 @@ The project is moving toward a `v2.0.0` product model with four named lines:
 
 - `Legacy89DiskKit.Cli`: standalone end-user tool
 - `Legacy89DiskKit.CSharp`: reusable managed library
-- `Legacy89DiskKit.Native`: planned native library line
+- `Legacy89DiskKit.Native`: documented native bridge companion
 - `Legacy89DiskKit.Wasm`: planned browser/runtime line
 
 Today, the only release-critical artifact is the CLI. The C# library remains supported for integration work. Native and WASM are defined roadmap targets, not current release-gate deliverables.
 
 For managed integration, the supported public surface is centered on `Legacy89DiskKit.Application`. `Domain` models may be used as result and work objects. Direct `Infrastructure` usage remains possible for advanced experimentation, but it is not part of the supported compatibility contract.
+
+For native integration, the public bridge contract is the documented `ldk_*` C ABI under the `Legacy89DiskKit.Native` product identity. The current implementation is still backed by the managed/native-interop bridge and is not the final portable bare-metal core.
 
 The current CLI focuses on practical disk inspection and editing workflows for:
 
@@ -79,6 +81,14 @@ An optional PowerShell companion exists for Windows:
 pwsh ./scripts/release-cli.ps1 -Version 2.0.0
 ```
 
+Native companion release automation:
+
+```bash
+./scripts/release-native.sh 2.0.0
+```
+
+The native bridge currently guarantees host-platform verification and a documented C ABI. Broader native platform support remains an intended direction, but may still be unverified on the current release host.
+
 ## Minimal Examples
 
 ### List files and disk summary
@@ -143,6 +153,7 @@ dotnet CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll \
 
 - [Release process](Documents/Release_Process.md)
 - [C# integration guide](Documents/CSharp_Integration_Guide.md)
+- [Native integration guide](Documents/Native_Integration_Guide.md)
 - [Current project task list](Documents/handoff/task.md)
 - [Roadmap](Documents/ROADMAP.md)
 - [Hu-BASIC disk format specification](Documents/HuBasic_Format_Specification.md)
