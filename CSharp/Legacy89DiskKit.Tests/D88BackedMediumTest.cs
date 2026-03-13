@@ -107,8 +107,24 @@ public class D88BackedMediumTest
         var visible = controller.GetVisibleState();
 
         Assert.Equal(0x5A, visible.Data);
+        Assert.Equal(0, visible.SelectedDrive);
+        Assert.Equal(0, visible.SelectedSide);
         Assert.True(visible.Drq);
         Assert.Equal(0x5A, controller.ReadRegister(Domain.Fdc.Model.FdcRegister.Data));
         Assert.Equal(0x6B, controller.ReadRegister(Domain.Fdc.Model.FdcRegister.Data));
+    }
+
+    [Fact]
+    public void FdcMediumController_ReflectsSelectedDriveAndSide()
+    {
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        var medium = new D88BackedControllerFacingMedium(container);
+        medium.SelectSide(1);
+        var controller = new FdcMediumController(medium, selectedDrive: 2);
+
+        var visible = controller.GetVisibleState();
+
+        Assert.Equal(2, visible.SelectedDrive);
+        Assert.Equal(1, visible.SelectedSide);
     }
 }

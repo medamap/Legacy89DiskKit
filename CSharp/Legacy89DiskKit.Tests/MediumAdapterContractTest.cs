@@ -77,6 +77,8 @@ public class MediumAdapterContractTest
 
         public bool IsWriteProtected => false;
 
+        public int SelectedSide { get; private set; }
+
         public bool IsIrqAsserted => false;
 
         public bool IsDrqAsserted => false;
@@ -90,6 +92,7 @@ public class MediumAdapterContractTest
 
         public void SelectSide(int side)
         {
+            SelectedSide = side;
         }
 
         public void SeekTrack(int track)

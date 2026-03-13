@@ -8,6 +8,8 @@ public interface IControllerFacingMedium
 
     bool IsWriteProtected { get; }
 
+    int SelectedSide { get; }
+
     void Reset();
 
     void SelectSide(int side);

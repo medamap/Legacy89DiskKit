@@ -60,4 +60,26 @@ public class MountedMediumBindingServiceTest
 
         Assert.Equal(0x6C, accessService.ReadRegister(FdcRegister.Data));
     }
+
+    [Fact]
+    public void BindingService_CanCreateDriveAwareController()
+    {
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        container.WriteSector(0, 1, 1, new byte[] { 0x6C, 0x7D });
+
+        var bindingService = Legacy89DiskKitApplication.CreateMountedMediumBindingService();
+        var binding = bindingService.CreateFromContainer(container);
+        binding.ControllerFacingMedium!.SelectSide(1);
+        var controller = bindingService.CreateController(binding, 3);
+
+        controller.WriteRegister(FdcRegister.Track, 0);
+        controller.WriteRegister(FdcRegister.Sector, 1);
+        controller.WriteRegister(FdcRegister.CommandStatus, 0x80);
+
+        var visible = controller.GetVisibleState();
+
+        Assert.Equal(3, visible.SelectedDrive);
+        Assert.Equal(1, visible.SelectedSide);
+        Assert.Equal(0x6C, visible.Data);
+    }
 }

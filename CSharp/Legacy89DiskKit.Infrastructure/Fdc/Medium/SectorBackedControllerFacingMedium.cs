@@ -20,6 +20,8 @@ public abstract class SectorBackedControllerFacingMedium : IControllerFacingMedi
 
     public abstract bool IsWriteProtected { get; }
 
+    public int SelectedSide => _selectedSide;
+
     public bool IsIrqAsserted => _irq;
 
     public bool IsDrqAsserted => _drq;

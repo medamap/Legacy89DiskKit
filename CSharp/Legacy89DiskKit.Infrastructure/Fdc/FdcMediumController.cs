@@ -6,10 +6,12 @@ namespace Legacy89DiskKit.Infrastructure.Fdc;
 public class FdcMediumController : IFdcController
 {
     private readonly IControllerFacingMedium _medium;
+    private readonly int _selectedDrive;
 
-    public FdcMediumController(IControllerFacingMedium medium)
+    public FdcMediumController(IControllerFacingMedium medium, int selectedDrive = 0)
     {
         _medium = medium ?? throw new ArgumentNullException(nameof(medium));
+        _selectedDrive = selectedDrive;
     }
 
     public void Reset()
@@ -57,8 +59,8 @@ public class FdcMediumController : IFdcController
             _medium.ReadTrackRegister(),
             _medium.ReadSectorRegister(),
             _medium.PeekDataRegister(),
-            0,
-            0,
+            _selectedDrive,
+            _medium.SelectedSide,
             _medium.IsIrqAsserted,
             _medium.IsDrqAsserted
         );

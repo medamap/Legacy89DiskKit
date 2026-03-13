@@ -112,6 +112,8 @@ public class RawDiskBackedMediumTest
         var visible = controller.GetVisibleState();
 
         Assert.Equal(0x7E, visible.Data);
+        Assert.Equal(0, visible.SelectedDrive);
+        Assert.Equal(0, visible.SelectedSide);
         Assert.True(visible.Drq);
         Assert.Equal(0x7E, controller.ReadRegister(Domain.Fdc.Model.FdcRegister.Data));
         Assert.Equal(0x3C, controller.ReadRegister(Domain.Fdc.Model.FdcRegister.Data));

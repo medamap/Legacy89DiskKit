@@ -1,6 +1,8 @@
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
+using Legacy89DiskKit.Domain.Fdc.Interface;
 using Legacy89DiskKit.Infrastructure.DiskImage.Container;
 using Legacy89DiskKit.Infrastructure.Drive.Medium;
+using Legacy89DiskKit.Infrastructure.Fdc;
 using Legacy89DiskKit.Infrastructure.Fdc.Medium;
 
 namespace Legacy89DiskKit.Application.Drive;
@@ -26,6 +28,18 @@ public class MountedMediumBindingService
         var binding = CreateFromContainer(container);
         driveMountService.Mount(driveNumber, binding.MountedMedium);
         return binding;
+    }
+
+    public IFdcController CreateController(MountedMediumBinding binding, int driveNumber)
+    {
+        ArgumentNullException.ThrowIfNull(binding);
+
+        if (binding.ControllerFacingMedium is null)
+        {
+            throw new NotSupportedException("The mounted medium does not expose a controller-facing adapter.");
+        }
+
+        return new FdcMediumController(binding.ControllerFacingMedium, driveNumber);
     }
 
     private static MountedMediumBinding CreateD88Binding(D88DiskContainer container)
