@@ -20,19 +20,25 @@ public class D88DiskContainer : IDiskContainer, IDisposable
     public DiskType DiskType => _header.MediaType;
 
     public D88DiskContainer(string filePath, bool isReadOnly = false)
+        : this(LoadDiskImage(filePath), isReadOnly, filePath)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a D88 container from an in-memory disk image.
+    /// </summary>
+    public D88DiskContainer(byte[] imageData, bool isReadOnly = true, string filePath = "")
+        : this(imageData, isReadOnly, filePath, false)
+    {
+    }
+
+    private D88DiskContainer(byte[] imageData, bool isReadOnly, string filePath, bool skipClone)
     {
         _filePath = filePath;
         _isReadOnly = isReadOnly;
         _sectors = new Dictionary<(int, int, int), D88Sector>();
-        
-        if (File.Exists(filePath))
-        {
-            LoadFromFile();
-        }
-        else
-        {
-            throw new FileNotFoundException($"D88 file not found: {filePath}");
-        }
+        _imageData = skipClone ? imageData : (byte[])imageData.Clone();
+        LoadFromBytes();
     }
 
     public static D88DiskContainer CreateNew(string filePath, DiskType diskType, string diskName = "", int? sectorsPerTrack = null, ushort? sectorSize = null)
@@ -45,6 +51,19 @@ public class D88DiskContainer : IDiskContainer, IDisposable
         return container;
     }
 
+    /// <summary>
+    /// Creates a new in-memory D88 container.
+    /// </summary>
+    public static D88DiskContainer CreateNewInMemory(string diskName, DiskType diskType, int? sectorsPerTrack = null, ushort? sectorSize = null)
+    {
+        var container = new D88DiskContainer();
+        container._filePath = "";
+        container._isReadOnly = false;
+        container.CreateEmptyImage(diskType, diskName, sectorsPerTrack, sectorSize);
+        container.BuildImageData();
+        return new D88DiskContainer(container._imageData, false);
+    }
+
     private D88DiskContainer()
     {
         _filePath = "";
@@ -52,13 +71,29 @@ public class D88DiskContainer : IDiskContainer, IDisposable
         _sectors = new Dictionary<(int, int, int), D88Sector>();
     }
 
-    private void LoadFromFile()
+    private static byte[] LoadDiskImage(string filePath)
+    {
+        if (filePath is null)
+        {
+            throw new ArgumentNullException(nameof(filePath));
+        }
+
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException($"D88 file not found: {filePath}");
+        }
+
+        return File.ReadAllBytes(filePath);
+    }
+
+    private void LoadFromBytes()
     {
         try
         {
-            _imageData = File.ReadAllBytes(_filePath);
             if (_imageData.Length < 0x2b0)
+            {
                 throw new DiskImageException($"Invalid D88 file: too small ({_imageData.Length} bytes)");
+            }
 
             ParseHeader();
             ParseSectors();
@@ -217,10 +252,25 @@ public class D88DiskContainer : IDiskContainer, IDisposable
 
     public void SaveAs(string filePath)
     {
+        if (string.IsNullOrEmpty(filePath))
+            throw new DiskImageException("Cannot save a disk image without a file path");
         BuildImageData();
         File.WriteAllBytes(filePath, _imageData);
         _hasChanges = false;
         _filePath = filePath;
+    }
+
+    /// <summary>
+    /// Returns the current D88 image bytes.
+    /// </summary>
+    public byte[] ToImageData()
+    {
+        if (_hasChanges || _imageData.Length == 0)
+        {
+            BuildImageData();
+        }
+
+        return (byte[])_imageData.Clone();
     }
 
     private void BuildImageData()

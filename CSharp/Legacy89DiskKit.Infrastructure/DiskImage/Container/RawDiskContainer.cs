@@ -18,17 +18,40 @@ public class RawDiskContainer : IDiskContainer
     private readonly DiskType _diskType;
 
     public RawDiskContainer(string filePath, bool readOnly = true)
+        : this(LoadDiskImage(filePath), filePath, readOnly)
     {
-        _filePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
+    }
+
+    /// <summary>
+    /// Initializes a raw disk container from an in-memory disk image.
+    /// </summary>
+    public RawDiskContainer(byte[] diskData, bool readOnly = true, string filePath = "")
+        : this(diskData ?? throw new ArgumentNullException(nameof(diskData)), filePath, readOnly)
+    {
+    }
+
+    private RawDiskContainer(byte[] diskData, string filePath, bool readOnly)
+    {
+        _filePath = filePath ?? "";
         _readOnly = readOnly;
+        _diskData = (byte[])diskData.Clone();
+        
+        (_cylinders, _sides, _sectorsPerTrack, _bytesPerSector, _diskType) = DetectGeometry(_diskData.Length);
+    }
+
+    private static byte[] LoadDiskImage(string filePath)
+    {
+        if (filePath is null)
+        {
+            throw new ArgumentNullException(nameof(filePath));
+        }
 
         if (!File.Exists(filePath))
+        {
             throw new FileNotFoundException($"Disk image file not found: {filePath}");
+        }
 
-        _diskData = File.ReadAllBytes(filePath);
-        
-        // Detect geometry based on size
-        (_cylinders, _sides, _sectorsPerTrack, _bytesPerSector, _diskType) = DetectGeometry(_diskData.Length);
+        return File.ReadAllBytes(filePath);
     }
 
     private static (int c, int h, int spt, int bps, DiskType type) DetectGeometry(long size)
@@ -46,6 +69,21 @@ public class RawDiskContainer : IDiskContainer
 
     public static RawDiskContainer CreateNew(string filePath, DiskType type, int? sectorsPerTrack = null, ushort? sectorSize = null)
     {
+        var data = CreateEmptyDiskData(type);
+        File.WriteAllBytes(filePath, data);
+        return new RawDiskContainer(data, false, filePath);
+    }
+
+    /// <summary>
+    /// Creates a new in-memory raw disk container.
+    /// </summary>
+    public static RawDiskContainer CreateNewInMemory(DiskType type, int? sectorsPerTrack = null, ushort? sectorSize = null)
+    {
+        return new RawDiskContainer(CreateEmptyDiskData(type), false);
+    }
+
+    private static byte[] CreateEmptyDiskData(DiskType type)
+    {
         int size = type switch
         {
             DiskType.TwoD => 327680,
@@ -54,9 +92,7 @@ public class RawDiskContainer : IDiskContainer
             _ => 327680
         };
 
-        var data = new byte[size];
-        File.WriteAllBytes(filePath, data);
-        return new RawDiskContainer(filePath, false);
+        return new byte[size];
     }
 
     public byte[] ReadSector(int cylinder, int head, int sector) => ReadSector(cylinder, head, sector, false);
@@ -106,10 +142,16 @@ public class RawDiskContainer : IDiskContainer
     public void Save()
     {
         if (_readOnly) throw new DiskImageException("Cannot save read-only disk image");
+        if (string.IsNullOrEmpty(_filePath)) throw new DiskImageException("Cannot save a disk image without a file path");
         File.WriteAllBytes(_filePath, _diskData);
     }
 
     public void SaveAs(string filePath) => File.WriteAllBytes(filePath, _diskData);
+
+    /// <summary>
+    /// Returns the current disk image bytes.
+    /// </summary>
+    public byte[] ToImageData() => (byte[])_diskData.Clone();
 
     private int CalculateOffset(int cylinder, int head, int sector)
     {
