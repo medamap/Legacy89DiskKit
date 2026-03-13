@@ -6,6 +6,7 @@ namespace Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
 
 public class Pc8801CharacterEncoder : ICharacterEncoder
 {
+    public string EncodingId => "PC88";
     public MachineType SupportedMachine => MachineType.PC8801;
 
     public string DecodeText(byte[] data) => DecodeText(data, Environment.NewLine);

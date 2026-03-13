@@ -1,8 +1,12 @@
 using Legacy89DiskKit.Application.CharacterEncoding;
+using Legacy89DiskKit.Domain.Drive.Interface;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
+using Legacy89DiskKit.Domain.CharacterEncoding.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.Registry;
 using Legacy89DiskKit.Domain.FileSystem.Model;
+using Legacy89DiskKit.Domain.Fdc.Interface;
+using Legacy89DiskKit.Domain.Timing.Interface;
 using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
@@ -38,6 +42,21 @@ public static class Legacy89DiskKitApplication
     public static FileSystem.DirectoryLayoutService CreateDirectoryLayoutService()
     {
         return new FileSystem.DirectoryLayoutService();
+    }
+
+    public static Drive.DriveMountService CreateDriveMountService()
+    {
+        return new Drive.DriveMountService();
+    }
+
+    public static Drive.MountedMediumBindingService CreateMountedMediumBindingService()
+    {
+        return new Drive.MountedMediumBindingService();
+    }
+
+    public static Fdc.FdcAccessService CreateFdcAccessService(IFdcController controller, IControllerClock? clock = null)
+    {
+        return new Fdc.FdcAccessService(controller, clock);
     }
 
     /// <summary>
@@ -89,8 +108,15 @@ public static class Legacy89DiskKitApplication
     public static ICharacterEncoder ResolveEncoder(DiskFileSystemInfo fsInfo, string? encodingOverride = null)
     {
         var registry = CreateEncoderRegistry();
-        return registry.GetEncoder(encodingOverride ?? fsInfo.DefaultEncodingId)
-            ?? registry.GetEncoder(fsInfo.PlatformId)
-            ?? new ShiftJisCharacterEncoder();
+        return new CharacterEncodingResolver(registry).ResolveEncoder(fsInfo, encodingOverride);
+    }
+
+    /// <summary>
+    /// Resolves the supported logical character encoding profile for the specified filesystem info.
+    /// </summary>
+    public static CharacterEncodingProfile ResolveEncodingProfile(DiskFileSystemInfo fsInfo, string? encodingOverride = null)
+    {
+        var registry = CreateEncoderRegistry();
+        return new CharacterEncodingResolver(registry).ResolveProfile(fsInfo, encodingOverride);
     }
 }

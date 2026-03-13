@@ -28,10 +28,10 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
     {
         var fat = _fatManager.ReadFat();
         int free = 0;
-        int maxIndex = _diskContainer.DiskType == DiskType.TwoHD ? 512 : _config.TotalClusters;
+        int maxIndex = HuBasicAllocationRules.GetFatScanLimit(_diskContainer.DiskType, _config);
         for (int i = _config.ReservedClusters; i < maxIndex; i++)
         {
-            if (_diskContainer.DiskType == DiskType.TwoHD && (i % 256) >= 0x80) continue;
+            if (!HuBasicAllocationRules.IsAllocatableCluster(_diskContainer.DiskType, _config, i)) continue;
             if (_fatManager.GetFatEntry(fat, i) == 0x00) free++;
         }
 
@@ -80,28 +80,7 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
             ms.Write(ReadCluster(c));
         }
 
-        var data = ms.ToArray();
-        
-        // Determine actual size from FAT terminal flag if it's a 2HD disk and size is 0 (common for some binary dumps)
-        // Or if the size field is used but the FAT specifies the record count.
-        int recordCount = clusters.Count * (_config.ClusterSize / _config.SectorSize);
-        if (_diskContainer.DiskType == DiskType.TwoHD && terminalFlag >= 0x80 && terminalFlag <= 0x8F)
-        {
-            int usedInLast = terminalFlag - 0x7F;
-            int totalRecords = (clusters.Count - 1) * (_config.ClusterSize / _config.SectorSize) + usedInLast;
-            int totalBytes = totalRecords * _config.SectorSize;
-            
-            if (file.Size == 0 || totalBytes < data.Length)
-            {
-                data = data.Take(totalBytes).ToArray();
-            }
-        }
-
-        if (file.Attributes.IsAscii)
-        {
-            return ExtractAscii(data);
-        }
-        return (file.Size > 0 && data.Length > file.Size) ? data.Take((int)file.Size).ToArray() : data;
+        return HuBasicReadRules.ResolveReadPayload(ms.ToArray(), file, _diskContainer.DiskType, _config, clusters.Count, terminalFlag);
     }
 
     public bool FileExists(string fileName)
@@ -120,20 +99,12 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
         if (data.Length > 0xFFFF)
             throw new FileSystemException("Hu-BASIC files larger than 65535 bytes are not supported.");
 
-        // Hu-BASIC ASCII files must end with 0x1A
-        if (attributes.IsAscii && (data.Length == 0 || data[^1] != 0x1A))
-        {
-            var newData = new byte[data.Length + 1];
-            Array.Copy(data, newData, data.Length);
-            newData[^1] = 0x1A;
-            data = newData;
-        }
+        data = HuBasicWriteRules.PrepareWritePayload(data, attributes);
 
         if (data.Length > 0xFFFF)
             throw new FileSystemException("Hu-BASIC files larger than 65535 bytes are not supported.");
 
-        int clustersNeeded = (data.Length + _config.ClusterSize - 1) / _config.ClusterSize;
-        if (clustersNeeded == 0) clustersNeeded = 1;
+        int clustersNeeded = HuBasicWriteRules.GetClustersNeeded(data.Length, _config);
 
         var allocatedClusters = AllocateClusters(clustersNeeded);
         if (allocatedClusters.Count < clustersNeeded)
@@ -143,35 +114,12 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
 
         // Update FAT
         var fat = _fatManager.ReadFat();
-        int sectorsInLastCluster = ((data.Length + _config.SectorSize - 1) / _config.SectorSize) % (_config.ClusterSize / _config.SectorSize);
-        if (sectorsInLastCluster == 0) sectorsInLastCluster = _config.ClusterSize / _config.SectorSize;
-        int terminalFlag = 0x7F + sectorsInLastCluster;
-
-        for (int i = 0; i < allocatedClusters.Count; i++)
-        {
-            int next = (i == allocatedClusters.Count - 1) ? terminalFlag : allocatedClusters[i + 1];
-            _fatManager.SetFatEntry(fat, allocatedClusters[i], next);
-        }
+        int terminalFlag = HuBasicWriteRules.GetTerminalFlagForLength(data.Length, _config);
+        HuBasicFatRules.ApplyChain(fat, allocatedClusters, terminalFlag);
         _fatManager.WriteFat(fat);
 
         // Create and add directory entry
-        var (name, ext) = ParseFileName(fileName);
-        var fileType = IsAscii(attributes) ? HuBasicFileType.Ascii : HuBasicFileType.Binary;
-        var metadata = new HuBasicFileMetadata(
-            fileType,
-            false,
-            false,
-            false,
-            false,
-            false,
-            (ushort)data.Length,
-            loadAddress,
-            executionAddress,
-            allocatedClusters[0],
-            attributes.RawAttributes
-        );
-
-        var entry = new FileEntry(name, ext, data.Length, null, DateTime.Now, attributes, allocatedClusters[0], loadAddress, (ushort?)(loadAddress + data.Length - 1), executionAddress, null, null, metadata);
+        var entry = HuBasicDirectoryRules.CreateFileEntryForWrite(fileName, data, attributes, allocatedClusters[0], loadAddress, executionAddress);
         AddDirectoryEntry(entry);
     }
 
@@ -215,7 +163,7 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
 
                 if (entry.FullName.Equals(oldName, StringComparison.OrdinalIgnoreCase))
                 {
-                    var (name, ext) = ParseFileName(newName);
+                    var (name, ext) = HuBasicNameRules.ParseFileName(newName);
                     var updatedEntry = entry with { FileName = name, Extension = ext };
                     _dirParser.WriteToBuffer(dirData, offset, updatedEntry);
                     modified = true;
@@ -338,7 +286,7 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
                 Array.Copy(dirData, offset, entryData, 0, 32);
                 var entry = _dirParser.Parse(entryData);
                 var id = $"{s:D2}:{offset:D3}:{entry.FullName}";
-                var itemKind = IsVirtualLabelEntry(entry) ? DirectoryLayoutItemKind.VirtualLabel : DirectoryLayoutItemKind.FileEntry;
+                var itemKind = HuBasicLabelRules.IsVirtualLabelEntry(entry) ? DirectoryLayoutItemKind.VirtualLabel : DirectoryLayoutItemKind.FileEntry;
                 var virtualLabel = itemKind == DirectoryLayoutItemKind.VirtualLabel
                     ? new VirtualDirectoryLabelEntry(
                         entry.FileName,
@@ -494,17 +442,7 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
     private List<int> AllocateClusters(int count)
     {
         var fat = _fatManager.ReadFat();
-        var allocated = new List<int>();
-        int maxIndex = _diskContainer.DiskType == DiskType.TwoHD ? 512 : _config.TotalClusters;
-
-        for (int i = _config.ReservedClusters; i < maxIndex && allocated.Count < count; i++)
-        {
-            if (_diskContainer.DiskType == DiskType.TwoHD && (i % 256) >= 0x80) continue;
-
-            var entry = _fatManager.GetFatEntry(fat, i);
-            if (entry == 0) allocated.Add(i);
-        }
-        return allocated;
+        return HuBasicAllocationRules.CollectFreeClusters(fat, _diskContainer.DiskType, _config, count);
     }
 
     private void WriteDataToClusters(byte[] data, List<int> clusters)
@@ -557,29 +495,6 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
         return attributes.IsAscii || (attributes.RawAttributes & 0x0C) != 0;
     }
 
-    private static bool IsVirtualLabelEntry(FileEntry entry)
-    {
-        if (entry.FileSystemMetadata is not HuBasicFileMetadata metadata)
-        {
-            return false;
-        }
-
-        if (metadata.FileType != HuBasicFileType.Ascii)
-        {
-            return false;
-        }
-
-        var looksDecorative = entry.FullName.All(ch => ch is '-' or '.' or ' ');
-        var hasSentinelAddresses = entry.LoadAddress == 0xFFFF &&
-                                   entry.ExecutionAddress == 0xFFFF &&
-                                   (entry.EndAddress == 0xFFFF || entry.Size == 0);
-        var suspiciousCluster = entry.StartCluster >= 0x7FFF;
-        var labelFlags = metadata.HasPassword && metadata.IsWriteProtected && !metadata.IsHidden && !metadata.IsVerify;
-
-        return (looksDecorative || suspiciousCluster || hasSentinelAddresses) &&
-               (labelFlags || suspiciousCluster || hasSentinelAddresses);
-    }
-
     private static bool TryMergeVirtualLabelExtension(List<DirectoryLayoutItem> items, DirectoryLayoutItem item)
     {
         if (item.Kind != DirectoryLayoutItemKind.VirtualLabel || item.VirtualLabel == null || items.Count == 0)
@@ -593,7 +508,7 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
             return false;
         }
 
-        if (!CanMergeLabelEntries(previous.VirtualLabel, item.VirtualLabel))
+        if (!HuBasicLabelRules.CanMergeLabelEntries(previous.VirtualLabel, item.VirtualLabel))
         {
             return false;
         }
@@ -604,36 +519,10 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
         };
         items[^1] = previous with
         {
-            DisplayName = BuildDisplayName(mergedLabel.FileName, mergedLabel.Extension),
+            DisplayName = HuBasicNameRules.BuildDisplayName(mergedLabel.FileName, mergedLabel.Extension),
             VirtualLabel = mergedLabel
         };
         return true;
-    }
-
-    private static bool CanMergeLabelEntries(VirtualDirectoryLabelEntry previous, VirtualDirectoryLabelEntry current)
-    {
-        if (!string.IsNullOrEmpty(previous.Extension) || string.IsNullOrEmpty(previous.FileName))
-        {
-            return false;
-        }
-
-        if (!string.IsNullOrEmpty(current.Extension) || string.IsNullOrEmpty(current.FileName))
-        {
-            return false;
-        }
-
-        if (!current.FileName.StartsWith(".", StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        return previous.RawModeByte == current.RawModeByte &&
-               previous.PasswordByte == current.PasswordByte &&
-               previous.Size == current.Size &&
-               previous.LoadAddress == current.LoadAddress &&
-               previous.EndAddress == current.EndAddress &&
-               previous.ExecutionAddress == current.ExecutionAddress &&
-               previous.StartCluster == current.StartCluster;
     }
 
     private static FileEntry CreateVirtualLabelFileEntry(VirtualDirectoryLabelEntry label)
@@ -670,20 +559,7 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
         );
     }
 
-    private (string name, string ext) ParseFileName(string fileName)
-    {
-        var parts = fileName.Split('.');
-        string name = parts[0];
-        if (name.Length > 13) name = name.Substring(0, 13);
-        string ext = parts.Length > 1 ? parts[1] : "";
-        if (ext.Length > 3) ext = ext.Substring(0, 3);
-        return (name, ext);
-    }
-
-    private static string BuildDisplayName(string fileName, string extension)
-    {
-        return string.IsNullOrEmpty(extension) ? fileName : $"{fileName}.{extension}";
-    }
+    
 
     private byte[] ReadDirectorySector(int sectorIndex)
     {
@@ -720,17 +596,6 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
         int head = (recordNumber / _config.SectorsPerTrack) % 2;
         int sectorNum = (recordNumber % _config.SectorsPerTrack) + 1;
         return (cylinder, head, sectorNum);
-    }
-
-    private byte[] ExtractAscii(byte[] data)
-    {
-        var res = new List<byte>();
-        foreach (var b in data)
-        {
-            if (b == 0x1A) break;
-            res.Add(b);
-        }
-        return res.ToArray();
     }
 
     public void Dispose() { }

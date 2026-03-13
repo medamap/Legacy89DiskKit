@@ -1,6 +1,7 @@
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.DiskImage.Exception;
+using Legacy89DiskKit.Infrastructure.DiskImage.D88;
 using System.Text;
 
 namespace Legacy89DiskKit.Infrastructure.DiskImage.Container;
@@ -11,7 +12,7 @@ public class D88DiskContainer : IDiskContainer, IDisposable
     private bool _isReadOnly;
     private byte[] _imageData = Array.Empty<byte>();
     private D88Header _header = new D88Header();
-    private readonly Dictionary<(int, int, int), D88Sector> _sectors;
+    private readonly Dictionary<(int, int, int), D88SectorData> _sectors;
     private bool _hasChanges = false;
     private bool _disposed = false;
 
@@ -20,19 +21,25 @@ public class D88DiskContainer : IDiskContainer, IDisposable
     public DiskType DiskType => _header.MediaType;
 
     public D88DiskContainer(string filePath, bool isReadOnly = false)
+        : this(LoadDiskImage(filePath), isReadOnly, filePath)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a D88 container from an in-memory disk image.
+    /// </summary>
+    public D88DiskContainer(byte[] imageData, bool isReadOnly = true, string filePath = "")
+        : this(imageData, isReadOnly, filePath, false)
+    {
+    }
+
+    private D88DiskContainer(byte[] imageData, bool isReadOnly, string filePath, bool skipClone)
     {
         _filePath = filePath;
         _isReadOnly = isReadOnly;
-        _sectors = new Dictionary<(int, int, int), D88Sector>();
-        
-        if (File.Exists(filePath))
-        {
-            LoadFromFile();
-        }
-        else
-        {
-            throw new FileNotFoundException($"D88 file not found: {filePath}");
-        }
+        _sectors = new Dictionary<(int, int, int), D88SectorData>();
+        _imageData = skipClone ? imageData : (byte[])imageData.Clone();
+        LoadFromBytes();
     }
 
     public static D88DiskContainer CreateNew(string filePath, DiskType diskType, string diskName = "", int? sectorsPerTrack = null, ushort? sectorSize = null)
@@ -45,126 +52,61 @@ public class D88DiskContainer : IDiskContainer, IDisposable
         return container;
     }
 
+    /// <summary>
+    /// Creates a new in-memory D88 container.
+    /// </summary>
+    public static D88DiskContainer CreateNewInMemory(string diskName, DiskType diskType, int? sectorsPerTrack = null, ushort? sectorSize = null)
+    {
+        var container = new D88DiskContainer();
+        container._filePath = "";
+        container._isReadOnly = false;
+        container.CreateEmptyImage(diskType, diskName, sectorsPerTrack, sectorSize);
+        container.BuildImageData();
+        return new D88DiskContainer(container._imageData, false);
+    }
+
     private D88DiskContainer()
     {
         _filePath = "";
         _isReadOnly = false;
-        _sectors = new Dictionary<(int, int, int), D88Sector>();
+        _sectors = new Dictionary<(int, int, int), D88SectorData>();
     }
 
-    private void LoadFromFile()
+    private static byte[] LoadDiskImage(string filePath)
+    {
+        if (filePath is null)
+        {
+            throw new ArgumentNullException(nameof(filePath));
+        }
+
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException($"D88 file not found: {filePath}");
+        }
+
+        return File.ReadAllBytes(filePath);
+    }
+
+    private void LoadFromBytes()
     {
         try
         {
-            _imageData = File.ReadAllBytes(_filePath);
             if (_imageData.Length < 0x2b0)
+            {
                 throw new DiskImageException($"Invalid D88 file: too small ({_imageData.Length} bytes)");
+            }
 
-            ParseHeader();
-            ParseSectors();
+            _header = D88ImageParser.ParseHeader(_imageData);
+            var parsedSectors = D88ImageParser.ParseSectors(_imageData, _header);
+            _sectors.Clear();
+            foreach (var entry in parsedSectors)
+            {
+                _sectors[entry.Key] = entry.Value;
+            }
         }
         catch (Exception ex) when (ex is not DiskImageException)
         {
             throw new DiskImageException($"Error loading D88 file: {ex.Message}", ex);
-        }
-    }
-
-    private void ParseHeader()
-    {
-        using var stream = new MemoryStream(_imageData);
-        using var reader = new BinaryReader(stream);
-
-        var imageName = reader.ReadBytes(17);
-        var diskName = Encoding.ASCII.GetString(imageName).TrimEnd('\0');
-        
-        reader.BaseStream.Seek(17 + 9, SeekOrigin.Begin);
-        var protect = reader.ReadByte();
-        var mediaTypeByte = reader.ReadByte();
-        
-        if (!Enum.IsDefined(typeof(DiskType), mediaTypeByte))
-            throw new DiskImageException($"Invalid media type: 0x{mediaTypeByte:X2}");
-        
-        var mediaType = (DiskType)mediaTypeByte;
-        var diskSize = reader.ReadUInt32();
-
-        reader.BaseStream.Seek(0x20, SeekOrigin.Begin);
-        var trackOffsets = new uint[164];
-        for (int i = 0; i < 164; i++)
-        {
-            trackOffsets[i] = reader.ReadUInt32();
-        }
-
-        _header = new D88Header
-        {
-            ImageName = diskName,
-            WriteProtect = protect != 0,
-            MediaType = mediaType,
-            DiskSize = diskSize,
-            TrackOffsets = trackOffsets
-        };
-    }
-
-    private void ParseSectors()
-    {
-        _sectors.Clear();
-        for (int track = 0; track < 164; track++)
-        {
-            if (_header.TrackOffsets[track] == 0) continue;
-            ParseTrack(track, _header.TrackOffsets[track]);
-        }
-    }
-
-    private void ParseTrack(int trackIndex, uint offset)
-    {
-        using var stream = new MemoryStream(_imageData);
-        using var reader = new BinaryReader(stream);
-        reader.BaseStream.Seek(offset, SeekOrigin.Begin);
-        
-        var sectorsInTrack = 0;
-        var maxSectorsPerTrack = GetMaxSectorsPerTrack(_header.MediaType);
-        
-        while (reader.BaseStream.Position < _imageData.Length)
-        {
-            var sectorStart = reader.BaseStream.Position;
-            if (reader.BaseStream.Position + 16 > _imageData.Length) break;
-            
-            var cylinder = reader.ReadByte();
-            var head = reader.ReadByte();
-            var sector = reader.ReadByte();
-            var sectorSizeN = reader.ReadByte();
-            var sectorCount = reader.ReadUInt16();
-            var density = reader.ReadByte();
-            var deleted = reader.ReadByte();
-            var status = reader.ReadByte();
-            reader.ReadBytes(5); // reserved
-            var actualSize = reader.ReadUInt16();
-            
-            if (reader.BaseStream.Position + actualSize > _imageData.Length) break;
-            var data = reader.ReadBytes(actualSize);
-            
-            var d88Sector = new D88Sector
-            {
-                Cylinder = cylinder,
-                Head = head,
-                Sector = sector,
-                SectorSizeN = sectorSizeN,
-                SectorCount = sectorCount,
-                Density = density,
-                Deleted = deleted != 0,
-                Status = status,
-                ActualSize = actualSize,
-                Data = data
-            };
-            
-            _sectors[(cylinder, head, sector)] = d88Sector;
-            sectorsInTrack++;
-            
-            // Ported logic for sector count and track switching
-            if (sectorsInTrack >= sectorCount) break;
-            if (trackIndex < 163 && _header.TrackOffsets[trackIndex + 1] > 0)
-            {
-                if (reader.BaseStream.Position >= _header.TrackOffsets[trackIndex + 1]) break;
-            }
         }
     }
 
@@ -184,6 +126,12 @@ public class D88DiskContainer : IDiskContainer, IDisposable
         if (!_sectors.TryGetValue((cylinder, head, sector), out var d88Sector))
             throw new DiskImageException($"Sector not found: C={cylinder}, H={head}, R={sector}");
         return d88Sector.Data;
+    }
+
+    public DiskContainerMetadata GetMetadata()
+    {
+        var metadata = D88ImageParser.CreateMetadata(_header, _sectors.Values);
+        return metadata with { IsWriteProtected = metadata.IsWriteProtected || _isReadOnly };
     }
 
     public byte[] ReadSector(int cylinder, int head, int sector, bool allowCorrupted)
@@ -217,10 +165,25 @@ public class D88DiskContainer : IDiskContainer, IDisposable
 
     public void SaveAs(string filePath)
     {
+        if (string.IsNullOrEmpty(filePath))
+            throw new DiskImageException("Cannot save a disk image without a file path");
         BuildImageData();
         File.WriteAllBytes(filePath, _imageData);
         _hasChanges = false;
         _filePath = filePath;
+    }
+
+    /// <summary>
+    /// Returns the current D88 image bytes.
+    /// </summary>
+    public byte[] ToImageData()
+    {
+        if (_hasChanges || _imageData.Length == 0)
+        {
+            BuildImageData();
+        }
+
+        return (byte[])_imageData.Clone();
     }
 
     private void BuildImageData()
@@ -304,7 +267,7 @@ public class D88DiskContainer : IDiskContainer, IDisposable
             {
                 for (int s = 1; s <= sectorsPerTrack; s++)
                 {
-                    var d88Sector = new D88Sector
+                    var d88Sector = new D88SectorData
                     {
                         Cylinder = (byte)c,
                         Head = (byte)h,
@@ -334,26 +297,4 @@ public class D88DiskContainer : IDiskContainer, IDisposable
         _disposed = true;
     }
 
-    private class D88Header
-    {
-        public string ImageName { get; set; } = "";
-        public bool WriteProtect { get; set; }
-        public DiskType MediaType { get; set; }
-        public uint DiskSize { get; set; }
-        public uint[] TrackOffsets { get; set; } = new uint[164];
-    }
-
-    private class D88Sector
-    {
-        public byte Cylinder { get; set; }
-        public byte Head { get; set; }
-        public byte Sector { get; set; }
-        public byte SectorSizeN { get; set; }
-        public ushort SectorCount { get; set; }
-        public byte Density { get; set; }
-        public bool Deleted { get; set; }
-        public byte Status { get; set; }
-        public ushort ActualSize { get; set; }
-        public byte[] Data { get; set; } = Array.Empty<byte>();
-    }
 }

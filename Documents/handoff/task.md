@@ -149,25 +149,112 @@
             - [x] confirm the mandatory `v2.0.0` deliverables
             - [x] confirm the roadmap-only deliverables
             - [x] review `RELEASE_NOTES_v2.0.0.md`
-            - [ ] tag and release only after every required item above is complete
+            - [x] tag and release only after every required item above is complete
 
-- [ ] Phase 20: C++ Core Transition and Bare-Metal-Oriented Architecture
-    - [ ] Define `Legacy89DiskKit.Cpp` as the future portable core line.
-    - [ ] Separate "reference implementation" from "final portable implementation" in public documents.
-    - [ ] Identify the first C# subsystems to port:
-        - [ ] disk container core
-        - [ ] filesystem core
-        - [ ] character encoding core
-    - [ ] Push path-dependent and host-dependent behavior out of the future core boundary.
-    - [ ] Prefer buffer-based and path-independent APIs where feasible.
-    - [ ] Reduce reliance on exception-heavy contracts at the future portability boundary.
-    - [ ] Define how `Legacy89DiskKit.Native` will relate to `Legacy89DiskKit.Cpp` during migration:
-        - [ ] bridge layer over C# first
-        - [ ] replacement or shared ABI over C++ later
-    - [ ] Decide when the CLI should switch from calling C# application services to calling bindings over the future C++ core.
+- [x] Phase 20: C++ Core Transition and Bare-Metal-Oriented Architecture
+    - [x] Define `Legacy89DiskKit.Cpp` as the future portable core line.
+    - [x] Separate "reference implementation" from "final portable implementation" in public documents.
+    - [x] Identify the first C# subsystems to port:
+        - [x] disk container core
+        - [x] character encoding core
+        - [x] filesystem core
+    - [x] Push path-dependent and host-dependent behavior out of the future core boundary.
+    - [x] Prefer buffer-based and path-independent APIs where feasible.
+    - [x] Reduce reliance on exception-heavy contracts at the future portability boundary.
+    - [x] Define how `Legacy89DiskKit.Native` will relate to `Legacy89DiskKit.Cpp` during migration:
+        - [x] bridge layer over C# first
+        - [x] replacement or shared ABI over C++ later
+    - [x] Decide when the CLI should switch from calling C# application services to calling bindings over the future C++ core.
+        - [x] keep the CLI on the managed `Application` surface until first-port subsystem parity exists behind bindings
+        - [x] switch only after container, encoding, at least one filesystem family, and layout validation reach practical parity
+    - [x] Execute Phase 20 on a dedicated branch:
+        - [x] create `feature/phase20-cpp-transition`
+        - [x] define the `Legacy89DiskKit.Cpp` product line in public documents
+        - [x] define C# as the reference implementation and C++ as the final portable implementation
+        - [x] decide the first-port candidates and their execution order
+        - [x] define the future core boundary around buffer-first and path-independent contracts
+        - [x] define the `Legacy89DiskKit.Native` migration policy against the future C++ core
+    - [x] Versioning policy for post-`v2.0.0` work:
+        - [x] reserve `v2.0.1` for hotfix-only use if needed
+        - [x] treat `Phase 20` as a likely `v2.1.0` candidate rather than a patch release
+    - [x] Define the first implementation slice for `Legacy89DiskKit.Cpp`:
+        - [x] start with read-only disk container open
+        - [x] keep geometry and sector access in the first slice
+        - [x] require a stable in-memory image representation
+        - [x] require a shared read-only container metadata contract across the first supported container families
+        - [x] require a read-only parser-result shape that can describe D88 images and raw sector-image metadata without host-path assumptions
+        - [x] establish logical encoding identifiers and profile resolution separate from CLI-only encoder wiring
+        - [x] start extracting platform-specific encoding tables into reusable pure data, beginning with the X1 character map
+        - [x] start extracting Hu-BASIC directory-entry decoding into a reusable raw-entry codec separate from `FileEntry` mapping
+        - [x] extract Hu-BASIC FAT entry, cluster-chain, and terminal-flag rules into reusable pure helpers
+        - [x] extract Hu-BASIC read-payload rules for terminal-length handling, recorded-size trimming, and ASCII EOF extraction
+        - [x] extract Hu-BASIC allocation rules for reserved-cluster handling and 2HD holey-FAT scanning
+        - [x] extract Hu-BASIC write-path rules for ASCII EOF appending, cluster-count calculation, and terminal-flag generation
+        - [x] extract Hu-BASIC file-name truncation and virtual-label rules into reusable helpers
+        - [x] extract Hu-BASIC write-transaction rules for FAT-chain application and directory-entry generation
+        - [x] decide the first concrete class or module boundary to port from the current C# codebase
+            - [x] raw-disk geometry and sector-offset logic from `RawDiskContainer`
+            - [x] D88 header and track-sector parsing from `D88DiskContainer`
+            - [x] minimal read-oriented container metadata contract around `DiskType` and `SectorInfo`
+        - [x] complete the managed-reference version of the first implementation slice
+    - [x] Identify host-side responsibilities that must remain outside the future core:
+        - [x] local path I/O
+        - [x] CLI presentation and localization
+        - [x] release packaging and verification orchestration
+        - [x] managed bootstrap convenience
+    - [x] Record the future runtime split between direct image access and controller-oriented access:
+        - [x] document direct image/container/filesystem access as one future surface
+        - [x] document an FDC-facing runtime surface for emulator integration as a separate future surface
+        - [x] keep this split as an architectural constraint for the future C++ core
+        - [x] describe the controller-facing surface in terms of register/state/IRQ/DRQ style behavior rather than filesystem convenience calls
+        - [x] add the first concrete mounted-medium candidates for both sector-container and raw sector-image families:
+            - [x] `D88Backed...` adapters for the D88/D77-style sector-container family
+            - [x] `RawDiskBacked...` adapters for raw sector-image families such as `.2d`
+    - [x] Define the additional domain boundaries needed by the controller-oriented path:
+        - [x] identify `Drive` as a separate concern from `FileSystem`
+        - [x] identify `Fdc` as a separate concern from direct image access
+        - [x] treat timing first as a smaller controller-oriented abstraction rather than a large standalone domain
+        - [x] assign Application, Domain, and Infrastructure responsibilities for the future FDC direction
+    - [x] Define the minimum public contract for the future FDC-facing API:
+        - [x] require controller reset and register-oriented command/status access
+        - [x] require track/sector/data register state
+        - [x] require drive and side selection
+        - [x] require IRQ/DRQ-visible outputs
+        - [x] require explicit timing progression without mandatory host-path assumptions
+        - [x] prove the narrow managed path with mounted-medium binding, a minimal command subset, drive/side-visible state, and timing-driven completion
+    - [x] Record the future raw magnetic-stream direction:
+        - [x] note that future sources may represent controller-visible magnetic data rather than only decoded sectors
+        - [x] reserve room for gaps, noise, timing-sensitive structures, and protection-relevant behavior
+        - [x] keep raw magnetic-stream support out of the immediate implementation slice
+        - [x] distinguish encoded-track preservation from lower-level sampled or timing-oriented signal preservation
+        - [x] document that conversion between sector-only and lower-level formats may be asymmetric and lossy
+        - [x] document the expected preservation pipeline from real-drive capture to a project-owned long-term raw container
+        - [x] reserve `Legacy 89 Storage` and `.l89` as the provisional project-owned raw preservation format name and extension
+        - [x] define the freeze conditions for turning the provisional `Legacy 89 Storage` / `.l89` naming into a final locked preservation format identity:
+            - [x] lock the capture-ingestion workflow
+            - [x] lock the encoded-track payload model
+            - [x] lock the conversion semantics from sector-only and lower-level raw inputs
+            - [x] lock the required metadata, integrity, and format-version fields
+            - [x] validate at least one fixture corpus against the frozen identity
+    - [x] Start the first executable `Legacy89DiskKit.Cpp` portability prototype:
+        - [x] create the `Cpp/Legacy89DiskKit.Cpp` skeleton
+        - [x] add a portable result/status contract
+        - [x] port raw-disk geometry detection and sector-offset logic
+        - [x] port a read-only D88 parser with the shared metadata/result shape
+        - [x] port a first logical character-encoding profile resolver
+
+- [ ] Controller Fidelity Research Track
+    - [x] reserve a dedicated branch name for MB8877-oriented behavior research:
+        - [x] `codex/mb8877-fidelity-research`
+    - [ ] compare the current narrow managed path against emulator-oriented controller expectations
+    - [ ] decide which additional commands and status transitions belong in the first practical emulator-facing milestone
+    - [ ] keep this investigation separate from the portability-first narrow path unless the findings force a contract change
 
 - [ ] Phase 21: Embedded and Bare-Metal Direction
     - [ ] Define the target order for low-level deployment:
+        - [ ] emulator-hosted integration first
+            - [ ] CSCP-style event-driven host adapter as the first concrete host-integration target
+            - [ ] xmil-web-style host adapter as the second concrete host-integration target
         - [ ] desktop/server native hosts
         - [ ] Linux-based embedded boards
         - [ ] WASM/runtime-hosted environments
@@ -178,5 +265,28 @@
         - [ ] explicit encoding contracts
         - [ ] host-agnostic error model
     - [ ] Identify which current services are unsuitable for bare-metal and must remain host-side only.
+    - [ ] Keep host integration split into:
+        - [ ] a shared narrow controller/core contract
+        - [ ] host-specific thin adapters instead of a universal adapter
+    - [ ] Document the first host-adapter expectations:
+        - [ ] event-driven host callback integration
+        - [ ] step/tick-driven host integration
+        - [ ] mount/unmount, ready, drive-select, side-select, IRQ/DRQ bridge responsibilities
     - [ ] Define the minimum proof-of-concept target after the C++ core exists.
+        - [ ] first proof target should be emulator-facing read-only controller integration
+        - [ ] keep write support and fidelity-heavy behavior out of the first proof target
     - [ ] Keep board-specific or hardware-specific work out of the `v2.0.0` release gate.
+    - [ ] Keep `Phase 21` downstream of the `Phase 20` migration-boundary work.
+
+- [ ] Future Packaging Follow-Up
+    - [ ] Revisit `Legacy89DiskKit.CSharp` packaging once the supported managed surface is stable enough for public package publication.
+    - [ ] If managed packaging becomes appropriate:
+        - [ ] define the `Legacy89DiskKit.CSharp` package boundary
+        - [ ] define package metadata, README, license, and repository metadata for `dotnet pack`
+        - [ ] create and configure a NuGet.org publisher account when publication work actually begins
+        - [ ] create and store a NuGet publish API key only when package publication is ready
+        - [ ] document the local `pack` and `push` workflow
+    - [ ] Revisit JavaScript ecosystem packaging only after one of these becomes real:
+        - [ ] a usable `Legacy89DiskKit.Wasm` runtime surface
+        - [ ] a stable native bridge suitable for Node-side wrapping
+    - [ ] Treat future npm publication as a wrapper or host binding problem rather than as direct C# package publication.

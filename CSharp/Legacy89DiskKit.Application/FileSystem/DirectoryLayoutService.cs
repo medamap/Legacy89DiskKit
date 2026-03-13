@@ -458,10 +458,7 @@ public class DirectoryLayoutService
 
     private ICharacterEncoder ResolveEncoder(DiskFileSystemInfo fsInfo)
     {
-        var encoder = _encoderRegistry.GetEncoder(fsInfo.DefaultEncodingId)
-            ?? _encoderRegistry.GetEncoder(fsInfo.PlatformId)
-            ?? new ShiftJisCharacterEncoder();
-        return encoder;
+        return new CharacterEncodingResolver(_encoderRegistry).ResolveEncoder(fsInfo);
     }
 
     private static int GetDirectoryCapacity(DirectoryEntryLayout layout, IFileSystem fileSystem)

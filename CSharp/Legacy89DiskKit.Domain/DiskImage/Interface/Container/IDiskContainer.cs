@@ -7,6 +7,7 @@ public interface IDiskContainer : IDisposable
     string FilePath { get; }
     bool IsReadOnly { get; }
     DiskType DiskType { get; }
+    DiskContainerMetadata GetMetadata();
     
     byte[] ReadSector(int cylinder, int head, int sector);
     byte[] ReadSector(int cylinder, int head, int sector, bool allowCorrupted);

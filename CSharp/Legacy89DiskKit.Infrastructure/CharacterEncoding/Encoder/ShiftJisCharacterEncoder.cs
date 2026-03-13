@@ -7,6 +7,7 @@ namespace Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
 public class ShiftJisCharacterEncoder : ICharacterEncoder
 {
     private readonly Encoding _sjis;
+    public string EncodingId => "SJIS";
 
     public ShiftJisCharacterEncoder()
     {

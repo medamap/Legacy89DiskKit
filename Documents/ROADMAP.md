@@ -159,6 +159,8 @@ After `v2.0.0`, the project should begin shifting from a C#-centered implementat
 Required follow-up direction:
 
 - define `Legacy89DiskKit.Cpp` as the future portable core line
+- treat the current C# implementation as the reference implementation
+- treat the future C++ implementation as the final portable core
 - identify which parts of the current C# implementation should be ported first
   - disk container core
   - filesystem core
@@ -166,6 +168,159 @@ Required follow-up direction:
 - keep path-dependent CLI and host concerns outside the future core boundary
 - move toward buffer-based and path-independent service contracts where practical
 - use the C# implementation as the reference behavior during the transition
+
+Immediate `Phase 20` execution order:
+
+1. define the `Legacy89DiskKit.Cpp` product line and its role
+2. separate "reference implementation" from "final portable implementation" in public documents
+3. identify first-port candidates
+4. define which host and path concerns must stay outside the future core boundary
+5. define how `Legacy89DiskKit.Native` transitions from a C# bridge ABI to a future C++-backed ABI
+
+Recommended first-port execution order:
+
+1. disk container core
+2. character encoding core
+3. filesystem parsing and write rules
+
+This order is preferred because:
+
+- container behavior is the lowest shared dependency
+- encoding rules are portable logic with limited host coupling
+- filesystem logic depends on both container rules and encoding behavior
+
+Recommended first implementation slice:
+
+1. read-only disk container open
+2. low-level geometry and sector access
+3. stable in-memory image representation
+4. explicit result handling at the core boundary
+
+This slice should prove the portability boundary before filesystem mutation or host-path convenience is carried into the new core.
+
+Preferred first concrete extraction targets from the current C# implementation:
+
+1. raw-disk geometry detection and sector-offset logic now concentrated in `RawDiskContainer`
+2. D88 header parsing and track-sector parsing now concentrated in `D88DiskContainer`
+3. the minimal read-oriented container metadata contract built around `DiskType`, `SectorInfo`, and the read-focused portion of the current container interface
+
+The preferred immediate refactoring direction is to split buffer-based parsing from file-path loading and saving, and to keep read-only behavior ahead of write-path reconstruction.
+
+The current managed reference implementation now already proves this direction in practice:
+
+- raw-disk geometry and sector-offset logic have been separated into pure helper modules
+- D88 header and track-sector parsing have been separated from the container shell
+- the supported `Application` surface can open images from in-memory buffers with explicit format selection
+- raw sector-image and D88/D77-style sector-container implementations already expose a shared read-only container metadata shape
+- the managed reference implementation now exposes a read-only parser-result shape for D88 images and a raw-image descriptor path using the same metadata family
+- the managed reference implementation now also exposes logical encoding identifiers and profile resolution separate from CLI-only wiring
+- the managed reference implementation has started extracting platform-specific encoding tables into reusable pure data, beginning with the X1 character map
+- the managed reference implementation has started extracting Hu-BASIC directory-entry rules into a reusable raw-entry codec separate from `FileEntry` mapping
+- the managed reference implementation now also exposes reusable Hu-BASIC FAT and cluster-chain helper rules separate from the filesystem shell
+- the managed reference implementation now also exposes reusable Hu-BASIC read-payload rules for terminal-length handling, recorded-size trimming, and ASCII EOF extraction
+- the managed reference implementation now also exposes reusable Hu-BASIC allocation helpers for reserved-cluster rules and 2HD holey-FAT scanning
+- the managed reference implementation now also exposes reusable Hu-BASIC write-path helpers for ASCII EOF appending, cluster-count calculation, and terminal-flag generation
+- the managed reference implementation now also exposes reusable Hu-BASIC naming and virtual-label rules separate from the filesystem shell
+- the managed reference implementation now also exposes reusable Hu-BASIC write-transaction helpers for FAT-chain application and directory-entry generation
+- both D88/D77-style sector-container media and raw sector-image media have concrete mounted-medium adapters
+- mounted media can already be bound into a minimal controller-facing path
+- the controller-facing path already includes a minimal command subset and timing-driven completion in the managed reference implementation
+
+This means the managed reference implementation has now completed the intended first implementation slice for the future `Legacy89DiskKit.Cpp` core. The next step is no longer to define the slice, but to begin translating the extracted contracts and pure-rule modules into the portable implementation line.
+
+That translation has now started. The repository contains an initial `Legacy89DiskKit.Cpp` portability prototype with:
+
+- a standalone CMake-based build path
+- a portable result/status contract
+- raw-disk geometry detection and sector-offset logic
+- a read-only D88 parser that emits the same metadata/result family as the managed reference implementation
+- a first logical character-encoding profile resolver
+
+This prototype is intentionally narrow. It is not yet the production portable core, but it proves that the extracted contracts can already be carried into a non-managed implementation line.
+
+### Future Core Boundary
+
+The future `Legacy89DiskKit.Cpp` core should keep:
+
+- disk image container parsing and low-level geometry rules
+- filesystem detection and explicit filesystem selection rules
+- directory parsing
+- file read and write rules
+- FAT and allocation logic
+- boot metadata parsing and write rules where they are filesystem-level rather than host-level
+- encoding conversion rules
+- layout validation and transformation core logic
+- stable metadata and DTO-like result models
+
+The future core should exclude:
+
+- local file path discovery and path-based convenience APIs as required interfaces
+- CLI presentation and formatting
+- release automation
+- host-specific dependency setup
+- localization and user-facing help text
+- managed bootstrap wiring
+- repository-specific sample image handling
+
+The future core should also leave these responsibilities to host layers:
+
+- command-line parsing and option policy
+- terminal and table rendering
+- artifact packaging and release verification orchestration
+- host-specific path discovery and sample-path shortcuts
+- user-facing document/help generation
+
+The future core should be allowed to serve these workflows only through caller-provided adapters rather than direct host assumptions.
+
+The desired portability boundary should be:
+
+- buffer-first
+- path-independent
+- explicit about ownership
+- explicit about result or status handling
+- independent of console or GUI concerns
+
+The preferred future core API style is:
+
+- buffer-oriented rather than path-mandatory
+- explicit about logical encoder names
+- compatible with serializable metadata/result models
+- conservative about exception-heavy control flow at the portability boundary
+
+### Native Migration Direction
+
+`Legacy89DiskKit.Native` should evolve in two stages:
+
+1. current state
+   - documented bridge ABI backed by the C# reference implementation
+2. future state
+   - the same public ABI backed by `Legacy89DiskKit.Cpp`, or a compatibility-preserving replacement ABI if a strict carry-over proves impossible
+
+Until the C++ core exists, native consumers should treat the current ABI as stable at the C boundary but not as proof of final internal implementation structure.
+
+The preferred migration rule is:
+
+- preserve the documented `ldk_*` contract where practical
+- change internals first
+- change the C ABI only if necessary and only at a future major-version boundary
+
+### CLI Transition Gate
+
+The CLI should remain on the managed `Application` surface until the future C++ path is strong enough to replace it without shrinking the supported public behavior.
+
+The preferred transition sequence is:
+
+1. establish parity for the first-port subsystems beneath a managed binding layer
+2. validate representative workflows against the bound C++ path
+3. switch the CLI only after those workflows are stable enough to become the default implementation path
+
+The minimum gate for that switch should include:
+
+- disk container open and geometry behavior
+- encoding conversion parity
+- at least one filesystem family with practical parity for list, read, write, create, and format flows
+- layout export and validation behavior that preserves the current documented contract
+- smoke coverage for both managed and native-facing paths
 
 ### 7. Bare-Metal and Embedded Direction
 
@@ -186,6 +341,148 @@ Design guidance:
 - keep encoding and filesystem logic isolated from OS concerns
 - keep ownership, error codes, and ABI rules explicit
 - avoid treating the current C# native interop layer as the final bare-metal solution
+
+### 8. Direct Image Access and Future FDC-Facing Access
+
+The long-term runtime model should distinguish between:
+
+- direct image/container/filesystem access
+- controller-oriented access for emulator integration
+
+The direct image path remains important for tooling, filesystem operations, and disk inspection.
+
+The controller-oriented path matters because emulator integrations often expect a floppy-controller-style interface rather than a host-side filesystem API. A future runtime surface should therefore be able to expose D88-backed data through an FDC-facing contract even when the underlying source remains sector-based.
+
+The preferred direction for that future FDC-facing contract is a controller-style model with:
+
+- command and status register behavior
+- track, sector, and data register state
+- drive and side selection state
+- IRQ and DRQ style signaling
+- controller-driven sequencing rather than direct filesystem convenience calls
+
+That means emulator-oriented integration should be treated as a controller-facing runtime problem, not merely as another form of direct sector helper API.
+
+The preferred architectural split for this direction is:
+
+- `DiskImage`
+  - image containers and lower-level media representation
+- `FileSystem`
+  - filesystem-aware interpretation and tooling workflows
+- `Drive`
+  - mounted-medium state and drive-visible properties
+- `Fdc`
+  - controller-visible command, status, transfer, and signaling behavior
+- `Timing`
+  - clock or scheduler abstractions needed by controller-facing sequencing
+
+For the near term, `Timing` can begin as a smaller controller-oriented abstraction rather than as a broad standalone subsystem.
+
+The preferred layer split is:
+
+- `Application` for drive-mount and controller-facing services
+- `Domain` for drive/FDC/timing state and contracts
+- `Infrastructure` for D88-backed and future raw-backed medium adapters
+
+The first concrete medium-adapter candidates should be:
+
+- `D88Backed...` for the D88/D77-style sector-container family
+- `RawDiskBacked...` for raw sector-image families such as `.2d`
+
+These first concrete adapter families already exist in the managed reference implementation and now serve as the baseline shape for future `Legacy89DiskKit.Cpp` porting work.
+
+The minimum future FDC-facing public contract should cover:
+
+- controller reset
+- register-oriented command and status access
+- track/sector/data register access
+- drive and side selection
+- media-ready and write-protect style state
+- IRQ and DRQ visibility
+- explicit timing progression through a clock or scheduler abstraction
+
+The early contract should stay transportable:
+
+- no mandatory host path I/O
+- suitable for both D88-backed and future raw-backed media
+- shaped for emulator integration rather than filesystem convenience
+
+### 9. Future Raw Magnetic Stream Support
+
+The architecture should also leave room for a later raw magnetic-stream source format.
+
+That future direction is expected to represent controller-visible magnetic data rather than only decoded sectors, and may eventually include:
+
+- inter-sector gaps
+- noise
+- malformed or timing-sensitive structures
+- physical copy-protection behaviors
+
+This does not make raw magnetic-stream support a current release target. It does mean the future core should avoid assuming that every disk source is permanently reducible to a clean side/cylinder/sector table.
+
+The preferred future direction is to distinguish two lower-level preservation tiers:
+
+1. encoded track data
+   - FM- and MFM-level track payloads
+   - per-track storage with media and timing metadata
+   - suitable for preserving unusual track organization and many non-standard physical layouts
+2. lower-level sampled or timing-oriented raw signal data
+   - reserved for cases where encoded-track preservation is still not enough
+   - relevant to stronger controller-visible or protection-relevant behavior
+
+The first tier should be considered before any lower-level signal capture work because it offers a better balance between fidelity and practical handling.
+
+The architecture should also assume asymmetric conversion:
+
+- sector-only sources may be importable into an encoded-track container
+- converting back from encoded or signal-oriented sources into sector-only formats may lose information or become impossible for some inputs
+
+The preferred long-term shape is:
+
+- direct image access as one stable surface
+- FDC-facing access as another stable surface
+- raw magnetic-stream sources added later beneath the FDC-facing surface without forcing them through a purely sector-decoded model first
+
+The long-term preservation workflow should also assume:
+
+1. real hardware capture through an FDC-visible path
+2. possible use of an intermediate raw capture representation during acquisition
+3. later conversion into a project-owned long-term preservation container
+
+That means the project should eventually define not only a runtime-facing raw surface, but also a preservation-oriented raw container owned by the project itself.
+
+The project-owned raw preservation container direction now provisionally reserves the family name `Legacy 89 Storage` and the extension `.l89`, but the concrete file structure and final frozen identity should remain open until the capture, conversion, and replay requirements are better understood.
+
+The provisional identity should freeze only after all of the following are fixed:
+
+- the capture-ingestion workflow
+- the encoded-track payload model
+- the conversion semantics from sector-only and lower-level raw inputs
+- the required metadata, integrity, and format-version fields
+- at least one validated fixture corpus against the frozen identity
+
+The embedded and bare-metal direction should remain downstream of `Phase 20`. Do not start board-specific or hardware-specific implementation work until the C++ core boundary and migration policy are decision-complete.
+
+The first concrete integration target for this direction should be emulator-hosted rather than board-hosted. This keeps the feedback loop fast while preserving the same controller-shaped contract that later embedded and bare-metal work will need.
+
+The preferred order is:
+
+1. emulator-hosted integration
+   - first an event-driven host adapter
+   - then a second host adapter with a different emulator-side integration style
+2. desktop and server native hosts
+3. Linux-based embedded boards
+4. WASM/runtime-hosted experiments where appropriate
+5. true bare-metal or custom-board targets
+
+The architectural goal is not a universal host adapter. The goal is a shared narrow controller/core contract that can support multiple thin host-specific adapters.
+
+That means:
+
+- the core contract should remain host-agnostic
+- timing progression should be host-driven through explicit tick or callback-style advancement
+- each emulator or hardware environment should get its own thin integration adapter
+- host adapters should translate drive selection, side selection, mount state, IRQ/DRQ visibility, and timing advancement into the shared controller/core contract
 
 ## Recommended v2.0.0 Scope
 
@@ -213,10 +510,15 @@ Primary candidates:
 
 - native library cleanup and supported API surface definition
 - WebAssembly build target and minimal browser/runtime integration
-- start the `Legacy89DiskKit.Cpp` portability plan
+- execute the `Legacy89DiskKit.Cpp` portability plan from the documented `Phase 20` sequence
 - better release automation
 - richer CLI help and localization
 - filesystem-specific attribute editing and boot editing
+
+Version guidance:
+
+- `v2.0.1` should be reserved for post-release fixes if needed
+- the `Phase 20` transition work is a likely `v2.1.0` candidate rather than a patch release
 
 ### v3.x: Broader Runtime Reach
 
@@ -253,3 +555,7 @@ Use this simple rule:
 - `v2.x+`: the implementation strategy starts bending toward a portable C++ core and eventual bare-metal viability
 
 That is why `v2.0.0` is justified even if not every future target is fully complete on the same day.
+
+Controller-fidelity work remains a separate track from this portability-first line. The narrow controller-facing contract is meant to expose controller-shaped information access now, while MB8877-oriented behavior research proceeds independently on a dedicated branch:
+
+- `codex/mb8877-fidelity-research`
