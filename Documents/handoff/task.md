@@ -129,12 +129,14 @@
             - [ ] identify and document the preferred public entrypoints
             - [ ] decide whether a facade layer or package boundary is required before `v2.0.0`
             - [ ] add developer-facing usage documentation for host C# applications
+            - [ ] identify which C# subsystems form the reference baseline for future C++ porting
         - [ ] Native library formalization
             - [ ] define whether `Legacy89DiskKit.NativeInterop` becomes `Legacy89DiskKit.Native` or remains an internal implementation name
             - [ ] define the supported native ABI surface
             - [ ] provide a public C header for native consumers
             - [ ] document string encoding, status codes, handle lifecycle, and ownership rules
             - [ ] decide whether Native is documented-only or also shipped as a release artifact in `v2.0.0`
+            - [ ] keep the ABI shape compatible with a future independent C++ core
         - [ ] WASM definition
             - [ ] define the intended WASM runtime model
             - [ ] define a path-independent API shape suitable for browser or WASI use
@@ -145,3 +147,33 @@
             - [ ] confirm the roadmap-only deliverables
             - [ ] review `RELEASE_NOTES_v2.0.0.md`
             - [ ] tag and release only after every required item above is complete
+
+- [ ] Phase 20: C++ Core Transition and Bare-Metal-Oriented Architecture
+    - [ ] Define `Legacy89DiskKit.Cpp` as the future portable core line.
+    - [ ] Separate "reference implementation" from "final portable implementation" in public documents.
+    - [ ] Identify the first C# subsystems to port:
+        - [ ] disk container core
+        - [ ] filesystem core
+        - [ ] character encoding core
+    - [ ] Push path-dependent and host-dependent behavior out of the future core boundary.
+    - [ ] Prefer buffer-based and path-independent APIs where feasible.
+    - [ ] Reduce reliance on exception-heavy contracts at the future portability boundary.
+    - [ ] Define how `Legacy89DiskKit.Native` will relate to `Legacy89DiskKit.Cpp` during migration:
+        - [ ] bridge layer over C# first
+        - [ ] replacement or shared ABI over C++ later
+    - [ ] Decide when the CLI should switch from calling C# application services to calling bindings over the future C++ core.
+
+- [ ] Phase 21: Embedded and Bare-Metal Direction
+    - [ ] Define the target order for low-level deployment:
+        - [ ] desktop/server native hosts
+        - [ ] Linux-based embedded boards
+        - [ ] WASM/runtime-hosted environments
+        - [ ] true bare-metal targets
+    - [ ] Document the constraints that must be satisfied before true bare-metal work starts:
+        - [ ] path-independent core
+        - [ ] explicit ownership and ABI rules
+        - [ ] explicit encoding contracts
+        - [ ] host-agnostic error model
+    - [ ] Identify which current services are unsuitable for bare-metal and must remain host-side only.
+    - [ ] Define the minimum proof-of-concept target after the C++ core exists.
+    - [ ] Keep board-specific or hardware-specific work out of the `v2.0.0` release gate.

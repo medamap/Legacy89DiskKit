@@ -8,6 +8,7 @@ Legacy89DiskKit is evolving from a C# retro disk library into a product family w
 - a C# library for desktop and server integrations
 - a native library for lower-level or embedded use
 - a WebAssembly target for browser and portable runtime scenarios
+- a future C++ core for low-level portability and bare-metal-oriented targets
 
 The next major milestone is not just feature growth. It is a packaging and product-definition reset.
 
@@ -36,8 +37,9 @@ Still unstable or incomplete for release packaging:
 It should mean:
 
 - the CLI is intentionally distributed as a standalone end-user binary
-- the C# library remains a supported reusable development target
+- the C# library remains a supported reusable development target and reference implementation
 - native and WASM deliverables have defined scope, even if they are still partial
+- the future C++ core direction is documented as the long-term path toward embedded and bare-metal deployment
 - the release process, README, and roadmap all describe the same product shape
 
 ## v2.0.0 Required Work
@@ -47,10 +49,11 @@ The `v2.0.0` path should be executed as a sequential readiness checklist.
 The intended order is:
 
 1. stabilize the standalone CLI release path
-2. define and document the supported C# library surface
-3. formalize the native library boundary and shipping expectations
+2. define and document the supported C# library surface as the current reference implementation
+3. formalize the native library boundary and shipping expectations as the bridge layer
 4. define the WASM-facing API shape and scope
 5. close the remaining packaging and documentation gates
+6. prepare the post-`v2.0.0` transition toward a C++ core and bare-metal-oriented targets
 
 `v2.0.0` is ready only when every required item in that sequence is complete.
 
@@ -76,7 +79,7 @@ This is the highest-priority `v2.0.0` requirement.
 
 ### 2. C# Library Definition
 
-The C# library should remain a supported integration target, but it needs a clearer public shape than it has today.
+The C# library should remain a supported integration target, but it also needs to be treated as the current reference implementation for future non-.NET ports.
 
 Required:
 
@@ -85,10 +88,11 @@ Required:
 - reduce ambiguity between low-level internal layers and supported application-facing services
 - document how a C# consumer should open disks, access file systems, transfer files, and perform layout operations
 - decide whether a dedicated facade package or namespace is required before `v2.0.0`
+- identify which subsystems are stable enough to serve as the future porting baseline for C++ and bare-metal work
 
 ### 3. Native Library Formalization
 
-The repository already contains a native interop prototype, but it is not yet a clearly shipped product line.
+The repository already contains a native interop prototype, but it is not yet a clearly shipped product line. In the long term, this layer should be treated as the bridge between the C# reference implementation and a future independent C++ core.
 
 Required:
 
@@ -97,6 +101,7 @@ Required:
 - provide a public header and usage contract for external native callers
 - define what platforms and artifact forms are expected for native consumers
 - decide whether Native remains documented-only in `v2.0.0` or becomes a packaged companion artifact
+- keep the API shape compatible with a future replacement of the C# implementation by a true C++ core
 
 ### 4. WASM Definition
 
@@ -126,21 +131,58 @@ Required:
 - define which deliverables remain roadmap targets only
 - prepare final release notes and tagging criteria
 
+### 6. Post-v2 Core Transition
+
+After `v2.0.0`, the project should begin shifting from a C#-centered implementation to a C++-centered portability strategy.
+
+Required follow-up direction:
+
+- define `Legacy89DiskKit.Cpp` as the future portable core line
+- identify which parts of the current C# implementation should be ported first
+  - disk container core
+  - filesystem core
+  - character encoding core
+- keep path-dependent CLI and host concerns outside the future core boundary
+- move toward buffer-based and path-independent service contracts where practical
+- use the C# implementation as the reference behavior during the transition
+
+### 7. Bare-Metal and Embedded Direction
+
+The long-term ambition includes board-level and bare-metal-oriented targets.
+
+This is not a `v2.0.0` gate, but it should guide architecture choices now.
+
+Target direction:
+
+- desktop and server native hosts first
+- Linux-based embedded boards such as Raspberry Pi next
+- browser/WASM and portable runtime scenarios in parallel where useful
+- true bare-metal or board-specific ports only after the C++ core is mature
+
+Design guidance:
+
+- prefer buffer-based APIs over local-path-only APIs
+- keep encoding and filesystem logic isolated from OS concerns
+- keep ownership, error codes, and ABI rules explicit
+- avoid treating the current C# native interop layer as the final bare-metal solution
+
 ## Recommended v2.0.0 Scope
 
 The safest `v2.0.0` scope is:
 
 - standalone CLI release for four platforms
-- current C# library retained and documented
+- current C# library retained, documented, and treated as the reference implementation
 - native library scope documented, with the current interop layer assessed against a formal shipping checklist
 - WASM scope documented as an active next target, with a defined API direction but not required to ship fully in `v2.0.0`
+- future C++ core and bare-metal direction documented, but not required to ship in `v2.0.0`
 
 In other words:
 
 - CLI packaging must ship
-- C# library must remain usable
+- C# library must remain usable and reference-worthy
 - native/WASM must be defined
-- native/WASM do not both need full production completeness on day one
+- C++/bare-metal direction must be explicit
+- native/WASM/C++ do not all need production completeness on day one
 
 ## After v2.0.0
 
@@ -150,6 +192,7 @@ Primary candidates:
 
 - native library cleanup and supported API surface definition
 - WebAssembly build target and minimal browser/runtime integration
+- start the `Legacy89DiskKit.Cpp` portability plan
 - better release automation
 - richer CLI help and localization
 - filesystem-specific attribute editing and boot editing
@@ -158,9 +201,11 @@ Primary candidates:
 
 Possible directions:
 
+- mature the C++ core into the primary portable implementation
 - stronger native embedding story
 - browser-first tooling
 - small-footprint and embedded scenarios
+- board-specific and bare-metal deployment experiments
 - conversion workflows between image/container families
 
 ## Deferred but Important Items
@@ -173,6 +218,8 @@ These remain valuable, but they are not the best `v2.0.0` gate items:
 - external language packs
 - broader cross-filesystem layout editing
 - deeper real-image verification matrix expansion
+- C++ core migration work beyond the first documented transition stage
+- bare-metal-target-specific hardware adaptation work
 
 These should stay in the handoff task list rather than driving the version boundary alone.
 
@@ -182,5 +229,6 @@ Use this simple rule:
 
 - `v1.x`: feature growth during architectural transition
 - `v2.0.0`: packaging model and deliverable structure become intentional and sequentially verifiable
+- `v2.x+`: the implementation strategy starts bending toward a portable C++ core and eventual bare-metal viability
 
 That is why `v2.0.0` is justified even if not every future target is fully complete on the same day.
