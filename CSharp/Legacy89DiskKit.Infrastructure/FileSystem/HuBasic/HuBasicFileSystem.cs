@@ -28,10 +28,10 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
     {
         var fat = _fatManager.ReadFat();
         int free = 0;
-        int maxIndex = _diskContainer.DiskType == DiskType.TwoHD ? 512 : _config.TotalClusters;
+        int maxIndex = HuBasicAllocationRules.GetFatScanLimit(_diskContainer.DiskType, _config);
         for (int i = _config.ReservedClusters; i < maxIndex; i++)
         {
-            if (_diskContainer.DiskType == DiskType.TwoHD && (i % 256) >= 0x80) continue;
+            if (!HuBasicAllocationRules.IsAllocatableCluster(_diskContainer.DiskType, _config, i)) continue;
             if (_fatManager.GetFatEntry(fat, i) == 0x00) free++;
         }
 
@@ -473,17 +473,7 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
     private List<int> AllocateClusters(int count)
     {
         var fat = _fatManager.ReadFat();
-        var allocated = new List<int>();
-        int maxIndex = _diskContainer.DiskType == DiskType.TwoHD ? 512 : _config.TotalClusters;
-
-        for (int i = _config.ReservedClusters; i < maxIndex && allocated.Count < count; i++)
-        {
-            if (_diskContainer.DiskType == DiskType.TwoHD && (i % 256) >= 0x80) continue;
-
-            var entry = _fatManager.GetFatEntry(fat, i);
-            if (entry == 0) allocated.Add(i);
-        }
-        return allocated;
+        return HuBasicAllocationRules.CollectFreeClusters(fat, _diskContainer.DiskType, _config, count);
     }
 
     private void WriteDataToClusters(byte[] data, List<int> clusters)
