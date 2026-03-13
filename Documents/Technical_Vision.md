@@ -135,6 +135,9 @@ The current managed reference implementation already demonstrates the first part
 - the first Hu-BASIC filesystem-core extraction by splitting raw 32-byte directory-entry decoding from `FileEntry` mapping
 - extracted Hu-BASIC FAT entry, cluster-chain, and terminal-flag interpretation rules into reusable pure helpers
 - extracted Hu-BASIC read-payload trimming rules for terminal-length handling, recorded-size trimming, and ASCII EOF handling
+- extracted Hu-BASIC allocation rules for reserved-cluster handling and 2HD holey-FAT scanning
+- extracted Hu-BASIC write-payload rules for ASCII EOF appending, cluster-count calculation, and terminal-flag generation
+- extracted Hu-BASIC file-name truncation and virtual-label detection/merge rules into reusable helpers
 - concrete mounted-medium adapters for both D88/D77-style sector-container and raw sector-image families
 - a minimal mounted-medium to controller-facing binding path for future FDC-oriented workflows
 
