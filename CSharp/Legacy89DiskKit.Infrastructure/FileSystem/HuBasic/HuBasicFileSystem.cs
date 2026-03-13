@@ -80,28 +80,7 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
             ms.Write(ReadCluster(c));
         }
 
-        var data = ms.ToArray();
-        
-        // Determine actual size from FAT terminal flag if it's a 2HD disk and size is 0 (common for some binary dumps)
-        // Or if the size field is used but the FAT specifies the record count.
-        int recordCount = clusters.Count * (_config.ClusterSize / _config.SectorSize);
-        if (_diskContainer.DiskType == DiskType.TwoHD && terminalFlag >= 0x80 && terminalFlag <= 0x8F)
-        {
-            int usedInLast = terminalFlag - 0x7F;
-            int totalRecords = (clusters.Count - 1) * (_config.ClusterSize / _config.SectorSize) + usedInLast;
-            int totalBytes = totalRecords * _config.SectorSize;
-            
-            if (file.Size == 0 || totalBytes < data.Length)
-            {
-                data = data.Take(totalBytes).ToArray();
-            }
-        }
-
-        if (file.Attributes.IsAscii)
-        {
-            return ExtractAscii(data);
-        }
-        return (file.Size > 0 && data.Length > file.Size) ? data.Take((int)file.Size).ToArray() : data;
+        return HuBasicReadRules.ResolveReadPayload(ms.ToArray(), file, _diskContainer.DiskType, _config, clusters.Count, terminalFlag);
     }
 
     public bool FileExists(string fileName)
@@ -720,17 +699,6 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
         int head = (recordNumber / _config.SectorsPerTrack) % 2;
         int sectorNum = (recordNumber % _config.SectorsPerTrack) + 1;
         return (cylinder, head, sectorNum);
-    }
-
-    private byte[] ExtractAscii(byte[] data)
-    {
-        var res = new List<byte>();
-        foreach (var b in data)
-        {
-            if (b == 0x1A) break;
-            res.Add(b);
-        }
-        return res.ToArray();
     }
 
     public void Dispose() { }

@@ -216,6 +216,8 @@ The current managed reference implementation now already proves this direction i
 - the managed reference implementation now also exposes logical encoding identifiers and profile resolution separate from CLI-only wiring
 - the managed reference implementation has started extracting platform-specific encoding tables into reusable pure data, beginning with the X1 character map
 - the managed reference implementation has started extracting Hu-BASIC directory-entry rules into a reusable raw-entry codec separate from `FileEntry` mapping
+- the managed reference implementation now also exposes reusable Hu-BASIC FAT and cluster-chain helper rules separate from the filesystem shell
+- the managed reference implementation now also exposes reusable Hu-BASIC read-payload rules for terminal-length handling, recorded-size trimming, and ASCII EOF extraction
 - both D88/D77-style sector-container media and raw sector-image media have concrete mounted-medium adapters
 - mounted media can already be bound into a minimal controller-facing path
 - the controller-facing path already includes a minimal command subset and timing-driven completion in the managed reference implementation

@@ -186,6 +186,8 @@
         - [x] establish logical encoding identifiers and profile resolution separate from CLI-only encoder wiring
         - [x] start extracting platform-specific encoding tables into reusable pure data, beginning with the X1 character map
         - [x] start extracting Hu-BASIC directory-entry decoding into a reusable raw-entry codec separate from `FileEntry` mapping
+        - [x] extract Hu-BASIC FAT entry, cluster-chain, and terminal-flag rules into reusable pure helpers
+        - [x] extract Hu-BASIC read-payload rules for terminal-length handling, recorded-size trimming, and ASCII EOF extraction
         - [x] decide the first concrete class or module boundary to port from the current C# codebase
             - [x] raw-disk geometry and sector-offset logic from `RawDiskContainer`
             - [x] D88 header and track-sector parsing from `D88DiskContainer`

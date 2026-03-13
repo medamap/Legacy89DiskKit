@@ -133,6 +133,8 @@ The current managed reference implementation already demonstrates the first part
 - a logical character-encoding identity and profile resolution path above the concrete managed encoders
 - the first platform-specific mapping table extraction by moving the X1 character map into reusable pure data
 - the first Hu-BASIC filesystem-core extraction by splitting raw 32-byte directory-entry decoding from `FileEntry` mapping
+- extracted Hu-BASIC FAT entry, cluster-chain, and terminal-flag interpretation rules into reusable pure helpers
+- extracted Hu-BASIC read-payload trimming rules for terminal-length handling, recorded-size trimming, and ASCII EOF handling
 - concrete mounted-medium adapters for both D88/D77-style sector-container and raw sector-image families
 - a minimal mounted-medium to controller-facing binding path for future FDC-oriented workflows
 

@@ -42,41 +42,19 @@ public class HuBasicFatManager
 
     public int GetFatEntry(byte[] fatData, int cluster)
     {
-        if (cluster < 0 || cluster >= fatData.Length) return 0x8F; // Terminal/Out of range
-        return fatData[cluster];
+        return HuBasicFatRules.GetEntry(fatData, cluster);
     }
 
     public void SetFatEntry(byte[] fatData, int cluster, int value)
     {
-        if (cluster >= 0 && cluster < fatData.Length)
-        {
-            fatData[cluster] = (byte)value;
-        }
+        HuBasicFatRules.SetEntry(fatData, cluster, value);
     }
 
     public (List<int> Chain, int TerminalFlag) GetClusterChainWithTerminal(int startCluster)
     {
-        var chain = new List<int>();
         var fatData = ReadFat();
-        var current = startCluster;
-        var visited = new HashSet<int>();
-        int terminalFlag = 0xFF;
-
-        while (current >= _config.ReservedClusters && current < _config.TotalClusters)
-        {
-            if (visited.Contains(current)) break; // Circular reference
-            visited.Add(current);
-            chain.Add(current);
-
-            var next = GetFatEntry(fatData, current);
-            if ((next >= 0x80 && next <= 0x8F) || next == 0xFF)
-            {
-                terminalFlag = next;
-                break;
-            }
-            current = next;
-        }
-        return (chain, terminalFlag);
+        var result = HuBasicFatRules.GetClusterChain(fatData, _config, startCluster);
+        return (result.Chain.ToList(), result.TerminalFlag);
     }
 
     public List<int> GetClusterChain(int startCluster) => GetClusterChainWithTerminal(startCluster).Chain;
