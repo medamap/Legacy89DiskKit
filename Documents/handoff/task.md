@@ -218,6 +218,12 @@
         - [x] document that conversion between sector-only and lower-level formats may be asymmetric and lossy
         - [x] document the expected preservation pipeline from real-drive capture to a project-owned long-term raw container
         - [ ] decide when to reserve a concrete project-owned raw preservation format name and extension
+        - [x] keep `Legacy 89 Storage` and `.l89` as provisional candidates rather than final locked identifiers
+    - [ ] Run a separate controller-fidelity investigation track:
+        - [ ] create a dedicated branch for MB8877-oriented behavior research when the project is ready for fidelity work
+        - [ ] compare the current narrow managed path against emulator-oriented controller expectations
+        - [ ] decide which additional commands and status transitions belong in the first practical emulator-facing milestone
+        - [ ] keep this investigation separate from the portability-first narrow path unless the findings force a contract change
 
 - [ ] Phase 21: Embedded and Bare-Metal Direction
     - [ ] Define the target order for low-level deployment:

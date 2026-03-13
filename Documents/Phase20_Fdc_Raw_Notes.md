@@ -35,6 +35,14 @@ The preferred near-term behavior is:
 - keep fidelity work and compatibility investigation on a separate track
 - allow early controller-facing adapters to return sector-derived results without pretending to be a complete historical controller
 
+The current managed reference implementation already covers that narrow path with:
+
+- mounted-medium binding
+- drive-aware controller-visible state
+- a small controller-style command subset
+- explicit `busy -> advance -> complete` timing progression
+- named status outcomes for busy, record-not-found, and unsupported-command cases
+
 ## D88 and Raw Sector Images in the Controller Path
 
 The controller-facing design should allow both sector-container and raw sector-image families to sit behind the same broad contract.
@@ -88,6 +96,8 @@ Current provisional direction:
 
 This naming is not locked yet. It is a working direction only.
 
+At the current stage, this is still the preferred provisional naming direction unless future capture or replay requirements force a different shape.
+
 The name is preferred because it can cover:
 
 - sector-derived preservation workflows
@@ -139,3 +149,20 @@ These questions remain open:
 - how much MB8877-compatible behavior should be required for the first practical emulator-facing milestone
 - whether the first encoded-track preservation step is sufficient before lower-level raw signal storage is introduced
 - what concrete proof-of-concept should define the first embedded or bare-metal milestone
+
+## Separate Investigation Track
+
+MB8877 compatibility and higher-fidelity controller behavior should be investigated on a separate branch from the narrow architectural path.
+
+The main implementation branch should continue to preserve:
+
+- the minimal command subset
+- narrow controller-facing contracts
+- portability-oriented boundaries
+
+The separate investigation track can then answer:
+
+- which controller commands matter first for real emulator integration
+- which status transitions must become more historically accurate
+- which timing behaviors are required in practice rather than only in theory
+- how far D88-backed and future raw-backed paths can share the same controller contract before media-specific divergence is needed
