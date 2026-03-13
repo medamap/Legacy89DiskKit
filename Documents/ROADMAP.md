@@ -331,6 +331,27 @@ The preferred direction for that future FDC-facing contract is a controller-styl
 
 That means emulator-oriented integration should be treated as a controller-facing runtime problem, not merely as another form of direct sector helper API.
 
+The preferred architectural split for this direction is:
+
+- `DiskImage`
+  - image containers and lower-level media representation
+- `FileSystem`
+  - filesystem-aware interpretation and tooling workflows
+- `Drive`
+  - mounted-medium state and drive-visible properties
+- `Fdc`
+  - controller-visible command, status, transfer, and signaling behavior
+- `Timing`
+  - clock or scheduler abstractions needed by controller-facing sequencing
+
+For the near term, `Timing` can begin as a smaller controller-oriented abstraction rather than as a broad standalone subsystem.
+
+The preferred layer split is:
+
+- `Application` for drive-mount and controller-facing services
+- `Domain` for drive/FDC/timing state and contracts
+- `Infrastructure` for D88-backed and future raw-backed medium adapters
+
 ### 9. Future Raw Magnetic Stream Support
 
 The architecture should also leave room for a later raw magnetic-stream source format.

@@ -260,6 +260,47 @@ The expected contract shape is closer to:
 
 This does not require a chip-perfect implementation in the earliest phase, but it does mean the architectural direction should remain compatible with a controller model of that class.
 
+## Additional Domain Boundaries for the FDC Direction
+
+The controller-oriented direction should not be treated as merely an extension of the existing filesystem domain.
+
+The future architecture should introduce additional domain concerns beside `DiskImage` and `FileSystem`:
+
+- `Drive`
+  - mounted-medium state
+  - selected side and track position as drive-visible state
+  - ready, motor, and media-presence style properties
+- `Fdc`
+  - controller command and status behavior
+  - data-register and sector-transfer sequencing
+  - IRQ/DRQ-oriented state transitions
+- `Timing`
+  - clock or scheduler abstractions required for controller-visible sequencing
+
+For the near term, `Timing` does not need to become a large standalone domain. It may begin as a smaller clock or scheduler abstraction attached to the controller-oriented work and only later grow into a broader domain if that becomes necessary.
+
+This means the future architecture should not force all emulator-facing behavior into `FileSystem`. The controller-facing model is a different concern and should be allowed to evolve as its own bounded context.
+
+## Application and Infrastructure Responsibilities for the FDC Direction
+
+The preferred layering for this future direction is:
+
+- `Application`
+  - expose host-facing services for drive mounting and FDC-oriented interaction
+  - coordinate which mounted medium backs a given drive
+  - expose controller-facing workflows without requiring the caller to know container internals
+- `Domain`
+  - define drive-visible state, controller-visible state, and timing-oriented abstractions
+- `Infrastructure`
+  - adapt concrete media sources such as D88-backed sector images or future raw magnetic-stream sources
+  - provide the media-specific behavior needed by the controller-facing layer
+
+Under this model:
+
+- a D88-backed mounted medium may satisfy the controller-facing contract through an emulated sector-oriented adapter
+- a future raw magnetic-stream source may satisfy that same controller-facing contract more directly
+- direct image access remains separate from the controller-oriented path even when both are backed by the same underlying image source
+
 ## Future Raw Magnetic Stream Direction
 
 The current project centers on sector-based disk image containers such as D88 and raw sector images.

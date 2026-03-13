@@ -195,6 +195,11 @@
         - [x] document an FDC-facing runtime surface for emulator integration as a separate future surface
         - [x] keep this split as an architectural constraint for the future C++ core
         - [x] describe the controller-facing surface in terms of register/state/IRQ/DRQ style behavior rather than filesystem convenience calls
+    - [ ] Define the additional domain boundaries needed by the controller-oriented path:
+        - [x] identify `Drive` as a separate concern from `FileSystem`
+        - [x] identify `Fdc` as a separate concern from direct image access
+        - [x] treat timing first as a smaller controller-oriented abstraction rather than a large standalone domain
+        - [x] assign Application, Domain, and Infrastructure responsibilities for the future FDC direction
     - [ ] Record the future raw magnetic-stream direction:
         - [x] note that future sources may represent controller-visible magnetic data rather than only decoded sectors
         - [x] reserve room for gaps, noise, timing-sensitive structures, and protection-relevant behavior
