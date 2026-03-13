@@ -283,6 +283,13 @@ In practice this means:
 - step-driven hosts should be able to drive the same core through explicit ticking
 - host adapters should translate mount state, selected drive, selected side, IRQ/DRQ visibility, and timing progression into the common controller-facing contract
 
+The first two concrete host targets are:
+
+1. a CSCP-style event-driven host adapter
+2. an xmil-web-style host adapter with a more C-style global-state integration shape
+
+These should not share one universal adapter. They should share the same narrow controller/core contract while keeping host-specific glue in separate thin adapters.
+
 ## Disk Image API vs FDC-Facing API
 
 The long-term architecture should not assume that every consumer wants direct filesystem-aware or image-container-aware access only.

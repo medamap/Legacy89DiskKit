@@ -252,9 +252,9 @@
 
 - [ ] Phase 21: Embedded and Bare-Metal Direction
     - [ ] Define the target order for low-level deployment:
-        - [ ] emulator-hosted integration first
-            - [ ] CSCP-style event-driven host adapter as the first concrete host-integration target
-            - [ ] xmil-web-style host adapter as the second concrete host-integration target
+        - [x] emulator-hosted integration first
+            - [x] CSCP-style event-driven host adapter as the first concrete host-integration target
+            - [x] xmil-web-style host adapter as the second concrete host-integration target
         - [ ] desktop/server native hosts
         - [ ] Linux-based embedded boards
         - [ ] WASM/runtime-hosted environments
@@ -265,18 +265,22 @@
         - [ ] explicit encoding contracts
         - [ ] host-agnostic error model
     - [ ] Identify which current services are unsuitable for bare-metal and must remain host-side only.
-    - [ ] Keep host integration split into:
-        - [ ] a shared narrow controller/core contract
-        - [ ] host-specific thin adapters instead of a universal adapter
-    - [ ] Document the first host-adapter expectations:
-        - [ ] event-driven host callback integration
-        - [ ] step/tick-driven host integration
-        - [ ] mount/unmount, ready, drive-select, side-select, IRQ/DRQ bridge responsibilities
+    - [x] Keep host integration split into:
+        - [x] a shared narrow controller/core contract
+        - [x] host-specific thin adapters instead of a universal adapter
+    - [x] Document the first host-adapter expectations:
+        - [x] event-driven host callback integration
+        - [x] step/tick-driven host integration
+        - [x] mount/unmount, ready, drive-select, side-select, IRQ/DRQ bridge responsibilities
     - [ ] Define the minimum proof-of-concept target after the C++ core exists.
-        - [ ] first proof target should be emulator-facing read-only controller integration
-        - [ ] keep write support and fidelity-heavy behavior out of the first proof target
+        - [x] first proof target should be emulator-facing read-only controller integration
+        - [x] keep write support and fidelity-heavy behavior out of the first proof target
     - [ ] Keep board-specific or hardware-specific work out of the `v2.0.0` release gate.
     - [ ] Keep `Phase 21` downstream of the `Phase 20` migration-boundary work.
+    - [ ] Implement a CSCP-style thin host adapter against the shared controller/core contract.
+    - [ ] Implement an xmil-web-style thin host adapter against the shared controller/core contract.
+    - [ ] Validate that both host adapters can share the same mounted-medium binding path without a universal adapter layer.
+    - [ ] Keep detailed host-integration planning in `Documents/Phase21_Emulator_Host_Integration_Plan.md`.
 
 - [ ] Future Packaging Follow-Up
     - [ ] Revisit `Legacy89DiskKit.CSharp` packaging once the supported managed surface is stable enough for public package publication.

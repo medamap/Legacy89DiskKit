@@ -484,6 +484,22 @@ That means:
 - each emulator or hardware environment should get its own thin integration adapter
 - host adapters should translate drive selection, side selection, mount state, IRQ/DRQ visibility, and timing advancement into the shared controller/core contract
 
+The first concrete host-integration order is now fixed:
+
+1. a CSCP-style event-driven host adapter
+2. an xmil-web-style host adapter
+
+This order should remain read-only at first. The first proof target is emulator-facing controller integration with:
+
+- mounted-medium binding
+- register-shaped access
+- explicit timing advancement
+- visible busy, IRQ, and DRQ state
+- D88-backed media first
+- raw sector-image-backed media second
+
+Write support and higher-fidelity controller behavior should remain outside the first proof target.
+
 ## Recommended v2.0.0 Scope
 
 The safest `v2.0.0` scope is:
