@@ -165,6 +165,16 @@
         - [ ] bridge layer over C# first
         - [ ] replacement or shared ABI over C++ later
     - [ ] Decide when the CLI should switch from calling C# application services to calling bindings over the future C++ core.
+    - [ ] Execute Phase 20 on a dedicated branch:
+        - [x] create `feature/phase20-cpp-transition`
+        - [ ] define the `Legacy89DiskKit.Cpp` product line in public documents
+        - [ ] define C# as the reference implementation and C++ as the final portable implementation
+        - [ ] decide the first-port candidates and their execution order
+        - [ ] define the future core boundary around buffer-first and path-independent contracts
+        - [ ] define the `Legacy89DiskKit.Native` migration policy against the future C++ core
+    - [ ] Versioning policy for post-`v2.0.0` work:
+        - [ ] reserve `v2.0.1` for hotfix-only use if needed
+        - [ ] treat `Phase 20` as a likely `v2.1.0` candidate rather than a patch release
 
 - [ ] Phase 21: Embedded and Bare-Metal Direction
     - [ ] Define the target order for low-level deployment:
@@ -180,3 +190,4 @@
     - [ ] Identify which current services are unsuitable for bare-metal and must remain host-side only.
     - [ ] Define the minimum proof-of-concept target after the C++ core exists.
     - [ ] Keep board-specific or hardware-specific work out of the `v2.0.0` release gate.
+    - [ ] Keep `Phase 21` downstream of the `Phase 20` migration-boundary work.

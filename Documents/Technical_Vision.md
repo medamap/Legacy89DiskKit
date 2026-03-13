@@ -1,213 +1,130 @@
-# Legacy89DiskKit 技術ビジョン
+# Legacy89DiskKit Technical Vision
 
-## 🎯 ミッション
+## Mission
 
-「レトロコンピューティングの知識を、モダンな技術で次世代に継承する」
+Preserve and extend Japanese retro disk knowledge with modern tooling, explicit interfaces, and portable implementation boundaries.
 
-## 🌍 なぜマルチプラットフォーム化が重要か
+## Product Direction After v2.0.0
 
-### 1. レトロコンピューティングの現状
+The project now has a defined product-line model:
 
-現在、レトロコンピュータの愛好家たちは様々な環境で活動しています：
+- `Legacy89DiskKit.Cli`: standalone end-user tool
+- `Legacy89DiskKit.CSharp`: supported managed integration surface and current reference implementation
+- `Legacy89DiskKit.Native`: current bridge ABI over the managed implementation
+- `Legacy89DiskKit.Wasm`: documented future runtime line with a path-independent API direction
+- `Legacy89DiskKit.Cpp`: future portable core line
 
-- **実機派**: オリジナルハードウェアを維持・修理
-- **エミュレータ派**: PC上でソフトウェアエミュレーション
-- **FPGA派**: MiSTer等でハードウェア再現
-- **ハイブリッド派**: Gotek等でFDDをエミュレート
+The key post-`v2.0.0` transition is not "add more features first". It is to separate:
 
-それぞれの環境で**ディスクイメージの扱い**は共通の課題です。
+- the current reference implementation
+- the future portable implementation
 
-### 2. 組み込み環境の重要性
+## Why the C++ Core Matters
 
-#### Raspberry Pi Picoの可能性
-- **$4の革命**: 誰でも手に入る価格
-- **豊富なGPIO**: FDD信号の直接生成可能
-- **デュアルコア**: リアルタイム処理に最適
-- **PIO**: 特殊なタイミング信号も生成可能
+The long-term goal includes embedded and bare-metal-oriented targets. That makes a pure managed implementation insufficient as the final portability layer.
 
-#### 実用例
-```
-[実機のFDD] ← 34pinケーブル → [Pico + Legacy89DiskKit]
-                                        ↓
-                                    SDカード
-```
+The intended transition is:
 
-### 3. WebAssemblyが開く未来
+```text
+Current state:
+  C# reference implementation
+  -> Native bridge ABI
+  -> CLI and host tooling
 
-#### なぜWASMか？
-1. **Write Once, Run Anywhere**
-   - ブラウザ、サーバー、組み込み、すべてで動作
-   
-2. **安全性**
-   - サンドボックス環境で実行
-   - メモリ破壊のリスクなし
-
-3. **パフォーマンス**
-   - ネイティブに近い実行速度
-   - 起動時間の短縮
-
-#### 革新的な使用例
-
-**ブラウザでのディスク操作**
-```javascript
-// ブラウザ上で直接ディスクイメージを操作
-const diskKit = await Legacy89DiskKit.load();
-const disk = await diskKit.openDisk(file);
-const files = disk.listFiles();
+Next state:
+  C++ portable core
+  -> Native ABI backed by C++
+  -> C# binding and host integration
+  -> WASM/runtime targets
+  -> embedded and bare-metal exploration
 ```
 
-**エッジコンピューティング**
-```
-IoTデバイス → WASM Runtime → Legacy89DiskKit
-    ↓
-リアルタイムでレトロデータを処理
-```
+This means:
 
-## 🔧 技術的アプローチ
+- C# remains important as the behavioral reference
+- Native remains useful as the short-term bridge contract
+- C++ becomes the long-term portability anchor
 
-### 1. 段階的移行戦略
+## Reference Implementation vs Portable Core
 
-```
-[現在] C# (フル機能)
-   ↓
-[Phase 1] C++ Core (読み取り専用)
-   ↓
-[Phase 2] C++ Full (全機能)
-   ↓
-[Phase 3] WASM化
-   ↓
-[Phase 4] 組み込み最適化
-```
+The project should now use these terms consistently:
 
-### 2. アーキテクチャの維持
+- **Reference implementation**
+  - the current C# implementation
+  - used to define expected behavior
+  - still supported for host applications
+- **Portable core**
+  - the future `Legacy89DiskKit.Cpp`
+  - intended to carry disk/container parsing, filesystem rules, encoding logic, and low-level reusable behavior
+  - intended to support native, WASM, embedded, and eventually bare-metal-oriented targets
 
-**DDD (Domain-Driven Design) の利点**
-- 言語に依存しない設計
-- ビジネスロジックの明確な分離
-- テストしやすい構造
+This distinction is required before deeper migration work starts.
 
-**C++での実装例**
-```cpp
-namespace Legacy89DiskKit {
-    // インターフェースは純粋仮想クラス
-    class IFileSystem {
-    public:
-        virtual ~IFileSystem() = default;
-        virtual std::vector<FileEntry> GetFiles() = 0;
-        virtual std::vector<uint8_t> ReadFile(const std::string& name) = 0;
-    };
-    
-    // ファクトリーパターンも同様に実装
-    class FileSystemFactory {
-    public:
-        static std::unique_ptr<IFileSystem> 
-        Create(IDiskContainer& container, FileSystemType type);
-    };
-}
-```
+## Phase 20 Technical Direction
 
-### 3. メモリ効率の追求
+The immediate work after `v2.0.0` should define the future C++ transition boundary.
 
-**組み込み向け最適化**
-```cpp
-// スタック上での小さなバッファ
-template<size_t N>
-class StackBuffer {
-    uint8_t data[N];
-public:
-    // ヒープ割り当てなし
-};
+The first tasks are:
 
-// セクタ単位の処理
-class SectorIterator {
-    // 一度に1セクタのみメモリに保持
-};
-```
+1. define `Legacy89DiskKit.Cpp` as the future portable core line
+2. define which current C# subsystems are the first portability candidates
+3. move path-dependent and host-dependent concerns out of the future core boundary
+4. prefer buffer-first and path-independent public contracts
+5. define how the current `Legacy89DiskKit.Native` bridge ABI can later sit on top of the C++ core
 
-## 🚀 革新的な応用例
+The intended first-port candidates are:
 
-### 1. Universal Disk Server
-```
-[Raspberry Pi Zero W]
-    ↓
-WiFi アクセスポイント
-    ↓
-[レトロPC] → ネットワークディスク
-```
+- disk container core
+- filesystem parsing and write rules
+- character encoding core
 
-### 2. AI駆動の修復
-```
-破損ディスク → Legacy89DiskKit → 機械学習モデル
-                    ↓
-              自動修復・補完
-```
+## Boundaries to Preserve
 
-### 3. ブロックチェーン認証
-```
-オリジナルディスク → ハッシュ生成 → ブロックチェーン
-                        ↓
-                    真正性の保証
-```
+The future core should aim to keep:
 
-### 4. 教育プラットフォーム
-```
-Webブラウザ → インタラクティブな
-               ファイルシステム学習
-                    ↓
-              可視化・シミュレーション
-```
+- disk and container parsing
+- filesystem detection and explicit selection logic
+- file listing, read, and write rules
+- layout core logic where it is not CLI-presentation-specific
+- encoding conversion rules
+- stable metadata and result models
 
-## 💡 なぜこれが重要なのか
+The future core should avoid:
 
-### 文化的意義
-- **デジタル考古学**: 失われつつある知識の保存
-- **教育的価値**: コンピュータの基礎を学ぶ教材
-- **技術継承**: 先人の知恵を現代に活かす
+- local path I/O as a required interface
+- CLI-specific presentation formatting
+- host-specific release automation
+- localization concerns
+- managed bootstrap wiring as part of the core contract
 
-### 技術的意義
-- **制約下での創造性**: 限られたリソースでの最適化
-- **レガシーとモダンの融合**: 新旧技術の架け橋
-- **実用的なツール**: 実際に使えるソフトウェア
+## Embedded and Bare-Metal Direction
 
-### コミュニティへの貢献
-- **オープンソース**: 知識の共有
-- **標準化**: 共通フォーマットの確立
-- **協働**: 世界中の愛好家との連携
+The project is explicitly interested in lower-level deployment targets, but those must remain downstream of the core transition work.
 
-## 🔮 10年後のビジョン
+Recommended target order:
 
-2035年、Legacy89DiskKitは：
+1. desktop and server native hosts
+2. Linux-based embedded boards
+3. browser and runtime-hosted environments
+4. true bare-metal targets
 
-1. **デファクトスタンダード**
-   - レトロディスク操作の標準ライブラリ
-   - 主要言語すべてにバインディング
+Before true bare-metal work starts, the project should have:
 
-2. **教育機関での採用**
-   - コンピュータサイエンスの教材
-   - ファイルシステムの学習ツール
+- a path-independent core
+- explicit ownership and ABI rules
+- explicit encoding contracts
+- a host-agnostic error model
 
-3. **産業利用**
-   - レガシーシステムのマイグレーション
-   - データ復旧サービス
+That is why the current managed/native bridge should not be treated as the final low-level solution.
 
-4. **研究プラットフォーム**
-   - デジタル保存の研究
-   - 新しいストレージ技術の実験場
+## Long-Term Aim
 
-## 🤝 参加の呼びかけ
+The long-term aim is a toolkit family where:
 
-このビジョンを実現するには、様々な分野の協力が必要です：
+- the CLI remains practical and accessible
+- the managed integration surface remains productive
+- the native ABI remains stable for consumers
+- the C++ core becomes the portability anchor
+- WASM and embedded targets grow from the same core assumptions
 
-- **C++/Rust開発者**: コア実装
-- **組み込みエンジニア**: ハードウェア統合
-- **Web開発者**: UI/UX
-- **レトロPC愛好家**: 知識とテスト
-- **ドキュメント作成者**: 知識の体系化
-
-一緒に、レトロコンピューティングの未来を創りましょう！
-
----
-
-*「過去を理解することで、未来を創造する」*
-
-*Legacy89DiskKit Development Team*
+This is the route that best supports both practical host tooling and the project’s bare-metal ambitions.

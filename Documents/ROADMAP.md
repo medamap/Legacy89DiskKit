@@ -159,6 +159,8 @@ After `v2.0.0`, the project should begin shifting from a C#-centered implementat
 Required follow-up direction:
 
 - define `Legacy89DiskKit.Cpp` as the future portable core line
+- treat the current C# implementation as the reference implementation
+- treat the future C++ implementation as the final portable core
 - identify which parts of the current C# implementation should be ported first
   - disk container core
   - filesystem core
@@ -166,6 +168,14 @@ Required follow-up direction:
 - keep path-dependent CLI and host concerns outside the future core boundary
 - move toward buffer-based and path-independent service contracts where practical
 - use the C# implementation as the reference behavior during the transition
+
+Immediate `Phase 20` execution order:
+
+1. define the `Legacy89DiskKit.Cpp` product line and its role
+2. separate "reference implementation" from "final portable implementation" in public documents
+3. identify first-port candidates
+4. define which host and path concerns must stay outside the future core boundary
+5. define how `Legacy89DiskKit.Native` transitions from a C# bridge ABI to a future C++-backed ABI
 
 ### 7. Bare-Metal and Embedded Direction
 
@@ -186,6 +196,8 @@ Design guidance:
 - keep encoding and filesystem logic isolated from OS concerns
 - keep ownership, error codes, and ABI rules explicit
 - avoid treating the current C# native interop layer as the final bare-metal solution
+
+The embedded and bare-metal direction should remain downstream of `Phase 20`. Do not start board-specific or hardware-specific implementation work until the C++ core boundary and migration policy are decision-complete.
 
 ## Recommended v2.0.0 Scope
 
@@ -213,7 +225,7 @@ Primary candidates:
 
 - native library cleanup and supported API surface definition
 - WebAssembly build target and minimal browser/runtime integration
-- start the `Legacy89DiskKit.Cpp` portability plan
+- execute the `Legacy89DiskKit.Cpp` portability plan from the documented `Phase 20` sequence
 - better release automation
 - richer CLI help and localization
 - filesystem-specific attribute editing and boot editing
