@@ -5,6 +5,7 @@ using Legacy89DiskKit.Application;
 using Legacy89DiskKit.Application.DiskImage;
 using Legacy89DiskKit.Application.FileSystem;
 using Legacy89DiskKit.Application.Services;
+using Legacy89DiskKit.Application.Fdc.Hosts.Scripting;
 using Legacy89DiskKit.Cli.Presentation.FileSystem;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
 using Legacy89DiskKit.Domain.DiskImage.Model;
@@ -269,6 +270,9 @@ diskCommand.AddCommand(diskFormatCommand);
 var hostCommand = new Command("host", localizer.HostCommandDescription);
 var hostStdioCommand = new Command("stdio", localizer.HostStdioCommandDescription);
 var hostObservableOption = new Option<bool>("--observable", localizer.HostObservableOptionDescription);
+var hostScriptCommand = new Command("script", localizer.HostScriptCommandDescription);
+var hostScriptD88PathCommand = new Command("d88-path", localizer.HostScriptD88PathCommandDescription);
+var hostOutputArgument = new Argument<string>("output", localizer.HostOutputArgumentDescription);
 hostStdioCommand.AddOption(hostObservableOption);
 hostStdioCommand.SetHandler(async (bool observable) =>
 {
@@ -280,7 +284,24 @@ hostStdioCommand.SetHandler(async (bool observable) =>
 
     await Legacy89DiskKitApplication.CreateEmulatorHostProtocolStdioRunner().RunAsync();
 }, hostObservableOption);
+hostScriptD88PathCommand.AddArgument(imageArgument);
+hostScriptD88PathCommand.AddArgument(hostOutputArgument);
+hostScriptD88PathCommand.SetHandler(async (string imagePath, string outputPath) =>
+{
+    try
+    {
+        var requests = Legacy89DiskKitApplication.CreateReadOnlyD88PathScript(imagePath);
+        await EmulatorHostRequestScriptFileStore.SaveAsync(outputPath, requests);
+        PrintSuccess(localizer, $"Host request script written: {outputPath}");
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+}, imageArgument, hostOutputArgument);
+hostScriptCommand.AddCommand(hostScriptD88PathCommand);
 hostCommand.AddCommand(hostStdioCommand);
+hostCommand.AddCommand(hostScriptCommand);
 
 var bootCommand = new Command("boot", localizer.BootCommandDescription);
 var filesOption = new Option<string>("--files", () => "all", localizer.BootFilesOptionDescription);
