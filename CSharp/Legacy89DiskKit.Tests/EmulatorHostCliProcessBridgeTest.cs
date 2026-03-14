@@ -43,36 +43,35 @@ public class EmulatorHostCliProcessBridgeTest
 
         try
         {
-            var capabilities = await SendExchangeAsync(process, new EmulatorHostRequest(EmulatorHostRequestKind.QueryCapabilities));
+            var sequence = HostProofSequence.CreateReadOnlyD88ByPathSequence(imagePath);
+
+            var capabilities = await SendExchangeAsync(process, sequence[0]);
             Assert.NotNull(capabilities.Response.Capabilities);
             Assert.True(capabilities.Response.Capabilities!.SupportsObservableStdio);
             Assert.True(capabilities.Response.Capabilities.SupportsPathOpen);
 
-            var openExchange = await SendExchangeAsync(
-                process,
-                new EmulatorHostRequest(
-                    EmulatorHostRequestKind.OpenDiskPath,
-                    ImagePath: imagePath,
-                    DriveNumber: 0,
-                    ReadOnly: true));
+            var openExchange = await SendExchangeAsync(process, sequence[1]);
             Assert.NotNull(openExchange.Response.VisibleState);
 
-            await SendExchangeAsync(process, new EmulatorHostRequest(EmulatorHostRequestKind.SelectDrive, DriveNumber: 0));
-            await SendExchangeAsync(process, new EmulatorHostRequest(EmulatorHostRequestKind.WriteRegister, RegisterAddress: 1, RegisterValue: 0));
-            await SendExchangeAsync(process, new EmulatorHostRequest(EmulatorHostRequestKind.WriteRegister, RegisterAddress: 2, RegisterValue: 1));
+            await SendExchangeAsync(process, sequence[2]);
+            await SendExchangeAsync(process, sequence[3]);
+            await SendExchangeAsync(process, sequence[4]);
 
-            var commandExchange = await SendExchangeAsync(process, new EmulatorHostRequest(EmulatorHostRequestKind.WriteRegister, RegisterAddress: 0, RegisterValue: 0x80));
+            var commandExchange = await SendExchangeAsync(process, sequence[5]);
             Assert.Contains(commandExchange.Notifications, x => x.Kind == EmulatorHostNotificationKind.AdvanceRequested);
 
-            var advanceExchange = await SendExchangeAsync(process, new EmulatorHostRequest(EmulatorHostRequestKind.Advance, AdvanceMicroseconds: 1000));
+            var advanceExchange = await SendExchangeAsync(process, sequence[6]);
             Assert.True(advanceExchange.Response.IrqAsserted);
             Assert.True(advanceExchange.Response.DrqAsserted);
 
-            var firstByte = await SendExchangeAsync(process, new EmulatorHostRequest(EmulatorHostRequestKind.ReadRegister, RegisterAddress: 3));
-            var secondByte = await SendExchangeAsync(process, new EmulatorHostRequest(EmulatorHostRequestKind.ReadRegister, RegisterAddress: 3));
+            var firstByte = await SendExchangeAsync(process, sequence[7]);
+            var secondByte = await SendExchangeAsync(process, sequence[8]);
 
             Assert.Equal((byte?)0x41, firstByte.Response.RegisterValue);
             Assert.Equal((byte?)0x42, secondByte.Response.RegisterValue);
+
+            var closeExchange = await SendExchangeAsync(process, sequence[9]);
+            Assert.Null(closeExchange.Response.VisibleState);
         }
         finally
         {
