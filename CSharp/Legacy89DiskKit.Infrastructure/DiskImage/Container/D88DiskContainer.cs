@@ -14,7 +14,6 @@ public class D88DiskContainer : IDiskContainer, IDisposable
     private D88Header _header = new D88Header();
     private readonly Dictionary<(int, int, int), D88SectorData> _sectors;
     private bool _hasChanges = false;
-    private bool _disposed = false;
 
     public string FilePath => _filePath;
     public bool IsReadOnly => _isReadOnly;
@@ -294,7 +293,6 @@ public class D88DiskContainer : IDiskContainer, IDisposable
         {
             try { Save(); } catch { }
         }
-        _disposed = true;
     }
 
 }
