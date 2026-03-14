@@ -37,26 +37,26 @@ internal sealed class CliHostProcessSession : IAsyncDisposable
         EmulatorHostRequest request,
         ICollection<HostProofTranscriptEntry>? transcript = null)
     {
-        var payload = EmulatorHostProtocolCodec.SerializeRequest(request);
-        await _process.StandardInput.WriteLineAsync(payload);
-        await _process.StandardInput.FlushAsync();
-
-        var responseLine = await _process.StandardOutput.ReadLineAsync();
-        Assert.False(string.IsNullOrWhiteSpace(responseLine), "The CLI host process did not produce a response line.");
-        var exchange = EmulatorHostProtocolCodec.DeserializeExchange(responseLine!);
+        var responseLine = await SendRawLineAsync(EmulatorHostProtocolCodec.SerializeRequest(request));
+        var exchange = EmulatorHostProtocolCodec.DeserializeExchange(responseLine);
         transcript?.Add(new HostProofTranscriptEntry(request, exchange));
         return exchange;
     }
 
     public async Task<EmulatorHostResponse> SendResponseAsync(EmulatorHostRequest request)
     {
-        var payload = EmulatorHostProtocolCodec.SerializeRequest(request);
+        var responseLine = await SendRawLineAsync(EmulatorHostProtocolCodec.SerializeRequest(request));
+        return EmulatorHostProtocolCodec.DeserializeResponse(responseLine);
+    }
+
+    public async Task<string> SendRawLineAsync(string payload)
+    {
         await _process.StandardInput.WriteLineAsync(payload);
         await _process.StandardInput.FlushAsync();
 
         var responseLine = await _process.StandardOutput.ReadLineAsync();
         Assert.False(string.IsNullOrWhiteSpace(responseLine), "The CLI host process did not produce a response line.");
-        return EmulatorHostProtocolCodec.DeserializeResponse(responseLine!);
+        return responseLine!;
     }
 
     public async ValueTask DisposeAsync()
