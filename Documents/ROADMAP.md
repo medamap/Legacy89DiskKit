@@ -652,6 +652,8 @@ Work:
 - identify candidate transport bindings such as local sockets, named pipes, stdio-style process bridges, or browser-friendly message bridges
 - keep the first concrete transport thin: a stdio-oriented runner over the line-delimited text session rather than a mandatory always-on daemon shape
 - support both plain request/response exchange and notification-aware exchange for IRQ, DRQ, and timing-advance hints
+- support path-based image open and close from external hosts that do not own in-process container instances
+- expose the first shipped host-facing process entrypoint through the CLI as `host stdio`
 
 This makes it possible to:
 
@@ -660,6 +662,8 @@ This makes it possible to:
 - support process-separated integration where a host-side bridge is the safer choice
 - carry the same host-facing protocol into desktop, embedded, and browser-connected scenarios
 - let host-side bridges choose between polling-only integration and notification-aware integration without changing the core controller contract
+- start a host bridge as a thin process without writing a dedicated daemon first
+- let an external emulator-side bridge open disk images by path and drive the controller contract immediately
 
 ### Phase 24: First Real Emulator Integrations
 
