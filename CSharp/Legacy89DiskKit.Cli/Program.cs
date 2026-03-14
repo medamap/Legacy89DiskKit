@@ -272,6 +272,7 @@ var hostStdioCommand = new Command("stdio", localizer.HostStdioCommandDescriptio
 var hostObservableOption = new Option<bool>("--observable", localizer.HostObservableOptionDescription);
 var hostScriptCommand = new Command("script", localizer.HostScriptCommandDescription);
 var hostScriptD88PathCommand = new Command("d88-path", localizer.HostScriptD88PathCommandDescription);
+var hostScriptD88BufferCommand = new Command("d88-buffer", localizer.HostScriptD88BufferCommandDescription);
 var hostOutputArgument = new Argument<string>("output", localizer.HostOutputArgumentDescription);
 hostStdioCommand.AddOption(hostObservableOption);
 hostStdioCommand.SetHandler(async (bool observable) =>
@@ -299,7 +300,24 @@ hostScriptD88PathCommand.SetHandler(async (string imagePath, string outputPath) 
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, hostOutputArgument);
+hostScriptD88BufferCommand.AddArgument(imageArgument);
+hostScriptD88BufferCommand.AddArgument(hostOutputArgument);
+hostScriptD88BufferCommand.SetHandler(async (string imagePath, string outputPath) =>
+{
+    try
+    {
+        var imageData = await File.ReadAllBytesAsync(imagePath);
+        var requests = Legacy89DiskKitApplication.CreateReadOnlyD88BufferScript(imageData);
+        await EmulatorHostRequestScriptFileStore.SaveAsync(outputPath, requests);
+        PrintSuccess(localizer, $"Host request script written: {outputPath}");
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+}, imageArgument, hostOutputArgument);
 hostScriptCommand.AddCommand(hostScriptD88PathCommand);
+hostScriptCommand.AddCommand(hostScriptD88BufferCommand);
 hostCommand.AddCommand(hostStdioCommand);
 hostCommand.AddCommand(hostScriptCommand);
 

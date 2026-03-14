@@ -66,6 +66,7 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string HostObservableOptionDescription { get; }
     string HostScriptCommandDescription { get; }
     string HostScriptD88PathCommandDescription { get; }
+    string HostScriptD88BufferCommandDescription { get; }
     string HostOutputArgumentDescription { get; }
     string BootCommandDescription { get; }
     string BootShowCommandDescription { get; }
@@ -202,6 +203,7 @@ public static class FileListLocalizer
         public abstract string HostObservableOptionDescription { get; }
         public abstract string HostScriptCommandDescription { get; }
         public abstract string HostScriptD88PathCommandDescription { get; }
+        public abstract string HostScriptD88BufferCommandDescription { get; }
         public abstract string HostOutputArgumentDescription { get; }
         public abstract string BootCommandDescription { get; }
         public abstract string BootShowCommandDescription { get; }
@@ -318,6 +320,7 @@ public static class FileListLocalizer
         public override string HostObservableOptionDescription => "Emit notification-aware exchanges that include IRQ, DRQ, and advance-request notifications";
         public override string HostScriptCommandDescription => "Generate reusable request scripts for external host bridges";
         public override string HostScriptD88PathCommandDescription => "Write a read-only D88-by-path request script";
+        public override string HostScriptD88BufferCommandDescription => "Write a read-only D88-by-buffer request script";
         public override string HostOutputArgumentDescription => "Output file path";
         public override string BootCommandDescription => "Boot metadata operations";
         public override string BootShowCommandDescription => "Show boot metadata for this disk";
@@ -434,6 +437,7 @@ public static class FileListLocalizer
         public override string HostObservableOptionDescription => "IRQ、DRQ、advance-request 通知を含む通知対応 exchange を出力します";
         public override string HostScriptCommandDescription => "外部ホストブリッジ向けの再利用可能な要求スクリプトを生成";
         public override string HostScriptD88PathCommandDescription => "読み取り専用の D88 パス指定要求スクリプトを書き出す";
+        public override string HostScriptD88BufferCommandDescription => "読み取り専用の D88 バッファ指定要求スクリプトを書き出す";
         public override string HostOutputArgumentDescription => "出力ファイルパス";
         public override string BootCommandDescription => "ブート情報の操作";
         public override string BootShowCommandDescription => "このディスクのブート情報を表示します";
