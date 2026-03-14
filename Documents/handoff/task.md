@@ -278,7 +278,17 @@
     - [ ] Keep board-specific or hardware-specific work out of the `v2.0.0` release gate.
     - [ ] Keep `Phase 21` downstream of the `Phase 20` migration-boundary work.
     - [ ] Implement a CSCP-style thin host adapter against the shared controller/core contract.
+        - [ ] bridge disk mount and unmount into mounted-medium binding
+        - [ ] bridge register reads and writes into `IFdcController`
+        - [ ] bridge delayed events into explicit timing advancement
+        - [ ] bridge IRQ and DRQ into host-visible callbacks or signals
+        - [ ] keep the first proof read-only
     - [ ] Implement an xmil-web-style thin host adapter against the shared controller/core contract.
+        - [ ] isolate global controller state behind a thin adapter
+        - [ ] bridge `x1_fdc_w` / `x1_fdc_r` style entrypoints into register access
+        - [ ] bridge event objects into explicit timing advancement
+        - [ ] prove D88-backed integration first
+        - [ ] prove raw sector-image-backed integration second
     - [ ] Validate that both host adapters can share the same mounted-medium binding path without a universal adapter layer.
     - [ ] Keep detailed host-integration planning in `Documents/Phase21_Emulator_Host_Integration_Plan.md`.
 

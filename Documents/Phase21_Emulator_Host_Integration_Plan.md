@@ -89,6 +89,29 @@ The thin adapter for this host should translate:
 - IRQ and DRQ output hooks into the shared visible-state and signal model
 - drive select, side select, and ready state into the shared drive model
 
+### Interface Mapping
+
+| Host-side shape | Legacy89DiskKit side |
+| --- | --- |
+| disk open and close | mounted-medium binding + drive mount service |
+| disk inserted query | drive-ready and mount-state query |
+| register read and write | `IFdcController` register access |
+| signal input and output | drive-selection, side-selection, IRQ, DRQ bridge |
+| delayed event callback | `IControllerClock` + explicit timing advancement |
+| public drive type / media queries | `DiskType` and mounted-medium metadata |
+
+### First Adapter Work Package
+
+The first CSCP-style adapter should be implemented in this order:
+
+1. drive mount and unmount glue
+2. register read and write bridge
+3. delayed event to timing-advancement bridge
+4. IRQ and DRQ bridge
+5. ready-state and selected-drive bridge
+
+The first implementation should avoid write-capable controller behavior and should not attempt full chip fidelity.
+
 ### First Proof Target
 
 The first proof target for this host should be:
@@ -120,6 +143,28 @@ The thin adapter for this host should translate:
 - backend mount operations into mounted-medium binding
 - global drive and media state into the shared drive model
 - busy and transfer progression into the shared controller-visible state
+
+### Interface Mapping
+
+| Host-side shape | Legacy89DiskKit side |
+| --- | --- |
+| global `x1_fdc_w` / `x1_fdc_r` entrypoints | `IFdcController` register write and read |
+| busy and read/write event objects | timing advancement and controller busy state |
+| backend mount and eject functions | mounted-medium binding + drive mount service |
+| global media and drive fields | mounted drive state and metadata |
+| direct sector helper for backend access | sector-addressable medium bridge |
+
+### Second Adapter Work Package
+
+The xmil-web-style adapter should be implemented after the first event-driven host proof.
+
+The second adapter should focus on:
+
+1. global-state bridge isolation
+2. event-object to timing-advancement bridge
+3. register entrypoint wrapping
+4. D88-backed proof
+5. raw sector-image-backed proof
 
 ### Second Proof Target
 
@@ -177,6 +222,8 @@ Phase 21 should produce:
 - a concrete host-integration mapping for the second host style
 - a thin-adapter responsibility checklist
 - a first proof target definition that can be implemented without changing the narrow controller/core contract
+- an implementation order for the first host adapter
+- an implementation order for the second host adapter
 
 ## Exit Criteria
 

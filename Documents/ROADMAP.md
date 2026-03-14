@@ -500,6 +500,20 @@ This order should remain read-only at first. The first proof target is emulator-
 
 Write support and higher-fidelity controller behavior should remain outside the first proof target.
 
+The first adapter should translate an event-driven host controller shape into:
+
+- mounted-medium binding
+- register access
+- explicit timing advancement
+- IRQ and DRQ visibility
+- drive-ready and drive-selection state
+
+The second adapter should prove that the same shared contract can also fit a host with:
+
+- global controller state
+- port-style read and write entrypoints
+- host-owned event objects
+
 ## Recommended v2.0.0 Scope
 
 The safest `v2.0.0` scope is:
