@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Legacy89DiskKit.Application.Fdc.Hosts.Protocol;
 using Legacy89DiskKit.Infrastructure.DiskImage.Container;
 using Xunit;
@@ -7,13 +6,6 @@ namespace Legacy89DiskKit.Tests;
 
 public class EmulatorHostCliProcessBridgeTest
 {
-    private static string GetRepoPath(string relativePath)
-    {
-        var baseDirectory = AppContext.BaseDirectory;
-        var repoRoot = Path.GetFullPath(Path.Combine(baseDirectory, "../../../../.."));
-        return Path.Combine(repoRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
-    }
-
     [Fact]
     public async Task CliHostStdioObservable_CanServeReadOnlyD88Flow()
     {
@@ -23,55 +15,39 @@ public class EmulatorHostCliProcessBridgeTest
         var imagePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.d88");
         await File.WriteAllBytesAsync(imagePath, container.ToImageData());
 
-        var cliDllPath = GetRepoPath("csharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll");
-        Assert.True(File.Exists(cliDllPath), $"CLI assembly was not found: {cliDllPath}");
-
-        using var process = new Process
-        {
-            StartInfo = new ProcessStartInfo("dotnet", $"\"{cliDllPath}\" host stdio --observable")
-            {
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = GetRepoPath(string.Empty)
-            }
-        };
-
-        process.Start();
+        await using var process = new CliHostProcessSession();
         var transcript = new List<HostProofTranscriptEntry>();
 
         try
         {
             var sequence = HostProofSequence.CreateReadOnlyD88ByPathSequence(imagePath);
 
-            var capabilities = await SendExchangeAsync(process, sequence[0], transcript);
+            var capabilities = await process.SendExchangeAsync(sequence[0], transcript);
             Assert.NotNull(capabilities.Response.Capabilities);
             Assert.True(capabilities.Response.Capabilities!.SupportsObservableStdio);
             Assert.True(capabilities.Response.Capabilities.SupportsPathOpen);
 
-            var openExchange = await SendExchangeAsync(process, sequence[1], transcript);
+            var openExchange = await process.SendExchangeAsync(sequence[1], transcript);
             Assert.NotNull(openExchange.Response.VisibleState);
 
-            await SendExchangeAsync(process, sequence[2], transcript);
-            await SendExchangeAsync(process, sequence[3], transcript);
-            await SendExchangeAsync(process, sequence[4], transcript);
+            await process.SendExchangeAsync(sequence[2], transcript);
+            await process.SendExchangeAsync(sequence[3], transcript);
+            await process.SendExchangeAsync(sequence[4], transcript);
 
-            var commandExchange = await SendExchangeAsync(process, sequence[5], transcript);
+            var commandExchange = await process.SendExchangeAsync(sequence[5], transcript);
             Assert.Contains(commandExchange.Notifications, x => x.Kind == EmulatorHostNotificationKind.AdvanceRequested);
 
-            var advanceExchange = await SendExchangeAsync(process, sequence[6], transcript);
+            var advanceExchange = await process.SendExchangeAsync(sequence[6], transcript);
             Assert.True(advanceExchange.Response.IrqAsserted);
             Assert.True(advanceExchange.Response.DrqAsserted);
 
-            var firstByte = await SendExchangeAsync(process, sequence[7], transcript);
-            var secondByte = await SendExchangeAsync(process, sequence[8], transcript);
+            var firstByte = await process.SendExchangeAsync(sequence[7], transcript);
+            var secondByte = await process.SendExchangeAsync(sequence[8], transcript);
 
             Assert.Equal((byte?)0x41, firstByte.Response.RegisterValue);
             Assert.Equal((byte?)0x42, secondByte.Response.RegisterValue);
 
-            var closeExchange = await SendExchangeAsync(process, sequence[9], transcript);
+            var closeExchange = await process.SendExchangeAsync(sequence[9], transcript);
             Assert.Null(closeExchange.Response.VisibleState);
 
             var transcriptPayload = HostProofTranscriptCodec.SerializeLines(transcript);
@@ -81,29 +57,7 @@ public class EmulatorHostCliProcessBridgeTest
         }
         finally
         {
-            process.StandardInput.Close();
-            if (!process.WaitForExit(2000))
-            {
-                process.Kill(entireProcessTree: true);
-            }
-
             File.Delete(imagePath);
         }
-    }
-
-    private static async Task<EmulatorHostExchange> SendExchangeAsync(
-        Process process,
-        EmulatorHostRequest request,
-        ICollection<HostProofTranscriptEntry> transcript)
-    {
-        var payload = EmulatorHostProtocolCodec.SerializeRequest(request);
-        await process.StandardInput.WriteLineAsync(payload);
-        await process.StandardInput.FlushAsync();
-
-        var responseLine = await process.StandardOutput.ReadLineAsync();
-        Assert.False(string.IsNullOrWhiteSpace(responseLine), "The CLI host process did not produce a response line.");
-        var exchange = EmulatorHostProtocolCodec.DeserializeExchange(responseLine!);
-        transcript.Add(new HostProofTranscriptEntry(request, exchange));
-        return exchange;
     }
 }
