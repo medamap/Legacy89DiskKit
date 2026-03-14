@@ -42,17 +42,26 @@ public class HostProofBundleWriterTest
 
         try
         {
-            await HostProofBundleWriter.WriteAsync(outputDirectory, "proof", report, transcript);
+            var requestScript = new[]
+            {
+                new EmulatorHostRequest(EmulatorHostRequestKind.QueryCapabilities)
+            };
+
+            await HostProofBundleWriter.WriteAsync(outputDirectory, "proof", report, transcript, requestScript);
 
             var markdownPath = Path.Combine(outputDirectory, "proof.md");
             var transcriptPath = Path.Combine(outputDirectory, "proof.jsonl");
+            var requestPath = Path.Combine(outputDirectory, "proof.requests.jsonl");
 
             Assert.True(File.Exists(markdownPath));
             Assert.True(File.Exists(transcriptPath));
+            Assert.True(File.Exists(requestPath));
             Assert.Contains("Host Proof Report", await File.ReadAllTextAsync(markdownPath));
 
             var roundTrip = await HostProofTranscriptFileStore.LoadAsync(transcriptPath);
             Assert.Single(roundTrip);
+            var roundTripRequests = await HostProofRequestScriptFileStore.LoadAsync(requestPath);
+            Assert.Single(roundTripRequests);
         }
         finally
         {
