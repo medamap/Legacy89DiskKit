@@ -650,6 +650,7 @@ Work:
 - keep static and dynamic library use as first-class options
 - define process-separated or IPC-friendly request and response transport for hosts that should not link directly
 - identify candidate transport bindings such as local sockets, named pipes, stdio-style process bridges, or browser-friendly message bridges
+- support both plain request/response exchange and notification-aware exchange for IRQ, DRQ, and timing-advance hints
 
 This makes it possible to:
 
@@ -657,6 +658,7 @@ This makes it possible to:
 - support direct embedding where licenses and deployment allow it
 - support process-separated integration where a host-side bridge is the safer choice
 - carry the same host-facing protocol into desktop, embedded, and browser-connected scenarios
+- let host-side bridges choose between polling-only integration and notification-aware integration without changing the core controller contract
 
 ### Phase 24: First Real Emulator Integrations
 

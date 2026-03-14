@@ -311,6 +311,8 @@
 - [ ] Rough Future Phases (adjustable roadmap only; promote to concrete tasks when each phase approaches execution)
     - [ ] Phase 22: Controller Fidelity Research
     - [ ] Phase 23: External Host Exposure and Transport Shape
+        - [x] expose a line-delimited text session suitable for stdio-style and pipe-style process bridges
+        - [x] expose a notification-aware exchange shape that can carry IRQ, DRQ, and advance-request signals alongside request responses
     - [ ] Phase 24: First Real Emulator Integrations
     - [ ] Phase 25: Portable Native Surface Consolidation
     - [ ] Phase 26: C++ Filesystem Parity Expansion

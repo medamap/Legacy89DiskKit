@@ -31,4 +31,17 @@ public static class EmulatorHostProtocolCodec
         return JsonSerializer.Deserialize<EmulatorHostResponse>(payload, SerializerOptions)
             ?? throw new InvalidOperationException("The emulator host response payload could not be deserialized.");
     }
+
+    public static string SerializeExchange(EmulatorHostExchange exchange)
+    {
+        ArgumentNullException.ThrowIfNull(exchange);
+        return JsonSerializer.Serialize(exchange, SerializerOptions);
+    }
+
+    public static EmulatorHostExchange DeserializeExchange(string payload)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(payload);
+        return JsonSerializer.Deserialize<EmulatorHostExchange>(payload, SerializerOptions)
+            ?? throw new InvalidOperationException("The emulator host exchange payload could not be deserialized.");
+    }
 }
