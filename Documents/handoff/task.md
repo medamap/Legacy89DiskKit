@@ -336,6 +336,7 @@
         - [ ] execute the minimum proof defined in `Documents/Phase24_First_EventDriven_Host_Checklist.md`
         - [ ] use `Documents/Phase24_First_EventDriven_Host_Bridge_Tasks.md` as the bridge-side implementation order for the first event-driven host
         - [ ] keep an out-of-process CLI-host smoke proof passing while the first real-host bridge work is still in progress
+        - [ ] return the first real-host result using `Documents/Phase24_First_Host_Proof_Report_Template.md`
     - [ ] Phase 25: Portable Native Surface Consolidation
     - [ ] Phase 26: C++ Filesystem Parity Expansion
     - [ ] Phase 27: Raw Preservation Format Formalization
