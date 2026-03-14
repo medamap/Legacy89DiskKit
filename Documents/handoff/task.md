@@ -289,10 +289,10 @@
     - [ ] Implement an xmil-web-style thin host adapter against the shared controller/core contract.
         - [x] isolate global controller state behind a thin adapter
         - [x] bridge `x1_fdc_w` / `x1_fdc_r` style entrypoints into register access
-        - [ ] bridge event objects into explicit timing advancement
+        - [x] bridge event objects into explicit timing advancement
         - [x] prove D88-backed integration first
-        - [ ] prove raw sector-image-backed integration second
-    - [ ] Validate that both host adapters can share the same mounted-medium binding path without a universal adapter layer.
+        - [x] prove raw sector-image-backed integration second
+    - [x] Validate that both host adapters can share the same mounted-medium binding path without a universal adapter layer.
     - [ ] Keep detailed host-integration planning in `Documents/Phase21_Emulator_Host_Integration_Plan.md`.
 
 - [ ] Future Packaging Follow-Up

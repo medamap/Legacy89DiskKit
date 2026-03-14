@@ -7,13 +7,19 @@ public class XmilWebStyleFdcHostAdapter
     private readonly EventDrivenEmulatorFdcHostAdapter _adapter;
     private int _selectedDrive;
     private int _selectedSide;
+    private TimeSpan? _pendingEventDelay;
 
     public XmilWebStyleFdcHostAdapter(EventDrivenEmulatorFdcHostAdapter adapter)
     {
         _adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));
         _adapter.IrqChanged += value => IrqChanged?.Invoke(value);
         _adapter.DrqChanged += value => DrqChanged?.Invoke(value);
-        _adapter.AdvanceRequested += delay => AdvanceRequested?.Invoke(delay);
+        _adapter.AdvanceRequested += delay =>
+        {
+            _pendingEventDelay = delay;
+            AdvanceRequested?.Invoke(delay);
+            EventScheduled?.Invoke(XmilWebFdcEventKind.BusyCompletion, delay);
+        };
     }
 
     public event Action<bool>? IrqChanged;
@@ -21,6 +27,8 @@ public class XmilWebStyleFdcHostAdapter
     public event Action<bool>? DrqChanged;
 
     public event Action<TimeSpan>? AdvanceRequested;
+
+    public event Action<XmilWebFdcEventKind, TimeSpan>? EventScheduled;
 
     public void MountDisk(int driveNumber, IDiskContainer container)
     {
@@ -62,6 +70,21 @@ public class XmilWebStyleFdcHostAdapter
     public void Advance(TimeSpan delta)
     {
         _adapter.Advance(delta);
+        if (_pendingEventDelay == delta)
+        {
+            _pendingEventDelay = null;
+        }
+    }
+
+    public bool RunEvent(XmilWebFdcEventKind eventKind)
+    {
+        if (eventKind != XmilWebFdcEventKind.BusyCompletion || _pendingEventDelay is null)
+        {
+            return false;
+        }
+
+        Advance(_pendingEventDelay.Value);
+        return true;
     }
 
     public XmilWebFdcState GetState()

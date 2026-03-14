@@ -195,6 +195,8 @@ The managed reference implementation now includes an initial xmil-web-style adap
 - global-state snapshot isolation behind a dedicated adapter object
 - `x1_fdc_w` / `x1_fdc_r` style entrypoints over the shared register contract
 - D88-backed read-only proof through the existing mounted-medium binding path
+- event-object style scheduling over the current advance-delay hints
+- raw sector-image-backed read-only proof through the same mounted-medium binding path
 
 ### Second Proof Target
 
