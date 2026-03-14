@@ -510,6 +510,8 @@ The first adapter should translate an event-driven host controller shape into:
 
 Where direct linking would create an avoidable license or distribution problem, the first adapter path should prefer a process-separated or IPC-friendly bridge so emulator-specific glue can remain on the host side.
 
+That bridge should remain generic enough that it is not reasonably described as a dedicated integration path for one emulator codebase only. The repository should own the portable contract and transport shape, while host-specific bridge implementations stay with the host when license boundaries make that the safer choice.
+
 The second adapter should prove that the same shared contract can also fit a host with:
 
 - global controller state

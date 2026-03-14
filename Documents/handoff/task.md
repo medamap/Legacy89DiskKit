@@ -284,6 +284,7 @@
         - [x] bridge IRQ and DRQ into host-visible callbacks or signals
         - [x] keep the first proof read-only
         - [ ] keep the adapter boundary process-separated or IPC-friendly so host-side integration code can remain in the emulator-side codebase
+        - [ ] keep the transport and naming generic enough that the adapter path is not framed as support for one specific emulator codebase only
     - [ ] Implement an xmil-web-style thin host adapter against the shared controller/core contract.
         - [ ] isolate global controller state behind a thin adapter
         - [ ] bridge `x1_fdc_w` / `x1_fdc_r` style entrypoints into register access

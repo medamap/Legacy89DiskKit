@@ -6,6 +6,8 @@ This document defines the first host-integration track after the `Phase 20` port
 
 The goal is not to build a universal emulator adapter. The goal is to prove that the shared narrow controller/core contract can be connected to more than one emulator-side integration style through thin host-specific adapters.
 
+The first host-integration track must also avoid implying that this repository is designed for one specific emulator codebase only. The integration boundary should stay generic enough that different emulator hosts can connect through the same narrow contract without turning this repository into a host-specific derivative work.
+
 ## Scope
 
 This plan covers:
@@ -28,10 +30,10 @@ Those remain downstream or on separate research tracks.
 
 The first two host targets are:
 
-1. an event-driven host adapter matching the public controller shape exposed by the CommonSourceCodeProject emulator family
+1. an event-driven host adapter matching a controller shape with delayed callbacks and explicit register access
 2. a second host adapter matching the X millennium / xmil-web integration style
 
-The first target is preferred because its public controller-facing interface is clearer and closer to the current `Drive / Fdc / Timing` split.
+The first target is preferred because that controller-facing shape is clearer and closer to the current `Drive / Fdc / Timing` split.
 
 ## Shared Core Contract
 
@@ -65,6 +67,7 @@ That means:
 - the host adapter owns host-specific IRQ and DRQ bridging
 - the host adapter owns host-specific drive and side selection glue
 - the controller/core contract remains host-agnostic
+- the repository must not rely on a host-specific link boundary to justify the existence of the adapter path
 
 ## Event-Driven Emulator Host Adapter
 
@@ -128,6 +131,7 @@ The remaining event-driven emulator work is host-specific glue:
 - host event-manager integration using the current advance-delay hints
 - richer host event bridge work beyond the current IRQ and DRQ callback path
 - process-separated or IPC-friendly integration so emulator-specific bridge code can remain outside this repository when required by license constraints
+- a transport or message boundary that remains reusable for more than one emulator host
 
 ### First Proof Target
 
@@ -139,6 +143,7 @@ The first proof target for this host should be:
 - expose busy, IRQ, DRQ, and record-not-found style outcomes
 - keep the integration read-only
 - keep the host-specific bridge out of the portable core repository when a copyleft or otherwise restrictive emulator license requires process or IPC separation
+- avoid naming or structuring the bridge as if it existed for one emulator family only
 
 ## xmil-web-Style Host Adapter
 
