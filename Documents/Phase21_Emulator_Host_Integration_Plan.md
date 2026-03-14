@@ -126,6 +126,7 @@ The managed reference implementation already includes a first event-driven emula
 - explicit read-only timing advancement through the shared controller/core contract
 - callback-friendly advance-delay hints for host-side event registration
 - a transport-neutral request and response shape for register access, state queries, drive selection, and timing advancement
+- a JSON-friendly protocol codec and endpoint that can sit behind process-separated or IPC-based transport
 
 The remaining event-driven emulator work is host-specific glue:
 
@@ -133,6 +134,7 @@ The remaining event-driven emulator work is host-specific glue:
 - richer host event bridge work beyond the current IRQ and DRQ callback path
 - process-separated or IPC-friendly integration so emulator-specific bridge code can remain outside this repository when required by license constraints
 - a transport or message boundary that remains reusable for more than one emulator host
+- concrete transport bindings such as sockets, pipes, or other host-owned IPC layers
 
 ### First Proof Target
 
