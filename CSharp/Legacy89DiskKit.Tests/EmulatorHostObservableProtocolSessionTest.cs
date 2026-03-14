@@ -66,4 +66,16 @@ public class EmulatorHostObservableProtocolSessionTest
         Assert.True(exchange.Response.Capabilities.SupportsObservableStdio);
         Assert.Empty(exchange.Notifications);
     }
+
+    [Fact]
+    public void Session_ReturnsErrorExchangeForMalformedRequestLine()
+    {
+        var session = new EmulatorHostObservableProtocolSession(Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter());
+
+        var payload = session.HandleLine("{not-json");
+        var exchange = EmulatorHostProtocolCodec.DeserializeExchange(payload);
+
+        Assert.False(string.IsNullOrWhiteSpace(exchange.Response.ErrorMessage));
+        Assert.Empty(exchange.Notifications);
+    }
 }

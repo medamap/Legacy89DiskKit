@@ -16,9 +16,16 @@ public sealed class EmulatorHostProtocolTextSession
             throw new ArgumentException("Request line must not be empty.", nameof(line));
         }
 
-        var responsePayload = _endpoint.Handle(line);
-        var response = EmulatorHostProtocolCodec.DeserializeResponse(responsePayload);
-        return EmulatorHostProtocolCodec.SerializeResponse(PatchCapabilities(response));
+        try
+        {
+            var responsePayload = _endpoint.Handle(line);
+            var response = EmulatorHostProtocolCodec.DeserializeResponse(responsePayload);
+            return EmulatorHostProtocolCodec.SerializeResponse(PatchCapabilities(response));
+        }
+        catch (Exception ex)
+        {
+            return EmulatorHostProtocolCodec.SerializeResponse(CreateErrorResponse(ex.Message));
+        }
     }
 
     public async Task RunAsync(TextReader reader, TextWriter writer, CancellationToken cancellationToken = default)
@@ -62,5 +69,16 @@ public sealed class EmulatorHostProtocolTextSession
                 SupportsObservableStdio = false
             }
         };
+    }
+
+    private static EmulatorHostResponse CreateErrorResponse(string message)
+    {
+        return new EmulatorHostResponse(
+            RegisterValue: null,
+            VisibleState: null,
+            IrqAsserted: false,
+            DrqAsserted: false,
+            PendingAdvanceMicroseconds: null,
+            ErrorMessage: message);
     }
 }

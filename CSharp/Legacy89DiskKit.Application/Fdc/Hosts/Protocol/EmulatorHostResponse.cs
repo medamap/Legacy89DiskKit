@@ -8,4 +8,5 @@ public sealed record EmulatorHostResponse(
     bool IrqAsserted,
     bool DrqAsserted,
     long? PendingAdvanceMicroseconds,
-    EmulatorHostCapabilities? Capabilities = null);
+    EmulatorHostCapabilities? Capabilities = null,
+    string? ErrorMessage = null);

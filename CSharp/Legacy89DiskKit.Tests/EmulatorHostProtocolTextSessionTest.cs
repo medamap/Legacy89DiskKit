@@ -86,4 +86,16 @@ public class EmulatorHostProtocolTextSessionTest
         Assert.Equal((byte?)0x41, responses[5].RegisterValue);
         Assert.Equal((byte?)0x42, responses[6].RegisterValue);
     }
+
+    [Fact]
+    public void Session_ReturnsErrorResponseForMalformedRequestLine()
+    {
+        var endpoint = new EmulatorHostProtocolEndpoint(Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter());
+        var session = new EmulatorHostProtocolTextSession(endpoint);
+
+        var payload = session.HandleLine("{not-json");
+        var response = EmulatorHostProtocolCodec.DeserializeResponse(payload);
+
+        Assert.False(string.IsNullOrWhiteSpace(response.ErrorMessage));
+    }
 }
