@@ -125,7 +125,7 @@ The managed reference implementation already includes a first CSCP-style host ad
 The remaining CSCP-style work is host-specific glue:
 
 - delayed event registration and callback integration
-- host-facing IRQ and DRQ callback or signal bridging
+- richer host event bridge work beyond the current IRQ and DRQ callback path
 
 ### First Proof Target
 

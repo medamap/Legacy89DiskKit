@@ -77,4 +77,29 @@ public class CscpStyleFdcHostAdapterTest
         Assert.True(closed);
         Assert.False(adapter.IsDiskInserted(1));
     }
+
+    [Fact]
+    public void Adapter_RaisesIrqAndDrqCallbacksWhenSignalStateChanges()
+    {
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        container.WriteSector(0, 0, 1, new byte[] { 0x55 });
+
+        var adapter = Legacy89DiskKitApplication.CreateCscpStyleFdcHostAdapter();
+        var irqStates = new List<bool>();
+        var drqStates = new List<bool>();
+        adapter.IrqChanged += value => irqStates.Add(value);
+        adapter.DrqChanged += value => drqStates.Add(value);
+
+        adapter.OpenDisk(0, container);
+        adapter.SelectDrive(0);
+        adapter.WriteIo8(1, 0);
+        adapter.WriteIo8(2, 1);
+        adapter.WriteIo8(0, 0x80);
+        adapter.Advance(TimeSpan.FromMilliseconds(1));
+        adapter.ReadIo8(3);
+
+        Assert.Contains(true, irqStates);
+        Assert.Contains(true, drqStates);
+        Assert.Contains(false, drqStates);
+    }
 }

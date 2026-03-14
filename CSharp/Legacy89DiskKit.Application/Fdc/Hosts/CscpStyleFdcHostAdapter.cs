@@ -12,6 +12,12 @@ public class CscpStyleFdcHostAdapter
     private readonly Dictionary<int, MountedMediumBinding> _bindings = new();
     private readonly Dictionary<int, ControllerBinding> _controllers = new();
     private int _selectedDrive;
+    private bool _lastIrq;
+    private bool _lastDrq;
+
+    public event Action<bool>? IrqChanged;
+
+    public event Action<bool>? DrqChanged;
 
     public CscpStyleFdcHostAdapter(DriveMountService driveMountService, MountedMediumBindingService bindingService)
     {
@@ -32,13 +38,16 @@ public class CscpStyleFdcHostAdapter
 
         _bindings[driveNumber] = binding;
         _controllers[driveNumber] = new ControllerBinding(controller, timedController);
+        SyncSignals();
     }
 
     public bool CloseDisk(int driveNumber)
     {
         _bindings.Remove(driveNumber);
         _controllers.Remove(driveNumber);
-        return _driveMountService.Unmount(driveNumber);
+        var result = _driveMountService.Unmount(driveNumber);
+        SyncSignals();
+        return result;
     }
 
     public bool IsDiskInserted(int driveNumber)
@@ -55,6 +64,7 @@ public class CscpStyleFdcHostAdapter
     {
         EnsureDriveMounted(driveNumber);
         _selectedDrive = driveNumber;
+        SyncSignals();
     }
 
     public void SelectSide(int side)
@@ -65,26 +75,32 @@ public class CscpStyleFdcHostAdapter
         }
 
         binding.ControllerFacingMedium.SelectSide(side);
+        SyncSignals();
     }
 
     public void Reset()
     {
         CurrentController.Controller.Reset();
+        SyncSignals();
     }
 
     public void WriteIo8(uint address, byte value)
     {
         CurrentController.Controller.WriteRegister(MapRegister(address), value);
+        SyncSignals();
     }
 
     public byte ReadIo8(uint address)
     {
-        return CurrentController.Controller.ReadRegister(MapRegister(address));
+        var value = CurrentController.Controller.ReadRegister(MapRegister(address));
+        SyncSignals();
+        return value;
     }
 
     public void Advance(TimeSpan delta)
     {
         CurrentController.TimedController.Advance(delta);
+        SyncSignals();
     }
 
     public FdcVisibleState GetVisibleState()
@@ -100,6 +116,35 @@ public class CscpStyleFdcHostAdapter
     public bool IsDrqAsserted()
     {
         return GetVisibleState().Drq;
+    }
+
+    private void SyncSignals()
+    {
+        var visible = TryGetVisibleState();
+        var irq = visible?.Irq ?? false;
+        var drq = visible?.Drq ?? false;
+
+        if (irq != _lastIrq)
+        {
+            _lastIrq = irq;
+            IrqChanged?.Invoke(irq);
+        }
+
+        if (drq != _lastDrq)
+        {
+            _lastDrq = drq;
+            DrqChanged?.Invoke(drq);
+        }
+    }
+
+    private FdcVisibleState? TryGetVisibleState()
+    {
+        if (_controllers.TryGetValue(_selectedDrive, out var controller))
+        {
+            return controller.Controller.GetVisibleState();
+        }
+
+        return null;
     }
 
     private ControllerBinding CurrentController
