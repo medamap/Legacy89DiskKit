@@ -266,6 +266,14 @@ diskFormatCommand.SetHandler((string imagePath, string? explicitFileSystemName) 
 diskCommand.AddCommand(diskCreateCommand);
 diskCommand.AddCommand(diskFormatCommand);
 
+var hostCommand = new Command("host", localizer.HostCommandDescription);
+var hostStdioCommand = new Command("stdio", localizer.HostStdioCommandDescription);
+hostStdioCommand.SetHandler(async () =>
+{
+    await Legacy89DiskKitApplication.CreateEmulatorHostProtocolStdioRunner().RunAsync();
+});
+hostCommand.AddCommand(hostStdioCommand);
+
 var bootCommand = new Command("boot", localizer.BootCommandDescription);
 var filesOption = new Option<string>("--files", () => "all", localizer.BootFilesOptionDescription);
 
@@ -591,6 +599,7 @@ injectCommand.SetHandler((string imagePath, string hostFilePath, string? targetN
 rootCommand.AddCommand(listCommand);
 rootCommand.AddCommand(fileCommand);
 rootCommand.AddCommand(diskCommand);
+rootCommand.AddCommand(hostCommand);
 rootCommand.AddCommand(bootCommand);
 rootCommand.AddCommand(layoutCommand);
 rootCommand.AddCommand(injectCommand);
