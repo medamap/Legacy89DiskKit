@@ -31,6 +31,21 @@ public class EmulatorHostProtocolTextSessionTest
     }
 
     [Fact]
+    public void Session_CanReportPlainTransportCapabilities()
+    {
+        var endpoint = new EmulatorHostProtocolEndpoint(Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter());
+        var session = new EmulatorHostProtocolTextSession(endpoint);
+
+        var payload = session.HandleLine(EmulatorHostProtocolCodec.SerializeRequest(
+            new EmulatorHostRequest(EmulatorHostRequestKind.QueryCapabilities)));
+        var response = EmulatorHostProtocolCodec.DeserializeResponse(payload);
+
+        Assert.NotNull(response.Capabilities);
+        Assert.True(response.Capabilities!.SupportsPlainStdio);
+        Assert.False(response.Capabilities.SupportsObservableStdio);
+    }
+
+    [Fact]
     public async Task Session_CanProcessLineDelimitedRequestsOverTextStreams()
     {
         using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);

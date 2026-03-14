@@ -26,7 +26,7 @@ public sealed class EmulatorHostObservableProtocolSession
         }
 
         var responsePayload = _endpoint.Handle(line);
-        var response = EmulatorHostProtocolCodec.DeserializeResponse(responsePayload);
+        var response = PatchCapabilities(EmulatorHostProtocolCodec.DeserializeResponse(responsePayload));
         var notifications = DrainNotifications();
         return EmulatorHostProtocolCodec.SerializeExchange(new EmulatorHostExchange(response, notifications));
     }
@@ -71,5 +71,22 @@ public sealed class EmulatorHostObservableProtocolSession
         }
 
         return notifications;
+    }
+
+    private static EmulatorHostResponse PatchCapabilities(EmulatorHostResponse response)
+    {
+        if (response.Capabilities is null)
+        {
+            return response;
+        }
+
+        return response with
+        {
+            Capabilities = response.Capabilities with
+            {
+                SupportsPlainStdio = false,
+                SupportsObservableStdio = true
+            }
+        };
     }
 }

@@ -62,6 +62,8 @@ public class EmulatorHostObservableProtocolSessionTest
         var exchange = EmulatorHostProtocolCodec.DeserializeExchange(payload);
 
         Assert.NotNull(exchange.Response.Capabilities);
+        Assert.False(exchange.Response.Capabilities!.SupportsPlainStdio);
+        Assert.True(exchange.Response.Capabilities.SupportsObservableStdio);
         Assert.Empty(exchange.Notifications);
     }
 }

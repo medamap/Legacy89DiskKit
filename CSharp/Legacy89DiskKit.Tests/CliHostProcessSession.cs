@@ -48,6 +48,17 @@ internal sealed class CliHostProcessSession : IAsyncDisposable
         return exchange;
     }
 
+    public async Task<EmulatorHostResponse> SendResponseAsync(EmulatorHostRequest request)
+    {
+        var payload = EmulatorHostProtocolCodec.SerializeRequest(request);
+        await _process.StandardInput.WriteLineAsync(payload);
+        await _process.StandardInput.FlushAsync();
+
+        var responseLine = await _process.StandardOutput.ReadLineAsync();
+        Assert.False(string.IsNullOrWhiteSpace(responseLine), "The CLI host process did not produce a response line.");
+        return EmulatorHostProtocolCodec.DeserializeResponse(responseLine!);
+    }
+
     public async ValueTask DisposeAsync()
     {
         _process.StandardInput.Close();

@@ -16,7 +16,9 @@ public sealed class EmulatorHostProtocolTextSession
             throw new ArgumentException("Request line must not be empty.", nameof(line));
         }
 
-        return _endpoint.Handle(line);
+        var responsePayload = _endpoint.Handle(line);
+        var response = EmulatorHostProtocolCodec.DeserializeResponse(responsePayload);
+        return EmulatorHostProtocolCodec.SerializeResponse(PatchCapabilities(response));
     }
 
     public async Task RunAsync(TextReader reader, TextWriter writer, CancellationToken cancellationToken = default)
@@ -39,9 +41,26 @@ public sealed class EmulatorHostProtocolTextSession
                 continue;
             }
 
-            var response = _endpoint.Handle(line);
+            var response = HandleLine(line);
             await writer.WriteLineAsync(response);
             await writer.FlushAsync();
         }
+    }
+
+    private static EmulatorHostResponse PatchCapabilities(EmulatorHostResponse response)
+    {
+        if (response.Capabilities is null)
+        {
+            return response;
+        }
+
+        return response with
+        {
+            Capabilities = response.Capabilities with
+            {
+                SupportsPlainStdio = true,
+                SupportsObservableStdio = false
+            }
+        };
     }
 }
