@@ -125,6 +125,7 @@ The managed reference implementation already includes a first event-driven emula
 - selected drive and side control
 - explicit read-only timing advancement through the shared controller/core contract
 - callback-friendly advance-delay hints for host-side event registration
+- a transport-neutral request and response shape for register access, state queries, drive selection, and timing advancement
 
 The remaining event-driven emulator work is host-specific glue:
 

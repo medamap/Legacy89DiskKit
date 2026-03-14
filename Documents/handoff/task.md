@@ -283,6 +283,7 @@
         - [x] bridge delayed events into explicit timing advancement
         - [x] bridge IRQ and DRQ into host-visible callbacks or signals
         - [x] keep the first proof read-only
+        - [x] expose a transport-neutral request/response shape for register access and timing advancement
         - [ ] keep the adapter boundary process-separated or IPC-friendly so host-side integration code can remain in the emulator-side codebase
         - [ ] keep the transport and naming generic enough that the adapter path is not framed as support for one specific emulator codebase only
     - [ ] Implement an xmil-web-style thin host adapter against the shared controller/core contract.

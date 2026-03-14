@@ -1,4 +1,5 @@
 using Legacy89DiskKit.Application;
+using Legacy89DiskKit.Application.Fdc.Hosts.Protocol;
 using Legacy89DiskKit.Infrastructure.DiskImage.Container;
 using Xunit;
 
@@ -120,5 +121,34 @@ public class EventDrivenEmulatorFdcHostAdapterTest
         adapter.WriteIo8(0, 0x80);
 
         Assert.Contains(TimeSpan.FromMilliseconds(1), requestedDelays);
+    }
+
+    [Fact]
+    public void Adapter_CanHandleTransportNeutralRequests()
+    {
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        container.WriteSector(0, 0, 1, new byte[] { 0x61, 0x62 });
+
+        var adapter = Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter();
+        adapter.OpenDisk(0, container);
+
+        adapter.Handle(new EmulatorHostRequest(EmulatorHostRequestKind.SelectDrive, DriveNumber: 0));
+        adapter.Handle(new EmulatorHostRequest(EmulatorHostRequestKind.WriteRegister, RegisterAddress: 1, RegisterValue: 0));
+        adapter.Handle(new EmulatorHostRequest(EmulatorHostRequestKind.WriteRegister, RegisterAddress: 2, RegisterValue: 1));
+        var commandResponse = adapter.Handle(new EmulatorHostRequest(EmulatorHostRequestKind.WriteRegister, RegisterAddress: 0, RegisterValue: 0x80));
+
+        Assert.Equal(1000, commandResponse.PendingAdvanceMicroseconds);
+        Assert.True(commandResponse.VisibleState?.Busy);
+
+        var advanced = adapter.Handle(new EmulatorHostRequest(EmulatorHostRequestKind.Advance, AdvanceMicroseconds: 1000));
+
+        Assert.True(advanced.IrqAsserted);
+        Assert.True(advanced.DrqAsserted);
+
+        var firstByte = adapter.Handle(new EmulatorHostRequest(EmulatorHostRequestKind.ReadRegister, RegisterAddress: 3));
+        var secondByte = adapter.Handle(new EmulatorHostRequest(EmulatorHostRequestKind.ReadRegister, RegisterAddress: 3));
+
+        Assert.Equal((byte?)0x61, firstByte.RegisterValue);
+        Assert.Equal((byte?)0x62, secondByte.RegisterValue);
     }
 }

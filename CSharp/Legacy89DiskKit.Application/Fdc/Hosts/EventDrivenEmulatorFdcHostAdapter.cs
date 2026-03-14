@@ -2,6 +2,7 @@ using Legacy89DiskKit.Application.Drive;
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 using Legacy89DiskKit.Domain.Fdc.Interface;
 using Legacy89DiskKit.Domain.Fdc.Model;
+using Legacy89DiskKit.Application.Fdc.Hosts.Protocol;
 
 namespace Legacy89DiskKit.Application.Fdc.Hosts;
 
@@ -119,6 +120,51 @@ public class EventDrivenEmulatorFdcHostAdapter
     public bool IsDrqAsserted()
     {
         return GetVisibleState().Drq;
+    }
+
+    public EmulatorHostResponse Handle(EmulatorHostRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        byte? registerValue = null;
+
+        switch (request.Kind)
+        {
+            case EmulatorHostRequestKind.SelectDrive:
+                SelectDrive(request.DriveNumber ?? throw new ArgumentException("DriveNumber is required.", nameof(request)));
+                break;
+            case EmulatorHostRequestKind.SelectSide:
+                SelectSide(request.Side ?? throw new ArgumentException("Side is required.", nameof(request)));
+                break;
+            case EmulatorHostRequestKind.Reset:
+                Reset();
+                break;
+            case EmulatorHostRequestKind.WriteRegister:
+                WriteIo8(
+                    request.RegisterAddress ?? throw new ArgumentException("RegisterAddress is required.", nameof(request)),
+                    request.RegisterValue ?? throw new ArgumentException("RegisterValue is required.", nameof(request)));
+                break;
+            case EmulatorHostRequestKind.ReadRegister:
+                registerValue = ReadIo8(request.RegisterAddress ?? throw new ArgumentException("RegisterAddress is required.", nameof(request)));
+                break;
+            case EmulatorHostRequestKind.Advance:
+                Advance(TimeSpan.FromMilliseconds((request.AdvanceMicroseconds ?? throw new ArgumentException("AdvanceMicroseconds is required.", nameof(request))) / 1000.0));
+                break;
+            case EmulatorHostRequestKind.QueryState:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(request), request.Kind, "Unsupported host request kind.");
+        }
+
+        var visibleState = TryGetVisibleState();
+        var pendingAdvance = TryGetPendingAdvanceHint();
+
+        return new EmulatorHostResponse(
+            registerValue,
+            visibleState,
+            visibleState?.Irq ?? false,
+            visibleState?.Drq ?? false,
+            pendingAdvance is null ? null : (long)pendingAdvance.Value.TotalMilliseconds * 1000);
     }
 
     private void SyncSignals()
