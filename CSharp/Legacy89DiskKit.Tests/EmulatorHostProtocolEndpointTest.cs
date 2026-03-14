@@ -74,9 +74,40 @@ public class EmulatorHostProtocolEndpointTest
         Assert.NotNull(response.Capabilities);
         Assert.Equal(1, response.Capabilities!.ProtocolVersion);
         Assert.True(response.Capabilities.SupportsPathOpen);
+        Assert.True(response.Capabilities.SupportsBufferOpen);
         Assert.True(response.Capabilities.SupportsNotificationExchange);
         Assert.True(response.Capabilities.SupportsPlainStdio);
         Assert.True(response.Capabilities.SupportsObservableStdio);
+    }
+
+    [Fact]
+    public void Endpoint_CanOpenDiskByBufferPayload()
+    {
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        container.WriteSector(0, 0, 1, new byte[] { 0x61 });
+
+        var endpoint = new EmulatorHostProtocolEndpoint(Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter());
+        var openPayload = endpoint.Handle(EmulatorHostProtocolCodec.SerializeRequest(
+            new EmulatorHostRequest(
+                EmulatorHostRequestKind.OpenDiskImage,
+                ImageFormat: "d88",
+                ImageDataBase64: Convert.ToBase64String(container.ToImageData()),
+                DriveNumber: 0,
+                ReadOnly: true)));
+        var openResponse = EmulatorHostProtocolCodec.DeserializeResponse(openPayload);
+
+        Assert.NotNull(openResponse.VisibleState);
+
+        endpoint.Handle(EmulatorHostProtocolCodec.SerializeRequest(new EmulatorHostRequest(EmulatorHostRequestKind.SelectDrive, DriveNumber: 0)));
+        endpoint.Handle(EmulatorHostProtocolCodec.SerializeRequest(new EmulatorHostRequest(EmulatorHostRequestKind.WriteRegister, RegisterAddress: 1, RegisterValue: 0)));
+        endpoint.Handle(EmulatorHostProtocolCodec.SerializeRequest(new EmulatorHostRequest(EmulatorHostRequestKind.WriteRegister, RegisterAddress: 2, RegisterValue: 1)));
+        endpoint.Handle(EmulatorHostProtocolCodec.SerializeRequest(new EmulatorHostRequest(EmulatorHostRequestKind.WriteRegister, RegisterAddress: 0, RegisterValue: 0x80)));
+        endpoint.Handle(EmulatorHostProtocolCodec.SerializeRequest(new EmulatorHostRequest(EmulatorHostRequestKind.Advance, AdvanceMicroseconds: 1000)));
+
+        var firstByte = EmulatorHostProtocolCodec.DeserializeResponse(
+            endpoint.Handle(EmulatorHostProtocolCodec.SerializeRequest(new EmulatorHostRequest(EmulatorHostRequestKind.ReadRegister, RegisterAddress: 3))));
+
+        Assert.Equal((byte?)0x61, firstByte.RegisterValue);
     }
 
     [Fact]

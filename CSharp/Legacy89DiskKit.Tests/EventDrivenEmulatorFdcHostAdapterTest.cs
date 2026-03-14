@@ -179,4 +179,22 @@ public class EventDrivenEmulatorFdcHostAdapterTest
             File.Delete(imagePath);
         }
     }
+
+    [Fact]
+    public void Adapter_CanOpenDiskFromBuffer()
+    {
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        container.WriteSector(0, 0, 1, new byte[] { 0x81, 0x82 });
+
+        var adapter = Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter();
+        adapter.OpenDiskImage(0, container.ToImageData(), "d88");
+        adapter.SelectDrive(0);
+        adapter.WriteIo8(1, 0);
+        adapter.WriteIo8(2, 1);
+        adapter.WriteIo8(0, 0x80);
+        adapter.Advance(TimeSpan.FromMilliseconds(1));
+
+        Assert.Equal(0x81, adapter.ReadIo8(3));
+        Assert.Equal(0x82, adapter.ReadIo8(3));
+    }
 }

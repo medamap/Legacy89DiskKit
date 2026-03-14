@@ -12,6 +12,7 @@ public class EventDrivenEmulatorFdcHostAdapter
     private static readonly EmulatorHostCapabilities HostCapabilities = new(
         ProtocolVersion: 1,
         SupportsPathOpen: true,
+        SupportsBufferOpen: true,
         SupportsNotificationExchange: true,
         SupportsPlainStdio: true,
         SupportsObservableStdio: true);
@@ -68,6 +69,27 @@ public class EventDrivenEmulatorFdcHostAdapter
         }
 
         var container = _containerFactory.Open(imagePath, readOnly);
+        try
+        {
+            OpenDisk(driveNumber, container);
+            _ownedContainers[driveNumber] = container;
+        }
+        catch
+        {
+            container.Dispose();
+            throw;
+        }
+    }
+
+    public void OpenDiskImage(int driveNumber, byte[] imageData, string imageFormat, bool readOnly = true)
+    {
+        ArgumentNullException.ThrowIfNull(imageData);
+        if (string.IsNullOrWhiteSpace(imageFormat))
+        {
+            throw new ArgumentException("ImageFormat is required.", nameof(imageFormat));
+        }
+
+        var container = _containerFactory.Open(imageData, imageFormat, readOnly);
         try
         {
             OpenDisk(driveNumber, container);
@@ -172,6 +194,13 @@ public class EventDrivenEmulatorFdcHostAdapter
                 OpenDiskPath(
                     request.DriveNumber ?? throw new ArgumentException("DriveNumber is required.", nameof(request)),
                     request.ImagePath ?? throw new ArgumentException("ImagePath is required.", nameof(request)),
+                    request.ReadOnly ?? true);
+                break;
+            case EmulatorHostRequestKind.OpenDiskImage:
+                OpenDiskImage(
+                    request.DriveNumber ?? throw new ArgumentException("DriveNumber is required.", nameof(request)),
+                    Convert.FromBase64String(request.ImageDataBase64 ?? throw new ArgumentException("ImageDataBase64 is required.", nameof(request))),
+                    request.ImageFormat ?? throw new ArgumentException("ImageFormat is required.", nameof(request)),
                     request.ReadOnly ?? true);
                 break;
             case EmulatorHostRequestKind.CloseDisk:

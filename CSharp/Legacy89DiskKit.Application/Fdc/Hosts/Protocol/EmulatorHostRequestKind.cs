@@ -4,6 +4,7 @@ public enum EmulatorHostRequestKind
 {
     QueryCapabilities,
     OpenDiskPath,
+    OpenDiskImage,
     CloseDisk,
     SelectDrive,
     SelectSide,
