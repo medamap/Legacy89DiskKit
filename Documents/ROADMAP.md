@@ -654,6 +654,7 @@ Work:
 - support both plain request/response exchange and notification-aware exchange for IRQ, DRQ, and timing-advance hints
 - support path-based image open and close from external hosts that do not own in-process container instances
 - support explicit buffer-payload image open for browser-friendly and socket-style bridges that cannot rely on local host paths
+- support an explicit capability query so a host bridge can negotiate protocol version and supported open or transport modes
 - expose the first shipped host-facing process entrypoint through the CLI as `host stdio`
 
 This makes it possible to:
@@ -666,6 +667,23 @@ This makes it possible to:
 - start a host bridge as a thin process without writing a dedicated daemon first
 - let an external emulator-side bridge open disk images by path and drive the controller contract immediately
 - let browser-connected bridges start from uploaded or transferred image bytes without inventing a different controller protocol
+- let a real emulator bridge perform a stable first-contact handshake before it decides whether to use path-based, buffer-based, plain, or notification-aware integration
+
+The current Phase 23 baseline request set is now:
+
+- `QueryCapabilities`
+- `OpenDiskPath`
+- `OpenDiskImage`
+- `CloseDisk`
+- `SelectDrive`
+- `SelectSide`
+- `Reset`
+- `WriteRegister`
+- `ReadRegister`
+- `Advance`
+- `QueryState`
+
+That request set is intentionally narrow. Phase 24 should begin by testing whether real emulator bridges can stay inside this surface before any host-specific extension is introduced.
 
 ### Phase 24: First Real Emulator Integrations
 
