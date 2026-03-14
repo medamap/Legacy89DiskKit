@@ -333,6 +333,7 @@
             - [ ] `QueryState`
         - [ ] verify which of those requests are sufficient for the first event-driven real-host proof without adding host-specific protocol forks
         - [ ] drive the first real-host execution order from `Documents/Phase24_Real_Emulator_Integration_Plan.md`
+        - [ ] execute the minimum proof defined in `Documents/Phase24_First_EventDriven_Host_Checklist.md`
     - [ ] Phase 25: Portable Native Surface Consolidation
     - [ ] Phase 26: C++ Filesystem Parity Expansion
     - [ ] Phase 27: Raw Preservation Format Formalization
