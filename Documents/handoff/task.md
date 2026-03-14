@@ -250,8 +250,8 @@
     - [ ] decide which additional commands and status transitions belong in the first practical emulator-facing milestone
     - [ ] keep this investigation separate from the portability-first narrow path unless the findings force a contract change
 
-- [ ] Phase 21: Embedded and Bare-Metal Direction
-    - [ ] Define the target order for low-level deployment:
+- [x] Phase 21: Embedded and Bare-Metal Direction
+    - [x] Define the target order for low-level deployment:
         - [x] emulator-hosted integration first
             - [x] event-driven emulator host adapter as the first concrete host-integration target
             - [x] xmil-web-style host adapter as the second concrete host-integration target
@@ -259,7 +259,7 @@
         - [x] Linux-based embedded boards
         - [x] WASM/runtime-hosted environments
         - [x] true bare-metal targets
-    - [ ] Document the constraints that must be satisfied before true bare-metal work starts:
+    - [x] Document the constraints that must be satisfied before true bare-metal work starts:
         - [x] path-independent core
         - [x] explicit ownership and ABI rules
         - [x] explicit encoding contracts
@@ -277,7 +277,7 @@
         - [x] keep write support and fidelity-heavy behavior out of the first proof target
     - [x] Keep board-specific or hardware-specific work out of the `v2.0.0` release gate.
     - [x] Keep `Phase 21` downstream of the `Phase 20` migration-boundary work.
-    - [ ] Implement an event-driven emulator thin host adapter against the shared controller/core contract.
+    - [x] Implement an event-driven emulator thin host adapter against the shared controller/core contract.
         - [x] bridge disk mount and unmount into mounted-medium binding
         - [x] bridge register reads and writes into `IFdcController`
         - [x] bridge delayed events into explicit timing advancement
@@ -286,7 +286,7 @@
         - [x] expose a transport-neutral request/response shape for register access and timing advancement
         - [x] keep the adapter boundary process-separated or IPC-friendly so host-side integration code can remain in the emulator-side codebase
         - [x] keep the transport and naming generic enough that the adapter path is not framed as support for one specific emulator codebase only
-    - [ ] Implement an xmil-web-style thin host adapter against the shared controller/core contract.
+    - [x] Implement an xmil-web-style thin host adapter against the shared controller/core contract.
         - [x] isolate global controller state behind a thin adapter
         - [x] bridge `x1_fdc_w` / `x1_fdc_r` style entrypoints into register access
         - [x] bridge event objects into explicit timing advancement
