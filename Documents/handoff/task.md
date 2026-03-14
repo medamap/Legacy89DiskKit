@@ -312,6 +312,7 @@
     - [ ] Phase 22: Controller Fidelity Research
     - [ ] Phase 23: External Host Exposure and Transport Shape
         - [x] expose a line-delimited text session suitable for stdio-style and pipe-style process bridges
+        - [x] provide a stdio-oriented runner that can host the text session without requiring a long-lived daemon model
         - [x] expose a notification-aware exchange shape that can carry IRQ, DRQ, and advance-request signals alongside request responses
     - [ ] Phase 24: First Real Emulator Integrations
     - [ ] Phase 25: Portable Native Surface Consolidation

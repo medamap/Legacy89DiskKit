@@ -650,6 +650,7 @@ Work:
 - keep static and dynamic library use as first-class options
 - define process-separated or IPC-friendly request and response transport for hosts that should not link directly
 - identify candidate transport bindings such as local sockets, named pipes, stdio-style process bridges, or browser-friendly message bridges
+- keep the first concrete transport thin: a stdio-oriented runner over the line-delimited text session rather than a mandatory always-on daemon shape
 - support both plain request/response exchange and notification-aware exchange for IRQ, DRQ, and timing-advance hints
 
 This makes it possible to:
