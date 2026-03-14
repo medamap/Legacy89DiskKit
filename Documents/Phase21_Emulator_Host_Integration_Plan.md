@@ -112,6 +112,21 @@ The first CSCP-style adapter should be implemented in this order:
 
 The first implementation should avoid write-capable controller behavior and should not attempt full chip fidelity.
 
+### Current Managed Progress
+
+The managed reference implementation already includes a first CSCP-style host adapter scaffold with:
+
+- mounted-medium binding for D88-backed and raw sector-image-backed containers
+- drive insert and eject operations
+- register-shaped read and write entrypoints
+- selected drive and side control
+- explicit read-only timing advancement through the shared controller/core contract
+
+The remaining CSCP-style work is host-specific glue:
+
+- delayed event registration and callback integration
+- host-facing IRQ and DRQ callback or signal bridging
+
 ### First Proof Target
 
 The first proof target for this host should be:

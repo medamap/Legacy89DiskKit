@@ -59,6 +59,11 @@ public static class Legacy89DiskKitApplication
         return new Fdc.FdcAccessService(controller, clock);
     }
 
+    public static Fdc.Hosts.CscpStyleFdcHostAdapter CreateCscpStyleFdcHostAdapter()
+    {
+        return new Fdc.Hosts.CscpStyleFdcHostAdapter(CreateDriveMountService(), CreateMountedMediumBindingService());
+    }
+
     /// <summary>
     /// Creates the supported explicit filesystem resolver.
     /// </summary>

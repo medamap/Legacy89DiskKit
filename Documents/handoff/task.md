@@ -278,11 +278,11 @@
     - [ ] Keep board-specific or hardware-specific work out of the `v2.0.0` release gate.
     - [ ] Keep `Phase 21` downstream of the `Phase 20` migration-boundary work.
     - [ ] Implement a CSCP-style thin host adapter against the shared controller/core contract.
-        - [ ] bridge disk mount and unmount into mounted-medium binding
-        - [ ] bridge register reads and writes into `IFdcController`
+        - [x] bridge disk mount and unmount into mounted-medium binding
+        - [x] bridge register reads and writes into `IFdcController`
         - [ ] bridge delayed events into explicit timing advancement
         - [ ] bridge IRQ and DRQ into host-visible callbacks or signals
-        - [ ] keep the first proof read-only
+        - [x] keep the first proof read-only
     - [ ] Implement an xmil-web-style thin host adapter against the shared controller/core contract.
         - [ ] isolate global controller state behind a thin adapter
         - [ ] bridge `x1_fdc_w` / `x1_fdc_r` style entrypoints into register access
