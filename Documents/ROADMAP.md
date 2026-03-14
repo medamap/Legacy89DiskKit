@@ -617,3 +617,118 @@ That is why `v2.0.0` is justified even if not every future target is fully compl
 Controller-fidelity work remains a separate track from this portability-first line. The narrow controller-facing contract is meant to expose controller-shaped information access now, while MB8877-oriented behavior research proceeds independently on a dedicated branch:
 
 - `codex/mb8877-fidelity-research`
+
+## Rough Phase 22+ Direction
+
+The phases below are intentionally rough. They should be treated as a living roadmap that can stretch, split, merge, or change order as implementation evidence arrives.
+
+Each phase states both:
+
+- what work it is expected to do
+- what becomes possible after it is complete
+
+### Phase 22: Controller Fidelity Research
+
+Work:
+
+- perform datasheet-first MB8877 behavior research
+- compare the current narrow controller-facing path against real controller expectations
+- define the first fidelity-oriented command, status, and timing milestones
+- keep implementation guidance separate from host-specific adapter code
+
+This makes it possible to:
+
+- move from a narrow controller-shaped API to a controller behavior model with defensible semantics
+- implement restore, seek, read-sector, and related status transitions with stronger confidence
+- decide what belongs in the first practical emulator-facing fidelity milestone
+
+### Phase 23: External Host Exposure and Transport Shape
+
+Work:
+
+- define the externally exposed transport shape for emulator hosts
+- keep static and dynamic library use as first-class options
+- define process-separated or IPC-friendly request and response transport for hosts that should not link directly
+- identify candidate transport bindings such as local sockets, named pipes, stdio-style process bridges, or browser-friendly message bridges
+
+This makes it possible to:
+
+- expose the controller-facing contract without forcing one linking model
+- support direct embedding where licenses and deployment allow it
+- support process-separated integration where a host-side bridge is the safer choice
+- carry the same host-facing protocol into desktop, embedded, and browser-connected scenarios
+
+### Phase 24: First Real Emulator Integrations
+
+Work:
+
+- implement the first out-of-repository host bridge against a real event-driven emulator host
+- implement the second out-of-repository host bridge against a more C-style global-state emulator host
+- validate that both hosts can use the same mounted-medium binding and controller-facing protocol
+- verify read-only D88-backed and raw sector-image-backed flows end to end
+
+This makes it possible to:
+
+- run Legacy89DiskKit-backed controller access from real emulator hosts rather than only from internal tests
+- prove that the shared controller/core contract works across more than one host architecture
+- validate the transport and host-adapter split against real integration friction
+
+### Phase 25: Portable Native Surface Consolidation
+
+Work:
+
+- align the public native ABI with the evolving C++ core and controller-facing contract
+- decide how static libraries, shared libraries, and host-facing protocol layers relate to one another
+- keep `Legacy89DiskKit.Native` compatible with both direct embedding and transport-based integration
+- tighten ownership, lifetime, and status rules across the native boundary
+
+This makes it possible to:
+
+- treat direct static or shared-library embedding as a stable option
+- keep a clean boundary between in-process linking and out-of-process protocol use
+- reduce dependency on the managed bridge over time
+
+### Phase 26: C++ Filesystem Parity Expansion
+
+Work:
+
+- continue porting filesystem-core logic into `Legacy89DiskKit.Cpp`
+- finish read-oriented parity first and extend toward write-oriented parity
+- expand encoding-core parity where filesystem behavior depends on it
+- validate parity against the C# reference implementation
+
+This makes it possible to:
+
+- use the C++ core for more than container parsing alone
+- move the portable implementation closer to replacing managed core behavior in selected flows
+- prepare later native, embedded, and browser-facing deliverables on the same core
+
+### Phase 27: Raw Preservation Format Formalization
+
+Work:
+
+- turn provisional `Legacy 89 Storage` and `.l89` naming into a frozen format identity when the gate conditions are satisfied
+- define encoded-track and lower-level raw preservation semantics more precisely
+- define conversion behavior from sector-only and lower-level raw sources
+- define metadata, integrity, and versioning rules for the preservation container
+
+This makes it possible to:
+
+- preserve controller-visible magnetic information in a project-owned long-term container
+- convert between sector-oriented and preservation-oriented representations with explicit expectations
+- support future replay, archival, and protection-sensitive workflows on a documented basis
+
+### Phase 28: Embedded and Bare-Metal Proof
+
+Work:
+
+- execute the first embedded host proof after the deployment order and start conditions are satisfied
+- keep the first target read-only
+- validate controller-facing and direct-image access in a constrained environment
+- decide when write support and higher-fidelity controller behavior are safe to introduce
+
+This makes it possible to:
+
+- prove that the portable core can live outside desktop and emulator environments
+- move from emulator-hosted experimentation to real constrained deployment
+- start a true bare-metal or custom-board track with evidence instead of assumption

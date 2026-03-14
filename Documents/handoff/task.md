@@ -307,3 +307,12 @@
         - [ ] a usable `Legacy89DiskKit.Wasm` runtime surface
         - [ ] a stable native bridge suitable for Node-side wrapping
     - [ ] Treat future npm publication as a wrapper or host binding problem rather than as direct C# package publication.
+
+- [ ] Rough Future Phases (adjustable roadmap only; promote to concrete tasks when each phase approaches execution)
+    - [ ] Phase 22: Controller Fidelity Research
+    - [ ] Phase 23: External Host Exposure and Transport Shape
+    - [ ] Phase 24: First Real Emulator Integrations
+    - [ ] Phase 25: Portable Native Surface Consolidation
+    - [ ] Phase 26: C++ Filesystem Parity Expansion
+    - [ ] Phase 27: Raw Preservation Format Formalization
+    - [ ] Phase 28: Embedded and Bare-Metal Proof
