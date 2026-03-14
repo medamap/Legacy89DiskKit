@@ -40,38 +40,44 @@ public class EmulatorHostCliProcessBridgeTest
         };
 
         process.Start();
+        var transcript = new List<HostProofTranscriptEntry>();
 
         try
         {
             var sequence = HostProofSequence.CreateReadOnlyD88ByPathSequence(imagePath);
 
-            var capabilities = await SendExchangeAsync(process, sequence[0]);
+            var capabilities = await SendExchangeAsync(process, sequence[0], transcript);
             Assert.NotNull(capabilities.Response.Capabilities);
             Assert.True(capabilities.Response.Capabilities!.SupportsObservableStdio);
             Assert.True(capabilities.Response.Capabilities.SupportsPathOpen);
 
-            var openExchange = await SendExchangeAsync(process, sequence[1]);
+            var openExchange = await SendExchangeAsync(process, sequence[1], transcript);
             Assert.NotNull(openExchange.Response.VisibleState);
 
-            await SendExchangeAsync(process, sequence[2]);
-            await SendExchangeAsync(process, sequence[3]);
-            await SendExchangeAsync(process, sequence[4]);
+            await SendExchangeAsync(process, sequence[2], transcript);
+            await SendExchangeAsync(process, sequence[3], transcript);
+            await SendExchangeAsync(process, sequence[4], transcript);
 
-            var commandExchange = await SendExchangeAsync(process, sequence[5]);
+            var commandExchange = await SendExchangeAsync(process, sequence[5], transcript);
             Assert.Contains(commandExchange.Notifications, x => x.Kind == EmulatorHostNotificationKind.AdvanceRequested);
 
-            var advanceExchange = await SendExchangeAsync(process, sequence[6]);
+            var advanceExchange = await SendExchangeAsync(process, sequence[6], transcript);
             Assert.True(advanceExchange.Response.IrqAsserted);
             Assert.True(advanceExchange.Response.DrqAsserted);
 
-            var firstByte = await SendExchangeAsync(process, sequence[7]);
-            var secondByte = await SendExchangeAsync(process, sequence[8]);
+            var firstByte = await SendExchangeAsync(process, sequence[7], transcript);
+            var secondByte = await SendExchangeAsync(process, sequence[8], transcript);
 
             Assert.Equal((byte?)0x41, firstByte.Response.RegisterValue);
             Assert.Equal((byte?)0x42, secondByte.Response.RegisterValue);
 
-            var closeExchange = await SendExchangeAsync(process, sequence[9]);
+            var closeExchange = await SendExchangeAsync(process, sequence[9], transcript);
             Assert.Null(closeExchange.Response.VisibleState);
+
+            var transcriptPayload = HostProofTranscriptCodec.SerializeLines(transcript);
+            var roundTrip = HostProofTranscriptCodec.DeserializeLines(transcriptPayload);
+            Assert.Equal(transcriptPayload, HostProofTranscriptCodec.SerializeLines(roundTrip));
+            Assert.Equal(10, roundTrip.Count);
         }
         finally
         {
@@ -85,7 +91,10 @@ public class EmulatorHostCliProcessBridgeTest
         }
     }
 
-    private static async Task<EmulatorHostExchange> SendExchangeAsync(Process process, EmulatorHostRequest request)
+    private static async Task<EmulatorHostExchange> SendExchangeAsync(
+        Process process,
+        EmulatorHostRequest request,
+        ICollection<HostProofTranscriptEntry> transcript)
     {
         var payload = EmulatorHostProtocolCodec.SerializeRequest(request);
         await process.StandardInput.WriteLineAsync(payload);
@@ -93,6 +102,8 @@ public class EmulatorHostCliProcessBridgeTest
 
         var responseLine = await process.StandardOutput.ReadLineAsync();
         Assert.False(string.IsNullOrWhiteSpace(responseLine), "The CLI host process did not produce a response line.");
-        return EmulatorHostProtocolCodec.DeserializeExchange(responseLine!);
+        var exchange = EmulatorHostProtocolCodec.DeserializeExchange(responseLine!);
+        transcript.Add(new HostProofTranscriptEntry(request, exchange));
+        return exchange;
     }
 }
