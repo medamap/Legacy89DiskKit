@@ -259,6 +259,38 @@ Phase 21 should produce:
 - an implementation order for the first host adapter
 - an implementation order for the second host adapter
 
+## Deployment Order After Emulator Proof
+
+Once the emulator-hosted proof is stable enough to trust the shared controller/core contract, the low-level deployment order should remain:
+
+1. emulator-hosted integration
+2. desktop and server native hosts
+3. Linux-based embedded boards
+4. WASM or other runtime-hosted experiments when the transport shape is reusable
+5. true bare-metal or custom-board targets
+
+The first step proves correctness and debuggability. The second and third steps prove that the same transportable core can live outside a managed emulator context. The last step should only begin after the core and host boundary rules are no longer moving.
+
+## Bare-Metal Start Conditions
+
+True bare-metal work should not start until all of the following are stable:
+
+- the portable core remains path-independent
+- ownership and lifetime rules are explicit across the public boundary
+- the host-facing ABI and request or response contracts are explicit
+- character-encoding behavior is selected by logical profile rather than host defaults
+- the public error model is host-agnostic and does not depend on managed exception flow
+
+## Host-Only Services
+
+The following capabilities should remain host-side only and should not be treated as early bare-metal requirements:
+
+- CLI presentation and command-line parsing
+- release scripts and packaging automation
+- managed bootstrap convenience factories
+- process, socket, or pipe transport bindings for emulator-specific bridges
+- high-level filesystem tooling such as layout export/import workflows that assume host files or host application state
+
 ## Exit Criteria
 
 The planning portion of Phase 21 is complete when:

@@ -475,6 +475,8 @@ The preferred order is:
 4. WASM/runtime-hosted experiments where appropriate
 5. true bare-metal or custom-board targets
 
+That order is now fixed as a Phase 21 planning result, not just a rough preference.
+
 The architectural goal is not a universal host adapter. The goal is a shared narrow controller/core contract that can support multiple thin host-specific adapters.
 
 That means:
@@ -517,6 +519,28 @@ The second adapter should prove that the same shared contract can also fit a hos
 - global controller state
 - port-style read and write entrypoints
 - host-owned event objects
+
+The remaining deployment rule is straightforward:
+
+- emulator-hosted work proves the contract
+- desktop/server native hosts prove process-separated and non-managed integration
+- Linux-based embedded boards prove constrained-host deployment
+- true bare-metal work starts only after the host boundary and portable-core contracts stop moving
+
+Before bare-metal work begins, the project should treat these as mandatory:
+
+- path-independent portable core behavior
+- explicit ownership and ABI rules
+- explicit logical encoding contracts
+- host-agnostic status and error reporting
+
+The project should also keep these responsibilities host-side only during the first embedded push:
+
+- CLI and presentation logic
+- release and packaging automation
+- managed bootstrap convenience surfaces
+- emulator-specific transport bindings
+- high-level host workflow orchestration
 
 ## Recommended v2.0.0 Scope
 

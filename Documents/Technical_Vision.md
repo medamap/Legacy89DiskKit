@@ -294,6 +294,17 @@ Where a target emulator license would make direct linking undesirable, the prefe
 
 That process or IPC boundary should also stay generic in naming and message shape. The goal is not to publish an integration layer that appears dedicated to one emulator family, but to publish a reusable host-facing contract that more than one emulator or runtime can adopt.
 
+After the emulator-hosted proof, the intended deployment order is:
+
+1. desktop and server native hosts
+2. Linux-based embedded boards
+3. runtime-hosted experiments such as WASM where the same transport shape still applies
+4. true bare-metal or custom-board targets
+
+Bare-metal work should not begin until the portable core is path-independent, ownership and ABI rules are explicit, encoding selection is logical rather than host-default-driven, and the status or error model no longer assumes managed runtime behavior.
+
+The early bare-metal boundary should remain narrow. CLI presentation, release tooling, managed bootstrap convenience, emulator-specific transport bindings, and host workflow orchestration should remain outside the early bare-metal target.
+
 ## Disk Image API vs FDC-Facing API
 
 The long-term architecture should not assume that every consumer wants direct filesystem-aware or image-container-aware access only.
