@@ -20,6 +20,7 @@ internal static class HostProofBundleWriter
         var markdownPath = Path.Combine(outputDirectory, $"{baseName}.md");
         var transcriptPath = Path.Combine(outputDirectory, $"{baseName}.jsonl");
         var requestPath = Path.Combine(outputDirectory, $"{baseName}.requests.jsonl");
+        var manifestPath = Path.Combine(outputDirectory, $"{baseName}.manifest.json");
 
         await File.WriteAllTextAsync(
             markdownPath,
@@ -32,5 +33,18 @@ internal static class HostProofBundleWriter
         {
             await HostProofRequestScriptFileStore.SaveAsync(requestPath, requestScript, cancellationToken);
         }
+
+        var manifest = new HostProofBundleManifest(
+            BaseName: baseName,
+            ReportFileName: Path.GetFileName(markdownPath),
+            TranscriptFileName: Path.GetFileName(transcriptPath),
+            RequestScriptFileName: requestScript is null ? null : Path.GetFileName(requestPath),
+            OpenMode: report.OpenMode,
+            ExchangeMode: report.ExchangeMode);
+
+        await File.WriteAllTextAsync(
+            manifestPath,
+            HostProofBundleManifestCodec.Serialize(manifest),
+            cancellationToken);
     }
 }

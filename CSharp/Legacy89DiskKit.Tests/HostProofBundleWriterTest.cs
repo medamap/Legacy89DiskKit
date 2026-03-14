@@ -52,16 +52,21 @@ public class HostProofBundleWriterTest
             var markdownPath = Path.Combine(outputDirectory, "proof.md");
             var transcriptPath = Path.Combine(outputDirectory, "proof.jsonl");
             var requestPath = Path.Combine(outputDirectory, "proof.requests.jsonl");
+            var manifestPath = Path.Combine(outputDirectory, "proof.manifest.json");
 
             Assert.True(File.Exists(markdownPath));
             Assert.True(File.Exists(transcriptPath));
             Assert.True(File.Exists(requestPath));
+            Assert.True(File.Exists(manifestPath));
             Assert.Contains("Host Proof Report", await File.ReadAllTextAsync(markdownPath));
 
             var roundTrip = await HostProofTranscriptFileStore.LoadAsync(transcriptPath);
             Assert.Single(roundTrip);
             var roundTripRequests = await HostProofRequestScriptFileStore.LoadAsync(requestPath);
             Assert.Single(roundTripRequests);
+            var manifest = HostProofBundleManifestCodec.Deserialize(await File.ReadAllTextAsync(manifestPath));
+            Assert.Equal("proof.md", manifest.ReportFileName);
+            Assert.Equal("proof.requests.jsonl", manifest.RequestScriptFileName);
         }
         finally
         {
