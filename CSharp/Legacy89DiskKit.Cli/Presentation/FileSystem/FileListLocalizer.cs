@@ -61,6 +61,9 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string DiskCommandDescription { get; }
     string DiskCreateCommandDescription { get; }
     string DiskFormatCommandDescription { get; }
+    string HostCommandDescription { get; }
+    string HostStdioCommandDescription { get; }
+    string HostObservableOptionDescription { get; }
     string BootCommandDescription { get; }
     string BootShowCommandDescription { get; }
     string BootClearCommandDescription { get; }
@@ -191,6 +194,9 @@ public static class FileListLocalizer
         public abstract string DiskCommandDescription { get; }
         public abstract string DiskCreateCommandDescription { get; }
         public abstract string DiskFormatCommandDescription { get; }
+        public abstract string HostCommandDescription { get; }
+        public abstract string HostStdioCommandDescription { get; }
+        public abstract string HostObservableOptionDescription { get; }
         public abstract string BootCommandDescription { get; }
         public abstract string BootShowCommandDescription { get; }
         public abstract string BootClearCommandDescription { get; }
@@ -301,6 +307,9 @@ public static class FileListLocalizer
         public override string DiskCommandDescription => "Disk-level operations";
         public override string DiskCreateCommandDescription => "Create a new disk image and initialize it with an explicit file system";
         public override string DiskFormatCommandDescription => "Reinitialize an existing disk image, preferably with an explicit file system";
+        public override string HostCommandDescription => "External host integration operations";
+        public override string HostStdioCommandDescription => "Run the emulator host protocol over standard input/output";
+        public override string HostObservableOptionDescription => "Emit notification-aware exchanges that include IRQ, DRQ, and advance-request notifications";
         public override string BootCommandDescription => "Boot metadata operations";
         public override string BootShowCommandDescription => "Show boot metadata for this disk";
         public override string BootClearCommandDescription => "Clear file-backed boot metadata without erasing the whole boot sector";
@@ -411,6 +420,9 @@ public static class FileListLocalizer
         public override string DiskCommandDescription => "ディスク単位の操作";
         public override string DiskCreateCommandDescription => "新しいディスクイメージを作成し、指定したファイルシステムで初期化します";
         public override string DiskFormatCommandDescription => "既存ディスクイメージを再初期化します。明示的なファイルシステム指定を推奨します";
+        public override string HostCommandDescription => "外部ホスト連携の操作";
+        public override string HostStdioCommandDescription => "標準入出力でエミュレータホストプロトコルを実行";
+        public override string HostObservableOptionDescription => "IRQ、DRQ、advance-request 通知を含む通知対応 exchange を出力します";
         public override string BootCommandDescription => "ブート情報の操作";
         public override string BootShowCommandDescription => "このディスクのブート情報を表示します";
         public override string BootClearCommandDescription => "ブートセクタ全消去ではなく、ファイル参照型のブート情報だけを無効化します";

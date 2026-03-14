@@ -294,6 +294,19 @@ Where a target emulator license would make direct linking undesirable, the prefe
 
 That process or IPC boundary should also stay generic in naming and message shape. The goal is not to publish an integration layer that appears dedicated to one emulator family, but to publish a reusable host-facing contract that more than one emulator or runtime can adopt.
 
+The managed reference implementation now already proves a narrow external-host shape with:
+
+- a capability handshake for protocol version and supported transport/open modes
+- request and response protocol objects
+- notification-aware exchanges for IRQ, DRQ, and timing-advance hints
+- a line-delimited text session suitable for stdio or pipe-based integration
+- a stdio-oriented runner that does not require an always-on daemon model
+- path-based disk open and close so an external host bridge does not need in-process container ownership
+- buffer-based disk open so browser-connected or socket-bridged hosts do not need host filesystem path assumptions
+- a shipped CLI entrypoint, `host stdio`, that can act as the first external host process surface
+
+This means the external-host contract is now stable enough to hand off to real emulator bridges. The next phase should validate that real hosts can stay inside this narrow request set rather than immediately expanding it.
+
 After the emulator-hosted proof, the intended deployment order is:
 
 1. desktop and server native hosts

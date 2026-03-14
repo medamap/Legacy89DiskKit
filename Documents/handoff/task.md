@@ -310,8 +310,28 @@
 
 - [ ] Rough Future Phases (adjustable roadmap only; promote to concrete tasks when each phase approaches execution)
     - [ ] Phase 22: Controller Fidelity Research
-    - [ ] Phase 23: External Host Exposure and Transport Shape
+    - [x] Phase 23: External Host Exposure and Transport Shape
+        - [x] expose a line-delimited text session suitable for stdio-style and pipe-style process bridges
+        - [x] provide a stdio-oriented runner that can host the text session without requiring a long-lived daemon model
+        - [x] expose a notification-aware exchange shape that can carry IRQ, DRQ, and advance-request signals alongside request responses
+        - [x] let external hosts open and close disk images by path without requiring in-process `IDiskContainer` ownership
+        - [x] let browser-friendly or socket-based hosts open disk images from explicit buffer payloads instead of host paths
+        - [x] expose a capability query so a host bridge can detect protocol version and supported open/transport modes before issuing controller requests
+        - [x] expose a shipped `host stdio` CLI entrypoint over the generic host protocol
     - [ ] Phase 24: First Real Emulator Integrations
+        - [ ] keep the Phase 23 request set as the baseline handshake:
+            - [ ] `QueryCapabilities`
+            - [ ] `OpenDiskPath`
+            - [ ] `OpenDiskImage`
+            - [ ] `CloseDisk`
+            - [ ] `SelectDrive`
+            - [ ] `SelectSide`
+            - [ ] `Reset`
+            - [ ] `WriteRegister`
+            - [ ] `ReadRegister`
+            - [ ] `Advance`
+            - [ ] `QueryState`
+        - [ ] verify which of those requests are sufficient for the first event-driven real-host proof without adding host-specific protocol forks
     - [ ] Phase 25: Portable Native Surface Consolidation
     - [ ] Phase 26: C++ Filesystem Parity Expansion
     - [ ] Phase 27: Raw Preservation Format Formalization

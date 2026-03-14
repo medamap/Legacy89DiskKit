@@ -8,6 +8,7 @@ using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.Domain.Fdc.Interface;
 using Legacy89DiskKit.Domain.Timing.Interface;
 using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
+using Legacy89DiskKit.Infrastructure.DiskImage.Factory;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;
@@ -61,12 +62,35 @@ public static class Legacy89DiskKitApplication
 
     public static Fdc.Hosts.EventDrivenEmulatorFdcHostAdapter CreateEventDrivenEmulatorFdcHostAdapter()
     {
-        return new Fdc.Hosts.EventDrivenEmulatorFdcHostAdapter(CreateDriveMountService(), CreateMountedMediumBindingService());
+        return new Fdc.Hosts.EventDrivenEmulatorFdcHostAdapter(
+            CreateDriveMountService(),
+            CreateMountedMediumBindingService(),
+            new DiskContainerFactory());
     }
 
     public static Fdc.Hosts.Protocol.EmulatorHostProtocolEndpoint CreateEmulatorHostProtocolEndpoint()
     {
         return new Fdc.Hosts.Protocol.EmulatorHostProtocolEndpoint(CreateEventDrivenEmulatorFdcHostAdapter());
+    }
+
+    public static Fdc.Hosts.Protocol.EmulatorHostProtocolTextSession CreateEmulatorHostProtocolTextSession()
+    {
+        return new Fdc.Hosts.Protocol.EmulatorHostProtocolTextSession(CreateEmulatorHostProtocolEndpoint());
+    }
+
+    public static Fdc.Hosts.Protocol.EmulatorHostProtocolStdioRunner CreateEmulatorHostProtocolStdioRunner()
+    {
+        return new Fdc.Hosts.Protocol.EmulatorHostProtocolStdioRunner(CreateEmulatorHostProtocolTextSession());
+    }
+
+    public static Fdc.Hosts.Protocol.EmulatorHostObservableProtocolSession CreateEmulatorHostObservableProtocolSession()
+    {
+        return new Fdc.Hosts.Protocol.EmulatorHostObservableProtocolSession(CreateEventDrivenEmulatorFdcHostAdapter());
+    }
+
+    public static Fdc.Hosts.Protocol.EmulatorHostObservableProtocolStdioRunner CreateEmulatorHostObservableProtocolStdioRunner()
+    {
+        return new Fdc.Hosts.Protocol.EmulatorHostObservableProtocolStdioRunner(CreateEmulatorHostObservableProtocolSession());
     }
 
     public static Fdc.Hosts.XmilWebStyleFdcHostAdapter CreateXmilWebStyleFdcHostAdapter()

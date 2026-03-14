@@ -37,6 +37,13 @@ public class ManagedPublicSurfaceTest
     }
 
     [Fact]
+    public void CreateEmulatorHostProtocolStdioRunner_ReturnsSupportedRunner()
+    {
+        var runner = Legacy89DiskKitApplication.CreateEmulatorHostProtocolStdioRunner();
+        Assert.NotNull(runner);
+    }
+
+    [Fact]
     public void ManagedBootstrap_CanOpenAndListKnownSample()
     {
         using var service = Legacy89DiskKitApplication.CreateDiskService();

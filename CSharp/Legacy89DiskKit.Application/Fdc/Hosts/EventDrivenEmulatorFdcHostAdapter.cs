@@ -1,5 +1,6 @@
 using Legacy89DiskKit.Application.Drive;
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
+using Legacy89DiskKit.Domain.DiskImage.Interface.Factory;
 using Legacy89DiskKit.Domain.Fdc.Interface;
 using Legacy89DiskKit.Domain.Fdc.Model;
 using Legacy89DiskKit.Application.Fdc.Hosts.Protocol;
@@ -8,10 +9,20 @@ namespace Legacy89DiskKit.Application.Fdc.Hosts;
 
 public class EventDrivenEmulatorFdcHostAdapter
 {
+    private static readonly EmulatorHostCapabilities HostCapabilities = new(
+        ProtocolVersion: 1,
+        SupportsPathOpen: true,
+        SupportsBufferOpen: true,
+        SupportsNotificationExchange: true,
+        SupportsPlainStdio: true,
+        SupportsObservableStdio: true);
+
     private readonly DriveMountService _driveMountService;
     private readonly MountedMediumBindingService _bindingService;
+    private readonly IDiskContainerFactory _containerFactory;
     private readonly Dictionary<int, MountedMediumBinding> _bindings = new();
     private readonly Dictionary<int, ControllerBinding> _controllers = new();
+    private readonly Dictionary<int, IDiskContainer> _ownedContainers = new();
     private int _selectedDrive;
     private bool _lastIrq;
     private bool _lastDrq;
@@ -23,10 +34,14 @@ public class EventDrivenEmulatorFdcHostAdapter
 
     public event Action<TimeSpan>? AdvanceRequested;
 
-    public EventDrivenEmulatorFdcHostAdapter(DriveMountService driveMountService, MountedMediumBindingService bindingService)
+    public EventDrivenEmulatorFdcHostAdapter(
+        DriveMountService driveMountService,
+        MountedMediumBindingService bindingService,
+        IDiskContainerFactory containerFactory)
     {
         _driveMountService = driveMountService ?? throw new ArgumentNullException(nameof(driveMountService));
         _bindingService = bindingService ?? throw new ArgumentNullException(nameof(bindingService));
+        _containerFactory = containerFactory ?? throw new ArgumentNullException(nameof(containerFactory));
     }
 
     public void OpenDisk(int driveNumber, IDiskContainer container)
@@ -40,9 +55,51 @@ public class EventDrivenEmulatorFdcHostAdapter
             throw new NotSupportedException("The mounted medium controller does not support timing advancement.");
         }
 
+        ReleaseOwnedContainer(driveNumber);
         _bindings[driveNumber] = binding;
         _controllers[driveNumber] = new ControllerBinding(controller, timedController);
         SyncSignals();
+    }
+
+    public void OpenDiskPath(int driveNumber, string imagePath, bool readOnly = true)
+    {
+        if (string.IsNullOrWhiteSpace(imagePath))
+        {
+            throw new ArgumentException("ImagePath is required.", nameof(imagePath));
+        }
+
+        var container = _containerFactory.Open(imagePath, readOnly);
+        try
+        {
+            OpenDisk(driveNumber, container);
+            _ownedContainers[driveNumber] = container;
+        }
+        catch
+        {
+            container.Dispose();
+            throw;
+        }
+    }
+
+    public void OpenDiskImage(int driveNumber, byte[] imageData, string imageFormat, bool readOnly = true)
+    {
+        ArgumentNullException.ThrowIfNull(imageData);
+        if (string.IsNullOrWhiteSpace(imageFormat))
+        {
+            throw new ArgumentException("ImageFormat is required.", nameof(imageFormat));
+        }
+
+        var container = _containerFactory.Open(imageData, imageFormat, readOnly);
+        try
+        {
+            OpenDisk(driveNumber, container);
+            _ownedContainers[driveNumber] = container;
+        }
+        catch
+        {
+            container.Dispose();
+            throw;
+        }
     }
 
     public bool CloseDisk(int driveNumber)
@@ -50,6 +107,7 @@ public class EventDrivenEmulatorFdcHostAdapter
         _bindings.Remove(driveNumber);
         _controllers.Remove(driveNumber);
         var result = _driveMountService.Unmount(driveNumber);
+        ReleaseOwnedContainer(driveNumber);
         SyncSignals();
         return result;
     }
@@ -130,6 +188,24 @@ public class EventDrivenEmulatorFdcHostAdapter
 
         switch (request.Kind)
         {
+            case EmulatorHostRequestKind.QueryCapabilities:
+                break;
+            case EmulatorHostRequestKind.OpenDiskPath:
+                OpenDiskPath(
+                    request.DriveNumber ?? throw new ArgumentException("DriveNumber is required.", nameof(request)),
+                    request.ImagePath ?? throw new ArgumentException("ImagePath is required.", nameof(request)),
+                    request.ReadOnly ?? true);
+                break;
+            case EmulatorHostRequestKind.OpenDiskImage:
+                OpenDiskImage(
+                    request.DriveNumber ?? throw new ArgumentException("DriveNumber is required.", nameof(request)),
+                    Convert.FromBase64String(request.ImageDataBase64 ?? throw new ArgumentException("ImageDataBase64 is required.", nameof(request))),
+                    request.ImageFormat ?? throw new ArgumentException("ImageFormat is required.", nameof(request)),
+                    request.ReadOnly ?? true);
+                break;
+            case EmulatorHostRequestKind.CloseDisk:
+                CloseDisk(request.DriveNumber ?? throw new ArgumentException("DriveNumber is required.", nameof(request)));
+                break;
             case EmulatorHostRequestKind.SelectDrive:
                 SelectDrive(request.DriveNumber ?? throw new ArgumentException("DriveNumber is required.", nameof(request)));
                 break;
@@ -164,7 +240,8 @@ public class EventDrivenEmulatorFdcHostAdapter
             visibleState,
             visibleState?.Irq ?? false,
             visibleState?.Drq ?? false,
-            pendingAdvance is null ? null : (long)pendingAdvance.Value.TotalMilliseconds * 1000);
+            pendingAdvance is null ? null : (long)pendingAdvance.Value.TotalMilliseconds * 1000,
+            request.Kind == EmulatorHostRequestKind.QueryCapabilities ? HostCapabilities : null);
     }
 
     private void SyncSignals()
@@ -217,6 +294,14 @@ public class EventDrivenEmulatorFdcHostAdapter
         }
 
         return null;
+    }
+
+    private void ReleaseOwnedContainer(int driveNumber)
+    {
+        if (_ownedContainers.Remove(driveNumber, out var ownedContainer))
+        {
+            ownedContainer.Dispose();
+        }
     }
 
     private ControllerBinding CurrentController
