@@ -151,4 +151,32 @@ public class EventDrivenEmulatorFdcHostAdapterTest
         Assert.Equal((byte?)0x61, firstByte.RegisterValue);
         Assert.Equal((byte?)0x62, secondByte.RegisterValue);
     }
+
+    [Fact]
+    public void Adapter_CanOpenDiskFromPath()
+    {
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        container.WriteSector(0, 0, 1, new byte[] { 0x71, 0x72 });
+
+        var imagePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.d88");
+        File.WriteAllBytes(imagePath, container.ToImageData());
+
+        try
+        {
+            var adapter = Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter();
+            adapter.OpenDiskPath(0, imagePath);
+            adapter.SelectDrive(0);
+            adapter.WriteIo8(1, 0);
+            adapter.WriteIo8(2, 1);
+            adapter.WriteIo8(0, 0x80);
+            adapter.Advance(TimeSpan.FromMilliseconds(1));
+
+            Assert.Equal(0x71, adapter.ReadIo8(3));
+            Assert.Equal(0x72, adapter.ReadIo8(3));
+        }
+        finally
+        {
+            File.Delete(imagePath);
+        }
+    }
 }

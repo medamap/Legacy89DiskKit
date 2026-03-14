@@ -1,5 +1,6 @@
 using Legacy89DiskKit.Application.Drive;
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
+using Legacy89DiskKit.Domain.DiskImage.Interface.Factory;
 using Legacy89DiskKit.Domain.Fdc.Interface;
 using Legacy89DiskKit.Domain.Fdc.Model;
 using Legacy89DiskKit.Application.Fdc.Hosts.Protocol;
@@ -10,8 +11,10 @@ public class EventDrivenEmulatorFdcHostAdapter
 {
     private readonly DriveMountService _driveMountService;
     private readonly MountedMediumBindingService _bindingService;
+    private readonly IDiskContainerFactory _containerFactory;
     private readonly Dictionary<int, MountedMediumBinding> _bindings = new();
     private readonly Dictionary<int, ControllerBinding> _controllers = new();
+    private readonly Dictionary<int, IDiskContainer> _ownedContainers = new();
     private int _selectedDrive;
     private bool _lastIrq;
     private bool _lastDrq;
@@ -23,10 +26,14 @@ public class EventDrivenEmulatorFdcHostAdapter
 
     public event Action<TimeSpan>? AdvanceRequested;
 
-    public EventDrivenEmulatorFdcHostAdapter(DriveMountService driveMountService, MountedMediumBindingService bindingService)
+    public EventDrivenEmulatorFdcHostAdapter(
+        DriveMountService driveMountService,
+        MountedMediumBindingService bindingService,
+        IDiskContainerFactory containerFactory)
     {
         _driveMountService = driveMountService ?? throw new ArgumentNullException(nameof(driveMountService));
         _bindingService = bindingService ?? throw new ArgumentNullException(nameof(bindingService));
+        _containerFactory = containerFactory ?? throw new ArgumentNullException(nameof(containerFactory));
     }
 
     public void OpenDisk(int driveNumber, IDiskContainer container)
@@ -40,9 +47,30 @@ public class EventDrivenEmulatorFdcHostAdapter
             throw new NotSupportedException("The mounted medium controller does not support timing advancement.");
         }
 
+        ReleaseOwnedContainer(driveNumber);
         _bindings[driveNumber] = binding;
         _controllers[driveNumber] = new ControllerBinding(controller, timedController);
         SyncSignals();
+    }
+
+    public void OpenDiskPath(int driveNumber, string imagePath, bool readOnly = true)
+    {
+        if (string.IsNullOrWhiteSpace(imagePath))
+        {
+            throw new ArgumentException("ImagePath is required.", nameof(imagePath));
+        }
+
+        var container = _containerFactory.Open(imagePath, readOnly);
+        try
+        {
+            OpenDisk(driveNumber, container);
+            _ownedContainers[driveNumber] = container;
+        }
+        catch
+        {
+            container.Dispose();
+            throw;
+        }
     }
 
     public bool CloseDisk(int driveNumber)
@@ -50,6 +78,7 @@ public class EventDrivenEmulatorFdcHostAdapter
         _bindings.Remove(driveNumber);
         _controllers.Remove(driveNumber);
         var result = _driveMountService.Unmount(driveNumber);
+        ReleaseOwnedContainer(driveNumber);
         SyncSignals();
         return result;
     }
@@ -130,6 +159,15 @@ public class EventDrivenEmulatorFdcHostAdapter
 
         switch (request.Kind)
         {
+            case EmulatorHostRequestKind.OpenDiskPath:
+                OpenDiskPath(
+                    request.DriveNumber ?? throw new ArgumentException("DriveNumber is required.", nameof(request)),
+                    request.ImagePath ?? throw new ArgumentException("ImagePath is required.", nameof(request)),
+                    request.ReadOnly ?? true);
+                break;
+            case EmulatorHostRequestKind.CloseDisk:
+                CloseDisk(request.DriveNumber ?? throw new ArgumentException("DriveNumber is required.", nameof(request)));
+                break;
             case EmulatorHostRequestKind.SelectDrive:
                 SelectDrive(request.DriveNumber ?? throw new ArgumentException("DriveNumber is required.", nameof(request)));
                 break;
@@ -217,6 +255,14 @@ public class EventDrivenEmulatorFdcHostAdapter
         }
 
         return null;
+    }
+
+    private void ReleaseOwnedContainer(int driveNumber)
+    {
+        if (_ownedContainers.Remove(driveNumber, out var ownedContainer))
+        {
+            ownedContainer.Dispose();
+        }
     }
 
     private ControllerBinding CurrentController
