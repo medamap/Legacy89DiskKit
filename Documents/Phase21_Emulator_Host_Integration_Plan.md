@@ -66,11 +66,11 @@ That means:
 - the host adapter owns host-specific drive and side selection glue
 - the controller/core contract remains host-agnostic
 
-## CSCP-Style Event-Driven Host Adapter
+## Event-Driven Emulator Host Adapter
 
 ### Observed Host Shape
 
-The first target host exposes a controller object with:
+The first target host family exposes a controller object with:
 
 - disk open and close operations
 - disk inserted queries
@@ -102,7 +102,7 @@ The thin adapter for this host should translate:
 
 ### First Adapter Work Package
 
-The first CSCP-style adapter should be implemented in this order:
+The first event-driven emulator adapter should be implemented in this order:
 
 1. drive mount and unmount glue
 2. register read and write bridge
@@ -114,7 +114,7 @@ The first implementation should avoid write-capable controller behavior and shou
 
 ### Current Managed Progress
 
-The managed reference implementation already includes a first CSCP-style host adapter scaffold with:
+The managed reference implementation already includes a first event-driven emulator host adapter scaffold with:
 
 - mounted-medium binding for D88-backed and raw sector-image-backed containers
 - drive insert and eject operations
@@ -123,10 +123,11 @@ The managed reference implementation already includes a first CSCP-style host ad
 - explicit read-only timing advancement through the shared controller/core contract
 - callback-friendly advance-delay hints for host-side event registration
 
-The remaining CSCP-style work is host-specific glue:
+The remaining event-driven emulator work is host-specific glue:
 
 - host event-manager integration using the current advance-delay hints
 - richer host event bridge work beyond the current IRQ and DRQ callback path
+- process-separated or IPC-friendly integration so emulator-specific bridge code can remain outside this repository when required by license constraints
 
 ### First Proof Target
 
@@ -137,6 +138,7 @@ The first proof target for this host should be:
 - support restore, seek, and read-sector in the narrow command subset
 - expose busy, IRQ, DRQ, and record-not-found style outcomes
 - keep the integration read-only
+- keep the host-specific bridge out of the portable core repository when a copyleft or otherwise restrictive emulator license requires process or IPC separation
 
 ## xmil-web-Style Host Adapter
 

@@ -59,9 +59,9 @@ public static class Legacy89DiskKitApplication
         return new Fdc.FdcAccessService(controller, clock);
     }
 
-    public static Fdc.Hosts.CscpStyleFdcHostAdapter CreateCscpStyleFdcHostAdapter()
+    public static Fdc.Hosts.EventDrivenEmulatorFdcHostAdapter CreateEventDrivenEmulatorFdcHostAdapter()
     {
-        return new Fdc.Hosts.CscpStyleFdcHostAdapter(CreateDriveMountService(), CreateMountedMediumBindingService());
+        return new Fdc.Hosts.EventDrivenEmulatorFdcHostAdapter(CreateDriveMountService(), CreateMountedMediumBindingService());
     }
 
     /// <summary>

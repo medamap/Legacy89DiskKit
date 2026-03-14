@@ -253,7 +253,7 @@
 - [ ] Phase 21: Embedded and Bare-Metal Direction
     - [ ] Define the target order for low-level deployment:
         - [x] emulator-hosted integration first
-            - [x] CSCP-style event-driven host adapter as the first concrete host-integration target
+            - [x] event-driven emulator host adapter as the first concrete host-integration target
             - [x] xmil-web-style host adapter as the second concrete host-integration target
         - [ ] desktop/server native hosts
         - [ ] Linux-based embedded boards
@@ -277,12 +277,13 @@
         - [x] keep write support and fidelity-heavy behavior out of the first proof target
     - [ ] Keep board-specific or hardware-specific work out of the `v2.0.0` release gate.
     - [ ] Keep `Phase 21` downstream of the `Phase 20` migration-boundary work.
-    - [ ] Implement a CSCP-style thin host adapter against the shared controller/core contract.
+    - [ ] Implement an event-driven emulator thin host adapter against the shared controller/core contract.
         - [x] bridge disk mount and unmount into mounted-medium binding
         - [x] bridge register reads and writes into `IFdcController`
         - [x] bridge delayed events into explicit timing advancement
         - [x] bridge IRQ and DRQ into host-visible callbacks or signals
         - [x] keep the first proof read-only
+        - [ ] keep the adapter boundary process-separated or IPC-friendly so host-side integration code can remain in the emulator-side codebase
     - [ ] Implement an xmil-web-style thin host adapter against the shared controller/core contract.
         - [ ] isolate global controller state behind a thin adapter
         - [ ] bridge `x1_fdc_w` / `x1_fdc_r` style entrypoints into register access

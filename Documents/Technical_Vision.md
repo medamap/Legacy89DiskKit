@@ -285,10 +285,12 @@ In practice this means:
 
 The first two concrete host targets are:
 
-1. a CSCP-style event-driven host adapter
+1. an event-driven emulator host adapter
 2. an xmil-web-style host adapter with a more C-style global-state integration shape
 
 These should not share one universal adapter. They should share the same narrow controller/core contract while keeping host-specific glue in separate thin adapters.
+
+Where a target emulator license would make direct linking undesirable, the preferred integration boundary should be process-separated or IPC-friendly so the emulator-side bridge can live with the emulator rather than inside the portable core repository.
 
 ## Disk Image API vs FDC-Facing API
 

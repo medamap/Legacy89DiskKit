@@ -486,7 +486,7 @@ That means:
 
 The first concrete host-integration order is now fixed:
 
-1. a CSCP-style event-driven host adapter
+1. an event-driven emulator host adapter
 2. an xmil-web-style host adapter
 
 This order should remain read-only at first. The first proof target is emulator-facing controller integration with:
@@ -507,6 +507,8 @@ The first adapter should translate an event-driven host controller shape into:
 - explicit timing advancement
 - IRQ and DRQ visibility
 - drive-ready and drive-selection state
+
+Where direct linking would create an avoidable license or distribution problem, the first adapter path should prefer a process-separated or IPC-friendly bridge so emulator-specific glue can remain on the host side.
 
 The second adapter should prove that the same shared contract can also fit a host with:
 
