@@ -51,4 +51,17 @@ public class EmulatorHostObservableProtocolSessionTest
         Assert.Contains(exchange.Notifications, x => x.Kind == EmulatorHostNotificationKind.IrqChanged && x.SignalState == true);
         Assert.Contains(exchange.Notifications, x => x.Kind == EmulatorHostNotificationKind.DrqChanged && x.SignalState == true);
     }
+
+    [Fact]
+    public void Session_CanReturnCapabilitiesWithoutNotifications()
+    {
+        var session = new EmulatorHostObservableProtocolSession(Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter());
+
+        var payload = session.HandleLine(EmulatorHostProtocolCodec.SerializeRequest(
+            new EmulatorHostRequest(EmulatorHostRequestKind.QueryCapabilities)));
+        var exchange = EmulatorHostProtocolCodec.DeserializeExchange(payload);
+
+        Assert.NotNull(exchange.Response.Capabilities);
+        Assert.Empty(exchange.Notifications);
+    }
 }

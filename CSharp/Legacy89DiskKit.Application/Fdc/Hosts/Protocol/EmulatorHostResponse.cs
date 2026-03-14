@@ -7,4 +7,5 @@ public sealed record EmulatorHostResponse(
     FdcVisibleState? VisibleState,
     bool IrqAsserted,
     bool DrqAsserted,
-    long? PendingAdvanceMicroseconds);
+    long? PendingAdvanceMicroseconds,
+    EmulatorHostCapabilities? Capabilities = null);

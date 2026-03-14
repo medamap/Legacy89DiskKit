@@ -63,6 +63,23 @@ public class EmulatorHostProtocolEndpointTest
     }
 
     [Fact]
+    public void Endpoint_CanReportCapabilities()
+    {
+        var endpoint = new EmulatorHostProtocolEndpoint(Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter());
+
+        var payload = endpoint.Handle(EmulatorHostProtocolCodec.SerializeRequest(
+            new EmulatorHostRequest(EmulatorHostRequestKind.QueryCapabilities)));
+        var response = EmulatorHostProtocolCodec.DeserializeResponse(payload);
+
+        Assert.NotNull(response.Capabilities);
+        Assert.Equal(1, response.Capabilities!.ProtocolVersion);
+        Assert.True(response.Capabilities.SupportsPathOpen);
+        Assert.True(response.Capabilities.SupportsNotificationExchange);
+        Assert.True(response.Capabilities.SupportsPlainStdio);
+        Assert.True(response.Capabilities.SupportsObservableStdio);
+    }
+
+    [Fact]
     public void Endpoint_CanOpenAndCloseDiskByPath()
     {
         using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);

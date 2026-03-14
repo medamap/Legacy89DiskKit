@@ -9,6 +9,13 @@ namespace Legacy89DiskKit.Application.Fdc.Hosts;
 
 public class EventDrivenEmulatorFdcHostAdapter
 {
+    private static readonly EmulatorHostCapabilities HostCapabilities = new(
+        ProtocolVersion: 1,
+        SupportsPathOpen: true,
+        SupportsNotificationExchange: true,
+        SupportsPlainStdio: true,
+        SupportsObservableStdio: true);
+
     private readonly DriveMountService _driveMountService;
     private readonly MountedMediumBindingService _bindingService;
     private readonly IDiskContainerFactory _containerFactory;
@@ -159,6 +166,8 @@ public class EventDrivenEmulatorFdcHostAdapter
 
         switch (request.Kind)
         {
+            case EmulatorHostRequestKind.QueryCapabilities:
+                break;
             case EmulatorHostRequestKind.OpenDiskPath:
                 OpenDiskPath(
                     request.DriveNumber ?? throw new ArgumentException("DriveNumber is required.", nameof(request)),
@@ -202,7 +211,8 @@ public class EventDrivenEmulatorFdcHostAdapter
             visibleState,
             visibleState?.Irq ?? false,
             visibleState?.Drq ?? false,
-            pendingAdvance is null ? null : (long)pendingAdvance.Value.TotalMilliseconds * 1000);
+            pendingAdvance is null ? null : (long)pendingAdvance.Value.TotalMilliseconds * 1000,
+            request.Kind == EmulatorHostRequestKind.QueryCapabilities ? HostCapabilities : null);
     }
 
     private void SyncSignals()
