@@ -48,6 +48,11 @@ public class EmulatorHostCliProcessBridgeTest
             Assert.Null(closeExchange.Response.VisibleState);
 
             HostProofAssert.AssertTranscriptRoundTrip(transcript, 10);
+            var report = HostProofReportBuilder.Build(transcript, "OpenDiskPath", "observable");
+            Assert.True(report.CapabilityHandshakeSucceeded);
+            Assert.True(report.DiskOpenSucceeded);
+            Assert.True(report.DataReadSucceeded);
+            Assert.True(report.CloseSucceeded);
         }
         finally
         {

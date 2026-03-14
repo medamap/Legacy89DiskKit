@@ -39,5 +39,9 @@ public class EmulatorHostCliProcessRawBridgeTest
         await process.SendExchangeAsync(sequence[8], transcript);
         HostProofAssert.AssertReadRegisterValues(transcript, 0x51, 0x52);
         HostProofAssert.AssertTranscriptRoundTrip(transcript, 9);
+        var report = HostProofReportBuilder.Build(transcript, "OpenDiskImage", "observable");
+        Assert.True(report.SupportsBufferOpen);
+        Assert.True(report.DiskOpenSucceeded);
+        Assert.True(report.DataReadSucceeded);
     }
 }
