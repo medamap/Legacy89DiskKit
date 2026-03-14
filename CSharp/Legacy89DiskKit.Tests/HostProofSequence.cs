@@ -44,4 +44,25 @@ internal static class HostProofSequence
             new EmulatorHostRequest(EmulatorHostRequestKind.ReadRegister, RegisterAddress: 3)
         ];
     }
+
+    public static IReadOnlyList<EmulatorHostRequest> CreateReadOnlyRawByBufferSequence(byte[] imageData, string imageFormat = "2d", int driveNumber = 0)
+    {
+        return
+        [
+            new EmulatorHostRequest(EmulatorHostRequestKind.QueryCapabilities),
+            new EmulatorHostRequest(
+                EmulatorHostRequestKind.OpenDiskImage,
+                ImageFormat: imageFormat,
+                ImageDataBase64: Convert.ToBase64String(imageData),
+                DriveNumber: driveNumber,
+                ReadOnly: true),
+            new EmulatorHostRequest(EmulatorHostRequestKind.SelectDrive, DriveNumber: driveNumber),
+            new EmulatorHostRequest(EmulatorHostRequestKind.WriteRegister, RegisterAddress: 1, RegisterValue: 0),
+            new EmulatorHostRequest(EmulatorHostRequestKind.WriteRegister, RegisterAddress: 2, RegisterValue: 1),
+            new EmulatorHostRequest(EmulatorHostRequestKind.WriteRegister, RegisterAddress: 0, RegisterValue: 0x80),
+            new EmulatorHostRequest(EmulatorHostRequestKind.Advance, AdvanceMicroseconds: 1000),
+            new EmulatorHostRequest(EmulatorHostRequestKind.ReadRegister, RegisterAddress: 3),
+            new EmulatorHostRequest(EmulatorHostRequestKind.ReadRegister, RegisterAddress: 3)
+        ];
+    }
 }
