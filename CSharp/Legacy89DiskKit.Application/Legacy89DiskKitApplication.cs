@@ -93,6 +93,21 @@ public static class Legacy89DiskKitApplication
         return new Fdc.Hosts.Protocol.EmulatorHostObservableProtocolStdioRunner(CreateEmulatorHostObservableProtocolSession());
     }
 
+    public static IReadOnlyList<Fdc.Hosts.Protocol.EmulatorHostRequest> CreateReadOnlyD88PathScript(string imagePath, int driveNumber = 0)
+    {
+        return Fdc.Hosts.Scripting.EmulatorHostRequestScriptFactory.CreateReadOnlyD88ByPathSequence(imagePath, driveNumber);
+    }
+
+    public static IReadOnlyList<Fdc.Hosts.Protocol.EmulatorHostRequest> CreateReadOnlyD88BufferScript(byte[] imageData, string imageFormat = "d88", int driveNumber = 0)
+    {
+        return Fdc.Hosts.Scripting.EmulatorHostRequestScriptFactory.CreateReadOnlyD88ByBufferSequence(imageData, imageFormat, driveNumber);
+    }
+
+    public static IReadOnlyList<Fdc.Hosts.Protocol.EmulatorHostRequest> CreateReadOnlyRawBufferScript(byte[] imageData, string imageFormat = "2d", int driveNumber = 0)
+    {
+        return Fdc.Hosts.Scripting.EmulatorHostRequestScriptFactory.CreateReadOnlyRawByBufferSequence(imageData, imageFormat, driveNumber);
+    }
+
     public static Fdc.Hosts.XmilWebStyleFdcHostAdapter CreateXmilWebStyleFdcHostAdapter()
     {
         return new Fdc.Hosts.XmilWebStyleFdcHostAdapter(CreateEventDrivenEmulatorFdcHostAdapter());

@@ -44,6 +44,20 @@ public class ManagedPublicSurfaceTest
     }
 
     [Fact]
+    public void CreateReadOnlyD88PathScript_ReturnsSupportedSequence()
+    {
+        var script = Legacy89DiskKitApplication.CreateReadOnlyD88PathScript("/tmp/example.d88");
+        Assert.NotEmpty(script);
+    }
+
+    [Fact]
+    public void CreateReadOnlyD88BufferScript_ReturnsSupportedSequence()
+    {
+        var script = Legacy89DiskKitApplication.CreateReadOnlyD88BufferScript([0x00, 0x01]);
+        Assert.NotEmpty(script);
+    }
+
+    [Fact]
     public void ManagedBootstrap_CanOpenAndListKnownSample()
     {
         using var service = Legacy89DiskKitApplication.CreateDiskService();
