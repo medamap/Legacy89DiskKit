@@ -15,6 +15,7 @@ Use these files first when you need the current project direction.
 - `Phase21_Emulator_Host_Integration_Plan.md`: emulator-first host adapter planning for the next phase
 - `Phase24_Real_Emulator_Integration_Plan.md`: real-host bridge planning for the next emulator-integration phase
 - `Phase24_First_EventDriven_Host_Checklist.md`: minimum proof checklist for the first real event-driven host bridge
+- `Phase24_First_EventDriven_Host_Bridge_Tasks.md`: bridge-side task list for the first real event-driven host proof
 - `Glossary.md`: project terminology used across roadmap and migration work
 
 ## Reference Specifications
