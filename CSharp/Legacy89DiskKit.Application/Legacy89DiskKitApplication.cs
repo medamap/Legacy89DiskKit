@@ -88,6 +88,11 @@ public static class Legacy89DiskKitApplication
         return new Fdc.Hosts.Protocol.EmulatorHostObservableProtocolSession(CreateEventDrivenEmulatorFdcHostAdapter());
     }
 
+    public static Fdc.Hosts.Protocol.EmulatorHostObservableProtocolStdioRunner CreateEmulatorHostObservableProtocolStdioRunner()
+    {
+        return new Fdc.Hosts.Protocol.EmulatorHostObservableProtocolStdioRunner(CreateEmulatorHostObservableProtocolSession());
+    }
+
     public static Fdc.Hosts.XmilWebStyleFdcHostAdapter CreateXmilWebStyleFdcHostAdapter()
     {
         return new Fdc.Hosts.XmilWebStyleFdcHostAdapter(CreateEventDrivenEmulatorFdcHostAdapter());

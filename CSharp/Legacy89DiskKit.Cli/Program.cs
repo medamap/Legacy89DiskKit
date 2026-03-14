@@ -268,10 +268,18 @@ diskCommand.AddCommand(diskFormatCommand);
 
 var hostCommand = new Command("host", localizer.HostCommandDescription);
 var hostStdioCommand = new Command("stdio", localizer.HostStdioCommandDescription);
-hostStdioCommand.SetHandler(async () =>
+var hostObservableOption = new Option<bool>("--observable", localizer.HostObservableOptionDescription);
+hostStdioCommand.AddOption(hostObservableOption);
+hostStdioCommand.SetHandler(async (bool observable) =>
 {
+    if (observable)
+    {
+        await Legacy89DiskKitApplication.CreateEmulatorHostObservableProtocolStdioRunner().RunAsync();
+        return;
+    }
+
     await Legacy89DiskKitApplication.CreateEmulatorHostProtocolStdioRunner().RunAsync();
-});
+}, hostObservableOption);
 hostCommand.AddCommand(hostStdioCommand);
 
 var bootCommand = new Command("boot", localizer.BootCommandDescription);
