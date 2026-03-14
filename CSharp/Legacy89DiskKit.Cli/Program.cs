@@ -274,7 +274,11 @@ var hostScriptCommand = new Command("script", localizer.HostScriptCommandDescrip
 var hostScriptD88PathCommand = new Command("d88-path", localizer.HostScriptD88PathCommandDescription);
 var hostScriptD88BufferCommand = new Command("d88-buffer", localizer.HostScriptD88BufferCommandDescription);
 var hostScriptRawBufferCommand = new Command("raw-buffer", localizer.HostScriptRawBufferCommandDescription);
+var hostBundleCommand = new Command("bundle", localizer.HostBundleCommandDescription);
+var hostBundleInspectCommand = new Command("inspect", localizer.HostBundleInspectCommandDescription);
 var hostOutputArgument = new Argument<string>("output", localizer.HostOutputArgumentDescription);
+var hostDirectoryArgument = new Argument<string>("directory", localizer.HostDirectoryArgumentDescription);
+var hostBaseNameArgument = new Argument<string>("base-name", localizer.HostBaseNameArgumentDescription);
 hostStdioCommand.AddOption(hostObservableOption);
 hostStdioCommand.SetHandler(async (bool observable) =>
 {
@@ -336,8 +340,28 @@ hostScriptRawBufferCommand.SetHandler(async (string imagePath, string outputPath
 hostScriptCommand.AddCommand(hostScriptD88PathCommand);
 hostScriptCommand.AddCommand(hostScriptD88BufferCommand);
 hostScriptCommand.AddCommand(hostScriptRawBufferCommand);
+hostBundleInspectCommand.AddArgument(hostDirectoryArgument);
+hostBundleInspectCommand.AddArgument(hostBaseNameArgument);
+hostBundleInspectCommand.SetHandler(async (string directoryPath, string baseName) =>
+{
+    try
+    {
+        var bundle = await EmulatorHostBundleReader.ReadAsync(directoryPath, baseName);
+        Console.WriteLine($"BaseName: {bundle.Manifest.BaseName}");
+        Console.WriteLine($"OpenMode: {bundle.Manifest.OpenMode}");
+        Console.WriteLine($"ExchangeMode: {bundle.Manifest.ExchangeMode}");
+        Console.WriteLine($"TranscriptEntries: {bundle.Transcript.Count}");
+        Console.WriteLine($"RequestEntries: {bundle.RequestScript.Count}");
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+}, hostDirectoryArgument, hostBaseNameArgument);
+hostBundleCommand.AddCommand(hostBundleInspectCommand);
 hostCommand.AddCommand(hostStdioCommand);
 hostCommand.AddCommand(hostScriptCommand);
+hostCommand.AddCommand(hostBundleCommand);
 
 var bootCommand = new Command("boot", localizer.BootCommandDescription);
 var filesOption = new Option<string>("--files", () => "all", localizer.BootFilesOptionDescription);
