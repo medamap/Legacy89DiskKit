@@ -287,10 +287,10 @@
         - [ ] keep the adapter boundary process-separated or IPC-friendly so host-side integration code can remain in the emulator-side codebase
         - [ ] keep the transport and naming generic enough that the adapter path is not framed as support for one specific emulator codebase only
     - [ ] Implement an xmil-web-style thin host adapter against the shared controller/core contract.
-        - [ ] isolate global controller state behind a thin adapter
-        - [ ] bridge `x1_fdc_w` / `x1_fdc_r` style entrypoints into register access
+        - [x] isolate global controller state behind a thin adapter
+        - [x] bridge `x1_fdc_w` / `x1_fdc_r` style entrypoints into register access
         - [ ] bridge event objects into explicit timing advancement
-        - [ ] prove D88-backed integration first
+        - [x] prove D88-backed integration first
         - [ ] prove raw sector-image-backed integration second
     - [ ] Validate that both host adapters can share the same mounted-medium binding path without a universal adapter layer.
     - [ ] Keep detailed host-integration planning in `Documents/Phase21_Emulator_Host_Integration_Plan.md`.

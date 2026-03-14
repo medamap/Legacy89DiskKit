@@ -64,6 +64,11 @@ public static class Legacy89DiskKitApplication
         return new Fdc.Hosts.EventDrivenEmulatorFdcHostAdapter(CreateDriveMountService(), CreateMountedMediumBindingService());
     }
 
+    public static Fdc.Hosts.XmilWebStyleFdcHostAdapter CreateXmilWebStyleFdcHostAdapter()
+    {
+        return new Fdc.Hosts.XmilWebStyleFdcHostAdapter(CreateEventDrivenEmulatorFdcHostAdapter());
+    }
+
     /// <summary>
     /// Creates the supported explicit filesystem resolver.
     /// </summary>

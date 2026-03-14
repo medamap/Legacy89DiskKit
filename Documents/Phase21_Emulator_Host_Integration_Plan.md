@@ -190,6 +190,12 @@ The second adapter should focus on:
 4. D88-backed proof
 5. raw sector-image-backed proof
 
+The managed reference implementation now includes an initial xmil-web-style adapter scaffold with:
+
+- global-state snapshot isolation behind a dedicated adapter object
+- `x1_fdc_w` / `x1_fdc_r` style entrypoints over the shared register contract
+- D88-backed read-only proof through the existing mounted-medium binding path
+
 ### Second Proof Target
 
 The second proof target should remain read-only and should confirm that the shared narrow contract can also fit a host with:
