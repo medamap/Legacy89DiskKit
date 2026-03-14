@@ -280,7 +280,7 @@
     - [ ] Implement a CSCP-style thin host adapter against the shared controller/core contract.
         - [x] bridge disk mount and unmount into mounted-medium binding
         - [x] bridge register reads and writes into `IFdcController`
-        - [ ] bridge delayed events into explicit timing advancement
+        - [x] bridge delayed events into explicit timing advancement
         - [x] bridge IRQ and DRQ into host-visible callbacks or signals
         - [x] keep the first proof read-only
     - [ ] Implement an xmil-web-style thin host adapter against the shared controller/core contract.

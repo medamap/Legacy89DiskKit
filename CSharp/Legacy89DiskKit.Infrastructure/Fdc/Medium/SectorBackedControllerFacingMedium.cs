@@ -42,6 +42,11 @@ public abstract class SectorBackedControllerFacingMedium : IControllerFacingMedi
 
     public bool IsDrqAsserted => _drq;
 
+    public TimeSpan? GetPendingDelayHint()
+    {
+        return _pendingOperation == PendingOperation.None ? null : _remainingDelay;
+    }
+
     public void Reset()
     {
         _status = 0;

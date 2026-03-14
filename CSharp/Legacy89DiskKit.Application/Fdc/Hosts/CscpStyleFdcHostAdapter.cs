@@ -14,10 +14,13 @@ public class CscpStyleFdcHostAdapter
     private int _selectedDrive;
     private bool _lastIrq;
     private bool _lastDrq;
+    private TimeSpan? _lastAdvanceHint;
 
     public event Action<bool>? IrqChanged;
 
     public event Action<bool>? DrqChanged;
+
+    public event Action<TimeSpan>? AdvanceRequested;
 
     public CscpStyleFdcHostAdapter(DriveMountService driveMountService, MountedMediumBindingService bindingService)
     {
@@ -123,6 +126,7 @@ public class CscpStyleFdcHostAdapter
         var visible = TryGetVisibleState();
         var irq = visible?.Irq ?? false;
         var drq = visible?.Drq ?? false;
+        var hint = TryGetPendingAdvanceHint();
 
         if (irq != _lastIrq)
         {
@@ -135,6 +139,18 @@ public class CscpStyleFdcHostAdapter
             _lastDrq = drq;
             DrqChanged?.Invoke(drq);
         }
+
+        if (hint is null)
+        {
+            _lastAdvanceHint = null;
+            return;
+        }
+
+        if (_lastAdvanceHint != hint)
+        {
+            _lastAdvanceHint = hint;
+            AdvanceRequested?.Invoke(hint.Value);
+        }
     }
 
     private FdcVisibleState? TryGetVisibleState()
@@ -142,6 +158,16 @@ public class CscpStyleFdcHostAdapter
         if (_controllers.TryGetValue(_selectedDrive, out var controller))
         {
             return controller.Controller.GetVisibleState();
+        }
+
+        return null;
+    }
+
+    private TimeSpan? TryGetPendingAdvanceHint()
+    {
+        if (_controllers.TryGetValue(_selectedDrive, out var controller))
+        {
+            return controller.TimedController.GetPendingAdvanceHint();
         }
 
         return null;

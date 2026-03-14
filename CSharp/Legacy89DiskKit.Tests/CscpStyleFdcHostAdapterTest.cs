@@ -102,4 +102,23 @@ public class CscpStyleFdcHostAdapterTest
         Assert.Contains(true, drqStates);
         Assert.Contains(false, drqStates);
     }
+
+    [Fact]
+    public void Adapter_RaisesAdvanceRequestedWhenCommandStartsPendingWork()
+    {
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        container.WriteSector(0, 0, 1, new byte[] { 0x10 });
+
+        var adapter = Legacy89DiskKitApplication.CreateCscpStyleFdcHostAdapter();
+        var requestedDelays = new List<TimeSpan>();
+        adapter.AdvanceRequested += delay => requestedDelays.Add(delay);
+
+        adapter.OpenDisk(0, container);
+        adapter.SelectDrive(0);
+        adapter.WriteIo8(1, 0);
+        adapter.WriteIo8(2, 1);
+        adapter.WriteIo8(0, 0x80);
+
+        Assert.Contains(TimeSpan.FromMilliseconds(1), requestedDelays);
+    }
 }

@@ -81,6 +81,8 @@ public class MediumAdapterContractTest
 
         public bool IsBusy => false;
 
+        public TimeSpan? GetPendingDelayHint() => null;
+
         public bool IsIrqAsserted => false;
 
         public bool IsDrqAsserted => false;

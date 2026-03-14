@@ -121,10 +121,11 @@ The managed reference implementation already includes a first CSCP-style host ad
 - register-shaped read and write entrypoints
 - selected drive and side control
 - explicit read-only timing advancement through the shared controller/core contract
+- callback-friendly advance-delay hints for host-side event registration
 
 The remaining CSCP-style work is host-specific glue:
 
-- delayed event registration and callback integration
+- host event-manager integration using the current advance-delay hints
 - richer host event bridge work beyond the current IRQ and DRQ callback path
 
 ### First Proof Target
