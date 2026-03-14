@@ -12,6 +12,8 @@ public interface IControllerFacingMedium
 
     bool IsBusy { get; }
 
+    TimeSpan? GetPendingDelayHint();
+
     void Reset();
 
     void Advance(TimeSpan delta);

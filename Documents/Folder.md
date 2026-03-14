@@ -12,6 +12,7 @@ Use these files first when you need the current project direction.
 - `plans/RealImageTestPlan.md`: planned real-image verification work
 - `Release_Process.md`: release procedure
 - `Phase20_Fdc_Raw_Notes.md`: decision notes for controller-facing and raw-direction discussions
+- `Phase21_Emulator_Host_Integration_Plan.md`: emulator-first host adapter planning for the next phase
 - `Glossary.md`: project terminology used across roadmap and migration work
 
 ## Reference Specifications

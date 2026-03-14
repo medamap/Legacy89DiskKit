@@ -250,33 +250,50 @@
     - [ ] decide which additional commands and status transitions belong in the first practical emulator-facing milestone
     - [ ] keep this investigation separate from the portability-first narrow path unless the findings force a contract change
 
-- [ ] Phase 21: Embedded and Bare-Metal Direction
-    - [ ] Define the target order for low-level deployment:
-        - [ ] emulator-hosted integration first
-            - [ ] CSCP-style event-driven host adapter as the first concrete host-integration target
-            - [ ] xmil-web-style host adapter as the second concrete host-integration target
-        - [ ] desktop/server native hosts
-        - [ ] Linux-based embedded boards
-        - [ ] WASM/runtime-hosted environments
-        - [ ] true bare-metal targets
-    - [ ] Document the constraints that must be satisfied before true bare-metal work starts:
-        - [ ] path-independent core
-        - [ ] explicit ownership and ABI rules
-        - [ ] explicit encoding contracts
-        - [ ] host-agnostic error model
-    - [ ] Identify which current services are unsuitable for bare-metal and must remain host-side only.
-    - [ ] Keep host integration split into:
-        - [ ] a shared narrow controller/core contract
-        - [ ] host-specific thin adapters instead of a universal adapter
-    - [ ] Document the first host-adapter expectations:
-        - [ ] event-driven host callback integration
-        - [ ] step/tick-driven host integration
-        - [ ] mount/unmount, ready, drive-select, side-select, IRQ/DRQ bridge responsibilities
-    - [ ] Define the minimum proof-of-concept target after the C++ core exists.
-        - [ ] first proof target should be emulator-facing read-only controller integration
-        - [ ] keep write support and fidelity-heavy behavior out of the first proof target
-    - [ ] Keep board-specific or hardware-specific work out of the `v2.0.0` release gate.
-    - [ ] Keep `Phase 21` downstream of the `Phase 20` migration-boundary work.
+- [x] Phase 21: Embedded and Bare-Metal Direction
+    - [x] Define the target order for low-level deployment:
+        - [x] emulator-hosted integration first
+            - [x] event-driven emulator host adapter as the first concrete host-integration target
+            - [x] xmil-web-style host adapter as the second concrete host-integration target
+        - [x] desktop/server native hosts
+        - [x] Linux-based embedded boards
+        - [x] WASM/runtime-hosted environments
+        - [x] true bare-metal targets
+    - [x] Document the constraints that must be satisfied before true bare-metal work starts:
+        - [x] path-independent core
+        - [x] explicit ownership and ABI rules
+        - [x] explicit encoding contracts
+        - [x] host-agnostic error model
+    - [x] Identify which current services are unsuitable for bare-metal and must remain host-side only.
+    - [x] Keep host integration split into:
+        - [x] a shared narrow controller/core contract
+        - [x] host-specific thin adapters instead of a universal adapter
+    - [x] Document the first host-adapter expectations:
+        - [x] event-driven host callback integration
+        - [x] step/tick-driven host integration
+        - [x] mount/unmount, ready, drive-select, side-select, IRQ/DRQ bridge responsibilities
+    - [x] Define the minimum proof-of-concept target after the C++ core exists.
+        - [x] first proof target should be emulator-facing read-only controller integration
+        - [x] keep write support and fidelity-heavy behavior out of the first proof target
+    - [x] Keep board-specific or hardware-specific work out of the `v2.0.0` release gate.
+    - [x] Keep `Phase 21` downstream of the `Phase 20` migration-boundary work.
+    - [x] Implement an event-driven emulator thin host adapter against the shared controller/core contract.
+        - [x] bridge disk mount and unmount into mounted-medium binding
+        - [x] bridge register reads and writes into `IFdcController`
+        - [x] bridge delayed events into explicit timing advancement
+        - [x] bridge IRQ and DRQ into host-visible callbacks or signals
+        - [x] keep the first proof read-only
+        - [x] expose a transport-neutral request/response shape for register access and timing advancement
+        - [x] keep the adapter boundary process-separated or IPC-friendly so host-side integration code can remain in the emulator-side codebase
+        - [x] keep the transport and naming generic enough that the adapter path is not framed as support for one specific emulator codebase only
+    - [x] Implement an xmil-web-style thin host adapter against the shared controller/core contract.
+        - [x] isolate global controller state behind a thin adapter
+        - [x] bridge `x1_fdc_w` / `x1_fdc_r` style entrypoints into register access
+        - [x] bridge event objects into explicit timing advancement
+        - [x] prove D88-backed integration first
+        - [x] prove raw sector-image-backed integration second
+    - [x] Validate that both host adapters can share the same mounted-medium binding path without a universal adapter layer.
+    - [x] Keep detailed host-integration planning in `Documents/Phase21_Emulator_Host_Integration_Plan.md`.
 
 - [ ] Future Packaging Follow-Up
     - [ ] Revisit `Legacy89DiskKit.CSharp` packaging once the supported managed surface is stable enough for public package publication.
@@ -290,3 +307,12 @@
         - [ ] a usable `Legacy89DiskKit.Wasm` runtime surface
         - [ ] a stable native bridge suitable for Node-side wrapping
     - [ ] Treat future npm publication as a wrapper or host binding problem rather than as direct C# package publication.
+
+- [ ] Rough Future Phases (adjustable roadmap only; promote to concrete tasks when each phase approaches execution)
+    - [ ] Phase 22: Controller Fidelity Research
+    - [ ] Phase 23: External Host Exposure and Transport Shape
+    - [ ] Phase 24: First Real Emulator Integrations
+    - [ ] Phase 25: Portable Native Surface Consolidation
+    - [ ] Phase 26: C++ Filesystem Parity Expansion
+    - [ ] Phase 27: Raw Preservation Format Formalization
+    - [ ] Phase 28: Embedded and Bare-Metal Proof

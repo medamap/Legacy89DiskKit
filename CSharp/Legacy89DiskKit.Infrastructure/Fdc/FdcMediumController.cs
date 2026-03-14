@@ -71,4 +71,9 @@ public class FdcMediumController : IFdcController, ITimedFdcController
     {
         _medium.Advance(delta);
     }
+
+    public TimeSpan? GetPendingAdvanceHint()
+    {
+        return _medium.GetPendingDelayHint();
+    }
 }
