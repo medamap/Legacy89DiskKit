@@ -23,9 +23,7 @@ public class EmulatorHostCliProcessBridgeTest
             var sequence = HostProofSequence.CreateReadOnlyD88ByPathSequence(imagePath);
 
             var capabilities = await process.SendExchangeAsync(sequence[0], transcript);
-            Assert.NotNull(capabilities.Response.Capabilities);
-            Assert.True(capabilities.Response.Capabilities!.SupportsObservableStdio);
-            Assert.True(capabilities.Response.Capabilities.SupportsPathOpen);
+            HostProofAssert.AssertCapabilityHandshake(capabilities, expectObservable: true, expectPathOpen: true, expectBufferOpen: true);
 
             var openExchange = await process.SendExchangeAsync(sequence[1], transcript);
             Assert.NotNull(openExchange.Response.VisibleState);
@@ -35,7 +33,7 @@ public class EmulatorHostCliProcessBridgeTest
             await process.SendExchangeAsync(sequence[4], transcript);
 
             var commandExchange = await process.SendExchangeAsync(sequence[5], transcript);
-            Assert.Contains(commandExchange.Notifications, x => x.Kind == EmulatorHostNotificationKind.AdvanceRequested);
+            HostProofAssert.AssertAdvanceRequested(commandExchange);
 
             var advanceExchange = await process.SendExchangeAsync(sequence[6], transcript);
             Assert.True(advanceExchange.Response.IrqAsserted);
@@ -44,16 +42,12 @@ public class EmulatorHostCliProcessBridgeTest
             var firstByte = await process.SendExchangeAsync(sequence[7], transcript);
             var secondByte = await process.SendExchangeAsync(sequence[8], transcript);
 
-            Assert.Equal((byte?)0x41, firstByte.Response.RegisterValue);
-            Assert.Equal((byte?)0x42, secondByte.Response.RegisterValue);
+            HostProofAssert.AssertReadRegisterValues(transcript, 0x41, 0x42);
 
             var closeExchange = await process.SendExchangeAsync(sequence[9], transcript);
             Assert.Null(closeExchange.Response.VisibleState);
 
-            var transcriptPayload = HostProofTranscriptCodec.SerializeLines(transcript);
-            var roundTrip = HostProofTranscriptCodec.DeserializeLines(transcriptPayload);
-            Assert.Equal(transcriptPayload, HostProofTranscriptCodec.SerializeLines(roundTrip));
-            Assert.Equal(10, roundTrip.Count);
+            HostProofAssert.AssertTranscriptRoundTrip(transcript, 10);
         }
         finally
         {

@@ -21,8 +21,7 @@ public class EmulatorHostCliProcessRawBridgeTest
         var sequence = HostProofSequence.CreateReadOnlyRawByBufferSequence(container.ToImageData());
 
         var capabilities = await process.SendExchangeAsync(sequence[0], transcript);
-        Assert.NotNull(capabilities.Response.Capabilities);
-        Assert.True(capabilities.Response.Capabilities!.SupportsBufferOpen);
+        HostProofAssert.AssertCapabilityHandshake(capabilities, expectObservable: true, expectPathOpen: true, expectBufferOpen: true);
 
         await process.SendExchangeAsync(sequence[1], transcript);
         await process.SendExchangeAsync(sequence[2], transcript);
@@ -30,21 +29,15 @@ public class EmulatorHostCliProcessRawBridgeTest
         await process.SendExchangeAsync(sequence[4], transcript);
 
         var commandExchange = await process.SendExchangeAsync(sequence[5], transcript);
-        Assert.Contains(commandExchange.Notifications, x => x.Kind == EmulatorHostNotificationKind.AdvanceRequested);
+        HostProofAssert.AssertAdvanceRequested(commandExchange);
 
         var advanceExchange = await process.SendExchangeAsync(sequence[6], transcript);
         Assert.True(advanceExchange.Response.IrqAsserted);
         Assert.True(advanceExchange.Response.DrqAsserted);
 
-        var firstByte = await process.SendExchangeAsync(sequence[7], transcript);
-        var secondByte = await process.SendExchangeAsync(sequence[8], transcript);
-
-        Assert.Equal((byte?)0x51, firstByte.Response.RegisterValue);
-        Assert.Equal((byte?)0x52, secondByte.Response.RegisterValue);
-
-        var transcriptPayload = HostProofTranscriptCodec.SerializeLines(transcript);
-        var roundTrip = HostProofTranscriptCodec.DeserializeLines(transcriptPayload);
-        Assert.Equal(transcriptPayload, HostProofTranscriptCodec.SerializeLines(roundTrip));
-        Assert.Equal(9, roundTrip.Count);
+        await process.SendExchangeAsync(sequence[7], transcript);
+        await process.SendExchangeAsync(sequence[8], transcript);
+        HostProofAssert.AssertReadRegisterValues(transcript, 0x51, 0x52);
+        HostProofAssert.AssertTranscriptRoundTrip(transcript, 9);
     }
 }

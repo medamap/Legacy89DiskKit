@@ -17,9 +17,7 @@ public class EmulatorHostCliProcessBufferBridgeTest
         var sequence = HostProofSequence.CreateReadOnlyD88ByBufferSequence(container.ToImageData());
 
         var capabilities = await process.SendExchangeAsync(sequence[0], transcript);
-        Assert.NotNull(capabilities.Response.Capabilities);
-        Assert.True(capabilities.Response.Capabilities!.SupportsBufferOpen);
-        Assert.True(capabilities.Response.Capabilities.SupportsObservableStdio);
+        HostProofAssert.AssertCapabilityHandshake(capabilities, expectObservable: true, expectPathOpen: true, expectBufferOpen: true);
 
         var openExchange = await process.SendExchangeAsync(sequence[1], transcript);
         Assert.NotNull(openExchange.Response.VisibleState);
@@ -29,18 +27,15 @@ public class EmulatorHostCliProcessBufferBridgeTest
         await process.SendExchangeAsync(sequence[4], transcript);
 
         var commandExchange = await process.SendExchangeAsync(sequence[5], transcript);
-        Assert.Contains(commandExchange.Notifications, x => x.Kind == EmulatorHostNotificationKind.AdvanceRequested);
+        HostProofAssert.AssertAdvanceRequested(commandExchange);
 
         var advanceExchange = await process.SendExchangeAsync(sequence[6], transcript);
         Assert.True(advanceExchange.Response.IrqAsserted);
         Assert.True(advanceExchange.Response.DrqAsserted);
 
-        var firstByte = await process.SendExchangeAsync(sequence[7], transcript);
-        Assert.Equal((byte?)0x31, firstByte.Response.RegisterValue);
+        await process.SendExchangeAsync(sequence[7], transcript);
+        HostProofAssert.AssertReadRegisterValues(transcript, 0x31);
 
-        var transcriptPayload = HostProofTranscriptCodec.SerializeLines(transcript);
-        var roundTrip = HostProofTranscriptCodec.DeserializeLines(transcriptPayload);
-        Assert.Equal(transcriptPayload, HostProofTranscriptCodec.SerializeLines(roundTrip));
-        Assert.Equal(8, roundTrip.Count);
+        HostProofAssert.AssertTranscriptRoundTrip(transcript, 8);
     }
 }
