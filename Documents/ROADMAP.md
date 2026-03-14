@@ -700,6 +700,12 @@ This makes it possible to:
 - prove that the shared controller/core contract works across more than one host architecture
 - validate the transport and host-adapter split against real integration friction
 
+The first execution rule for Phase 24 is conservative:
+
+- treat the Phase 23 request set as fixed
+- try the first real bridges without protocol growth
+- only expand the protocol when a real host proves the need
+
 ### Phase 25: Portable Native Surface Consolidation
 
 Work:
