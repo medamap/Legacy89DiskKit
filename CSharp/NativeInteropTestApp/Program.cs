@@ -50,6 +50,9 @@ class Program
     private delegate int GetOpenHandleCountDelegate();
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int CloseAllHandlesDelegate();
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int OpenDiskDelegate(IntPtr path, bool readOnly);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -94,6 +97,7 @@ class Program
         var getStatusName = LoadDelegate<GetStatusNameDelegate>(libraryHandle, "ldk_get_status_name");
         var isHandleValid = LoadDelegate<IsHandleValidDelegate>(libraryHandle, "ldk_is_handle_valid");
         var getOpenHandleCount = LoadDelegate<GetOpenHandleCountDelegate>(libraryHandle, "ldk_get_open_handle_count");
+        var closeAllHandles = LoadDelegate<CloseAllHandlesDelegate>(libraryHandle, "ldk_close_all_handles");
         var openDisk = LoadDelegate<OpenDiskDelegate>(libraryHandle, "ldk_open_disk");
         var closeDisk = LoadDelegate<CloseDiskDelegate>(libraryHandle, "ldk_close_disk");
         var getFileSystemInfo = LoadDelegate<GetFileSystemInfoDelegate>(libraryHandle, "ldk_get_file_system_info");
@@ -180,6 +184,8 @@ class Program
         closeDisk(handle);
         Console.WriteLine($"Handle valid after close: {isHandleValid(handle) != 0}");
         Console.WriteLine($"Open handle count after close: {getOpenHandleCount()}");
+        Console.WriteLine($"Close all handles result: {closeAllHandles()}");
+        Console.WriteLine($"Open handle count after reset: {getOpenHandleCount()}");
         NativeLibrary.Free(libraryHandle);
         Console.WriteLine("Disk closed.");
         return 0;

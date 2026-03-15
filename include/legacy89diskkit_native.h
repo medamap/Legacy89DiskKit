@@ -60,6 +60,7 @@ int32_t LDK_CALL ldk_get_capability_summary(char* buffer, int32_t capacity);
 int32_t LDK_CALL ldk_get_status_name(int32_t status_code, char* buffer, int32_t capacity);
 int32_t LDK_CALL ldk_is_handle_valid(int32_t handle);
 int32_t LDK_CALL ldk_get_open_handle_count(void);
+int32_t LDK_CALL ldk_close_all_handles(void);
 int32_t LDK_CALL ldk_get_file_system_info(int32_t handle, LdkFileSystemInfo* info);
 int32_t LDK_CALL ldk_get_files_count(int32_t handle, int32_t* out_count);
 int32_t LDK_CALL ldk_get_files(int32_t handle, LdkFileEntry* buffer, int32_t capacity);

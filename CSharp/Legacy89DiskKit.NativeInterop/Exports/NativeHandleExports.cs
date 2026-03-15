@@ -16,4 +16,11 @@ public static class NativeHandleExports
     {
         return HandleManager.GetOpenHandleCount();
     }
+
+    [UnmanagedCallersOnly(EntryPoint = "ldk_close_all_handles")]
+    public static int CloseAllHandles()
+    {
+        HandleManager.Clear();
+        return 0;
+    }
 }
