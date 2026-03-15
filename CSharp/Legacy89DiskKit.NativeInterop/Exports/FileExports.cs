@@ -26,13 +26,9 @@ public static class FileExports
             Marshal.Copy(data, 0, bufferPtr, size);
             return size;
         }
-        catch (FileNotFoundException)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorFileNotFound;
-        }
-        catch (Exception)
-        {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 
@@ -53,9 +49,9 @@ public static class FileExports
             fs.DeleteFile(fileName);
             return (int)LdkStatus.Success;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 
@@ -79,9 +75,9 @@ public static class FileExports
             fs.WriteFile(fileName, data, new Legacy89DiskKit.Domain.FileSystem.Model.ExtendedFileAttributes((Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes)attributes, 0, false));
             return (int)LdkStatus.Success;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 
@@ -103,9 +99,9 @@ public static class FileExports
             fs.RenameFile(oldName, newName);
             return (int)LdkStatus.Success;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 
@@ -126,9 +122,9 @@ public static class FileExports
             fs.UpdateAttributes(fileName, new Legacy89DiskKit.Domain.FileSystem.Model.ExtendedFileAttributes((Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes)attributes, 0, false));
             return (int)LdkStatus.Success;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 }
