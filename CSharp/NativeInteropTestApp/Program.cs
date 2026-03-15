@@ -32,6 +32,18 @@ class Program
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetAbiVersionDelegate();
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetCapabilityFlagsDelegate();
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetCapabilitySummaryDelegate(IntPtr buffer, int capacity);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetStatusNameDelegate(int statusCode, IntPtr buffer, int capacity);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int OpenDiskDelegate(IntPtr path, bool readOnly);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -70,6 +82,10 @@ class Program
         }
 
         IntPtr libraryHandle = NativeLibrary.Load(libPath);
+        var getAbiVersion = LoadDelegate<GetAbiVersionDelegate>(libraryHandle, "ldk_get_abi_version");
+        var getCapabilityFlags = LoadDelegate<GetCapabilityFlagsDelegate>(libraryHandle, "ldk_get_capability_flags");
+        var getCapabilitySummary = LoadDelegate<GetCapabilitySummaryDelegate>(libraryHandle, "ldk_get_capability_summary");
+        var getStatusName = LoadDelegate<GetStatusNameDelegate>(libraryHandle, "ldk_get_status_name");
         var openDisk = LoadDelegate<OpenDiskDelegate>(libraryHandle, "ldk_open_disk");
         var closeDisk = LoadDelegate<CloseDiskDelegate>(libraryHandle, "ldk_close_disk");
         var getFileSystemInfo = LoadDelegate<GetFileSystemInfoDelegate>(libraryHandle, "ldk_get_file_system_info");
@@ -77,6 +93,10 @@ class Program
         var getFiles = LoadDelegate<GetFilesDelegate>(libraryHandle, "ldk_get_files");
 
         Console.WriteLine("Native Interop Test Application");
+        Console.WriteLine($"ABI Version: {getAbiVersion()}");
+        Console.WriteLine($"Capability Flags: 0x{getCapabilityFlags():X}");
+        Console.WriteLine($"Capability Summary: {ReadString(getCapabilitySummary)}");
+        Console.WriteLine($"Success Status Name: {ReadStatusName(getStatusName, 0)}");
         Console.WriteLine($"Opening disk: {diskImagePath}");
 
         IntPtr diskPathPtr = Marshal.StringToCoTaskMemUTF8(diskImagePath);
@@ -157,5 +177,33 @@ class Program
     {
         var symbol = NativeLibrary.GetExport(libraryHandle, exportName);
         return Marshal.GetDelegateForFunctionPointer<T>(symbol);
+    }
+
+    private static string ReadString(GetCapabilitySummaryDelegate reader)
+    {
+        IntPtr buffer = Marshal.AllocHGlobal(256);
+        try
+        {
+            int length = reader(buffer, 256);
+            return Marshal.PtrToStringUTF8(buffer, length) ?? string.Empty;
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
+        }
+    }
+
+    private static string ReadStatusName(GetStatusNameDelegate reader, int statusCode)
+    {
+        IntPtr buffer = Marshal.AllocHGlobal(256);
+        try
+        {
+            int length = reader(statusCode, buffer, 256);
+            return Marshal.PtrToStringUTF8(buffer, length) ?? string.Empty;
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
+        }
     }
 }
