@@ -80,6 +80,40 @@ public class HostTranscriptCliCommandTest
         }
     }
 
+    [Fact]
+    public async Task HostTranscriptVerify_MatchesEventDrivenBaseline()
+    {
+        var workingDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(workingDirectory);
+
+        try
+        {
+            var transcriptPath = Path.Combine(workingDirectory, "proof.transcript.jsonl");
+            await EmulatorHostTranscriptFileStore.SaveAsync(transcriptPath, CreateEventDrivenD88Transcript());
+
+            var result = await CliCommandRunner.RunAsync(
+                "host",
+                "transcript",
+                "verify",
+                transcriptPath,
+                "event-d88",
+                "--open-mode",
+                "OpenDiskPath",
+                "--exchange-mode",
+                "observable");
+
+            Assert.Equal(0, result.ExitCode);
+            Assert.Contains("Host-proof transcript matched baseline: event-d88", result.StandardOutput);
+        }
+        finally
+        {
+            if (Directory.Exists(workingDirectory))
+            {
+                Directory.Delete(workingDirectory, recursive: true);
+            }
+        }
+    }
+
     private static IReadOnlyList<EmulatorHostTranscriptEntry> CreateEventDrivenD88Transcript()
     {
         return
