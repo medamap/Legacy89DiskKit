@@ -279,6 +279,10 @@ var hostBundleCommand = new Command("bundle", localizer.HostBundleCommandDescrip
 var hostBundleInspectCommand = new Command("inspect", localizer.HostBundleInspectCommandDescription);
 var hostBundleVerifyCommand = new Command("verify", localizer.HostBundleVerifyCommandDescription);
 var hostBundlePackCommand = new Command("pack", localizer.HostBundlePackCommandDescription);
+var hostTranscriptCommand = new Command("transcript", localizer.HostTranscriptCommandDescription);
+var hostTranscriptInspectCommand = new Command("inspect", localizer.HostTranscriptInspectCommandDescription);
+var hostTranscriptReportCommand = new Command("report", localizer.HostTranscriptReportCommandDescription);
+var hostTranscriptVerifyCommand = new Command("verify", localizer.HostTranscriptVerifyCommandDescription);
 var hostOutputArgument = new Argument<string>("output", localizer.HostOutputArgumentDescription);
 var hostDirectoryArgument = new Argument<string>("directory", localizer.HostDirectoryArgumentDescription);
 var hostBaseNameArgument = new Argument<string>("base-name", localizer.HostBaseNameArgumentDescription);
@@ -452,12 +456,83 @@ hostBundlePackCommand.SetHandler(async (
         PrintError(localizer, ex.Message);
     }
 }, hostTranscriptArgument, hostDirectoryArgument, hostBaseNameArgument, hostRequestScriptOption, hostOpenModeOption, hostExchangeModeOption);
+hostTranscriptInspectCommand.AddArgument(hostTranscriptArgument);
+hostTranscriptInspectCommand.AddOption(hostOpenModeOption);
+hostTranscriptInspectCommand.AddOption(hostExchangeModeOption);
+hostTranscriptInspectCommand.SetHandler(async (string transcriptPath, string openMode, string exchangeMode) =>
+{
+    try
+    {
+        var transcript = await Legacy89DiskKitApplication.ReadEmulatorHostTranscriptAsync(transcriptPath);
+        var report = Legacy89DiskKitApplication.BuildEmulatorHostProofReport(transcript, openMode, exchangeMode);
+        Console.WriteLine($"TranscriptEntries: {transcript.Count}");
+        Console.WriteLine($"OpenMode: {report.OpenMode}");
+        Console.WriteLine($"ExchangeMode: {report.ExchangeMode}");
+        Console.WriteLine($"CapabilityHandshakeSucceeded: {report.CapabilityHandshakeSucceeded}");
+        Console.WriteLine($"SupportsPathOpen: {report.SupportsPathOpen}");
+        Console.WriteLine($"SupportsBufferOpen: {report.SupportsBufferOpen}");
+        Console.WriteLine($"SupportsNotificationExchange: {report.SupportsNotificationExchange}");
+        Console.WriteLine($"DiskOpenSucceeded: {report.DiskOpenSucceeded}");
+        Console.WriteLine($"BusyObserved: {report.BusyObserved}");
+        Console.WriteLine($"IrqObserved: {report.IrqObserved}");
+        Console.WriteLine($"DrqObserved: {report.DrqObserved}");
+        Console.WriteLine($"DataReadSucceeded: {report.DataReadSucceeded}");
+        Console.WriteLine($"CloseSucceeded: {report.CloseSucceeded}");
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+}, hostTranscriptArgument, hostOpenModeOption, hostExchangeModeOption);
+hostTranscriptReportCommand.AddArgument(hostTranscriptArgument);
+hostTranscriptReportCommand.AddArgument(hostOutputArgument);
+hostTranscriptReportCommand.AddOption(hostOpenModeOption);
+hostTranscriptReportCommand.AddOption(hostExchangeModeOption);
+hostTranscriptReportCommand.SetHandler(async (string transcriptPath, string outputPath, string openMode, string exchangeMode) =>
+{
+    try
+    {
+        var transcript = await Legacy89DiskKitApplication.ReadEmulatorHostTranscriptAsync(transcriptPath);
+        var report = Legacy89DiskKitApplication.BuildEmulatorHostProofReport(transcript, openMode, exchangeMode);
+        var markdown = EmulatorHostProofReportMarkdownRenderer.Render(report);
+        await File.WriteAllTextAsync(outputPath, markdown, Encoding.UTF8);
+        PrintSuccess(localizer, $"Host-proof report written: {outputPath}");
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+}, hostTranscriptArgument, hostOutputArgument, hostOpenModeOption, hostExchangeModeOption);
+hostTranscriptVerifyCommand.AddArgument(hostTranscriptArgument);
+hostTranscriptVerifyCommand.AddArgument(hostBaselineArgument);
+hostTranscriptVerifyCommand.AddOption(hostOpenModeOption);
+hostTranscriptVerifyCommand.AddOption(hostExchangeModeOption);
+hostTranscriptVerifyCommand.SetHandler(async (string transcriptPath, string baselineName, string openMode, string exchangeMode) =>
+{
+    var transcript = await Legacy89DiskKitApplication.ReadEmulatorHostTranscriptAsync(transcriptPath);
+    var report = Legacy89DiskKitApplication.BuildEmulatorHostProofReport(transcript, openMode, exchangeMode);
+    var expectation = ParseHostBaseline(baselineName);
+    var mismatches = Legacy89DiskKitApplication.CompareEmulatorHostProofReport(report, expectation);
+
+    if (mismatches.Count == 0)
+    {
+        PrintSuccess(localizer, $"Host-proof transcript matched baseline: {baselineName}");
+        return;
+    }
+
+    throw new InvalidOperationException(
+        $"Host-proof transcript mismatches for baseline '{baselineName}': {string.Join(" ", mismatches)}");
+}, hostTranscriptArgument, hostBaselineArgument, hostOpenModeOption, hostExchangeModeOption);
 hostBundleCommand.AddCommand(hostBundleInspectCommand);
 hostBundleCommand.AddCommand(hostBundleVerifyCommand);
 hostBundleCommand.AddCommand(hostBundlePackCommand);
+hostTranscriptCommand.AddCommand(hostTranscriptInspectCommand);
+hostTranscriptCommand.AddCommand(hostTranscriptReportCommand);
+hostTranscriptCommand.AddCommand(hostTranscriptVerifyCommand);
 hostCommand.AddCommand(hostStdioCommand);
 hostCommand.AddCommand(hostScriptCommand);
 hostCommand.AddCommand(hostBundleCommand);
+hostCommand.AddCommand(hostTranscriptCommand);
 
 var bootCommand = new Command("boot", localizer.BootCommandDescription);
 var filesOption = new Option<string>("--files", () => "all", localizer.BootFilesOptionDescription);
