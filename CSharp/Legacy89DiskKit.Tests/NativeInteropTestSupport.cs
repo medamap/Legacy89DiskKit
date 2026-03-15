@@ -82,6 +82,12 @@ internal static class NativeExportInvoker
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int IntIntPtrIntPtrDelegate(int handle, IntPtr first, IntPtr second);
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int IntIntPtrIntDelegate(int handle, IntPtr pointer, int value);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int IntIntPtrUshortDelegate(int handle, IntPtr pointer, ushort value);
+
     public static int GetAbiVersion() => GetDelegate<NoArgIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetAbiVersion))();
     public static int GetCapabilityFlags() => GetDelegate<NoArgIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetCapabilityFlags))();
     public static int GetCapabilitySummary(IntPtr pointer, int capacity) => GetDelegate<IntPtrIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetCapabilitySummary))(pointer, capacity);
@@ -101,14 +107,43 @@ internal static class NativeExportInvoker
     public static int GetFileSystemInfo(int handle, IntPtr pointer) => GetDelegate<IntIntPtrDelegate>(typeof(DiskExports), nameof(DiskExports.GetFileSystemInfo))(handle, pointer);
     public static int GetContainerMetadata(int handle, IntPtr pointer) => GetDelegate<IntIntPtrDelegate>(typeof(DiskExports), nameof(DiskExports.GetContainerMetadata))(handle, pointer);
     public static int GetFilesCount(int handle, IntPtr pointer) => GetDelegate<IntIntPtrDelegate>(typeof(DiskExports), nameof(DiskExports.GetFilesCount))(handle, pointer);
+    public static int GetFiles(int handle, IntPtr pointer, int capacity) => GetDelegate<IntIntPtrIntDelegate>(typeof(DiskExports), nameof(DiskExports.GetFiles))(handle, pointer, capacity);
+    public static int ReadBootArea(int handle, IntPtr pointer, int capacity) => GetDelegate<IntIntPtrIntDelegate>(typeof(DiskExports), nameof(DiskExports.ReadBootArea))(handle, pointer, capacity);
+    public static int WriteBootArea(int handle, IntPtr pointer, int length) => GetDelegate<IntIntPtrIntDelegate>(typeof(DiskExports), nameof(DiskExports.WriteBootArea))(handle, pointer, length);
+    public static int Format(int handle) => GetDelegate<IntIntDelegate>(typeof(DiskExports), nameof(DiskExports.Format))(handle);
     public static int ReadFile(int handle, IntPtr name, IntPtr buffer, int capacity) => GetDelegate<HandleNameBufferDelegate>(typeof(FileExports), nameof(FileExports.ReadFile))(handle, name, buffer, capacity);
     public static int DeleteFile(int handle, IntPtr name) => GetDelegate<IntIntPtrDelegate>(typeof(FileExports), nameof(FileExports.DeleteFile))(handle, name);
     public static int WriteFile(int handle, IntPtr name, IntPtr data, int length, ushort attributes) => GetDelegate<IntIntPtrIntUshortDelegate>(typeof(FileExports), nameof(FileExports.WriteFile))(handle, name, data, length, attributes);
     public static int RenameFile(int handle, IntPtr oldName, IntPtr newName) => GetDelegate<IntIntPtrIntPtrDelegate>(typeof(FileExports), nameof(FileExports.RenameFile))(handle, oldName, newName);
+    public static int UpdateAttributes(int handle, IntPtr name, ushort attributes) => GetDelegate<IntIntPtrUshortDelegate>(typeof(FileExports), nameof(FileExports.UpdateAttributes))(handle, name, attributes);
 
     private static T GetDelegate<T>(Type type, string methodName) where T : Delegate
     {
         var method = type.GetMethod(methodName) ?? throw new InvalidOperationException($"Method not found: {type.FullName}.{methodName}");
         return Marshal.GetDelegateForFunctionPointer<T>(method.MethodHandle.GetFunctionPointer());
+    }
+}
+
+internal sealed class NativeFileEntryBufferScope : IDisposable
+{
+    public NativeFileEntryBufferScope(int capacity)
+    {
+        Capacity = capacity;
+        EntrySize = Marshal.SizeOf<NativeFileEntry>();
+        Pointer = Marshal.AllocHGlobal(EntrySize * capacity);
+    }
+
+    public int Capacity { get; }
+    public int EntrySize { get; }
+    public IntPtr Pointer { get; }
+
+    public NativeFileEntry ReadEntry(int index)
+    {
+        return Marshal.PtrToStructure<NativeFileEntry>(Pointer + (index * EntrySize));
+    }
+
+    public void Dispose()
+    {
+        Marshal.FreeHGlobal(Pointer);
     }
 }
