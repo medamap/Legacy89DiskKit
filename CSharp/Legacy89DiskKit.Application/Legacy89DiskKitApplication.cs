@@ -93,6 +93,82 @@ public static class Legacy89DiskKitApplication
         return new Fdc.Hosts.Protocol.EmulatorHostObservableProtocolStdioRunner(CreateEmulatorHostObservableProtocolSession());
     }
 
+    public static IReadOnlyList<Fdc.Hosts.Protocol.EmulatorHostRequest> CreateReadOnlyD88PathScript(string imagePath, int driveNumber = 0)
+    {
+        return Fdc.Hosts.Scripting.EmulatorHostRequestScriptFactory.CreateReadOnlyD88ByPathSequence(imagePath, driveNumber);
+    }
+
+    public static IReadOnlyList<Fdc.Hosts.Protocol.EmulatorHostRequest> CreateReadOnlyD88BufferScript(byte[] imageData, string imageFormat = "d88", int driveNumber = 0)
+    {
+        return Fdc.Hosts.Scripting.EmulatorHostRequestScriptFactory.CreateReadOnlyD88ByBufferSequence(imageData, imageFormat, driveNumber);
+    }
+
+    public static IReadOnlyList<Fdc.Hosts.Protocol.EmulatorHostRequest> CreateReadOnlyRawBufferScript(byte[] imageData, string imageFormat = "2d", int driveNumber = 0)
+    {
+        return Fdc.Hosts.Scripting.EmulatorHostRequestScriptFactory.CreateReadOnlyRawByBufferSequence(imageData, imageFormat, driveNumber);
+    }
+
+    public static async Task<Fdc.Hosts.Scripting.EmulatorHostBundle> ReadEmulatorHostBundleAsync(
+        string outputDirectory,
+        string baseName,
+        CancellationToken cancellationToken = default)
+    {
+        return await Fdc.Hosts.Scripting.EmulatorHostBundleReader.ReadAsync(outputDirectory, baseName, cancellationToken);
+    }
+
+    public static Fdc.Hosts.Scripting.EmulatorHostProofReport BuildEmulatorHostProofReport(
+        IReadOnlyList<Fdc.Hosts.Scripting.EmulatorHostTranscriptEntry> transcript,
+        string openMode,
+        string exchangeMode)
+    {
+        return Fdc.Hosts.Scripting.EmulatorHostProofReportBuilder.Build(transcript, openMode, exchangeMode);
+    }
+
+    public static IReadOnlyList<string> CompareEmulatorHostBundle(
+        Fdc.Hosts.Scripting.EmulatorHostBundle bundle,
+        Fdc.Hosts.Scripting.EmulatorHostProofExpectation expectation)
+    {
+        return Fdc.Hosts.Scripting.EmulatorHostBundleComparer.Compare(bundle, expectation);
+    }
+
+    public static IReadOnlyList<string> CompareEmulatorHostProofReport(
+        Fdc.Hosts.Scripting.EmulatorHostProofReport report,
+        Fdc.Hosts.Scripting.EmulatorHostProofExpectation expectation)
+    {
+        return Fdc.Hosts.Scripting.EmulatorHostProofReportComparer.Compare(report, expectation);
+    }
+
+    public static async Task<IReadOnlyList<Fdc.Hosts.Scripting.EmulatorHostTranscriptEntry>> ReadEmulatorHostTranscriptAsync(
+        string transcriptPath,
+        CancellationToken cancellationToken = default)
+    {
+        return await Fdc.Hosts.Scripting.EmulatorHostTranscriptFileStore.LoadAsync(transcriptPath, cancellationToken);
+    }
+
+    public static async Task<IReadOnlyList<Fdc.Hosts.Protocol.EmulatorHostRequest>> ReadEmulatorHostRequestScriptAsync(
+        string requestScriptPath,
+        CancellationToken cancellationToken = default)
+    {
+        return await Fdc.Hosts.Scripting.EmulatorHostRequestScriptFileStore.LoadAsync(requestScriptPath, cancellationToken);
+    }
+
+    public static async Task WriteEmulatorHostBundleAsync(
+        string outputDirectory,
+        string baseName,
+        Fdc.Hosts.Scripting.EmulatorHostProofReport report,
+        IReadOnlyList<Fdc.Hosts.Scripting.EmulatorHostTranscriptEntry> transcript,
+        IReadOnlyList<Fdc.Hosts.Protocol.EmulatorHostRequest>? requestScript = null,
+        CancellationToken cancellationToken = default)
+    {
+        await Fdc.Hosts.Scripting.EmulatorHostBundleWriter.WriteAsync(
+            outputDirectory,
+            baseName,
+            report,
+            transcript,
+            requestScript,
+            cancellationToken);
+    }
+
     public static Fdc.Hosts.XmilWebStyleFdcHostAdapter CreateXmilWebStyleFdcHostAdapter()
     {
         return new Fdc.Hosts.XmilWebStyleFdcHostAdapter(CreateEventDrivenEmulatorFdcHostAdapter());

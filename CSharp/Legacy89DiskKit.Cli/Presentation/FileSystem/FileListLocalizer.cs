@@ -64,6 +64,27 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string HostCommandDescription { get; }
     string HostStdioCommandDescription { get; }
     string HostObservableOptionDescription { get; }
+    string HostScriptCommandDescription { get; }
+    string HostScriptD88PathCommandDescription { get; }
+    string HostScriptD88BufferCommandDescription { get; }
+    string HostScriptRawBufferCommandDescription { get; }
+    string HostScriptInspectCommandDescription { get; }
+    string HostBundleCommandDescription { get; }
+    string HostBundleInspectCommandDescription { get; }
+    string HostBundleVerifyCommandDescription { get; }
+    string HostBundlePackCommandDescription { get; }
+    string HostTranscriptCommandDescription { get; }
+    string HostTranscriptInspectCommandDescription { get; }
+    string HostTranscriptReportCommandDescription { get; }
+    string HostTranscriptVerifyCommandDescription { get; }
+    string HostOutputArgumentDescription { get; }
+    string HostDirectoryArgumentDescription { get; }
+    string HostBaseNameArgumentDescription { get; }
+    string HostBaselineArgumentDescription { get; }
+    string HostTranscriptArgumentDescription { get; }
+    string HostRequestScriptOptionDescription { get; }
+    string HostOpenModeOptionDescription { get; }
+    string HostExchangeModeOptionDescription { get; }
     string BootCommandDescription { get; }
     string BootShowCommandDescription { get; }
     string BootClearCommandDescription { get; }
@@ -197,6 +218,27 @@ public static class FileListLocalizer
         public abstract string HostCommandDescription { get; }
         public abstract string HostStdioCommandDescription { get; }
         public abstract string HostObservableOptionDescription { get; }
+        public abstract string HostScriptCommandDescription { get; }
+        public abstract string HostScriptD88PathCommandDescription { get; }
+        public abstract string HostScriptD88BufferCommandDescription { get; }
+        public abstract string HostScriptRawBufferCommandDescription { get; }
+        public abstract string HostScriptInspectCommandDescription { get; }
+        public abstract string HostBundleCommandDescription { get; }
+        public abstract string HostBundleInspectCommandDescription { get; }
+        public abstract string HostBundleVerifyCommandDescription { get; }
+        public abstract string HostBundlePackCommandDescription { get; }
+        public abstract string HostTranscriptCommandDescription { get; }
+        public abstract string HostTranscriptInspectCommandDescription { get; }
+        public abstract string HostTranscriptReportCommandDescription { get; }
+        public abstract string HostTranscriptVerifyCommandDescription { get; }
+        public abstract string HostOutputArgumentDescription { get; }
+        public abstract string HostDirectoryArgumentDescription { get; }
+        public abstract string HostBaseNameArgumentDescription { get; }
+        public abstract string HostBaselineArgumentDescription { get; }
+        public abstract string HostTranscriptArgumentDescription { get; }
+        public abstract string HostRequestScriptOptionDescription { get; }
+        public abstract string HostOpenModeOptionDescription { get; }
+        public abstract string HostExchangeModeOptionDescription { get; }
         public abstract string BootCommandDescription { get; }
         public abstract string BootShowCommandDescription { get; }
         public abstract string BootClearCommandDescription { get; }
@@ -310,6 +352,27 @@ public static class FileListLocalizer
         public override string HostCommandDescription => "External host integration operations";
         public override string HostStdioCommandDescription => "Run the emulator host protocol over standard input/output";
         public override string HostObservableOptionDescription => "Emit notification-aware exchanges that include IRQ, DRQ, and advance-request notifications";
+        public override string HostScriptCommandDescription => "Generate reusable request scripts for external host bridges";
+        public override string HostScriptD88PathCommandDescription => "Write a read-only D88-by-path request script";
+        public override string HostScriptD88BufferCommandDescription => "Write a read-only D88-by-buffer request script";
+        public override string HostScriptRawBufferCommandDescription => "Write a read-only raw-sector-image-by-buffer request script";
+        public override string HostScriptInspectCommandDescription => "Read a request script and print its summary";
+        public override string HostBundleCommandDescription => "Inspect portable host-proof bundles";
+        public override string HostBundleInspectCommandDescription => "Read a host-proof bundle and print its summary";
+        public override string HostBundleVerifyCommandDescription => "Validate a host-proof bundle against a built-in baseline";
+        public override string HostBundlePackCommandDescription => "Pack a transcript and optional request script into a host-proof bundle";
+        public override string HostTranscriptCommandDescription => "Inspect and validate raw host-proof transcripts";
+        public override string HostTranscriptInspectCommandDescription => "Read a transcript and print its proof summary";
+        public override string HostTranscriptReportCommandDescription => "Render a markdown proof report from a transcript";
+        public override string HostTranscriptVerifyCommandDescription => "Validate a transcript against a built-in baseline";
+        public override string HostOutputArgumentDescription => "Output file path";
+        public override string HostDirectoryArgumentDescription => "Bundle directory path";
+        public override string HostBaseNameArgumentDescription => "Bundle base name";
+        public override string HostBaselineArgumentDescription => "Baseline name: event-d88 or event-raw";
+        public override string HostTranscriptArgumentDescription => "Transcript file path";
+        public override string HostRequestScriptOptionDescription => "Optional request script file path";
+        public override string HostOpenModeOptionDescription => "Open mode label to record in the bundle";
+        public override string HostExchangeModeOptionDescription => "Exchange mode label to record in the bundle";
         public override string BootCommandDescription => "Boot metadata operations";
         public override string BootShowCommandDescription => "Show boot metadata for this disk";
         public override string BootClearCommandDescription => "Clear file-backed boot metadata without erasing the whole boot sector";
@@ -423,6 +486,27 @@ public static class FileListLocalizer
         public override string HostCommandDescription => "外部ホスト連携の操作";
         public override string HostStdioCommandDescription => "標準入出力でエミュレータホストプロトコルを実行";
         public override string HostObservableOptionDescription => "IRQ、DRQ、advance-request 通知を含む通知対応 exchange を出力します";
+        public override string HostScriptCommandDescription => "外部ホストブリッジ向けの再利用可能な要求スクリプトを生成";
+        public override string HostScriptD88PathCommandDescription => "読み取り専用の D88 パス指定要求スクリプトを書き出す";
+        public override string HostScriptD88BufferCommandDescription => "読み取り専用の D88 バッファ指定要求スクリプトを書き出す";
+        public override string HostScriptRawBufferCommandDescription => "読み取り専用の raw セクタイメージ用要求スクリプトを書き出す";
+        public override string HostScriptInspectCommandDescription => "要求スクリプトを読んで要約を表示する";
+        public override string HostBundleCommandDescription => "ホスト検証 bundle を確認する";
+        public override string HostBundleInspectCommandDescription => "host-proof bundle を読んで要約を表示する";
+        public override string HostBundleVerifyCommandDescription => "内蔵 baseline と照合して host-proof bundle を検証する";
+        public override string HostBundlePackCommandDescription => "transcript と任意の request script から host-proof bundle を組み立てる";
+        public override string HostTranscriptCommandDescription => "生の host-proof transcript を確認・検証する";
+        public override string HostTranscriptInspectCommandDescription => "transcript を読んで proof 要約を表示する";
+        public override string HostTranscriptReportCommandDescription => "transcript から markdown の proof report を生成する";
+        public override string HostTranscriptVerifyCommandDescription => "内蔵 baseline と照合して transcript を検証する";
+        public override string HostOutputArgumentDescription => "出力ファイルパス";
+        public override string HostDirectoryArgumentDescription => "bundle ディレクトリパス";
+        public override string HostBaseNameArgumentDescription => "bundle ベース名";
+        public override string HostBaselineArgumentDescription => "baseline 名: event-d88 または event-raw";
+        public override string HostTranscriptArgumentDescription => "transcript ファイルパス";
+        public override string HostRequestScriptOptionDescription => "任意の request script ファイルパス";
+        public override string HostOpenModeOptionDescription => "bundle に記録する open mode 名";
+        public override string HostExchangeModeOptionDescription => "bundle に記録する exchange mode 名";
         public override string BootCommandDescription => "ブート情報の操作";
         public override string BootShowCommandDescription => "このディスクのブート情報を表示します";
         public override string BootClearCommandDescription => "ブートセクタ全消去ではなく、ファイル参照型のブート情報だけを無効化します";

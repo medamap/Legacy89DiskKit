@@ -31,6 +31,21 @@ public class EmulatorHostProtocolTextSessionTest
     }
 
     [Fact]
+    public void Session_CanReportPlainTransportCapabilities()
+    {
+        var endpoint = new EmulatorHostProtocolEndpoint(Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter());
+        var session = new EmulatorHostProtocolTextSession(endpoint);
+
+        var payload = session.HandleLine(EmulatorHostProtocolCodec.SerializeRequest(
+            new EmulatorHostRequest(EmulatorHostRequestKind.QueryCapabilities)));
+        var response = EmulatorHostProtocolCodec.DeserializeResponse(payload);
+
+        Assert.NotNull(response.Capabilities);
+        Assert.True(response.Capabilities!.SupportsPlainStdio);
+        Assert.False(response.Capabilities.SupportsObservableStdio);
+    }
+
+    [Fact]
     public async Task Session_CanProcessLineDelimitedRequestsOverTextStreams()
     {
         using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
@@ -70,5 +85,17 @@ public class EmulatorHostProtocolTextSessionTest
         Assert.True(responses[4].DrqAsserted);
         Assert.Equal((byte?)0x41, responses[5].RegisterValue);
         Assert.Equal((byte?)0x42, responses[6].RegisterValue);
+    }
+
+    [Fact]
+    public void Session_ReturnsErrorResponseForMalformedRequestLine()
+    {
+        var endpoint = new EmulatorHostProtocolEndpoint(Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter());
+        var session = new EmulatorHostProtocolTextSession(endpoint);
+
+        var payload = session.HandleLine("{not-json");
+        var response = EmulatorHostProtocolCodec.DeserializeResponse(payload);
+
+        Assert.False(string.IsNullOrWhiteSpace(response.ErrorMessage));
     }
 }

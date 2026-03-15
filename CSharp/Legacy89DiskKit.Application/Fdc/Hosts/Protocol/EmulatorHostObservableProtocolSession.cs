@@ -25,10 +25,18 @@ public sealed class EmulatorHostObservableProtocolSession
             throw new ArgumentException("Request line must not be empty.", nameof(line));
         }
 
-        var responsePayload = _endpoint.Handle(line);
-        var response = EmulatorHostProtocolCodec.DeserializeResponse(responsePayload);
-        var notifications = DrainNotifications();
-        return EmulatorHostProtocolCodec.SerializeExchange(new EmulatorHostExchange(response, notifications));
+        try
+        {
+            var responsePayload = _endpoint.Handle(line);
+            var response = PatchCapabilities(EmulatorHostProtocolCodec.DeserializeResponse(responsePayload));
+            var notifications = DrainNotifications();
+            return EmulatorHostProtocolCodec.SerializeExchange(new EmulatorHostExchange(response, notifications));
+        }
+        catch (Exception ex)
+        {
+            var notifications = DrainNotifications();
+            return EmulatorHostProtocolCodec.SerializeExchange(new EmulatorHostExchange(CreateErrorResponse(ex.Message), notifications));
+        }
     }
 
     public async Task RunAsync(TextReader reader, TextWriter writer, CancellationToken cancellationToken = default)
@@ -71,5 +79,33 @@ public sealed class EmulatorHostObservableProtocolSession
         }
 
         return notifications;
+    }
+
+    private static EmulatorHostResponse PatchCapabilities(EmulatorHostResponse response)
+    {
+        if (response.Capabilities is null)
+        {
+            return response;
+        }
+
+        return response with
+        {
+            Capabilities = response.Capabilities with
+            {
+                SupportsPlainStdio = false,
+                SupportsObservableStdio = true
+            }
+        };
+    }
+
+    private static EmulatorHostResponse CreateErrorResponse(string message)
+    {
+        return new EmulatorHostResponse(
+            RegisterValue: null,
+            VisibleState: null,
+            IrqAsserted: false,
+            DrqAsserted: false,
+            PendingAdvanceMicroseconds: null,
+            ErrorMessage: message);
     }
 }
