@@ -87,13 +87,13 @@ The second real-host proof should demonstrate:
 
 ## Success Criteria
 
-Phase 24 is complete when:
+Phase 24 repository work is complete when:
 
-1. one real event-driven host bridge proves the fixed request set is sufficient for a read-only controller-facing integration
-2. one real global-state-style host bridge proves the same request set is still sufficient
-3. both real-host bridges can mount D88-backed media
-4. at least one of the two bridges also proves raw sector-image-backed media
-5. any required protocol expansion is documented as evidence-driven rather than speculative
+1. the fixed request set is frozen as the first-contact baseline for external host work
+2. shipped tooling can generate request scripts, inspect transcripts, pack bundles, and verify bundle or transcript results
+3. bridge-side checklists, task lists, and report templates remain available for external host work
+4. out-of-repository emulator bridge execution is explicitly marked as pending external validation
+5. any required protocol expansion remains evidence-driven rather than speculative
 
 ## Failure Criteria
 
@@ -106,3 +106,13 @@ If a real host requires more than the fixed baseline request set, the phase shou
 - whether the expansion belongs in Phase 24 or should be deferred
 
 This phase should prefer documenting proven gaps over inventing speculative protocol growth.
+
+## External Validation Status
+
+The following work remains intentionally outside this repository phase closure:
+
+- the first real event-driven host bridge execution
+- the second real global-state-style host bridge execution
+- any transcript or bundle produced by those real hosts
+
+Those results should be carried back later through the Phase 24 tooling rather than blocking the current mainline roadmap.

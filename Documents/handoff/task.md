@@ -318,22 +318,27 @@
         - [x] let browser-friendly or socket-based hosts open disk images from explicit buffer payloads instead of host paths
         - [x] expose a capability query so a host bridge can detect protocol version and supported open/transport modes before issuing controller requests
         - [x] expose a shipped `host stdio` CLI entrypoint over the generic host protocol
-    - [ ] Phase 24: First Real Emulator Integrations
-        - [ ] keep the Phase 23 request set as the baseline handshake:
-            - [ ] `QueryCapabilities`
-            - [ ] `OpenDiskPath`
-            - [ ] `OpenDiskImage`
-            - [ ] `CloseDisk`
-            - [ ] `SelectDrive`
-            - [ ] `SelectSide`
-            - [ ] `Reset`
-            - [ ] `WriteRegister`
-            - [ ] `ReadRegister`
-            - [ ] `Advance`
-            - [ ] `QueryState`
-        - [ ] verify which of those requests are sufficient for the first event-driven real-host proof without adding host-specific protocol forks
-        - [ ] drive the first real-host execution order from `Documents/Phase24_Real_Emulator_Integration_Plan.md`
-        - [ ] execute the minimum proof defined in `Documents/Phase24_First_EventDriven_Host_Checklist.md`
+    - [x] Phase 24: First Real Emulator Integrations
+        - [x] keep the Phase 23 request set as the baseline handshake:
+            - [x] `QueryCapabilities`
+            - [x] `OpenDiskPath`
+            - [x] `OpenDiskImage`
+            - [x] `CloseDisk`
+            - [x] `SelectDrive`
+            - [x] `SelectSide`
+            - [x] `Reset`
+            - [x] `WriteRegister`
+            - [x] `ReadRegister`
+            - [x] `Advance`
+            - [x] `QueryState`
+        - [x] expose reusable CLI and application surfaces for external bridge work:
+            - [x] `host stdio`
+            - [x] `host script`
+            - [x] `host transcript`
+            - [x] `host bundle`
+        - [x] keep bridge-side checklists, task lists, and report templates under `Documents/Phase24_*`
+        - [x] leave real out-of-repository emulator bridge execution as pending external validation rather than blocking the main roadmap
+        - [x] preserve external-host integration documents for later bridge work
         - [ ] use `Documents/Phase24_First_EventDriven_Host_Bridge_Tasks.md` as the bridge-side implementation order for the first event-driven host
         - [ ] keep an out-of-process CLI-host smoke proof passing while the first real-host bridge work is still in progress
         - [ ] return the first real-host result using `Documents/Phase24_First_Host_Proof_Report_Template.md`

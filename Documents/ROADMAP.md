@@ -689,21 +689,25 @@ That request set is intentionally narrow. Phase 24 should begin by testing wheth
 
 Work:
 
-- implement the first out-of-repository host bridge against a real event-driven emulator host
-- implement the second out-of-repository host bridge against a more C-style global-state emulator host
-- validate that both hosts can use the same mounted-medium binding and controller-facing protocol
-- verify read-only D88-backed and raw sector-image-backed flows end to end
+- freeze the Phase 23 request set as the baseline handshake for first-contact real host work
+- ship reusable in-repository tools for external bridge work:
+  - `host stdio`
+  - `host script`
+  - `host transcript`
+  - `host bundle`
+- preserve bridge-side checklists, task lists, and report templates for later external validation
+- treat actual out-of-repository emulator bridge execution as deferred validation rather than blocking the mainline roadmap
 
 This makes it possible to:
 
-- run Legacy89DiskKit-backed controller access from real emulator hosts rather than only from internal tests
-- prove that the shared controller/core contract works across more than one host architecture
-- validate the transport and host-adapter split against real integration friction
+- hand a stable host-facing contract to external bridge work without expanding protocol surface speculatively
+- generate, inspect, compare, and bundle external bridge artifacts from the shipped CLI and managed surface
+- continue the mainline library, C++, Wasm, container, and filesystem work without waiting on external host implementation timing
 
 The first execution rule for Phase 24 is conservative:
 
 - treat the Phase 23 request set as fixed
-- try the first real bridges without protocol growth
+- leave real bridge execution to the external host side when it is ready
 - only expand the protocol when a real host proves the need
 
 ### Phase 25: Portable Native Surface Consolidation
