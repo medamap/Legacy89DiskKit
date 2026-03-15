@@ -131,6 +131,37 @@ public static class Legacy89DiskKitApplication
         return Fdc.Hosts.Scripting.EmulatorHostBundleComparer.Compare(bundle, expectation);
     }
 
+    public static async Task<IReadOnlyList<Fdc.Hosts.Scripting.EmulatorHostTranscriptEntry>> ReadEmulatorHostTranscriptAsync(
+        string transcriptPath,
+        CancellationToken cancellationToken = default)
+    {
+        return await Fdc.Hosts.Scripting.EmulatorHostTranscriptFileStore.LoadAsync(transcriptPath, cancellationToken);
+    }
+
+    public static async Task<IReadOnlyList<Fdc.Hosts.Protocol.EmulatorHostRequest>> ReadEmulatorHostRequestScriptAsync(
+        string requestScriptPath,
+        CancellationToken cancellationToken = default)
+    {
+        return await Fdc.Hosts.Scripting.EmulatorHostRequestScriptFileStore.LoadAsync(requestScriptPath, cancellationToken);
+    }
+
+    public static async Task WriteEmulatorHostBundleAsync(
+        string outputDirectory,
+        string baseName,
+        Fdc.Hosts.Scripting.EmulatorHostProofReport report,
+        IReadOnlyList<Fdc.Hosts.Scripting.EmulatorHostTranscriptEntry> transcript,
+        IReadOnlyList<Fdc.Hosts.Protocol.EmulatorHostRequest>? requestScript = null,
+        CancellationToken cancellationToken = default)
+    {
+        await Fdc.Hosts.Scripting.EmulatorHostBundleWriter.WriteAsync(
+            outputDirectory,
+            baseName,
+            report,
+            transcript,
+            requestScript,
+            cancellationToken);
+    }
+
     public static Fdc.Hosts.XmilWebStyleFdcHostAdapter CreateXmilWebStyleFdcHostAdapter()
     {
         return new Fdc.Hosts.XmilWebStyleFdcHostAdapter(CreateEventDrivenEmulatorFdcHostAdapter());
