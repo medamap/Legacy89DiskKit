@@ -71,10 +71,15 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string HostBundleCommandDescription { get; }
     string HostBundleInspectCommandDescription { get; }
     string HostBundleVerifyCommandDescription { get; }
+    string HostBundlePackCommandDescription { get; }
     string HostOutputArgumentDescription { get; }
     string HostDirectoryArgumentDescription { get; }
     string HostBaseNameArgumentDescription { get; }
     string HostBaselineArgumentDescription { get; }
+    string HostTranscriptArgumentDescription { get; }
+    string HostRequestScriptOptionDescription { get; }
+    string HostOpenModeOptionDescription { get; }
+    string HostExchangeModeOptionDescription { get; }
     string BootCommandDescription { get; }
     string BootShowCommandDescription { get; }
     string BootClearCommandDescription { get; }
@@ -215,10 +220,15 @@ public static class FileListLocalizer
         public abstract string HostBundleCommandDescription { get; }
         public abstract string HostBundleInspectCommandDescription { get; }
         public abstract string HostBundleVerifyCommandDescription { get; }
+        public abstract string HostBundlePackCommandDescription { get; }
         public abstract string HostOutputArgumentDescription { get; }
         public abstract string HostDirectoryArgumentDescription { get; }
         public abstract string HostBaseNameArgumentDescription { get; }
         public abstract string HostBaselineArgumentDescription { get; }
+        public abstract string HostTranscriptArgumentDescription { get; }
+        public abstract string HostRequestScriptOptionDescription { get; }
+        public abstract string HostOpenModeOptionDescription { get; }
+        public abstract string HostExchangeModeOptionDescription { get; }
         public abstract string BootCommandDescription { get; }
         public abstract string BootShowCommandDescription { get; }
         public abstract string BootClearCommandDescription { get; }
@@ -339,10 +349,15 @@ public static class FileListLocalizer
         public override string HostBundleCommandDescription => "Inspect portable host-proof bundles";
         public override string HostBundleInspectCommandDescription => "Read a host-proof bundle and print its summary";
         public override string HostBundleVerifyCommandDescription => "Validate a host-proof bundle against a built-in baseline";
+        public override string HostBundlePackCommandDescription => "Pack a transcript and optional request script into a host-proof bundle";
         public override string HostOutputArgumentDescription => "Output file path";
         public override string HostDirectoryArgumentDescription => "Bundle directory path";
         public override string HostBaseNameArgumentDescription => "Bundle base name";
         public override string HostBaselineArgumentDescription => "Baseline name: event-d88 or event-raw";
+        public override string HostTranscriptArgumentDescription => "Transcript file path";
+        public override string HostRequestScriptOptionDescription => "Optional request script file path";
+        public override string HostOpenModeOptionDescription => "Open mode label to record in the bundle";
+        public override string HostExchangeModeOptionDescription => "Exchange mode label to record in the bundle";
         public override string BootCommandDescription => "Boot metadata operations";
         public override string BootShowCommandDescription => "Show boot metadata for this disk";
         public override string BootClearCommandDescription => "Clear file-backed boot metadata without erasing the whole boot sector";
@@ -463,10 +478,15 @@ public static class FileListLocalizer
         public override string HostBundleCommandDescription => "ホスト検証 bundle を確認する";
         public override string HostBundleInspectCommandDescription => "host-proof bundle を読んで要約を表示する";
         public override string HostBundleVerifyCommandDescription => "内蔵 baseline と照合して host-proof bundle を検証する";
+        public override string HostBundlePackCommandDescription => "transcript と任意の request script から host-proof bundle を組み立てる";
         public override string HostOutputArgumentDescription => "出力ファイルパス";
         public override string HostDirectoryArgumentDescription => "bundle ディレクトリパス";
         public override string HostBaseNameArgumentDescription => "bundle ベース名";
         public override string HostBaselineArgumentDescription => "baseline 名: event-d88 または event-raw";
+        public override string HostTranscriptArgumentDescription => "transcript ファイルパス";
+        public override string HostRequestScriptOptionDescription => "任意の request script ファイルパス";
+        public override string HostOpenModeOptionDescription => "bundle に記録する open mode 名";
+        public override string HostExchangeModeOptionDescription => "bundle に記録する exchange mode 名";
         public override string BootCommandDescription => "ブート情報の操作";
         public override string BootShowCommandDescription => "このディスクのブート情報を表示します";
         public override string BootClearCommandDescription => "ブートセクタ全消去ではなく、ファイル参照型のブート情報だけを無効化します";
