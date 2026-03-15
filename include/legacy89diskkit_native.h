@@ -54,6 +54,10 @@ typedef struct LdkFileSystemInfo {
 int32_t LDK_CALL ldk_open_disk(const char* path, bool read_only);
 int32_t LDK_CALL ldk_create_disk(const char* path, int32_t disk_type, const char* name);
 int32_t LDK_CALL ldk_close_disk(int32_t handle);
+int32_t LDK_CALL ldk_get_abi_version(void);
+int32_t LDK_CALL ldk_get_capability_flags(void);
+int32_t LDK_CALL ldk_get_capability_summary(char* buffer, int32_t capacity);
+int32_t LDK_CALL ldk_get_status_name(int32_t status_code, char* buffer, int32_t capacity);
 int32_t LDK_CALL ldk_get_file_system_info(int32_t handle, LdkFileSystemInfo* info);
 int32_t LDK_CALL ldk_get_files_count(int32_t handle, int32_t* out_count);
 int32_t LDK_CALL ldk_get_files(int32_t handle, LdkFileEntry* buffer, int32_t capacity);
