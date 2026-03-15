@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using Legacy89DiskKit.Application;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.NativeInterop.Exports;
+using Legacy89DiskKit.NativeInterop.Types;
 
 namespace Legacy89DiskKit.Tests;
 
