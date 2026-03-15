@@ -48,6 +48,22 @@ public class NativeCatalogExportsTest
         }
     }
 
+    [Fact]
+    public void CatalogExport_ReturnsBufferTooSmallForTinyBuffer()
+    {
+        var buffer = Marshal.AllocHGlobal(3);
+
+        try
+        {
+            var result = NativeExportInvoker.GetSupportedImageFormatName(0, buffer, 3);
+            Assert.Equal((int)LdkStatus.ErrorBufferTooSmall, result);
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
+        }
+    }
+
     private static string ReadCatalogItem(Func<int, IntPtr, int, int> reader, int index)
     {
         var buffer = Marshal.AllocHGlobal(64);
