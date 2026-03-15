@@ -51,6 +51,17 @@ typedef struct LdkFileSystemInfo {
     char platform_id[16];
 } LdkFileSystemInfo;
 
+typedef struct LdkDiskContainerMetadata {
+    char image_format[16];
+    int32_t disk_type;
+    int32_t cylinders;
+    int32_t heads;
+    int32_t sectors_per_track;
+    int32_t bytes_per_sector;
+    int32_t is_write_protected;
+    int64_t declared_image_size;
+} LdkDiskContainerMetadata;
+
 int32_t LDK_CALL ldk_open_disk(const char* path, bool read_only);
 int32_t LDK_CALL ldk_create_disk(const char* path, int32_t disk_type, const char* name);
 int32_t LDK_CALL ldk_close_disk(int32_t handle);
@@ -62,6 +73,7 @@ int32_t LDK_CALL ldk_is_handle_valid(int32_t handle);
 int32_t LDK_CALL ldk_get_open_handle_count(void);
 int32_t LDK_CALL ldk_close_all_handles(void);
 int32_t LDK_CALL ldk_get_file_system_info(int32_t handle, LdkFileSystemInfo* info);
+int32_t LDK_CALL ldk_get_container_metadata(int32_t handle, LdkDiskContainerMetadata* metadata);
 int32_t LDK_CALL ldk_get_files_count(int32_t handle, int32_t* out_count);
 int32_t LDK_CALL ldk_get_files(int32_t handle, LdkFileEntry* buffer, int32_t capacity);
 int32_t LDK_CALL ldk_read_file(int32_t handle, const char* name, void* buffer, int32_t capacity);

@@ -19,6 +19,20 @@ class Program
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    public struct NativeDiskContainerMetadata
+    {
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 16)]
+        public string ImageFormat;
+        public int DiskType;
+        public int Cylinders;
+        public int Heads;
+        public int SectorsPerTrack;
+        public int BytesPerSector;
+        public int IsWriteProtected;
+        public long DeclaredImageSize;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
     public struct NativeFileEntry
     {
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 16)]
@@ -62,6 +76,9 @@ class Program
     private delegate int GetFileSystemInfoDelegate(int handle, ref NativeFileSystemInfo info);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetContainerMetadataDelegate(int handle, ref NativeDiskContainerMetadata metadata);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int GetFilesCountDelegate(int handle, out int count);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -101,6 +118,7 @@ class Program
         var openDisk = LoadDelegate<OpenDiskDelegate>(libraryHandle, "ldk_open_disk");
         var closeDisk = LoadDelegate<CloseDiskDelegate>(libraryHandle, "ldk_close_disk");
         var getFileSystemInfo = LoadDelegate<GetFileSystemInfoDelegate>(libraryHandle, "ldk_get_file_system_info");
+        var getContainerMetadata = LoadDelegate<GetContainerMetadataDelegate>(libraryHandle, "ldk_get_container_metadata");
         var getFilesCount = LoadDelegate<GetFilesCountDelegate>(libraryHandle, "ldk_get_files_count");
         var getFiles = LoadDelegate<GetFilesDelegate>(libraryHandle, "ldk_get_files");
 
@@ -146,6 +164,22 @@ class Program
         else
         {
             Console.WriteLine($"Failed to get file system info. Error code: {res}");
+        }
+
+        NativeDiskContainerMetadata metadata = new NativeDiskContainerMetadata();
+        res = getContainerMetadata(handle, ref metadata);
+        if (res == 0)
+        {
+            Console.WriteLine($"--- Container Metadata ---");
+            Console.WriteLine($"Format: {metadata.ImageFormat}");
+            Console.WriteLine($"Disk Type: {metadata.DiskType}");
+            Console.WriteLine($"Geometry: {metadata.Cylinders}/{metadata.Heads}/{metadata.SectorsPerTrack}/{metadata.BytesPerSector}");
+            Console.WriteLine($"Write Protected: {metadata.IsWriteProtected != 0}");
+            Console.WriteLine($"Declared Size: {metadata.DeclaredImageSize}");
+        }
+        else
+        {
+            Console.WriteLine($"Failed to get container metadata. Error code: {res}");
         }
 
         int count;
