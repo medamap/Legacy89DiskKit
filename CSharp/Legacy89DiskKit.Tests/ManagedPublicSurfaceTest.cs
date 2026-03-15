@@ -1,6 +1,9 @@
 using Legacy89DiskKit.Application;
 using Legacy89DiskKit.Application.DiskImage;
+using Legacy89DiskKit.Application.Fdc.Hosts.Protocol;
+using Legacy89DiskKit.Application.Fdc.Hosts.Scripting;
 using Legacy89DiskKit.Domain.FileSystem.Model;
+using Legacy89DiskKit.Domain.Fdc.Model;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;
@@ -55,6 +58,43 @@ public class ManagedPublicSurfaceTest
     {
         var script = Legacy89DiskKitApplication.CreateReadOnlyD88BufferScript([0x00, 0x01]);
         Assert.NotEmpty(script);
+    }
+
+    [Fact]
+    public void BuildAndCompareEmulatorHostProofReport_UsesSupportedBootstrap()
+    {
+        var transcript = new[]
+        {
+            new EmulatorHostTranscriptEntry(
+                new EmulatorHostRequest(EmulatorHostRequestKind.QueryCapabilities),
+                new EmulatorHostExchange(
+                    new EmulatorHostResponse(
+                        RegisterValue: null,
+                        VisibleState: null,
+                        IrqAsserted: false,
+                        DrqAsserted: false,
+                        PendingAdvanceMicroseconds: null,
+                        Capabilities: new EmulatorHostCapabilities(1, true, true, true, true, true)),
+                    [])),
+            new EmulatorHostTranscriptEntry(
+                new EmulatorHostRequest(EmulatorHostRequestKind.ReadRegister, RegisterAddress: 3),
+                new EmulatorHostExchange(
+                    new EmulatorHostResponse(
+                        RegisterValue: 0x41,
+                        VisibleState: new FdcVisibleState(0, 0, 1, 0x41, 0, 0, false, true, true),
+                        IrqAsserted: true,
+                        DrqAsserted: true,
+                        PendingAdvanceMicroseconds: null),
+                    [])),
+        };
+
+        var report = Legacy89DiskKitApplication.BuildEmulatorHostProofReport(transcript, "OpenDiskPath", "observable");
+        var mismatches = Legacy89DiskKitApplication.CompareEmulatorHostProofReport(
+            report,
+            EmulatorHostProofExpectationCatalog.EventDrivenSecondProofRaw());
+
+        Assert.NotNull(report);
+        Assert.NotNull(mismatches);
     }
 
     [Fact]
