@@ -86,6 +86,12 @@ internal static class NativeExportInvoker
     public static int GetCapabilityFlags() => GetDelegate<NoArgIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetCapabilityFlags))();
     public static int GetCapabilitySummary(IntPtr pointer, int capacity) => GetDelegate<IntPtrIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetCapabilitySummary))(pointer, capacity);
     public static int GetStatusName(int statusCode, IntPtr pointer, int capacity) => GetDelegate<StatusBufferDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetStatusName))(statusCode, pointer, capacity);
+    public static int GetSupportedFileSystemCount() => GetDelegate<NoArgIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetSupportedFileSystemCount))();
+    public static int GetSupportedFileSystemName(int index, IntPtr pointer, int capacity) => GetDelegate<StatusBufferDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetSupportedFileSystemName))(index, pointer, capacity);
+    public static int GetSupportedPlatformCount() => GetDelegate<NoArgIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetSupportedPlatformCount))();
+    public static int GetSupportedPlatformName(int index, IntPtr pointer, int capacity) => GetDelegate<StatusBufferDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetSupportedPlatformName))(index, pointer, capacity);
+    public static int GetSupportedImageFormatCount() => GetDelegate<NoArgIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetSupportedImageFormatCount))();
+    public static int GetSupportedImageFormatName(int index, IntPtr pointer, int capacity) => GetDelegate<StatusBufferDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetSupportedImageFormatName))(index, pointer, capacity);
     public static int IsHandleValid(int handle) => GetDelegate<IntIntDelegate>(typeof(NativeHandleExports), nameof(NativeHandleExports.IsHandleValid))(handle);
     public static int GetOpenHandleCount() => GetDelegate<NoArgIntDelegate>(typeof(NativeHandleExports), nameof(NativeHandleExports.GetOpenHandleCount))();
     public static int CloseAllHandles() => GetDelegate<NoArgIntDelegate>(typeof(NativeHandleExports), nameof(NativeHandleExports.CloseAllHandles))();
