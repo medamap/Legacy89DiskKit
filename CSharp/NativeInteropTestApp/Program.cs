@@ -44,6 +44,12 @@ class Program
     private delegate int GetStatusNameDelegate(int statusCode, IntPtr buffer, int capacity);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int IsHandleValidDelegate(int handle);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetOpenHandleCountDelegate();
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int OpenDiskDelegate(IntPtr path, bool readOnly);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -86,6 +92,8 @@ class Program
         var getCapabilityFlags = LoadDelegate<GetCapabilityFlagsDelegate>(libraryHandle, "ldk_get_capability_flags");
         var getCapabilitySummary = LoadDelegate<GetCapabilitySummaryDelegate>(libraryHandle, "ldk_get_capability_summary");
         var getStatusName = LoadDelegate<GetStatusNameDelegate>(libraryHandle, "ldk_get_status_name");
+        var isHandleValid = LoadDelegate<IsHandleValidDelegate>(libraryHandle, "ldk_is_handle_valid");
+        var getOpenHandleCount = LoadDelegate<GetOpenHandleCountDelegate>(libraryHandle, "ldk_get_open_handle_count");
         var openDisk = LoadDelegate<OpenDiskDelegate>(libraryHandle, "ldk_open_disk");
         var closeDisk = LoadDelegate<CloseDiskDelegate>(libraryHandle, "ldk_close_disk");
         var getFileSystemInfo = LoadDelegate<GetFileSystemInfoDelegate>(libraryHandle, "ldk_get_file_system_info");
@@ -118,6 +126,8 @@ class Program
         }
 
         Console.WriteLine($"Disk opened. Handle: {handle}");
+        Console.WriteLine($"Handle valid: {isHandleValid(handle) != 0}");
+        Console.WriteLine($"Open handle count: {getOpenHandleCount()}");
 
         NativeFileSystemInfo info = new NativeFileSystemInfo();
         int res = getFileSystemInfo(handle, ref info);
@@ -168,6 +178,8 @@ class Program
         }
 
         closeDisk(handle);
+        Console.WriteLine($"Handle valid after close: {isHandleValid(handle) != 0}");
+        Console.WriteLine($"Open handle count after close: {getOpenHandleCount()}");
         NativeLibrary.Free(libraryHandle);
         Console.WriteLine("Disk closed.");
         return 0;
