@@ -131,6 +131,13 @@ public static class Legacy89DiskKitApplication
         return Fdc.Hosts.Scripting.EmulatorHostBundleComparer.Compare(bundle, expectation);
     }
 
+    public static IReadOnlyList<string> CompareEmulatorHostProofReport(
+        Fdc.Hosts.Scripting.EmulatorHostProofReport report,
+        Fdc.Hosts.Scripting.EmulatorHostProofExpectation expectation)
+    {
+        return Fdc.Hosts.Scripting.EmulatorHostProofReportComparer.Compare(report, expectation);
+    }
+
     public static async Task<IReadOnlyList<Fdc.Hosts.Scripting.EmulatorHostTranscriptEntry>> ReadEmulatorHostTranscriptAsync(
         string transcriptPath,
         CancellationToken cancellationToken = default)
