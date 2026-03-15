@@ -8,6 +8,7 @@ using DiskFileAttributes = Legacy89DiskKit.Domain.FileSystem.Model.FileAttribute
 
 namespace Legacy89DiskKit.Tests;
 
+[Collection("NativeInterop")]
 public class NativeDiskExportsTest
 {
     [Fact]

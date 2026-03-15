@@ -8,10 +8,10 @@ using DiskFileAttributes = Legacy89DiskKit.Domain.FileSystem.Model.FileAttribute
 namespace Legacy89DiskKit.Tests;
 
 [Collection("NativeInterop")]
-public class NativeFormatExportsTest
+public class NativeFileAttributeExportsTest
 {
     [Fact]
-    public void Format_ClearsWrittenFiles()
+    public void UpdateAttributes_ChangesVisibleFileAttributes()
     {
         HandleManager.Clear();
 
@@ -24,9 +24,13 @@ public class NativeFormatExportsTest
 
         try
         {
-            var result = NativeExportInvoker.Format(handle);
+            using var fileName = new Utf8StringScope("HELLO");
+            var result = NativeExportInvoker.UpdateAttributes(handle, fileName.Pointer, (ushort)DiskFileAttributes.ReadOnly);
+
             Assert.Equal((int)LdkStatus.Success, result);
-            Assert.Empty(service.FileSystem!.GetFiles());
+
+            var file = Assert.Single(service.FileSystem!.GetFiles());
+            Assert.Equal(DiskFileAttributes.ReadOnly, file.Attributes.StandardAttributes);
         }
         finally
         {
@@ -35,9 +39,10 @@ public class NativeFormatExportsTest
     }
 
     [Fact]
-    public void Format_ReturnsInvalidHandleForUnknownHandle()
+    public void UpdateAttributes_ReturnsInvalidHandleForUnknownHandle()
     {
-        var result = NativeExportInvoker.Format(-22);
+        using var fileName = new Utf8StringScope("HELLO");
+        var result = NativeExportInvoker.UpdateAttributes(-31, fileName.Pointer, (ushort)DiskFileAttributes.ReadOnly);
         Assert.Equal((int)LdkStatus.ErrorInvalidHandle, result);
     }
 }

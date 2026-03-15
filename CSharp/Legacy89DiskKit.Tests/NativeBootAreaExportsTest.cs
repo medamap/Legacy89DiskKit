@@ -6,6 +6,7 @@ using Xunit;
 
 namespace Legacy89DiskKit.Tests;
 
+[Collection("NativeInterop")]
 public class NativeBootAreaExportsTest
 {
     [Fact]
