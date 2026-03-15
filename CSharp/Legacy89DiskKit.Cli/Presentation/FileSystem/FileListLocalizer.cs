@@ -68,6 +68,7 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string HostScriptD88PathCommandDescription { get; }
     string HostScriptD88BufferCommandDescription { get; }
     string HostScriptRawBufferCommandDescription { get; }
+    string HostScriptInspectCommandDescription { get; }
     string HostBundleCommandDescription { get; }
     string HostBundleInspectCommandDescription { get; }
     string HostBundleVerifyCommandDescription { get; }
@@ -217,6 +218,7 @@ public static class FileListLocalizer
         public abstract string HostScriptD88PathCommandDescription { get; }
         public abstract string HostScriptD88BufferCommandDescription { get; }
         public abstract string HostScriptRawBufferCommandDescription { get; }
+        public abstract string HostScriptInspectCommandDescription { get; }
         public abstract string HostBundleCommandDescription { get; }
         public abstract string HostBundleInspectCommandDescription { get; }
         public abstract string HostBundleVerifyCommandDescription { get; }
@@ -346,6 +348,7 @@ public static class FileListLocalizer
         public override string HostScriptD88PathCommandDescription => "Write a read-only D88-by-path request script";
         public override string HostScriptD88BufferCommandDescription => "Write a read-only D88-by-buffer request script";
         public override string HostScriptRawBufferCommandDescription => "Write a read-only raw-sector-image-by-buffer request script";
+        public override string HostScriptInspectCommandDescription => "Read a request script and print its summary";
         public override string HostBundleCommandDescription => "Inspect portable host-proof bundles";
         public override string HostBundleInspectCommandDescription => "Read a host-proof bundle and print its summary";
         public override string HostBundleVerifyCommandDescription => "Validate a host-proof bundle against a built-in baseline";
@@ -475,6 +478,7 @@ public static class FileListLocalizer
         public override string HostScriptD88PathCommandDescription => "読み取り専用の D88 パス指定要求スクリプトを書き出す";
         public override string HostScriptD88BufferCommandDescription => "読み取り専用の D88 バッファ指定要求スクリプトを書き出す";
         public override string HostScriptRawBufferCommandDescription => "読み取り専用の raw セクタイメージ用要求スクリプトを書き出す";
+        public override string HostScriptInspectCommandDescription => "要求スクリプトを読んで要約を表示する";
         public override string HostBundleCommandDescription => "ホスト検証 bundle を確認する";
         public override string HostBundleInspectCommandDescription => "host-proof bundle を読んで要約を表示する";
         public override string HostBundleVerifyCommandDescription => "内蔵 baseline と照合して host-proof bundle を検証する";
