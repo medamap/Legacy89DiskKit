@@ -28,7 +28,7 @@ public class NativeFileExportsTest
     }
 
     [Fact]
-    public void WriteAndReadFile_RoundTripsThroughNativeExports()
+    public void WriteReadRenameAndDeleteFile_RoundTripsThroughNativeExports()
     {
         HandleManager.Clear();
 
@@ -69,6 +69,15 @@ public class NativeFileExportsTest
             {
                 Marshal.FreeHGlobal(readBuffer);
             }
+
+            using var renamedName = new Utf8StringScope("HELLO2");
+            var renameResult = NativeExportInvoker.RenameFile(handle, writeName.Pointer, renamedName.Pointer);
+            Assert.Equal((int)LdkStatus.Success, renameResult);
+            Assert.Contains(service.FileSystem!.GetFiles(), static file => file.FileName == "HELLO2");
+
+            var deleteResult = NativeExportInvoker.DeleteFile(handle, renamedName.Pointer);
+            Assert.Equal((int)LdkStatus.Success, deleteResult);
+            Assert.DoesNotContain(service.FileSystem!.GetFiles(), static file => file.FileName == "HELLO2");
 
         }
         finally
