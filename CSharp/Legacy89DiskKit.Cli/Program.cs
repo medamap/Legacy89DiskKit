@@ -390,6 +390,8 @@ hostBundleInspectCommand.SetHandler(async (string directoryPath, string baseName
         Console.WriteLine($"SupportsPathOpen: {report.SupportsPathOpen}");
         Console.WriteLine($"SupportsBufferOpen: {report.SupportsBufferOpen}");
         Console.WriteLine($"SupportsNotificationExchange: {report.SupportsNotificationExchange}");
+        Console.WriteLine($"SupportsPlainStdio: {report.SupportsPlainStdio}");
+        Console.WriteLine($"SupportsObservableStdio: {report.SupportsObservableStdio}");
         Console.WriteLine($"DiskOpenSucceeded: {report.DiskOpenSucceeded}");
         Console.WriteLine($"BusyObserved: {report.BusyObserved}");
         Console.WriteLine($"IrqObserved: {report.IrqObserved}");
@@ -472,6 +474,8 @@ hostTranscriptInspectCommand.SetHandler(async (string transcriptPath, string ope
         Console.WriteLine($"SupportsPathOpen: {report.SupportsPathOpen}");
         Console.WriteLine($"SupportsBufferOpen: {report.SupportsBufferOpen}");
         Console.WriteLine($"SupportsNotificationExchange: {report.SupportsNotificationExchange}");
+        Console.WriteLine($"SupportsPlainStdio: {report.SupportsPlainStdio}");
+        Console.WriteLine($"SupportsObservableStdio: {report.SupportsObservableStdio}");
         Console.WriteLine($"DiskOpenSucceeded: {report.DiskOpenSucceeded}");
         Console.WriteLine($"BusyObserved: {report.BusyObserved}");
         Console.WriteLine($"IrqObserved: {report.IrqObserved}");
