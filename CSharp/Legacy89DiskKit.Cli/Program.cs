@@ -274,6 +274,7 @@ var hostScriptCommand = new Command("script", localizer.HostScriptCommandDescrip
 var hostScriptD88PathCommand = new Command("d88-path", localizer.HostScriptD88PathCommandDescription);
 var hostScriptD88BufferCommand = new Command("d88-buffer", localizer.HostScriptD88BufferCommandDescription);
 var hostScriptRawBufferCommand = new Command("raw-buffer", localizer.HostScriptRawBufferCommandDescription);
+var hostScriptInspectCommand = new Command("inspect", localizer.HostScriptInspectCommandDescription);
 var hostBundleCommand = new Command("bundle", localizer.HostBundleCommandDescription);
 var hostBundleInspectCommand = new Command("inspect", localizer.HostBundleInspectCommandDescription);
 var hostBundleVerifyCommand = new Command("verify", localizer.HostBundleVerifyCommandDescription);
@@ -344,9 +345,26 @@ hostScriptRawBufferCommand.SetHandler(async (string imagePath, string outputPath
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, hostOutputArgument);
+hostScriptInspectCommand.AddArgument(hostFileArgument);
+hostScriptInspectCommand.SetHandler(async (string scriptPath) =>
+{
+    try
+    {
+        var requests = await Legacy89DiskKitApplication.ReadEmulatorHostRequestScriptAsync(scriptPath);
+        Console.WriteLine($"RequestEntries: {requests.Count}");
+        Console.WriteLine($"FirstKind: {requests.FirstOrDefault()?.Kind}");
+        Console.WriteLine($"LastKind: {requests.LastOrDefault()?.Kind}");
+        Console.WriteLine($"Kinds: {string.Join(", ", requests.Select(x => x.Kind))}");
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+}, hostFileArgument);
 hostScriptCommand.AddCommand(hostScriptD88PathCommand);
 hostScriptCommand.AddCommand(hostScriptD88BufferCommand);
 hostScriptCommand.AddCommand(hostScriptRawBufferCommand);
+hostScriptCommand.AddCommand(hostScriptInspectCommand);
 hostBundleInspectCommand.AddArgument(hostDirectoryArgument);
 hostBundleInspectCommand.AddArgument(hostBaseNameArgument);
 hostBundleInspectCommand.SetHandler(async (string directoryPath, string baseName) =>
