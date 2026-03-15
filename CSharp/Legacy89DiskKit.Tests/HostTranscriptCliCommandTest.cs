@@ -31,6 +31,7 @@ public class HostTranscriptCliCommandTest
             Assert.Equal(0, result.ExitCode);
             Assert.Contains("TranscriptEntries: 4", result.StandardOutput);
             Assert.Contains("SupportsNotificationExchange: True", result.StandardOutput);
+            Assert.Contains("SupportsObservableStdio: True", result.StandardOutput);
             Assert.Contains("DataReadSucceeded: True", result.StandardOutput);
         }
         finally
