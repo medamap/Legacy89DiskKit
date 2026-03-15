@@ -20,6 +20,7 @@
     <ProjectReference Include="..\Legacy89DiskKit.Application\Legacy89DiskKit.Application.csproj" />
     <ProjectReference Include="..\Legacy89DiskKit.Cli\Legacy89DiskKit.Cli.csproj" />
     <ProjectReference Include="..\Legacy89DiskKit.Infrastructure\Legacy89DiskKit.Infrastructure.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.NativeInterop\Legacy89DiskKit.NativeInterop.csproj" />
   </ItemGroup>
 
 </Project>
