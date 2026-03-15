@@ -49,14 +49,15 @@ public class NativeCatalogExportsTest
     }
 
     [Fact]
-    public void CatalogExport_ReturnsBufferTooSmallForTinyBuffer()
+    public void CatalogExport_TruncatesToTinyBuffer()
     {
         var buffer = Marshal.AllocHGlobal(3);
 
         try
         {
             var result = NativeExportInvoker.GetSupportedImageFormatName(0, buffer, 3);
-            Assert.Equal((int)LdkStatus.ErrorBufferTooSmall, result);
+            Assert.Equal(2, result);
+            Assert.Equal("d8", Marshal.PtrToStringUTF8(buffer));
         }
         finally
         {

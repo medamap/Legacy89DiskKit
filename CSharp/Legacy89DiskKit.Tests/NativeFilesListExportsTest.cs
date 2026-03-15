@@ -51,4 +51,29 @@ public class NativeFilesListExportsTest
         var result = NativeExportInvoker.GetFiles(-99, buffer.Pointer, buffer.Capacity);
         Assert.Equal((int)LdkStatus.ErrorInvalidHandle, result);
     }
+
+    [Fact]
+    public void GetFiles_ClampsToRequestedCapacity()
+    {
+        HandleManager.Clear();
+
+        using var disk = new TempFormattedDiskScope();
+        using var service = Legacy89DiskKitApplication.CreateDiskService();
+        service.OpenDisk(disk.ImagePath, readOnly: false);
+        service.FileSystem!.WriteFile("HELLO", [0x01], new ExtendedFileAttributes(DiskFileAttributes.None, 0, false));
+        service.FileSystem!.WriteFile("WORLD", [0x02], new ExtendedFileAttributes(DiskFileAttributes.None, 0, false));
+
+        var handle = HandleManager.Register(service);
+
+        try
+        {
+            using var buffer = new NativeFileEntryBufferScope(1);
+            var count = NativeExportInvoker.GetFiles(handle, buffer.Pointer, buffer.Capacity);
+            Assert.Equal(1, count);
+        }
+        finally
+        {
+            HandleManager.Clear();
+        }
+    }
 }

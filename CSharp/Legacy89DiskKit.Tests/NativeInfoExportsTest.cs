@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using Legacy89DiskKit.NativeInterop.Exports;
+using Legacy89DiskKit.NativeInterop.Types;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;
@@ -52,13 +53,14 @@ public class NativeInfoExportsTest
     }
 
     [Fact]
-    public void GetCapabilitySummary_ReturnsBufferTooSmallForTinyBuffer()
+    public void GetCapabilitySummary_TruncatesToTinyBuffer()
     {
         var buffer = Marshal.AllocHGlobal(4);
         try
         {
             var result = NativeExportInvoker.GetCapabilitySummary(buffer, 4);
-            Assert.Equal((int)LdkStatus.ErrorBufferTooSmall, result);
+            Assert.Equal(3, result);
+            Assert.Equal("pat", Marshal.PtrToStringUTF8(buffer));
         }
         finally
         {
@@ -67,13 +69,14 @@ public class NativeInfoExportsTest
     }
 
     [Fact]
-    public void GetStatusName_ReturnsBufferTooSmallForTinyBuffer()
+    public void GetStatusName_TruncatesToTinyBuffer()
     {
         var buffer = Marshal.AllocHGlobal(3);
         try
         {
             var result = NativeExportInvoker.GetStatusName((int)LdkStatus.Success, buffer, 3);
-            Assert.Equal((int)LdkStatus.ErrorBufferTooSmall, result);
+            Assert.Equal(2, result);
+            Assert.Equal("su", Marshal.PtrToStringUTF8(buffer));
         }
         finally
         {
