@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Xunit;
 
 namespace Legacy89DiskKit.Tests;
 

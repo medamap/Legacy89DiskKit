@@ -380,28 +380,18 @@ hostBundleVerifyCommand.AddArgument(hostBaseNameArgument);
 hostBundleVerifyCommand.AddArgument(hostBaselineArgument);
 hostBundleVerifyCommand.SetHandler(async (string directoryPath, string baseName, string baselineName) =>
 {
-    try
-    {
-        var bundle = await Legacy89DiskKitApplication.ReadEmulatorHostBundleAsync(directoryPath, baseName);
-        var expectation = ParseHostBaseline(baselineName);
-        var mismatches = Legacy89DiskKitApplication.CompareEmulatorHostBundle(bundle, expectation);
+    var bundle = await Legacy89DiskKitApplication.ReadEmulatorHostBundleAsync(directoryPath, baseName);
+    var expectation = ParseHostBaseline(baselineName);
+    var mismatches = Legacy89DiskKitApplication.CompareEmulatorHostBundle(bundle, expectation);
 
-        if (mismatches.Count == 0)
-        {
-            PrintSuccess(localizer, $"Host-proof bundle matched baseline: {baselineName}");
-            return;
-        }
-
-        PrintError(localizer, $"Host-proof bundle mismatches for baseline '{baselineName}':");
-        foreach (var mismatch in mismatches)
-        {
-            Console.Error.WriteLine($"- {mismatch}");
-        }
-    }
-    catch (Exception ex)
+    if (mismatches.Count == 0)
     {
-        PrintError(localizer, ex.Message);
+        PrintSuccess(localizer, $"Host-proof bundle matched baseline: {baselineName}");
+        return;
     }
+
+    throw new InvalidOperationException(
+        $"Host-proof bundle mismatches for baseline '{baselineName}': {string.Join(" ", mismatches)}");
 }, hostDirectoryArgument, hostBaseNameArgument, hostBaselineArgument);
 hostBundleCommand.AddCommand(hostBundleInspectCommand);
 hostBundleCommand.AddCommand(hostBundleVerifyCommand);

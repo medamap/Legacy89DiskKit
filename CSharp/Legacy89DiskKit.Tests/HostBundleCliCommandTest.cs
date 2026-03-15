@@ -58,6 +58,30 @@ public class HostBundleCliCommandTest
         }
     }
 
+    [Fact]
+    public async Task HostBundleVerify_ReturnsNonZeroForUnsupportedBaseline()
+    {
+        var bundleDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(bundleDirectory);
+
+        try
+        {
+            await WriteEventDrivenD88BundleAsync(bundleDirectory, "proof");
+
+            var result = await CliCommandRunner.RunAsync("host", "bundle", "verify", bundleDirectory, "proof", "bad-baseline");
+
+            Assert.NotEqual(0, result.ExitCode);
+            Assert.Contains("Unsupported host baseline: bad-baseline", result.StandardError);
+        }
+        finally
+        {
+            if (Directory.Exists(bundleDirectory))
+            {
+                Directory.Delete(bundleDirectory, recursive: true);
+            }
+        }
+    }
+
     private static async Task WriteEventDrivenD88BundleAsync(string bundleDirectory, string baseName)
     {
         var manifest = new EmulatorHostBundleManifest(
