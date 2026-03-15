@@ -59,9 +59,9 @@ public static class DiskExports
             
             return HandleManager.Register(service);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 
@@ -79,9 +79,9 @@ public static class DiskExports
             
             return HandleManager.Register(service);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 
@@ -185,9 +185,9 @@ public static class DiskExports
             Marshal.Copy(data, 0, bufferPtr, size);
             return size;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 
@@ -207,9 +207,9 @@ public static class DiskExports
             fs.WriteBootArea(data);
             return (int)LdkStatus.Success;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 
@@ -227,9 +227,9 @@ public static class DiskExports
             fs.Format();
             return (int)LdkStatus.Success;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 }
