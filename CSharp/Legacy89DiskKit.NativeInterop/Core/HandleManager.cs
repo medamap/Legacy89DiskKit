@@ -38,6 +38,16 @@ public static class HandleManager
         return false;
     }
 
+    public static bool IsRegistered(int handle)
+    {
+        return _services.ContainsKey(handle);
+    }
+
+    public static int GetOpenHandleCount()
+    {
+        return _services.Count;
+    }
+
     public static void Clear()
     {
         foreach (var handle in _services.Keys)
