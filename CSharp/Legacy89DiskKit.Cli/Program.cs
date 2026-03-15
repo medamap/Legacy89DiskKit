@@ -276,9 +276,11 @@ var hostScriptD88BufferCommand = new Command("d88-buffer", localizer.HostScriptD
 var hostScriptRawBufferCommand = new Command("raw-buffer", localizer.HostScriptRawBufferCommandDescription);
 var hostBundleCommand = new Command("bundle", localizer.HostBundleCommandDescription);
 var hostBundleInspectCommand = new Command("inspect", localizer.HostBundleInspectCommandDescription);
+var hostBundleVerifyCommand = new Command("verify", localizer.HostBundleVerifyCommandDescription);
 var hostOutputArgument = new Argument<string>("output", localizer.HostOutputArgumentDescription);
 var hostDirectoryArgument = new Argument<string>("directory", localizer.HostDirectoryArgumentDescription);
 var hostBaseNameArgument = new Argument<string>("base-name", localizer.HostBaseNameArgumentDescription);
+var hostBaselineArgument = new Argument<string>("baseline", localizer.HostBaselineArgumentDescription);
 hostStdioCommand.AddOption(hostObservableOption);
 hostStdioCommand.SetHandler(async (bool observable) =>
 {
@@ -358,7 +360,36 @@ hostBundleInspectCommand.SetHandler(async (string directoryPath, string baseName
         PrintError(localizer, ex.Message);
     }
 }, hostDirectoryArgument, hostBaseNameArgument);
+hostBundleVerifyCommand.AddArgument(hostDirectoryArgument);
+hostBundleVerifyCommand.AddArgument(hostBaseNameArgument);
+hostBundleVerifyCommand.AddArgument(hostBaselineArgument);
+hostBundleVerifyCommand.SetHandler(async (string directoryPath, string baseName, string baselineName) =>
+{
+    try
+    {
+        var bundle = await Legacy89DiskKitApplication.ReadEmulatorHostBundleAsync(directoryPath, baseName);
+        var expectation = ParseHostBaseline(baselineName);
+        var mismatches = Legacy89DiskKitApplication.CompareEmulatorHostBundle(bundle, expectation);
+
+        if (mismatches.Count == 0)
+        {
+            PrintSuccess(localizer, $"Host-proof bundle matched baseline: {baselineName}");
+            return;
+        }
+
+        PrintError(localizer, $"Host-proof bundle mismatches for baseline '{baselineName}':");
+        foreach (var mismatch in mismatches)
+        {
+            Console.Error.WriteLine($"- {mismatch}");
+        }
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+}, hostDirectoryArgument, hostBaseNameArgument, hostBaselineArgument);
 hostBundleCommand.AddCommand(hostBundleInspectCommand);
+hostBundleCommand.AddCommand(hostBundleVerifyCommand);
 hostCommand.AddCommand(hostStdioCommand);
 hostCommand.AddCommand(hostScriptCommand);
 hostCommand.AddCommand(hostBundleCommand);
@@ -749,6 +780,16 @@ static DiskType ParseDiskType(string diskTypeName)
         "2dd" => DiskType.TwoDD,
         "2hd" => DiskType.TwoHD,
         _ => throw new InvalidOperationException($"Unsupported disk type: {diskTypeName}")
+    };
+}
+
+static EmulatorHostProofExpectation ParseHostBaseline(string baselineName)
+{
+    return baselineName.Trim().ToLowerInvariant() switch
+    {
+        "event-d88" => EmulatorHostProofExpectationCatalog.EventDrivenFirstProofD88(),
+        "event-raw" => EmulatorHostProofExpectationCatalog.EventDrivenSecondProofRaw(),
+        _ => throw new InvalidOperationException($"Unsupported host baseline: {baselineName}")
     };
 }
 
