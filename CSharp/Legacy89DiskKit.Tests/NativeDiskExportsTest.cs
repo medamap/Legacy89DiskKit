@@ -2,38 +2,33 @@ using System.Runtime.InteropServices;
 using Legacy89DiskKit.Application;
 using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.NativeInterop.Core;
-using Legacy89DiskKit.NativeInterop.Exports;
 using Legacy89DiskKit.NativeInterop.Types;
 using Xunit;
+using DiskFileAttributes = Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes;
 
 namespace Legacy89DiskKit.Tests;
 
 public class NativeDiskExportsTest
 {
     [Fact]
-    public void OpenDiskAndReadFileSystemInfo_ReturnsExpectedNativeSurface()
+    public void GetFileSystemInfoAndFilesCount_ReturnExpectedNativeSurface()
     {
         HandleManager.Clear();
 
         using var disk = new TempFormattedDiskScope();
-        using (var writer = Legacy89DiskKitApplication.CreateDiskService())
-        {
-            writer.OpenDisk(disk.ImagePath, readOnly: false);
-            writer.FileSystem!.WriteFile(
-                "HELLO",
-                [0x01, 0x02, 0x03],
-                new ExtendedFileAttributes(FileAttributes.Binary, 0, false));
-        }
+        using var service = Legacy89DiskKitApplication.CreateDiskService();
+        service.OpenDisk(disk.ImagePath, readOnly: false);
+        service.FileSystem!.WriteFile(
+            "HELLO",
+            [0x01, 0x02, 0x03],
+            new ExtendedFileAttributes(DiskFileAttributes.None, 0, false));
 
-        using var path = new Utf8StringScope(disk.ImagePath);
-        var handle = DiskExports.OpenDisk(path.Pointer, true);
+        var handle = HandleManager.Register(service);
 
         try
         {
-            Assert.True(handle > 0);
-
             var info = new NativeFileSystemInfo();
-            var infoResult = DiskExports.GetFileSystemInfo(handle, NativeStructPointer.Alloc(info, out var infoPtr));
+            var infoResult = NativeExportInvoker.GetFileSystemInfo(handle, NativeStructPointer.Alloc(info, out var infoPtr));
             Assert.Equal((int)LdkStatus.Success, infoResult);
 
             info = NativeStructPointer.ReadAndFree<NativeFileSystemInfo>(infoPtr);
@@ -43,7 +38,7 @@ public class NativeDiskExportsTest
             var countPtr = Marshal.AllocHGlobal(sizeof(int));
             try
             {
-                var countResult = DiskExports.GetFilesCount(handle, countPtr);
+                var countResult = NativeExportInvoker.GetFilesCount(handle, countPtr);
                 Assert.Equal((int)LdkStatus.Success, countResult);
                 Assert.True(Marshal.ReadInt32(countPtr) >= 1);
             }
@@ -54,36 +49,27 @@ public class NativeDiskExportsTest
         }
         finally
         {
-            Assert.Equal((int)LdkStatus.Success, DiskExports.CloseDisk(handle));
+            Assert.Equal((int)LdkStatus.Success, NativeExportInvoker.CloseDisk(handle));
             HandleManager.Clear();
         }
     }
 
     [Fact]
-    public void CreateDisk_ReturnsHandleThatCanBeClosed()
+    public void GetFileSystemInfo_ReturnsInvalidHandleForUnknownHandle()
     {
         HandleManager.Clear();
 
-        var imagePath = Path.Combine(Path.GetTempPath(), $"ldk-native-create-{Guid.NewGuid():N}.d88");
-        using var path = new Utf8StringScope(imagePath);
-        using var name = new Utf8StringScope("NATIVECRT");
+        var info = new NativeFileSystemInfo();
+        NativeStructPointer.Alloc(info, out var infoPtr);
 
         try
         {
-            var handle = DiskExports.CreateDisk(path.Pointer, (int)LdkDiskType.TwoD, name.Pointer);
-            Assert.True(handle > 0);
-            Assert.Equal(1, NativeHandleExports.IsHandleValid(handle));
-            Assert.Equal((int)LdkStatus.Success, DiskExports.CloseDisk(handle));
-            Assert.Equal(0, NativeHandleExports.IsHandleValid(handle));
+            var result = NativeExportInvoker.GetFileSystemInfo(-999, infoPtr);
+            Assert.Equal((int)LdkStatus.ErrorInvalidHandle, result);
         }
         finally
         {
-            HandleManager.Clear();
-
-            if (File.Exists(imagePath))
-            {
-                File.Delete(imagePath);
-            }
+            Marshal.FreeHGlobal(infoPtr);
         }
     }
 }

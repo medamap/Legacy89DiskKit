@@ -9,13 +9,13 @@ public class NativeInfoExportsTest
     [Fact]
     public void GetAbiVersion_ReturnsStableVersion()
     {
-        Assert.Equal(NativeSurfaceInfo.AbiVersion, NativeInfoExports.GetAbiVersion());
+        Assert.Equal(NativeSurfaceInfo.AbiVersion, NativeExportInvoker.GetAbiVersion());
     }
 
     [Fact]
     public void GetCapabilityFlags_ReturnsExpectedFlags()
     {
-        Assert.Equal(NativeSurfaceInfo.GetCapabilityFlags(), NativeInfoExports.GetCapabilityFlags());
+        Assert.Equal(NativeSurfaceInfo.GetCapabilityFlags(), NativeExportInvoker.GetCapabilityFlags());
     }
 
     [Fact]
@@ -24,7 +24,7 @@ public class NativeInfoExportsTest
         var buffer = Marshal.AllocHGlobal(256);
         try
         {
-            var length = NativeInfoExports.GetCapabilitySummary(buffer, 256);
+            var length = NativeExportInvoker.GetCapabilitySummary(buffer, 256);
             var text = Marshal.PtrToStringUTF8(buffer, length);
             Assert.Equal(NativeSurfaceInfo.GetCapabilitySummary(), text);
         }
@@ -40,7 +40,7 @@ public class NativeInfoExportsTest
         var buffer = Marshal.AllocHGlobal(256);
         try
         {
-            var length = NativeInfoExports.GetStatusName(0, buffer, 256);
+            var length = NativeExportInvoker.GetStatusName(0, buffer, 256);
             var text = Marshal.PtrToStringUTF8(buffer, length);
             Assert.Equal("success", text);
         }

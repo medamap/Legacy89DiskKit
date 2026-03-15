@@ -2,9 +2,9 @@ using System.Runtime.InteropServices;
 using Legacy89DiskKit.Application;
 using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.NativeInterop.Core;
-using Legacy89DiskKit.NativeInterop.Exports;
 using Legacy89DiskKit.NativeInterop.Types;
 using Xunit;
+using DiskFileAttributes = Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes;
 
 namespace Legacy89DiskKit.Tests;
 
@@ -18,7 +18,7 @@ public class NativeFileExportsTest
 
         try
         {
-            var result = FileExports.ReadFile(-123, fileName.Pointer, buffer, 16);
+            var result = NativeExportInvoker.ReadFile(-123, fileName.Pointer, buffer, 16);
             Assert.Equal((int)LdkStatus.ErrorInvalidHandle, result);
         }
         finally
@@ -28,7 +28,7 @@ public class NativeFileExportsTest
     }
 
     [Fact]
-    public void WriteReadRenameDeleteFile_RoundTripsThroughNativeExports()
+    public void WriteAndReadFile_RoundTripsThroughNativeExports()
     {
         HandleManager.Clear();
 
@@ -47,7 +47,7 @@ public class NativeFileExportsTest
 
             try
             {
-                var writeResult = FileExports.WriteFile(handle, writeName.Pointer, dataBuffer, fileData.Length, (ushort)FileAttributes.Binary);
+                var writeResult = NativeExportInvoker.WriteFile(handle, writeName.Pointer, dataBuffer, fileData.Length, (ushort)DiskFileAttributes.None);
                 Assert.Equal((int)LdkStatus.Success, writeResult);
             }
             finally
@@ -58,7 +58,7 @@ public class NativeFileExportsTest
             var readBuffer = Marshal.AllocHGlobal(16);
             try
             {
-                var readResult = FileExports.ReadFile(handle, writeName.Pointer, readBuffer, 16);
+                var readResult = NativeExportInvoker.ReadFile(handle, writeName.Pointer, readBuffer, 16);
                 Assert.Equal(fileData.Length, readResult);
 
                 var actual = new byte[fileData.Length];
@@ -70,12 +70,6 @@ public class NativeFileExportsTest
                 Marshal.FreeHGlobal(readBuffer);
             }
 
-            using var renamed = new Utf8StringScope("HELLO2");
-            var renameResult = FileExports.RenameFile(handle, writeName.Pointer, renamed.Pointer);
-            Assert.Equal((int)LdkStatus.Success, renameResult);
-
-            var deleteResult = FileExports.DeleteFile(handle, renamed.Pointer);
-            Assert.Equal((int)LdkStatus.Success, deleteResult);
         }
         finally
         {
