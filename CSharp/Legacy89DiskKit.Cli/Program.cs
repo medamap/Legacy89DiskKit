@@ -277,10 +277,15 @@ var hostScriptRawBufferCommand = new Command("raw-buffer", localizer.HostScriptR
 var hostBundleCommand = new Command("bundle", localizer.HostBundleCommandDescription);
 var hostBundleInspectCommand = new Command("inspect", localizer.HostBundleInspectCommandDescription);
 var hostBundleVerifyCommand = new Command("verify", localizer.HostBundleVerifyCommandDescription);
+var hostBundlePackCommand = new Command("pack", localizer.HostBundlePackCommandDescription);
 var hostOutputArgument = new Argument<string>("output", localizer.HostOutputArgumentDescription);
 var hostDirectoryArgument = new Argument<string>("directory", localizer.HostDirectoryArgumentDescription);
 var hostBaseNameArgument = new Argument<string>("base-name", localizer.HostBaseNameArgumentDescription);
 var hostBaselineArgument = new Argument<string>("baseline", localizer.HostBaselineArgumentDescription);
+var hostTranscriptArgument = new Argument<string>("transcript", localizer.HostTranscriptArgumentDescription);
+var hostRequestScriptOption = new Option<string?>("--request-script", localizer.HostRequestScriptOptionDescription);
+var hostOpenModeOption = new Option<string>("--open-mode", () => "OpenDiskPath", localizer.HostOpenModeOptionDescription);
+var hostExchangeModeOption = new Option<string>("--exchange-mode", () => "observable", localizer.HostExchangeModeOptionDescription);
 hostStdioCommand.AddOption(hostObservableOption);
 hostStdioCommand.SetHandler(async (bool observable) =>
 {
@@ -393,8 +398,45 @@ hostBundleVerifyCommand.SetHandler(async (string directoryPath, string baseName,
     throw new InvalidOperationException(
         $"Host-proof bundle mismatches for baseline '{baselineName}': {string.Join(" ", mismatches)}");
 }, hostDirectoryArgument, hostBaseNameArgument, hostBaselineArgument);
+hostBundlePackCommand.AddArgument(hostTranscriptArgument);
+hostBundlePackCommand.AddArgument(hostDirectoryArgument);
+hostBundlePackCommand.AddArgument(hostBaseNameArgument);
+hostBundlePackCommand.AddOption(hostRequestScriptOption);
+hostBundlePackCommand.AddOption(hostOpenModeOption);
+hostBundlePackCommand.AddOption(hostExchangeModeOption);
+hostBundlePackCommand.SetHandler(async (
+    string transcriptPath,
+    string directoryPath,
+    string baseName,
+    string? requestScriptPath,
+    string openMode,
+    string exchangeMode) =>
+{
+    try
+    {
+        var transcript = await Legacy89DiskKitApplication.ReadEmulatorHostTranscriptAsync(transcriptPath);
+        var requestScript = string.IsNullOrWhiteSpace(requestScriptPath)
+            ? null
+            : await Legacy89DiskKitApplication.ReadEmulatorHostRequestScriptAsync(requestScriptPath);
+        var report = Legacy89DiskKitApplication.BuildEmulatorHostProofReport(transcript, openMode, exchangeMode);
+
+        await Legacy89DiskKitApplication.WriteEmulatorHostBundleAsync(
+            directoryPath,
+            baseName,
+            report,
+            transcript,
+            requestScript);
+
+        PrintSuccess(localizer, $"Host-proof bundle written: {Path.Combine(directoryPath, $"{baseName}.manifest.json")}");
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+}, hostTranscriptArgument, hostDirectoryArgument, hostBaseNameArgument, hostRequestScriptOption, hostOpenModeOption, hostExchangeModeOption);
 hostBundleCommand.AddCommand(hostBundleInspectCommand);
 hostBundleCommand.AddCommand(hostBundleVerifyCommand);
+hostBundleCommand.AddCommand(hostBundlePackCommand);
 hostCommand.AddCommand(hostStdioCommand);
 hostCommand.AddCommand(hostScriptCommand);
 hostCommand.AddCommand(hostBundleCommand);
