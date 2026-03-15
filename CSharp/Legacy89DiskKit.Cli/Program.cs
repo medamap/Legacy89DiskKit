@@ -349,11 +349,26 @@ hostBundleInspectCommand.SetHandler(async (string directoryPath, string baseName
     try
     {
         var bundle = await EmulatorHostBundleReader.ReadAsync(directoryPath, baseName);
+        var report = Legacy89DiskKitApplication.BuildEmulatorHostProofReport(
+            bundle.Transcript,
+            bundle.Manifest.OpenMode,
+            bundle.Manifest.ExchangeMode);
+
         Console.WriteLine($"BaseName: {bundle.Manifest.BaseName}");
         Console.WriteLine($"OpenMode: {bundle.Manifest.OpenMode}");
         Console.WriteLine($"ExchangeMode: {bundle.Manifest.ExchangeMode}");
         Console.WriteLine($"TranscriptEntries: {bundle.Transcript.Count}");
         Console.WriteLine($"RequestEntries: {bundle.RequestScript.Count}");
+        Console.WriteLine($"CapabilityHandshakeSucceeded: {report.CapabilityHandshakeSucceeded}");
+        Console.WriteLine($"SupportsPathOpen: {report.SupportsPathOpen}");
+        Console.WriteLine($"SupportsBufferOpen: {report.SupportsBufferOpen}");
+        Console.WriteLine($"SupportsNotificationExchange: {report.SupportsNotificationExchange}");
+        Console.WriteLine($"DiskOpenSucceeded: {report.DiskOpenSucceeded}");
+        Console.WriteLine($"BusyObserved: {report.BusyObserved}");
+        Console.WriteLine($"IrqObserved: {report.IrqObserved}");
+        Console.WriteLine($"DrqObserved: {report.DrqObserved}");
+        Console.WriteLine($"DataReadSucceeded: {report.DataReadSucceeded}");
+        Console.WriteLine($"CloseSucceeded: {report.CloseSucceeded}");
     }
     catch (Exception ex)
     {
