@@ -50,4 +50,34 @@ public class NativeInfoExportsTest
             Marshal.FreeHGlobal(buffer);
         }
     }
+
+    [Fact]
+    public void GetCapabilitySummary_ReturnsBufferTooSmallForTinyBuffer()
+    {
+        var buffer = Marshal.AllocHGlobal(4);
+        try
+        {
+            var result = NativeExportInvoker.GetCapabilitySummary(buffer, 4);
+            Assert.Equal((int)LdkStatus.ErrorBufferTooSmall, result);
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
+        }
+    }
+
+    [Fact]
+    public void GetStatusName_ReturnsBufferTooSmallForTinyBuffer()
+    {
+        var buffer = Marshal.AllocHGlobal(3);
+        try
+        {
+            var result = NativeExportInvoker.GetStatusName((int)LdkStatus.Success, buffer, 3);
+            Assert.Equal((int)LdkStatus.ErrorBufferTooSmall, result);
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
+        }
+    }
 }
