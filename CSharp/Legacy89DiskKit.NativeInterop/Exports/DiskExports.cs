@@ -119,6 +119,20 @@ public static class DiskExports
         return (int)LdkStatus.Success;
     }
 
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_container_metadata")]
+    public static int GetContainerMetadata(int handle, IntPtr metadataPtr)
+    {
+        if (!HandleManager.TryGet(handle, out var service) || service == null)
+            return (int)LdkStatus.ErrorInvalidHandle;
+
+        var metadata = service.GetContainerMetadata();
+        if (metadata == null) return (int)LdkStatus.ErrorFileNotFound;
+
+        var nativeMetadata = NativeDiskContainerMetadataFactory.Create(metadata);
+        Marshal.StructureToPtr(nativeMetadata, metadataPtr, false);
+        return (int)LdkStatus.Success;
+    }
+
     [UnmanagedCallersOnly(EntryPoint = "ldk_get_files_count")]
     public static int GetFilesCount(int handle, IntPtr outCountPtr)
     {
