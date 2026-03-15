@@ -35,6 +35,18 @@ public class NativeDiskExportsTest
             Assert.Equal("Hu-BASIC", info.FileSystemName);
             Assert.Equal("X1", info.PlatformId);
 
+            var metadata = new NativeDiskContainerMetadata();
+            var metadataResult = NativeExportInvoker.GetContainerMetadata(handle, NativeStructPointer.Alloc(metadata, out var metadataPtr));
+            Assert.Equal((int)LdkStatus.Success, metadataResult);
+
+            metadata = NativeStructPointer.ReadAndFree<NativeDiskContainerMetadata>(metadataPtr);
+            Assert.Equal("d88", metadata.ImageFormat);
+            Assert.Equal(40, metadata.Cylinders);
+            Assert.Equal(2, metadata.Heads);
+            Assert.Equal(16, metadata.SectorsPerTrack);
+            Assert.Equal(256, metadata.BytesPerSector);
+            Assert.Equal(0, metadata.IsWriteProtected);
+
             var countPtr = Marshal.AllocHGlobal(sizeof(int));
             try
             {

@@ -93,6 +93,7 @@ internal static class NativeExportInvoker
     public static int CreateDisk(IntPtr path, int diskType, IntPtr name) => GetDelegate<IntPtrIntIntPtrDelegate>(typeof(DiskExports), nameof(DiskExports.CreateDisk))(path, diskType, name);
     public static int CloseDisk(int handle) => GetDelegate<IntIntDelegate>(typeof(DiskExports), nameof(DiskExports.CloseDisk))(handle);
     public static int GetFileSystemInfo(int handle, IntPtr pointer) => GetDelegate<IntIntPtrDelegate>(typeof(DiskExports), nameof(DiskExports.GetFileSystemInfo))(handle, pointer);
+    public static int GetContainerMetadata(int handle, IntPtr pointer) => GetDelegate<IntIntPtrDelegate>(typeof(DiskExports), nameof(DiskExports.GetContainerMetadata))(handle, pointer);
     public static int GetFilesCount(int handle, IntPtr pointer) => GetDelegate<IntIntPtrDelegate>(typeof(DiskExports), nameof(DiskExports.GetFilesCount))(handle, pointer);
     public static int ReadFile(int handle, IntPtr name, IntPtr buffer, int capacity) => GetDelegate<HandleNameBufferDelegate>(typeof(FileExports), nameof(FileExports.ReadFile))(handle, name, buffer, capacity);
     public static int DeleteFile(int handle, IntPtr name) => GetDelegate<IntIntPtrDelegate>(typeof(FileExports), nameof(FileExports.DeleteFile))(handle, name);
