@@ -114,6 +114,40 @@ public class HostTranscriptCliCommandTest
         }
     }
 
+    [Fact]
+    public async Task HostTranscriptVerify_ReturnsNonZeroForUnsupportedBaseline()
+    {
+        var workingDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(workingDirectory);
+
+        try
+        {
+            var transcriptPath = Path.Combine(workingDirectory, "proof.transcript.jsonl");
+            await EmulatorHostTranscriptFileStore.SaveAsync(transcriptPath, CreateEventDrivenD88Transcript());
+
+            var result = await CliCommandRunner.RunAsync(
+                "host",
+                "transcript",
+                "verify",
+                transcriptPath,
+                "bad-baseline",
+                "--open-mode",
+                "OpenDiskPath",
+                "--exchange-mode",
+                "observable");
+
+            Assert.NotEqual(0, result.ExitCode);
+            Assert.Contains("Unsupported host baseline: bad-baseline", result.StandardError);
+        }
+        finally
+        {
+            if (Directory.Exists(workingDirectory))
+            {
+                Directory.Delete(workingDirectory, recursive: true);
+            }
+        }
+    }
+
     private static IReadOnlyList<EmulatorHostTranscriptEntry> CreateEventDrivenD88Transcript()
     {
         return
