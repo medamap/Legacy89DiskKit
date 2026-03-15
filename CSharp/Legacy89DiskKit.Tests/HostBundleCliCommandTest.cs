@@ -82,6 +82,52 @@ public class HostBundleCliCommandTest
         }
     }
 
+    [Fact]
+    public async Task HostBundlePack_WritesBundleFromTranscriptAndRequestScript()
+    {
+        var workingDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(workingDirectory);
+
+        try
+        {
+            var transcriptPath = Path.Combine(workingDirectory, "proof.transcript.jsonl");
+            var requestScriptPath = Path.Combine(workingDirectory, "proof.requests.jsonl");
+            var bundleDirectory = Path.Combine(workingDirectory, "bundle");
+
+            var transcript = CreateEventDrivenD88Transcript();
+            var requests = CreateEventDrivenD88RequestScript();
+
+            await EmulatorHostTranscriptFileStore.SaveAsync(transcriptPath, transcript);
+            await EmulatorHostRequestScriptFileStore.SaveAsync(requestScriptPath, requests);
+
+            var result = await CliCommandRunner.RunAsync(
+                "host",
+                "bundle",
+                "pack",
+                transcriptPath,
+                bundleDirectory,
+                "proof",
+                "--request-script",
+                requestScriptPath,
+                "--open-mode",
+                "OpenDiskPath",
+                "--exchange-mode",
+                "observable");
+
+            Assert.Equal(0, result.ExitCode);
+            Assert.Contains("Host-proof bundle written", result.StandardOutput);
+            Assert.True(File.Exists(Path.Combine(bundleDirectory, "proof.manifest.json")));
+            Assert.True(File.Exists(Path.Combine(bundleDirectory, "proof.md")));
+        }
+        finally
+        {
+            if (Directory.Exists(workingDirectory))
+            {
+                Directory.Delete(workingDirectory, recursive: true);
+            }
+        }
+    }
+
     private static async Task WriteEventDrivenD88BundleAsync(string bundleDirectory, string baseName)
     {
         var manifest = new EmulatorHostBundleManifest(
@@ -92,8 +138,27 @@ public class HostBundleCliCommandTest
             OpenMode: "OpenDiskPath",
             ExchangeMode: "observable");
 
-        var transcript = new[]
-        {
+        var transcript = CreateEventDrivenD88Transcript();
+        var requests = CreateEventDrivenD88RequestScript();
+
+        await File.WriteAllTextAsync(
+            Path.Combine(bundleDirectory, manifest.ReportFileName),
+            "# proof");
+        await File.WriteAllTextAsync(
+            Path.Combine(bundleDirectory, $"{baseName}.manifest.json"),
+            EmulatorHostBundleManifestCodec.Serialize(manifest));
+        await EmulatorHostTranscriptFileStore.SaveAsync(
+            Path.Combine(bundleDirectory, manifest.TranscriptFileName),
+            transcript);
+        await EmulatorHostRequestScriptFileStore.SaveAsync(
+            Path.Combine(bundleDirectory, manifest.RequestScriptFileName!),
+            requests);
+    }
+
+    private static IReadOnlyList<EmulatorHostTranscriptEntry> CreateEventDrivenD88Transcript()
+    {
+        return
+        [
             new EmulatorHostTranscriptEntry(
                 new EmulatorHostRequest(EmulatorHostRequestKind.QueryCapabilities),
                 new EmulatorHostExchange(
@@ -135,27 +200,17 @@ public class HostBundleCliCommandTest
                         DrqAsserted: false,
                         PendingAdvanceMicroseconds: null),
                     [])),
-        };
+        ];
+    }
 
-        var requests = new[]
-        {
+    private static IReadOnlyList<EmulatorHostRequest> CreateEventDrivenD88RequestScript()
+    {
+        return
+        [
             new EmulatorHostRequest(EmulatorHostRequestKind.QueryCapabilities),
             new EmulatorHostRequest(EmulatorHostRequestKind.OpenDiskPath, ImagePath: "/tmp/test.d88"),
             new EmulatorHostRequest(EmulatorHostRequestKind.ReadRegister, RegisterAddress: 3),
             new EmulatorHostRequest(EmulatorHostRequestKind.CloseDisk),
-        };
-
-        await File.WriteAllTextAsync(
-            Path.Combine(bundleDirectory, manifest.ReportFileName),
-            "# proof");
-        await File.WriteAllTextAsync(
-            Path.Combine(bundleDirectory, $"{baseName}.manifest.json"),
-            EmulatorHostBundleManifestCodec.Serialize(manifest));
-        await EmulatorHostTranscriptFileStore.SaveAsync(
-            Path.Combine(bundleDirectory, manifest.TranscriptFileName),
-            transcript);
-        await EmulatorHostRequestScriptFileStore.SaveAsync(
-            Path.Combine(bundleDirectory, manifest.RequestScriptFileName!),
-            requests);
+        ];
     }
 }
