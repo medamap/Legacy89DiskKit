@@ -48,17 +48,9 @@ public class NativeDiskExportsTest
             Assert.Equal(256, metadata.BytesPerSector);
             Assert.Equal(0, metadata.IsWriteProtected);
 
-            var countPtr = Marshal.AllocHGlobal(sizeof(int));
-            try
-            {
-                var countResult = NativeExportInvoker.GetFilesCount(handle, countPtr);
-                Assert.Equal((int)LdkStatus.Success, countResult);
-                Assert.True(Marshal.ReadInt32(countPtr) >= 1);
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(countPtr);
-            }
+            using var entryBuffer = new NativeFileEntryBufferScope(8);
+            var entryCount = NativeExportInvoker.GetFiles(handle, entryBuffer.Pointer, entryBuffer.Capacity);
+            Assert.True(entryCount >= 1);
         }
         finally
         {

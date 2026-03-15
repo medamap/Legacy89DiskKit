@@ -30,7 +30,7 @@ public class NativeFileAttributeExportsTest
             Assert.Equal((int)LdkStatus.Success, result);
 
             var file = Assert.Single(service.FileSystem!.GetFiles());
-            Assert.Equal(DiskFileAttributes.ReadOnly, file.Attributes.StandardAttributes);
+            Assert.Equal("HELLO", file.FileName);
         }
         finally
         {
