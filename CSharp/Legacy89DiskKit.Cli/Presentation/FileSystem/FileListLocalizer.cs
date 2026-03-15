@@ -73,6 +73,10 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string HostBundleInspectCommandDescription { get; }
     string HostBundleVerifyCommandDescription { get; }
     string HostBundlePackCommandDescription { get; }
+    string HostTranscriptCommandDescription { get; }
+    string HostTranscriptInspectCommandDescription { get; }
+    string HostTranscriptReportCommandDescription { get; }
+    string HostTranscriptVerifyCommandDescription { get; }
     string HostOutputArgumentDescription { get; }
     string HostDirectoryArgumentDescription { get; }
     string HostBaseNameArgumentDescription { get; }
@@ -223,6 +227,10 @@ public static class FileListLocalizer
         public abstract string HostBundleInspectCommandDescription { get; }
         public abstract string HostBundleVerifyCommandDescription { get; }
         public abstract string HostBundlePackCommandDescription { get; }
+        public abstract string HostTranscriptCommandDescription { get; }
+        public abstract string HostTranscriptInspectCommandDescription { get; }
+        public abstract string HostTranscriptReportCommandDescription { get; }
+        public abstract string HostTranscriptVerifyCommandDescription { get; }
         public abstract string HostOutputArgumentDescription { get; }
         public abstract string HostDirectoryArgumentDescription { get; }
         public abstract string HostBaseNameArgumentDescription { get; }
@@ -353,6 +361,10 @@ public static class FileListLocalizer
         public override string HostBundleInspectCommandDescription => "Read a host-proof bundle and print its summary";
         public override string HostBundleVerifyCommandDescription => "Validate a host-proof bundle against a built-in baseline";
         public override string HostBundlePackCommandDescription => "Pack a transcript and optional request script into a host-proof bundle";
+        public override string HostTranscriptCommandDescription => "Inspect and validate raw host-proof transcripts";
+        public override string HostTranscriptInspectCommandDescription => "Read a transcript and print its proof summary";
+        public override string HostTranscriptReportCommandDescription => "Render a markdown proof report from a transcript";
+        public override string HostTranscriptVerifyCommandDescription => "Validate a transcript against a built-in baseline";
         public override string HostOutputArgumentDescription => "Output file path";
         public override string HostDirectoryArgumentDescription => "Bundle directory path";
         public override string HostBaseNameArgumentDescription => "Bundle base name";
@@ -483,6 +495,10 @@ public static class FileListLocalizer
         public override string HostBundleInspectCommandDescription => "host-proof bundle を読んで要約を表示する";
         public override string HostBundleVerifyCommandDescription => "内蔵 baseline と照合して host-proof bundle を検証する";
         public override string HostBundlePackCommandDescription => "transcript と任意の request script から host-proof bundle を組み立てる";
+        public override string HostTranscriptCommandDescription => "生の host-proof transcript を確認・検証する";
+        public override string HostTranscriptInspectCommandDescription => "transcript を読んで proof 要約を表示する";
+        public override string HostTranscriptReportCommandDescription => "transcript から markdown の proof report を生成する";
+        public override string HostTranscriptVerifyCommandDescription => "内蔵 baseline と照合して transcript を検証する";
         public override string HostOutputArgumentDescription => "出力ファイルパス";
         public override string HostDirectoryArgumentDescription => "bundle ディレクトリパス";
         public override string HostBaseNameArgumentDescription => "bundle ベース名";
