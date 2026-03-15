@@ -58,6 +58,12 @@ class Program
     private delegate int GetStatusNameDelegate(int statusCode, IntPtr buffer, int capacity);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetCatalogCountDelegate();
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetCatalogItemDelegate(int index, IntPtr buffer, int capacity);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int IsHandleValidDelegate(int handle);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -112,6 +118,12 @@ class Program
         var getCapabilityFlags = LoadDelegate<GetCapabilityFlagsDelegate>(libraryHandle, "ldk_get_capability_flags");
         var getCapabilitySummary = LoadDelegate<GetCapabilitySummaryDelegate>(libraryHandle, "ldk_get_capability_summary");
         var getStatusName = LoadDelegate<GetStatusNameDelegate>(libraryHandle, "ldk_get_status_name");
+        var getSupportedFileSystemCount = LoadDelegate<GetCatalogCountDelegate>(libraryHandle, "ldk_get_supported_file_system_count");
+        var getSupportedFileSystemName = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_supported_file_system_name");
+        var getSupportedPlatformCount = LoadDelegate<GetCatalogCountDelegate>(libraryHandle, "ldk_get_supported_platform_count");
+        var getSupportedPlatformName = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_supported_platform_name");
+        var getSupportedImageFormatCount = LoadDelegate<GetCatalogCountDelegate>(libraryHandle, "ldk_get_supported_image_format_count");
+        var getSupportedImageFormatName = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_supported_image_format_name");
         var isHandleValid = LoadDelegate<IsHandleValidDelegate>(libraryHandle, "ldk_is_handle_valid");
         var getOpenHandleCount = LoadDelegate<GetOpenHandleCountDelegate>(libraryHandle, "ldk_get_open_handle_count");
         var closeAllHandles = LoadDelegate<CloseAllHandlesDelegate>(libraryHandle, "ldk_close_all_handles");
@@ -127,6 +139,9 @@ class Program
         Console.WriteLine($"Capability Flags: 0x{getCapabilityFlags():X}");
         Console.WriteLine($"Capability Summary: {ReadString(getCapabilitySummary)}");
         Console.WriteLine($"Success Status Name: {ReadStatusName(getStatusName, 0)}");
+        Console.WriteLine($"Supported File Systems: {ReadCatalog(getSupportedFileSystemCount, getSupportedFileSystemName)}");
+        Console.WriteLine($"Supported Platforms: {ReadCatalog(getSupportedPlatformCount, getSupportedPlatformName)}");
+        Console.WriteLine($"Supported Image Formats: {ReadCatalog(getSupportedImageFormatCount, getSupportedImageFormatName)}");
         Console.WriteLine($"Opening disk: {diskImagePath}");
 
         IntPtr diskPathPtr = Marshal.StringToCoTaskMemUTF8(diskImagePath);
@@ -257,5 +272,27 @@ class Program
         {
             Marshal.FreeHGlobal(buffer);
         }
+    }
+
+    private static string ReadCatalog(GetCatalogCountDelegate getCount, GetCatalogItemDelegate getItem)
+    {
+        var count = getCount();
+        var items = new List<string>(count);
+
+        for (var i = 0; i < count; i++)
+        {
+            IntPtr buffer = Marshal.AllocHGlobal(256);
+            try
+            {
+                var length = getItem(i, buffer, 256);
+                items.Add(Marshal.PtrToStringUTF8(buffer, length) ?? string.Empty);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(buffer);
+            }
+        }
+
+        return string.Join(", ", items);
     }
 }
