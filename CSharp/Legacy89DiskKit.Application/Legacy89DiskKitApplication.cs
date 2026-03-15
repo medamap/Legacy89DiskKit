@@ -108,6 +108,29 @@ public static class Legacy89DiskKitApplication
         return Fdc.Hosts.Scripting.EmulatorHostRequestScriptFactory.CreateReadOnlyRawByBufferSequence(imageData, imageFormat, driveNumber);
     }
 
+    public static async Task<Fdc.Hosts.Scripting.EmulatorHostBundle> ReadEmulatorHostBundleAsync(
+        string outputDirectory,
+        string baseName,
+        CancellationToken cancellationToken = default)
+    {
+        return await Fdc.Hosts.Scripting.EmulatorHostBundleReader.ReadAsync(outputDirectory, baseName, cancellationToken);
+    }
+
+    public static Fdc.Hosts.Scripting.EmulatorHostProofReport BuildEmulatorHostProofReport(
+        IReadOnlyList<Fdc.Hosts.Scripting.EmulatorHostTranscriptEntry> transcript,
+        string openMode,
+        string exchangeMode)
+    {
+        return Fdc.Hosts.Scripting.EmulatorHostProofReportBuilder.Build(transcript, openMode, exchangeMode);
+    }
+
+    public static IReadOnlyList<string> CompareEmulatorHostBundle(
+        Fdc.Hosts.Scripting.EmulatorHostBundle bundle,
+        Fdc.Hosts.Scripting.EmulatorHostProofExpectation expectation)
+    {
+        return Fdc.Hosts.Scripting.EmulatorHostBundleComparer.Compare(bundle, expectation);
+    }
+
     public static Fdc.Hosts.XmilWebStyleFdcHostAdapter CreateXmilWebStyleFdcHostAdapter()
     {
         return new Fdc.Hosts.XmilWebStyleFdcHostAdapter(CreateEventDrivenEmulatorFdcHostAdapter());
