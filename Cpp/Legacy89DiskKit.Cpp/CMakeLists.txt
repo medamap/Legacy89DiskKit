@@ -12,6 +12,8 @@ add_library(Legacy89DiskKitCpp STATIC
     src/hu_basic_write_rules.cpp
     src/hu_basic_directory_rules.cpp
     src/hu_basic_directory_entry_codec.cpp
+    src/hu_basic_mode_rules.cpp
+    src/hu_basic_dir_parser.cpp
 )
 
 target_include_directories(Legacy89DiskKitCpp
