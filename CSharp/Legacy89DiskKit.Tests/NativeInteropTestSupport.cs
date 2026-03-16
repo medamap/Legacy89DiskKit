@@ -121,6 +121,9 @@ internal static class NativeExportInvoker
     public static int GetOpenModeNameAt(int index, IntPtr pointer, int capacity) => GetDelegate<StatusBufferDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetOpenModeNameAt))(index, pointer, capacity);
     public static int IsHandleValid(int handle) => GetDelegate<IntIntDelegate>(typeof(NativeHandleExports), nameof(NativeHandleExports.IsHandleValid))(handle);
     public static int GetOpenHandleCount() => GetDelegate<NoArgIntDelegate>(typeof(NativeHandleExports), nameof(NativeHandleExports.GetOpenHandleCount))();
+    public static int GetHandleSourceOperation(int handle, IntPtr pointer, int capacity) => GetDelegate<IntIntPtrIntDelegate>(typeof(NativeHandleExports), nameof(NativeHandleExports.GetHandleSourceOperation))(handle, pointer, capacity);
+    public static int GetHandleIsWritable(int handle) => GetDelegate<IntIntDelegate>(typeof(NativeHandleExports), nameof(NativeHandleExports.GetHandleIsWritable))(handle);
+    public static int GetHandleSummary(int handle, IntPtr pointer, int capacity) => GetDelegate<IntIntPtrIntDelegate>(typeof(NativeHandleExports), nameof(NativeHandleExports.GetHandleSummary))(handle, pointer, capacity);
     public static int CloseAllHandles() => GetDelegate<NoArgIntDelegate>(typeof(NativeHandleExports), nameof(NativeHandleExports.CloseAllHandles))();
     public static int OpenDisk(IntPtr path, bool readOnly) => GetDelegate<IntPtrIntFlagDelegate>(typeof(DiskExports), nameof(DiskExports.OpenDisk))(path, NativeBoolean.FromManagedBoolean(readOnly));
     public static int CreateDisk(IntPtr path, int diskType, IntPtr name) => GetDelegate<IntPtrIntIntPtrDelegate>(typeof(DiskExports), nameof(DiskExports.CreateDisk))(path, diskType, name);

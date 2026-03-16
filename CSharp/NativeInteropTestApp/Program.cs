@@ -82,6 +82,9 @@ class Program
     private delegate int GetOpenHandleCountDelegate();
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetHandleStringDelegate(int handle, IntPtr buffer, int capacity);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int CloseAllHandlesDelegate();
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -158,6 +161,9 @@ class Program
         var getOpenModeNameAt = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_open_mode_name_at");
         var isHandleValid = LoadDelegate<IsHandleValidDelegate>(libraryHandle, "ldk_is_handle_valid");
         var getOpenHandleCount = LoadDelegate<GetOpenHandleCountDelegate>(libraryHandle, "ldk_get_open_handle_count");
+        var getHandleSourceOperation = LoadDelegate<GetHandleStringDelegate>(libraryHandle, "ldk_get_handle_source_operation");
+        var getHandleIsWritable = LoadDelegate<IsHandleValidDelegate>(libraryHandle, "ldk_get_handle_is_writable");
+        var getHandleSummary = LoadDelegate<GetHandleStringDelegate>(libraryHandle, "ldk_get_handle_summary");
         var closeAllHandles = LoadDelegate<CloseAllHandlesDelegate>(libraryHandle, "ldk_close_all_handles");
         var openDisk = LoadDelegate<OpenDiskDelegate>(libraryHandle, "ldk_open_disk");
         var closeDisk = LoadDelegate<CloseDiskDelegate>(libraryHandle, "ldk_close_disk");
@@ -211,6 +217,9 @@ class Program
         Console.WriteLine($"Disk opened. Handle: {handle}");
         Console.WriteLine($"Handle valid: {isHandleValid(handle) != 0}");
         Console.WriteLine($"Open handle count: {getOpenHandleCount()}");
+        Console.WriteLine($"Handle source: {ReadHandleString(getHandleSourceOperation, handle)}");
+        Console.WriteLine($"Handle writable: {getHandleIsWritable(handle) != 0}");
+        Console.WriteLine($"Handle summary: {ReadHandleString(getHandleSummary, handle)}");
 
         NativeFileSystemInfo info = new NativeFileSystemInfo();
         int res = getFileSystemInfo(handle, ref info);
@@ -398,6 +407,20 @@ class Program
         try
         {
             var length = reader(buffer, 256);
+            return Marshal.PtrToStringUTF8(buffer, length) ?? string.Empty;
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
+        }
+    }
+
+    private static string ReadHandleString(GetHandleStringDelegate reader, int handle)
+    {
+        IntPtr buffer = Marshal.AllocHGlobal(256);
+        try
+        {
+            var length = reader(handle, buffer, 256);
             return Marshal.PtrToStringUTF8(buffer, length) ?? string.Empty;
         }
         finally
