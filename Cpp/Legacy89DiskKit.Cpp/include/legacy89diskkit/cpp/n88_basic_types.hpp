@@ -36,4 +36,12 @@ struct N88BasicFileEntry
     N88BasicFileAttributes attributes;
     int start_cluster;
 };
+
+struct N88BasicFileSystemInfo
+{
+    std::int64_t total_size;
+    std::int64_t free_space;
+    int cluster_size;
+    int reserved_clusters;
+};
 }
