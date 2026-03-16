@@ -68,6 +68,9 @@ add_library(Legacy89DiskKitCpp STATIC
     src/msx_dos_default_attribute_rules.cpp
     src/msx_dos_file_lookup.cpp
     src/msx_dos_filesystem_info_rules.cpp
+    src/msx_dos_file_entry_writer.cpp
+    src/msx_dos_format_rules.cpp
+    src/msx_dos_cluster_write_rules.cpp
     src/msx_dos_shell.cpp
 )
 
