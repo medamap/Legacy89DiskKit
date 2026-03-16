@@ -1,10 +1,15 @@
 #include "legacy89diskkit/cpp/hu_basic_allocation_rules.hpp"
+#include "legacy89diskkit/cpp/hu_basic_attribute_update_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_boot_record_codec.hpp"
 #include "legacy89diskkit/cpp/hu_basic_boot_record_parser.hpp"
+#include "legacy89diskkit/cpp/hu_basic_cluster_write_rules.hpp"
+#include "legacy89diskkit/cpp/hu_basic_default_attribute_rules.hpp"
+#include "legacy89diskkit/cpp/hu_basic_delete_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_directory_layout_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_directory_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_directory_sector_rules.hpp"
 #include "legacy89diskkit/cpp/disk_image_types.hpp"
+#include "legacy89diskkit/cpp/hu_basic_format_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_configuration.hpp"
 #include "legacy89diskkit/cpp/hu_basic_dir_parser.hpp"
 #include "legacy89diskkit/cpp/hu_basic_directory_entry_codec.hpp"
@@ -15,7 +20,10 @@
 #include "legacy89diskkit/cpp/hu_basic_mode_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_name_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_read_rules.hpp"
+#include "legacy89diskkit/cpp/hu_basic_record_address_rules.hpp"
+#include "legacy89diskkit/cpp/hu_basic_rename_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_types.hpp"
+#include "legacy89diskkit/cpp/hu_basic_virtual_label_entry_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_write_transaction.hpp"
 #include "legacy89diskkit/cpp/hu_basic_write_rules.hpp"
 
@@ -260,6 +268,73 @@ int main()
     if (boot_roundtrip[0] != 0x01 || boot_roundtrip[1] != 'S' || boot_roundtrip[0x1e] != 0x08)
     {
         return 24;
+    }
+
+    const auto default_ascii = HuBasicDefaultAttributeRules::CreateDefaultAttributes(true);
+    if (!default_ascii.is_ascii || default_ascii.raw_attributes != 0x04)
+    {
+        return 25;
+    }
+
+    auto renamed = HuBasicRenameRules::Rename(plan->file_entry, "RENAMED.BIN");
+    if (renamed.file_name != "RENAMED" || renamed.extension != "BIN")
+    {
+        return 26;
+    }
+
+    renamed = HuBasicAttributeUpdateRules::UpdateAttributes(
+        renamed,
+        HuBasicFileAttributes{ false, 0x41, false, true, false });
+    if (renamed.metadata.raw_mode_byte != 0x41 || renamed.metadata.is_write_protected != true)
+    {
+        return 27;
+    }
+
+    auto deleted_fat = fat;
+    HuBasicDeleteRules::FreeClusters(deleted_fat, { 0x10, 0x11 });
+    if (HuBasicFatRules::GetEntry(deleted_fat, 0x10) != 0x00 || HuBasicFatRules::GetEntry(deleted_fat, 0x11) != 0x00)
+    {
+        return 28;
+    }
+
+    const auto formatted_fat = HuBasicFormatRules::CreateFatData(config);
+    const auto formatted_directory = HuBasicFormatRules::CreateDirectorySectors(config);
+    if (HuBasicFatRules::GetEntry(formatted_fat, 0) != 0x01 ||
+        HuBasicFatRules::GetEntry(formatted_fat, config.reserved_clusters - 1) != 0x8f ||
+        formatted_directory.size() != static_cast<std::size_t>(config.directory_sectors) ||
+        formatted_directory[0][0] != 0xff)
+    {
+        return 29;
+    }
+
+    const auto physical = HuBasicRecordAddressRules::GetPhysicalAddressFromRecord(17, config);
+    if (physical.cylinder != 0 || physical.head != 1 || physical.sector != 2)
+    {
+        return 30;
+    }
+
+    const auto cluster_buffers = HuBasicClusterWriteRules::SplitIntoClusterBuffers(
+        { 1, 2, 3, 4, 5 },
+        { 4, 5 },
+        config);
+    if (cluster_buffers.size() != 2 || cluster_buffers[0][0] != 1 || cluster_buffers[0][4] != 5 || cluster_buffers[1][0] != 0)
+    {
+        return 31;
+    }
+
+    const auto virtual_label = HuBasicVirtualLabelEntryRules::CreateEntry(
+        "TITLE",
+        "",
+        0x44,
+        0x21,
+        0,
+        0xffff,
+        0xffff,
+        0xffff,
+        0x7fff);
+    if (!HuBasicLabelRules::IsVirtualLabelEntry(virtual_label))
+    {
+        return 32;
     }
 
     return 0;
