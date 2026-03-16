@@ -22,6 +22,7 @@ add_library(Legacy89DiskKitCpp STATIC
     src/infrastructure/character_encoding/character_encoding_table_catalog.cpp
     src/infrastructure/filesystem/filesystem_detection.cpp
     src/infrastructure/native/native_file_system_session.cpp
+    src/infrastructure/native/native_bridge_exports.cpp
     src/infrastructure/filesystem/explicit_filesystem_selector.cpp
     src/infrastructure/filesystem/hu_basic/hu_basic_file_system.cpp
     src/infrastructure/filesystem/n88_basic/n88_basic_file_system.cpp
@@ -109,6 +110,7 @@ add_library(Legacy89DiskKitCpp STATIC
 target_include_directories(Legacy89DiskKitCpp
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../include
 )
 
 target_compile_features(Legacy89DiskKitCpp PUBLIC cxx_std_20)
@@ -215,6 +217,12 @@ add_executable(Legacy89DiskKitCppNativeFileSystemSessionSmoke
 
 target_link_libraries(Legacy89DiskKitCppNativeFileSystemSessionSmoke PRIVATE Legacy89DiskKitCpp)
 
+add_executable(Legacy89DiskKitCppNativeBridgeExportsSmoke
+    tests/native_bridge_exports_smoke.cpp
+)
+
+target_link_libraries(Legacy89DiskKitCppNativeBridgeExportsSmoke PRIVATE Legacy89DiskKitCpp)
+
 enable_testing()
 add_test(NAME Legacy89DiskKitCppSmoke COMMAND Legacy89DiskKitCppSmoke)
 add_test(NAME Legacy89DiskKitCppHuBasicSmoke COMMAND Legacy89DiskKitCppHuBasicSmoke)
@@ -233,3 +241,4 @@ add_test(NAME Legacy89DiskKitCppExplicitFileSystemSelectorSmoke COMMAND Legacy89
 add_test(NAME Legacy89DiskKitCppFileSystemDetectionSmoke COMMAND Legacy89DiskKitCppFileSystemDetectionSmoke)
 add_test(NAME Legacy89DiskKitCppMountedMediumInfrastructureSmoke COMMAND Legacy89DiskKitCppMountedMediumInfrastructureSmoke)
 add_test(NAME Legacy89DiskKitCppNativeFileSystemSessionSmoke COMMAND Legacy89DiskKitCppNativeFileSystemSessionSmoke)
+add_test(NAME Legacy89DiskKitCppNativeBridgeExportsSmoke COMMAND Legacy89DiskKitCppNativeBridgeExportsSmoke)
