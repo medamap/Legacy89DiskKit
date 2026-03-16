@@ -101,6 +101,18 @@ public static class NativeInfoExports
         return NativeStringWriter.WriteUtf8(bufferPtr, capacity, NativeOwnershipPolicy.GetHandleLifecycleSummary());
     }
 
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_invalid_handle_value")]
+    public static int GetInvalidHandleValue()
+    {
+        return NativeHandleContract.InvalidHandleValue;
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_handle_value_summary")]
+    public static int GetHandleValueSummary(IntPtr bufferPtr, int capacity)
+    {
+        return NativeStringWriter.WriteUtf8(bufferPtr, capacity, NativeHandleContract.GetHandleValueSummary());
+    }
+
     [UnmanagedCallersOnly(EntryPoint = "ldk_get_buffer_string_policy_summary")]
     public static int GetBufferStringPolicySummary(IntPtr bufferPtr, int capacity)
     {
