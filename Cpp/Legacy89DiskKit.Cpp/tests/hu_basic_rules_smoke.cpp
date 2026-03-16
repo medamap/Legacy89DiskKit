@@ -46,8 +46,9 @@ int main()
     }
 
     HuBasicFileEntry two_hd_file{ 0, HuBasicFileAttributes{ false } };
+    std::vector<std::uint8_t> two_hd_data(700, 0x5a);
     const auto two_hd = HuBasicReadRules::ResolveReadPayload(
-        { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+        two_hd_data,
         two_hd_file,
         DiskType::TwoHD,
         HuBasicConfiguration{ 0x10, 0x100, 1024, 256 },
@@ -55,10 +56,7 @@ int main()
         0x82);
     if (two_hd.size() != 512)
     {
-        if (two_hd.size() != 10)
-        {
-            return 6;
-        }
+        return 6;
     }
 
     return 0;
