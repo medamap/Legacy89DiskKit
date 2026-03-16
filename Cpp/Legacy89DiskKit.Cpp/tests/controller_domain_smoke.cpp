@@ -1,4 +1,5 @@
 #include "legacy89diskkit/cpp/domain/controller/controller_runtime_contracts.hpp"
+#include "legacy89diskkit/cpp/domain/drive/sector_addressable_medium_contracts.hpp"
 #include "legacy89diskkit/cpp/domain/fdc/fdc_controller_contracts.hpp"
 
 #include <chrono>
@@ -122,6 +123,48 @@ public:
     }
 };
 
+class StubSectorMedium final : public SectorAddressableMedium
+{
+public:
+    const std::string& MediumKind() const override
+    {
+        return medium_kind_;
+    }
+
+    bool SupportsDirectImageAccess() const override
+    {
+        return true;
+    }
+
+    bool SupportsControllerFacingAccess() const override
+    {
+        return true;
+    }
+
+    bool SectorExists(int cylinder, int head, int sector) const override
+    {
+        return cylinder == 0 && head == 0 && sector == 1;
+    }
+
+    std::vector<std::uint8_t> ReadSector(int cylinder, int head, int sector, bool) const override
+    {
+        if (!SectorExists(cylinder, head, sector))
+        {
+            return {};
+        }
+
+        return {0x12, 0x34, 0x56};
+    }
+
+    std::vector<SectorInfo> GetAllSectors() const override
+    {
+        return {{0, 0, 1, 256, false, false}};
+    }
+
+private:
+    std::string medium_kind_{"d88"};
+};
+
 class StubController final : public FdcController, public TimedFdcController
 {
 public:
@@ -191,6 +234,7 @@ int main()
     StubMedium medium;
     StubClock clock;
     StubDrive drive;
+    StubSectorMedium sector_medium;
     StubController controller;
 
     controller.WriteRegister(FdcRegister::Track, 7);
@@ -229,6 +273,28 @@ int main()
     if (!controller.GetPendingAdvanceHint().has_value() || !medium.GetPendingDelayHint().has_value())
     {
         return 6;
+    }
+
+    if (!sector_medium.SupportsDirectImageAccess() || !sector_medium.SupportsControllerFacingAccess())
+    {
+        return 7;
+    }
+
+    if (!sector_medium.SectorExists(0, 0, 1) || sector_medium.SectorExists(0, 0, 2))
+    {
+        return 8;
+    }
+
+    const auto data = sector_medium.ReadSector(0, 0, 1, false);
+    if (data.size() != 3 || data[0] != 0x12)
+    {
+        return 9;
+    }
+
+    const auto sectors = sector_medium.GetAllSectors();
+    if (sectors.size() != 1 || sectors[0].sector != 1)
+    {
+        return 10;
     }
 
     return 0;
