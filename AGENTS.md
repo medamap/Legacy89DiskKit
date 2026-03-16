@@ -16,13 +16,18 @@ The current product direction is:
 When documents disagree, use this order:
 
 1. current code and CLI help
-2. `Documents/handoff/task.md`
-3. `Documents/ROADMAP.md`
-4. the relevant format specification under `Documents/`
+2. `Documents/Roadmap_V2.md` for the active C# to C++ migration track
+3. `Documents/Agent_Handoff_Roadmap_V2.md` when resuming the current migration work
+4. `Documents/handoff/task.md`
+5. `Documents/ROADMAP.md`
+6. the relevant format specification under `Documents/`
 
 Useful documents:
 
 - Release process: `Documents/Release_Process.md`
+- Roadmap V2 handoff: `Documents/Agent_Handoff_Roadmap_V2.md`
+- Roadmap V2: `Documents/Roadmap_V2.md`
+- C++ DDD folder rulebook: `Documents/Cpp_Ddd_Folder_Migration_Rulebook.md`
 - Current task list: `Documents/handoff/task.md`
 - Roadmap: `Documents/ROADMAP.md`
 - Document index: `Documents/Folder.md`
@@ -32,6 +37,9 @@ Useful documents:
 ```bash
 dotnet build CSharp/Legacy89DiskKit.Cli/Legacy89DiskKit.Cli.csproj
 dotnet test CSharp/Legacy89DiskKit.Tests/Legacy89DiskKit.Tests.csproj /p:UseAppHost=false
+cmake -S Cpp -B /tmp/legacy89-cpp-build
+cmake --build /tmp/legacy89-cpp-build
+ctest --test-dir /tmp/legacy89-cpp-build/Legacy89DiskKit.Cpp --output-on-failure
 ```
 
 Standalone CLI release automation:
@@ -47,6 +55,8 @@ Standalone CLI release automation:
 - CLI presentation logic should stay under the CLI project
 - Filesystem-specific raw parsing belongs in infrastructure
 - UI formatting must not be mixed into filesystem parsing code
+- The active C# to C++ migration track is managed through `Documents/Roadmap_V2.md`
+- When adding new C++ files, prefer the DDD-oriented folder layout defined in `Documents/Cpp_Ddd_Folder_Migration_Rulebook.md`
 
 ## Coding Rules
 
@@ -63,6 +73,7 @@ Standalone CLI release automation:
 - Use `--no-ff` merges when performing branch merges.
 - Use `Co-Authored-By: Codex <Codex-ai@anthropic.invalid>` when requested.
 - Do not commit unrelated local files.
+- For Roadmap V2 work, branch from `develop` and use the `codex/` prefix.
 
 ## Testing Rules
 
