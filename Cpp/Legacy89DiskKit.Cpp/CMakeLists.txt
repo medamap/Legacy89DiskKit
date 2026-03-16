@@ -11,6 +11,9 @@ add_library(Legacy89DiskKitCpp STATIC
     src/infrastructure/disk_image/disk_image_buffer_loader.cpp
     src/infrastructure/disk_image/raw_disk_container.cpp
     src/infrastructure/disk_image/d88_disk_container.cpp
+    src/infrastructure/character_encoding/byte_text_encoding_table.cpp
+    src/infrastructure/character_encoding/x1_encoding_table.cpp
+    src/infrastructure/character_encoding/character_encoding_table_catalog.cpp
     src/hu_basic_configuration.cpp
     src/hu_basic_name_rules.cpp
     src/hu_basic_fat_rules.cpp
@@ -151,6 +154,12 @@ add_executable(Legacy89DiskKitCppD88DiskContainerSmoke
 
 target_link_libraries(Legacy89DiskKitCppD88DiskContainerSmoke PRIVATE Legacy89DiskKitCpp)
 
+add_executable(Legacy89DiskKitCppCharacterEncodingTableSmoke
+    tests/character_encoding_table_smoke.cpp
+)
+
+target_link_libraries(Legacy89DiskKitCppCharacterEncodingTableSmoke PRIVATE Legacy89DiskKitCpp)
+
 enable_testing()
 add_test(NAME Legacy89DiskKitCppSmoke COMMAND Legacy89DiskKitCppSmoke)
 add_test(NAME Legacy89DiskKitCppHuBasicSmoke COMMAND Legacy89DiskKitCppHuBasicSmoke)
@@ -161,3 +170,4 @@ add_test(NAME Legacy89DiskKitCppRawPreservationDomainSmoke COMMAND Legacy89DiskK
 add_test(NAME Legacy89DiskKitCppBufferLoaderSmoke COMMAND Legacy89DiskKitCppBufferLoaderSmoke)
 add_test(NAME Legacy89DiskKitCppRawDiskContainerSmoke COMMAND Legacy89DiskKitCppRawDiskContainerSmoke)
 add_test(NAME Legacy89DiskKitCppD88DiskContainerSmoke COMMAND Legacy89DiskKitCppD88DiskContainerSmoke)
+add_test(NAME Legacy89DiskKitCppCharacterEncodingTableSmoke COMMAND Legacy89DiskKitCppCharacterEncodingTableSmoke)

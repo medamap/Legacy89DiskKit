@@ -132,6 +132,12 @@ A file belongs to `presentation/` when it primarily defines:
 | created-in-target | V2-12 | Infrastructure | `n/a` | `src/infrastructure/disk_image/raw_disk_container.cpp` | raw container implementation over migrated geometry rules |
 | created-in-target | V2-13 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/disk_image/d88_disk_container.hpp` | in-memory D88 container adapter |
 | created-in-target | V2-13 | Infrastructure | `n/a` | `src/infrastructure/disk_image/d88_disk_container.cpp` | D88 container implementation over migrated parser and domain rules |
+| created-in-target | V2-14 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/character_encoding/byte_text_encoding_table.hpp` | reusable byte-to-text table and lookup surface |
+| created-in-target | V2-14 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/character_encoding/x1_encoding_table.hpp` | concrete X1 encoding table surface |
+| created-in-target | V2-14 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/character_encoding/character_encoding_table_catalog.hpp` | concrete encoding table catalog surface |
+| created-in-target | V2-14 | Infrastructure | `n/a` | `src/infrastructure/character_encoding/byte_text_encoding_table.cpp` | reusable lookup implementation |
+| created-in-target | V2-14 | Infrastructure | `n/a` | `src/infrastructure/character_encoding/x1_encoding_table.cpp` | X1 concrete table data |
+| created-in-target | V2-14 | Infrastructure | `n/a` | `src/infrastructure/character_encoding/character_encoding_table_catalog.cpp` | concrete table catalog implementation |
 
 Append new rows as additional phases relocate files.
 
