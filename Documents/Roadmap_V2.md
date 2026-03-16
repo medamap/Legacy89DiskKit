@@ -192,10 +192,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - Expected C++ target: detection infrastructure over concrete container and filesystem adapters
   - Structural relocation: newly introduced filesystem detection infrastructure should be created directly under `infrastructure/filesystem/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
 
-- [ ] Phase V2-20: Mounted-medium and controller-medium infrastructure
+- [x] Phase V2-20: Mounted-medium and controller-medium infrastructure
   - Layer: Infrastructure
   - C# source area: mounted medium binding and controller-facing medium adapters
   - Expected C++ target: concrete mounted-medium and controller-medium adapters
+  - Structural relocation: newly introduced mounted-medium infrastructure should be created directly under `infrastructure/drive/`, and newly introduced controller-facing medium adapters should be created directly under `infrastructure/fdc/medium/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 - [ ] Phase V2-21: Native bridge infrastructure over C++ implementations
   - Layer: Infrastructure
