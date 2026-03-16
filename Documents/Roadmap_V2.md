@@ -156,10 +156,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - Expected C++ target: concrete D88 container adapters over migrated parser and domain rules
   - Structural relocation: newly introduced D88 container infrastructure should be created directly under `infrastructure/disk_image/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
 
-- [ ] Phase V2-14: Character encoding table infrastructure
+- [x] Phase V2-14: Character encoding table infrastructure
   - Layer: Infrastructure
   - C# source area: concrete encoding table and conversion data
   - Expected C++ target: reusable encoding table data and lookup infrastructure
+  - Structural relocation: newly introduced character-encoding infrastructure should be created directly under `infrastructure/character_encoding/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 - [ ] Phase V2-15: Hu-BASIC filesystem infrastructure
   - Layer: Infrastructure
