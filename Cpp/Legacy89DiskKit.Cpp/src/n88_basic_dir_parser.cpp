@@ -1,5 +1,7 @@
 #include "legacy89diskkit/cpp/n88_basic_dir_parser.hpp"
 
+#include "legacy89diskkit/cpp/n88_basic_mode_rules.hpp"
+
 #include <algorithm>
 
 namespace legacy89diskkit::cpp
@@ -39,9 +41,7 @@ N88BasicDirectoryEntry N88BasicDirParser::ParseEntry(const std::array<std::uint8
 N88BasicFileEntry N88BasicDirParser::ParseFileEntry(const std::array<std::uint8_t, 16>& entry_data)
 {
     const auto entry = ParseEntry(entry_data);
-    const auto is_binary = (entry.attribute_byte & 0x01) != 0;
-    const auto is_tokenized = (entry.attribute_byte & 0x80) != 0;
-    const auto is_ascii = !is_tokenized && !is_binary;
+    const auto is_ascii = N88BasicModeRules::IsAscii(entry.attribute_byte);
 
     return N88BasicFileEntry
     {
