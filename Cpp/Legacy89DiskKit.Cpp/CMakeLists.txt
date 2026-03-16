@@ -21,6 +21,7 @@ add_library(Legacy89DiskKitCpp STATIC
     src/hu_basic_rename_transaction.cpp
     src/hu_basic_attribute_update_transaction.cpp
     src/hu_basic_directory_layout_parser.cpp
+    src/hu_basic_file_lookup.cpp
     src/hu_basic_shell.cpp
     src/hu_basic_format_rules.cpp
     src/hu_basic_record_address_rules.cpp
