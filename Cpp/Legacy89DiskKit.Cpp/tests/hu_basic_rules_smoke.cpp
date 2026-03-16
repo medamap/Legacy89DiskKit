@@ -54,7 +54,7 @@ int main()
         HuBasicConfiguration{ 0x10, 0x100, 1024, 256 },
         1,
         0x82);
-    if (two_hd.size() != 512)
+    if (two_hd.size() != 768)
     {
         return 6;
     }
