@@ -143,6 +143,7 @@ class Program
         var getHandleLifecycleSummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_handle_lifecycle_summary");
         var getHandleValueSummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_handle_value_summary");
         var getBufferStringPolicySummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_buffer_string_policy_summary");
+        var getMutationPolicySummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_mutation_policy_summary");
         var getBackendKind = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_backend_kind");
         var getBackendImplementation = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_backend_implementation");
         var getBackendTarget = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_backend_target");
@@ -150,6 +151,8 @@ class Program
         var getExportCount = LoadDelegate<GetCatalogCountDelegate>(libraryHandle, "ldk_get_export_count");
         var getExportNameAt = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_export_name_at");
         var getExportGroupAt = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_export_group_at");
+        var getMutatingOperationCount = LoadDelegate<GetCatalogCountDelegate>(libraryHandle, "ldk_get_mutating_operation_count");
+        var getMutatingOperationNameAt = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_mutating_operation_name_at");
         var isHandleValid = LoadDelegate<IsHandleValidDelegate>(libraryHandle, "ldk_is_handle_valid");
         var getOpenHandleCount = LoadDelegate<GetOpenHandleCountDelegate>(libraryHandle, "ldk_get_open_handle_count");
         var closeAllHandles = LoadDelegate<CloseAllHandlesDelegate>(libraryHandle, "ldk_close_all_handles");
@@ -173,11 +176,13 @@ class Program
         Console.WriteLine($"Handle Lifecycle: {ReadString(getHandleLifecycleSummary)}");
         Console.WriteLine($"Handle Value Policy: {ReadString(getHandleValueSummary)}");
         Console.WriteLine($"Buffer/String Policy: {ReadString(getBufferStringPolicySummary)}");
+        Console.WriteLine($"Mutation Policy: {ReadString(getMutationPolicySummary)}");
         Console.WriteLine($"Backend Kind: {ReadString(getBackendKind)}");
         Console.WriteLine($"Backend Implementation: {ReadString(getBackendImplementation)}");
         Console.WriteLine($"Backend Target: {ReadString(getBackendTarget)}");
         Console.WriteLine($"Backend Summary: {ReadString(getBackendSummary)}");
         Console.WriteLine($"Export Catalog: {ReadExportCatalog(getExportCount, getExportNameAt, getExportGroupAt)}");
+        Console.WriteLine($"Mutating Operations: {ReadCatalog(getMutatingOperationCount, getMutatingOperationNameAt)}");
         Console.WriteLine($"Opening disk: {diskImagePath}");
 
         IntPtr diskPathPtr = Marshal.StringToCoTaskMemUTF8(diskImagePath);
