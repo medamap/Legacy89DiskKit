@@ -22,6 +22,7 @@
 #include "legacy89diskkit/cpp/hu_basic_read_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_record_address_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_rename_rules.hpp"
+#include "legacy89diskkit/cpp/hu_basic_shell.hpp"
 #include "legacy89diskkit/cpp/hu_basic_types.hpp"
 #include "legacy89diskkit/cpp/hu_basic_virtual_label_entry_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_write_transaction.hpp"
@@ -335,6 +336,41 @@ int main()
     if (!HuBasicLabelRules::IsVirtualLabelEntry(virtual_label))
     {
         return 32;
+    }
+
+    const auto shell_files = HuBasicShell::ListFiles({ directory_layout[0] }, config.sector_size);
+    const auto shell_layout = HuBasicShell::ReadDirectoryLayout({ directory_layout[0] }, config.sector_size);
+    const auto shell_info = HuBasicShell::GetFileSystemInfo(info_fat, DiskType::TwoD, config);
+    const auto shell_write = HuBasicShell::PlanWrite(
+        "SHELL.BAS",
+        { '1', '0' },
+        HuBasicFileAttributes{ true, 0x04, false, false, false },
+        DiskType::TwoD,
+        config,
+        transaction_fat,
+        0x2200,
+        0x2300);
+    const auto shell_rename = HuBasicShell::PlanRename({ directory_layout[0] }, config.sector_size, "HELLO.BAS", "WORLD.BAS");
+    const auto shell_update = HuBasicShell::PlanAttributeUpdate(
+        { directory_layout[0] },
+        config.sector_size,
+        "HELLO.BAS",
+        HuBasicFileAttributes{ false, 0x41, false, true, false });
+    const auto shell_delete = HuBasicShell::PlanDelete(
+        fat,
+        { 0x10, 0x11 },
+        { directory_layout[0] },
+        config.sector_size,
+        "HELLO.BAS");
+    if (shell_files.size() != 1 ||
+        shell_layout.items.size() != 1 ||
+        shell_info.cluster_size != config.cluster_size ||
+        !shell_write.has_value() ||
+        !shell_rename.has_value() ||
+        !shell_update.has_value() ||
+        !shell_delete.has_value())
+    {
+        return 33;
     }
 
     return 0;
