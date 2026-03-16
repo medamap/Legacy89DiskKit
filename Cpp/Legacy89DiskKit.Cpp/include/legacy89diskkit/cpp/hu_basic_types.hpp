@@ -8,6 +8,14 @@ namespace legacy89diskkit::cpp
 {
 struct HuBasicConfiguration
 {
+    int total_tracks;
+    int sectors_per_track;
+    int fat_track;
+    int fat_sector;
+    int fat_sectors;
+    int directory_track;
+    int directory_sector;
+    int directory_sectors;
     int reserved_clusters;
     int total_clusters;
     int cluster_size;
