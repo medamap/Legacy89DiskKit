@@ -148,6 +148,8 @@ A file belongs to `presentation/` when it primarily defines:
 | created-in-target | V2-18 | Infrastructure | `n/a` | `src/infrastructure/filesystem/explicit_filesystem_selector.cpp` | explicit selection implementation over concrete filesystem adapters |
 | created-in-target | V2-18 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/filesystem/msx_dos/explicit_msx_dos_file_system.hpp` | explicit MSX-DOS open helper for default-configuration create and format flows |
 | created-in-target | V2-18 | Infrastructure | `n/a` | `src/infrastructure/filesystem/msx_dos/explicit_msx_dos_file_system.cpp` | explicit MSX-DOS open implementation |
+| created-in-target | V2-19 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/filesystem/filesystem_detection.hpp` | provider-independent filesystem detection candidates and best-match surface |
+| created-in-target | V2-19 | Infrastructure | `n/a` | `src/infrastructure/filesystem/filesystem_detection.cpp` | concrete detection implementation over raw and D88 containers |
 
 Append new rows as additional phases relocate files.
 

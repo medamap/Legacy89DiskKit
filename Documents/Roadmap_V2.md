@@ -186,10 +186,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - Expected C++ target: provider-independent selection and resolver infrastructure
   - Structural relocation: newly introduced explicit selection infrastructure should be created directly under `infrastructure/filesystem/` and filesystem-specific explicit helpers should remain under their family subfolders per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
 
-- [ ] Phase V2-19: Filesystem detection infrastructure
+- [x] Phase V2-19: Filesystem detection infrastructure
   - Layer: Infrastructure
   - C# source area: filesystem detection and candidate evaluation
   - Expected C++ target: detection infrastructure over concrete container and filesystem adapters
+  - Structural relocation: newly introduced filesystem detection infrastructure should be created directly under `infrastructure/filesystem/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 - [ ] Phase V2-20: Mounted-medium and controller-medium infrastructure
   - Layer: Infrastructure
