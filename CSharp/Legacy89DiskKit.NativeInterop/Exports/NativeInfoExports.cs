@@ -143,6 +143,36 @@ public static class NativeInfoExports
         return NativeStringWriter.WriteUtf8(bufferPtr, capacity, NativeBackendIdentity.GetBackendSummary());
     }
 
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_export_count")]
+    public static int GetExportCount()
+    {
+        return NativeExportCatalog.GetEntries().Count;
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_export_name_at")]
+    public static int GetExportNameAt(int index, IntPtr bufferPtr, int capacity)
+    {
+        var entries = NativeExportCatalog.GetEntries();
+        if (index < 0 || index >= entries.Count)
+        {
+            return (int)LdkStatus.ErrorInvalidArgument;
+        }
+
+        return NativeStringWriter.WriteUtf8(bufferPtr, capacity, entries[index].Name);
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_export_group_at")]
+    public static int GetExportGroupAt(int index, IntPtr bufferPtr, int capacity)
+    {
+        var entries = NativeExportCatalog.GetEntries();
+        if (index < 0 || index >= entries.Count)
+        {
+            return (int)LdkStatus.ErrorInvalidArgument;
+        }
+
+        return NativeStringWriter.WriteUtf8(bufferPtr, capacity, entries[index].Group);
+    }
+
     private static int WriteCatalogItem(IReadOnlyList<string> items, int index, IntPtr bufferPtr, int capacity)
     {
         if (index < 0 || index >= items.Count)
