@@ -37,6 +37,13 @@ add_library(Legacy89DiskKitCpp STATIC
     src/hu_basic_label_rules.cpp
     src/hu_basic_directory_sector_rules.cpp
     src/hu_basic_write_transaction.cpp
+    src/n88_basic_configuration.cpp
+    src/n88_basic_dir_parser.cpp
+    src/n88_basic_fat_rules.cpp
+    src/n88_basic_read_rules.cpp
+    src/n88_basic_directory_listing.cpp
+    src/n88_basic_default_attribute_rules.cpp
+    src/n88_basic_shell.cpp
 )
 
 target_include_directories(Legacy89DiskKitCpp
