@@ -1,6 +1,7 @@
 #pragma once
 
 #include "legacy89diskkit/cpp/msx_dos_configuration.hpp"
+#include "legacy89diskkit/cpp/msx_dos_format_rules.hpp"
 #include "legacy89diskkit/cpp/msx_dos_directory_listing.hpp"
 #include "legacy89diskkit/cpp/msx_dos_file_lookup.hpp"
 #include "legacy89diskkit/cpp/msx_dos_filesystem_info_rules.hpp"
@@ -30,5 +31,8 @@ public:
     static MsxDosFileSystemInfo GetFileSystemInfo(
         const std::vector<std::uint8_t>& fat_data,
         const MsxDosConfiguration& config);
+
+    static std::vector<std::uint8_t> CreateFatData(const MsxDosConfiguration& config);
+    static std::vector<std::vector<std::uint8_t>> CreateRootDirectorySectors(const MsxDosConfiguration& config);
 };
 }
