@@ -17,9 +17,7 @@ Use the following order when resuming:
 1. current code and current branch state
 2. `Documents/Roadmap_V2.md`
 3. `Documents/Cpp_Ddd_Folder_Migration_Rulebook.md`
-4. `Documents/Roadmap_V2_Preparation.md`
-5. `Documents/ROADMAP.md`
-6. `Documents/handoff/task.md`
+4. `Documents/ROADMAP.md`
 
 If documents disagree, prefer the current code and `Roadmap_V2.md` for the current migration track.
 
@@ -190,4 +188,4 @@ dotnet test CSharp/Legacy89DiskKit.Tests/Legacy89DiskKit.Tests.csproj /p:UseAppH
 
 If a new agent needs the shortest possible resume instruction, use this:
 
-- Read `Documents/Agent_Handoff_Roadmap_V2.md`, then `Documents/Roadmap_V2.md`, then `Documents/Cpp_Ddd_Folder_Migration_Rulebook.md`, branch from `develop`, and continue with the next incomplete V2 phase.
+- Follow `AGENTS.md`, then read `Documents/Agent_Handoff_Roadmap_V2.md`, then `Documents/Roadmap_V2.md`, branch from `develop`, and continue with the next incomplete V2 phase.

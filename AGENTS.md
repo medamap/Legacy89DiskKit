@@ -16,11 +16,10 @@ The current product direction is:
 When documents disagree, use this order:
 
 1. current code and CLI help
-2. `Documents/Roadmap_V2.md` for the active C# to C++ migration track
-3. `Documents/Agent_Handoff_Roadmap_V2.md` when resuming the current migration work
-4. `Documents/handoff/task.md`
-5. `Documents/ROADMAP.md`
-6. the relevant format specification under `Documents/`
+2. `Documents/Agent_Handoff_Roadmap_V2.md` for the active C# to C++ migration track
+3. `Documents/Roadmap_V2.md`
+4. `Documents/ROADMAP.md`
+5. the relevant format specification under `Documents/`
 
 Useful documents:
 
@@ -28,7 +27,6 @@ Useful documents:
 - Roadmap V2 handoff: `Documents/Agent_Handoff_Roadmap_V2.md`
 - Roadmap V2: `Documents/Roadmap_V2.md`
 - C++ DDD folder rulebook: `Documents/Cpp_Ddd_Folder_Migration_Rulebook.md`
-- Current task list: `Documents/handoff/task.md`
 - Roadmap: `Documents/ROADMAP.md`
 - Document index: `Documents/Folder.md`
 
@@ -86,7 +84,7 @@ Standalone CLI release automation:
 - Do not create or rewrite markdown documents unless the user asks for it.
 - When documentation changes are requested, keep document bodies in English unless the user says otherwise.
 - Keep `README.md` compact and release-facing.
-- Keep deferred work in `Documents/handoff/task.md`.
+- Keep the current C# to C++ migration backlog in `Documents/Roadmap_V2.md`.
 
 ## Release Notes
 

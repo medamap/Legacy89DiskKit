@@ -6,12 +6,10 @@ This folder contains the project documents that are still useful for current dev
 
 Use these files first when you need the current project direction.
 
-- `handoff/task.md`: current implementation checklist and deferred work
+- `Agent_Handoff_Roadmap_V2.md`: single-entry handoff note for resuming the active Roadmap V2 migration work
 - `ROADMAP.md`: broader long-term direction
-- `Roadmap_V2_Preparation.md`: rationale and construction rules for the DDD-oriented migration roadmap rewrite
 - `Roadmap_V2.md`: DDD-oriented C# to C++ migration roadmap with per-layer phase status
 - `Cpp_Ddd_Folder_Migration_Rulebook.md`: staged relocation policy and mapping ledger for moving C++ work into a DDD-oriented folder layout
-- `Agent_Handoff_Roadmap_V2.md`: single-entry handoff note for resuming the active Roadmap V2 migration work
 - `Technical_Vision.md`: high-level technical intent
 - `plans/RealImageTestPlan.md`: planned real-image verification work
 - `Release_Process.md`: release procedure
@@ -57,5 +55,6 @@ These files are kept temporarily for review and possible later deletion. They sh
 If a document disagrees with the current implementation, use these in this order:
 
 1. current code and CLI help
-2. `handoff/task.md`
-3. the relevant format specification
+2. `Agent_Handoff_Roadmap_V2.md`
+3. `Roadmap_V2.md`
+4. the relevant format specification

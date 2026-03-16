@@ -145,7 +145,7 @@ The packaging model and public story must stay consistent across the repository.
 Required:
 
 - keep README compact and release-facing
-- keep `Documents/handoff/task.md` as the execution backlog
+- keep `Documents/Roadmap_V2.md` as the active migration backlog
 - keep this roadmap focused on product direction
 - keep `Documents/Release_Process.md` aligned with the script-based flow
 - define which deliverables are mandatory in `v2.0.0`

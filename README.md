@@ -160,10 +160,11 @@ dotnet CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll \
 ## Living Documents
 
 - [Release process](Documents/Release_Process.md)
+- [Roadmap V2 handoff](Documents/Agent_Handoff_Roadmap_V2.md)
+- [Roadmap V2 migration plan](Documents/Roadmap_V2.md)
 - [C# integration guide](Documents/CSharp_Integration_Guide.md)
 - [Native integration guide](Documents/Native_Integration_Guide.md)
 - [WASM integration guide](Documents/Wasm_Integration_Guide.md)
-- [Current project task list](Documents/handoff/task.md)
 - [Roadmap](Documents/ROADMAP.md)
 - [Hu-BASIC disk format specification](Documents/HuBasic_Format_Specification.md)
 - [D88 format reference](Documents/D88_Format.md)
@@ -172,5 +173,5 @@ dotnet CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll \
 ## Notes
 
 - Historical AI consultation notes and superseded planning documents were quarantined under `Documents/obsolete/2026-03-doc-audit/`.
-- Deferred implementation items remain tracked in `Documents/handoff/task.md`.
+- Deferred migration work remains tracked in `Documents/Roadmap_V2.md`.
 - GitHub Actions remains deferred. Local release automation is the current source of truth for standalone CLI packaging.
