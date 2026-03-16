@@ -61,6 +61,7 @@ int main()
     }
 
     std::array<std::uint8_t, 32> entry_bytes{};
+    entry_bytes.fill(static_cast<std::uint8_t>(' '));
     entry_bytes[0] = 0x01;
     entry_bytes[1] = 'H';
     entry_bytes[2] = 'E';
