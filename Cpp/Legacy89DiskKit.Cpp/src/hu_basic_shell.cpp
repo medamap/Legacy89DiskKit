@@ -11,6 +11,22 @@ std::vector<HuBasicFileEntry> HuBasicShell::ListFiles(
     return HuBasicDirectoryListing::ListFiles(directory_sectors, sector_size);
 }
 
+bool HuBasicShell::FileExists(
+    const std::vector<std::vector<std::uint8_t>>& directory_sectors,
+    const int sector_size,
+    const char* file_name)
+{
+    return HuBasicFileLookup::Exists(directory_sectors, sector_size, file_name);
+}
+
+std::optional<HuBasicFileEntry> HuBasicShell::FindFile(
+    const std::vector<std::vector<std::uint8_t>>& directory_sectors,
+    const int sector_size,
+    const char* file_name)
+{
+    return HuBasicFileLookup::FindByName(directory_sectors, sector_size, file_name);
+}
+
 HuBasicDirectoryLayout HuBasicShell::ReadDirectoryLayout(
     const std::vector<std::vector<std::uint8_t>>& directory_sectors,
     const int sector_size)
