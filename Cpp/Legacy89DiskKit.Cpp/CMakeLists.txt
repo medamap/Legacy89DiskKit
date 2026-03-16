@@ -14,8 +14,10 @@ add_library(Legacy89DiskKitCpp STATIC
     src/infrastructure/character_encoding/byte_text_encoding_table.cpp
     src/infrastructure/character_encoding/x1_encoding_table.cpp
     src/infrastructure/character_encoding/character_encoding_table_catalog.cpp
+    src/infrastructure/filesystem/explicit_filesystem_selector.cpp
     src/infrastructure/filesystem/hu_basic/hu_basic_file_system.cpp
     src/infrastructure/filesystem/n88_basic/n88_basic_file_system.cpp
+    src/infrastructure/filesystem/msx_dos/explicit_msx_dos_file_system.cpp
     src/infrastructure/filesystem/msx_dos/msx_dos_file_system.cpp
     src/hu_basic_configuration.cpp
     src/hu_basic_name_rules.cpp
@@ -181,6 +183,12 @@ add_executable(Legacy89DiskKitCppMsxDosFileSystemSmoke
 
 target_link_libraries(Legacy89DiskKitCppMsxDosFileSystemSmoke PRIVATE Legacy89DiskKitCpp)
 
+add_executable(Legacy89DiskKitCppExplicitFileSystemSelectorSmoke
+    tests/explicit_filesystem_selector_smoke.cpp
+)
+
+target_link_libraries(Legacy89DiskKitCppExplicitFileSystemSelectorSmoke PRIVATE Legacy89DiskKitCpp)
+
 enable_testing()
 add_test(NAME Legacy89DiskKitCppSmoke COMMAND Legacy89DiskKitCppSmoke)
 add_test(NAME Legacy89DiskKitCppHuBasicSmoke COMMAND Legacy89DiskKitCppHuBasicSmoke)
@@ -195,3 +203,4 @@ add_test(NAME Legacy89DiskKitCppCharacterEncodingTableSmoke COMMAND Legacy89Disk
 add_test(NAME Legacy89DiskKitCppHuBasicFileSystemSmoke COMMAND Legacy89DiskKitCppHuBasicFileSystemSmoke)
 add_test(NAME Legacy89DiskKitCppN88BasicFileSystemSmoke COMMAND Legacy89DiskKitCppN88BasicFileSystemSmoke)
 add_test(NAME Legacy89DiskKitCppMsxDosFileSystemSmoke COMMAND Legacy89DiskKitCppMsxDosFileSystemSmoke)
+add_test(NAME Legacy89DiskKitCppExplicitFileSystemSelectorSmoke COMMAND Legacy89DiskKitCppExplicitFileSystemSelectorSmoke)

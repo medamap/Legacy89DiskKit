@@ -180,10 +180,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - Expected C++ target: concrete MSX-DOS container-backed infrastructure over domain rules
   - Structural relocation: newly introduced MSX-DOS filesystem infrastructure should be created directly under `infrastructure/filesystem/msx_dos/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
 
-- [ ] Phase V2-18: Explicit filesystem selection infrastructure
+- [x] Phase V2-18: Explicit filesystem selection infrastructure
   - Layer: Infrastructure
   - C# source area: explicit resolver and provider wiring
   - Expected C++ target: provider-independent selection and resolver infrastructure
+  - Structural relocation: newly introduced explicit selection infrastructure should be created directly under `infrastructure/filesystem/` and filesystem-specific explicit helpers should remain under their family subfolders per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 - [ ] Phase V2-19: Filesystem detection infrastructure
   - Layer: Infrastructure
