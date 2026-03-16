@@ -58,6 +58,17 @@ add_library(Legacy89DiskKitCpp STATIC
     src/n88_basic_rename_transaction.cpp
     src/n88_basic_attribute_update_transaction.cpp
     src/n88_basic_shell.cpp
+    src/msx_dos_configuration.cpp
+    src/msx_dos_boot_sector_parser.cpp
+    src/msx_dos_mode_rules.cpp
+    src/msx_dos_dir_parser.cpp
+    src/msx_dos_fat_rules.cpp
+    src/msx_dos_read_rules.cpp
+    src/msx_dos_directory_listing.cpp
+    src/msx_dos_default_attribute_rules.cpp
+    src/msx_dos_file_lookup.cpp
+    src/msx_dos_filesystem_info_rules.cpp
+    src/msx_dos_shell.cpp
 )
 
 target_include_directories(Legacy89DiskKitCpp
@@ -79,6 +90,13 @@ add_executable(Legacy89DiskKitCppHuBasicSmoke
 
 target_link_libraries(Legacy89DiskKitCppHuBasicSmoke PRIVATE Legacy89DiskKitCpp)
 
+add_executable(Legacy89DiskKitCppMsxDosSmoke
+    tests/msx_dos_rules_smoke.cpp
+)
+
+target_link_libraries(Legacy89DiskKitCppMsxDosSmoke PRIVATE Legacy89DiskKitCpp)
+
 enable_testing()
 add_test(NAME Legacy89DiskKitCppSmoke COMMAND Legacy89DiskKitCppSmoke)
 add_test(NAME Legacy89DiskKitCppHuBasicSmoke COMMAND Legacy89DiskKitCppHuBasicSmoke)
+add_test(NAME Legacy89DiskKitCppMsxDosSmoke COMMAND Legacy89DiskKitCppMsxDosSmoke)
