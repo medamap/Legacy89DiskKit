@@ -49,6 +49,8 @@ int main()
     entry[26] = 0x02;
     entry[28] = 0x34;
     entry[29] = 0x12;
+    entry[30] = 0x00;
+    entry[31] = 0x00;
     const auto parsed_entry = MsxDosDirParser::ParseFileEntry(entry);
     if (parsed_entry.file_name != "MSX" || parsed_entry.extension != "BAS" || parsed_entry.size != 0x1234)
     {
