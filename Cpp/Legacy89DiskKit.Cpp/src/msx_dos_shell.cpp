@@ -34,4 +34,14 @@ MsxDosFileSystemInfo MsxDosShell::GetFileSystemInfo(
 {
     return MsxDosFileSystemInfoRules::BuildInfo(fat_data, config);
 }
+
+std::vector<std::uint8_t> MsxDosShell::CreateFatData(const MsxDosConfiguration& config)
+{
+    return MsxDosFormatRules::CreateFatData(config);
+}
+
+std::vector<std::vector<std::uint8_t>> MsxDosShell::CreateRootDirectorySectors(const MsxDosConfiguration& config)
+{
+    return MsxDosFormatRules::CreateRootDirectorySectors(config);
+}
 }
