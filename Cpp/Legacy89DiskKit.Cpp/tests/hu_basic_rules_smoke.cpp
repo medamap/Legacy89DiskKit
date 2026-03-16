@@ -1,14 +1,18 @@
 #include "legacy89diskkit/cpp/hu_basic_allocation_rules.hpp"
+#include "legacy89diskkit/cpp/hu_basic_boot_record_parser.hpp"
 #include "legacy89diskkit/cpp/hu_basic_directory_rules.hpp"
+#include "legacy89diskkit/cpp/hu_basic_directory_sector_rules.hpp"
 #include "legacy89diskkit/cpp/disk_image_types.hpp"
 #include "legacy89diskkit/cpp/hu_basic_configuration.hpp"
 #include "legacy89diskkit/cpp/hu_basic_dir_parser.hpp"
 #include "legacy89diskkit/cpp/hu_basic_directory_entry_codec.hpp"
 #include "legacy89diskkit/cpp/hu_basic_fat_rules.hpp"
+#include "legacy89diskkit/cpp/hu_basic_label_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_mode_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_name_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_read_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_types.hpp"
+#include "legacy89diskkit/cpp/hu_basic_write_transaction.hpp"
 #include "legacy89diskkit/cpp/hu_basic_write_rules.hpp"
 
 #include <algorithm>
@@ -156,6 +160,76 @@ int main()
         parsed_entry.metadata.password_byte != 0x20)
     {
         return 15;
+    }
+
+    std::vector<std::uint8_t> boot_area(32, static_cast<std::uint8_t>(' '));
+    boot_area[0] = 0x01;
+    boot_area[1] = 'S';
+    boot_area[2] = 'Y';
+    boot_area[3] = 'S';
+    boot_area[0x0e] = 'B';
+    boot_area[0x0f] = 'I';
+    boot_area[0x10] = 'N';
+    boot_area[0x11] = 0x21;
+    boot_area[0x12] = 0x34;
+    boot_area[0x13] = 0x12;
+    boot_area[0x14] = 0x00;
+    boot_area[0x15] = 0x40;
+    boot_area[0x16] = 0x00;
+    boot_area[0x17] = 0x50;
+    boot_area[0x1e] = 0x08;
+    boot_area[0x1f] = 0x00;
+    const auto boot_record = HuBasicBootRecordParser::Parse(boot_area);
+    if (!boot_record.has_value() || boot_record->file_name != "SYS" || boot_record->extension != "BIN" || !boot_record->has_password)
+    {
+        return 16;
+    }
+
+    HuBasicFileEntry label_entry{
+        "------", "", 0, HuBasicFileAttributes{ true, 0x44, false, true, false }, 0x7fff, 0xffff, 0xffff, 0xffff,
+        HuBasicFileMetadata{ HuBasicFileType::Ascii, true, false, false, true, false, 0, 0xffff, 0xffff, 0x7fff, 0x44, 0x21 } };
+    HuBasicFileEntry label_extension{
+        ".TXT", "", 0, HuBasicFileAttributes{ true, 0x44, false, true, false }, 0x7fff, 0xffff, 0xffff, 0xffff,
+        HuBasicFileMetadata{ HuBasicFileType::Ascii, true, false, false, true, false, 0, 0xffff, 0xffff, 0x7fff, 0x44, 0x21 } };
+    if (!HuBasicLabelRules::IsVirtualLabelEntry(label_entry) ||
+        !HuBasicLabelRules::CanMergeLabelEntries(label_entry, label_extension))
+    {
+        return 17;
+    }
+
+    std::vector<std::uint8_t> directory_sector(config.sector_size, 0x00);
+    std::copy(roundtrip.begin(), roundtrip.end(), directory_sector.begin());
+    directory_sector[32] = 0xff;
+    if (HuBasicDirectorySectorRules::CountActiveEntries(directory_sector, config.sector_size) != 1 ||
+        !HuBasicDirectorySectorRules::FindWritableSlotOffset(directory_sector, config.sector_size).has_value() ||
+        HuBasicDirectorySectorRules::FindEntryOffset(directory_sector, config.sector_size, "HELLO.BAS") != 0)
+    {
+        return 18;
+    }
+
+    HuBasicDirectorySectorRules::MarkEntryDeleted(directory_sector, 0);
+    if (directory_sector[0] != 0x00)
+    {
+        return 19;
+    }
+
+    std::vector<std::uint8_t> transaction_fat(256, 0x00);
+    const auto plan = HuBasicWriteTransaction::CreatePlan(
+        "HELLO.BAS",
+        { 'P', 'R', 'I', 'N', 'T' },
+        HuBasicFileAttributes{ true, 0x04, false, false, false },
+        DiskType::TwoD,
+        config,
+        transaction_fat,
+        0x2000,
+        0x2100);
+    if (!plan.has_value() ||
+        plan->allocated_clusters.empty() ||
+        plan->payload.back() != 0x1a ||
+        plan->directory_entry.file_name != "HELLO" ||
+        plan->file_entry.metadata.file_type != HuBasicFileType::Ascii)
+    {
+        return 20;
     }
 
     return 0;
