@@ -150,6 +150,19 @@ A file belongs to `presentation/` when it primarily defines:
 | created-in-target | V2-18 | Infrastructure | `n/a` | `src/infrastructure/filesystem/msx_dos/explicit_msx_dos_file_system.cpp` | explicit MSX-DOS open implementation |
 | created-in-target | V2-19 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/filesystem/filesystem_detection.hpp` | provider-independent filesystem detection candidates and best-match surface |
 | created-in-target | V2-19 | Infrastructure | `n/a` | `src/infrastructure/filesystem/filesystem_detection.cpp` | concrete detection implementation over raw and D88 containers |
+| created-in-target | V2-20 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/drive/raw_sector_addressable_medium.hpp` | raw-backed concrete sector-addressable mounted medium |
+| created-in-target | V2-20 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/drive/d88_sector_addressable_medium.hpp` | D88-backed concrete sector-addressable mounted medium |
+| created-in-target | V2-20 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/drive/mounted_medium_binding.hpp` | mounted medium binding data for concrete adapters |
+| created-in-target | V2-20 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/drive/mounted_medium_binding_factory.hpp` | binding factory over raw and D88 containers |
+| created-in-target | V2-20 | Infrastructure | `n/a` | `src/infrastructure/drive/raw_sector_addressable_medium.cpp` | raw-backed sector-addressable adapter implementation |
+| created-in-target | V2-20 | Infrastructure | `n/a` | `src/infrastructure/drive/d88_sector_addressable_medium.cpp` | D88-backed sector-addressable adapter implementation |
+| created-in-target | V2-20 | Infrastructure | `n/a` | `src/infrastructure/drive/mounted_medium_binding_factory.cpp` | mounted medium binding factory implementation |
+| created-in-target | V2-20 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/fdc/medium/sector_backed_controller_facing_medium.hpp` | shared sector-backed controller medium contract shell |
+| created-in-target | V2-20 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/fdc/medium/raw_backed_controller_facing_medium.hpp` | raw-backed concrete controller-facing medium |
+| created-in-target | V2-20 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/fdc/medium/d88_backed_controller_facing_medium.hpp` | D88-backed concrete controller-facing medium |
+| created-in-target | V2-20 | Infrastructure | `n/a` | `src/infrastructure/fdc/medium/sector_backed_controller_facing_medium.cpp` | shared sector-backed controller medium implementation |
+| created-in-target | V2-20 | Infrastructure | `n/a` | `src/infrastructure/fdc/medium/raw_backed_controller_facing_medium.cpp` | raw-backed controller-facing medium implementation |
+| created-in-target | V2-20 | Infrastructure | `n/a` | `src/infrastructure/fdc/medium/d88_backed_controller_facing_medium.cpp` | D88-backed controller-facing medium implementation |
 
 Append new rows as additional phases relocate files.
 
