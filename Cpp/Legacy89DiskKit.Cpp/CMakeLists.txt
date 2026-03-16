@@ -11,6 +11,12 @@ add_library(Legacy89DiskKitCpp STATIC
     src/infrastructure/disk_image/disk_image_buffer_loader.cpp
     src/infrastructure/disk_image/raw_disk_container.cpp
     src/infrastructure/disk_image/d88_disk_container.cpp
+    src/infrastructure/drive/raw_sector_addressable_medium.cpp
+    src/infrastructure/drive/d88_sector_addressable_medium.cpp
+    src/infrastructure/drive/mounted_medium_binding_factory.cpp
+    src/infrastructure/fdc/medium/sector_backed_controller_facing_medium.cpp
+    src/infrastructure/fdc/medium/raw_backed_controller_facing_medium.cpp
+    src/infrastructure/fdc/medium/d88_backed_controller_facing_medium.cpp
     src/infrastructure/character_encoding/byte_text_encoding_table.cpp
     src/infrastructure/character_encoding/x1_encoding_table.cpp
     src/infrastructure/character_encoding/character_encoding_table_catalog.cpp
@@ -196,6 +202,12 @@ add_executable(Legacy89DiskKitCppFileSystemDetectionSmoke
 
 target_link_libraries(Legacy89DiskKitCppFileSystemDetectionSmoke PRIVATE Legacy89DiskKitCpp)
 
+add_executable(Legacy89DiskKitCppMountedMediumInfrastructureSmoke
+    tests/mounted_medium_infrastructure_smoke.cpp
+)
+
+target_link_libraries(Legacy89DiskKitCppMountedMediumInfrastructureSmoke PRIVATE Legacy89DiskKitCpp)
+
 enable_testing()
 add_test(NAME Legacy89DiskKitCppSmoke COMMAND Legacy89DiskKitCppSmoke)
 add_test(NAME Legacy89DiskKitCppHuBasicSmoke COMMAND Legacy89DiskKitCppHuBasicSmoke)
@@ -212,3 +224,4 @@ add_test(NAME Legacy89DiskKitCppN88BasicFileSystemSmoke COMMAND Legacy89DiskKitC
 add_test(NAME Legacy89DiskKitCppMsxDosFileSystemSmoke COMMAND Legacy89DiskKitCppMsxDosFileSystemSmoke)
 add_test(NAME Legacy89DiskKitCppExplicitFileSystemSelectorSmoke COMMAND Legacy89DiskKitCppExplicitFileSystemSelectorSmoke)
 add_test(NAME Legacy89DiskKitCppFileSystemDetectionSmoke COMMAND Legacy89DiskKitCppFileSystemDetectionSmoke)
+add_test(NAME Legacy89DiskKitCppMountedMediumInfrastructureSmoke COMMAND Legacy89DiskKitCppMountedMediumInfrastructureSmoke)
