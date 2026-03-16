@@ -4,9 +4,13 @@ add_library(Legacy89DiskKitCpp STATIC
     src/character_encoding.cpp
     src/raw_disk_geometry.cpp
     src/d88_parser.cpp
+    src/hu_basic_configuration.cpp
     src/hu_basic_name_rules.cpp
     src/hu_basic_fat_rules.cpp
+    src/hu_basic_allocation_rules.cpp
     src/hu_basic_read_rules.cpp
+    src/hu_basic_write_rules.cpp
+    src/hu_basic_directory_rules.cpp
     src/hu_basic_directory_entry_codec.cpp
 )
 
