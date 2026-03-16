@@ -16,6 +16,12 @@ add_library(Legacy89DiskKitCpp STATIC
     src/hu_basic_delete_rules.cpp
     src/hu_basic_rename_rules.cpp
     src/hu_basic_attribute_update_rules.cpp
+    src/hu_basic_directory_listing.cpp
+    src/hu_basic_delete_transaction.cpp
+    src/hu_basic_rename_transaction.cpp
+    src/hu_basic_attribute_update_transaction.cpp
+    src/hu_basic_directory_layout_parser.cpp
+    src/hu_basic_shell.cpp
     src/hu_basic_format_rules.cpp
     src/hu_basic_record_address_rules.cpp
     src/hu_basic_cluster_write_rules.cpp
