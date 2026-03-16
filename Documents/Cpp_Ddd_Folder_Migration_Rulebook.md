@@ -120,6 +120,14 @@ A file belongs to `presentation/` when it primarily defines:
 | created-in-target | V2-10 | Domain | `n/a` | `include/legacy89diskkit/cpp/domain/raw/raw_preservation_types.hpp` | raw preservation identity, metadata, and integrity types |
 | created-in-target | V2-10 | Domain | `n/a` | `include/legacy89diskkit/cpp/domain/raw/encoded_track_contracts.hpp` | encoded-track payload and surface contract |
 | created-in-target | V2-10 | Domain | `n/a` | `include/legacy89diskkit/cpp/domain/raw/raw_conversion_contracts.hpp` | raw conversion direction and lossiness catalog |
+| created-in-target | V2-11 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/disk_image/buffer_image_format.hpp` | buffer image format normalization |
+| created-in-target | V2-11 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/disk_image/disk_image_buffer_loader.hpp` | buffer-first loading entrypoint |
+| created-in-target | V2-11 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/disk_image/d88_buffer_loader.hpp` | D88 concrete buffer loader |
+| created-in-target | V2-11 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/disk_image/raw_buffer_loader.hpp` | raw concrete buffer loader |
+| created-in-target | V2-11 | Infrastructure | `n/a` | `src/infrastructure/disk_image/buffer_image_format.cpp` | buffer image format implementation |
+| created-in-target | V2-11 | Infrastructure | `n/a` | `src/infrastructure/disk_image/disk_image_buffer_loader.cpp` | buffer-first loading implementation |
+| created-in-target | V2-11 | Infrastructure | `n/a` | `src/infrastructure/disk_image/d88_buffer_loader.cpp` | D88 buffer loader implementation |
+| created-in-target | V2-11 | Infrastructure | `n/a` | `src/infrastructure/disk_image/raw_buffer_loader.cpp` | raw buffer loader implementation |
 
 Append new rows as additional phases relocate files.
 

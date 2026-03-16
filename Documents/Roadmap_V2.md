@@ -138,10 +138,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
 
 ### Infrastructure Phases
 
-- [ ] Phase V2-11: Disk image buffer-loading infrastructure
+- [x] Phase V2-11: Disk image buffer-loading infrastructure
   - Layer: Infrastructure
   - C# source area: path or buffer image loading shells
   - Expected C++ target: buffer-oriented container construction entrypoints
+  - Structural relocation: newly introduced buffer-loading infrastructure should be created directly under `infrastructure/disk_image/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 - [ ] Phase V2-12: Raw disk container infrastructure
   - Layer: Infrastructure
