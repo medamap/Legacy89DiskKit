@@ -488,7 +488,7 @@ int main()
 
     const auto n88_formatted_fat = N88BasicFormatRules::CreateFatData(n88_config);
     const auto n88_formatted_dir = N88BasicFormatRules::CreateDirectorySectors(n88_config);
-    if (n88_formatted_fat.empty() || n88_formatted_fat[0] != 0xff ||
+    if (n88_formatted_fat.empty() || n88_formatted_fat[0] != 0x00 ||
         n88_formatted_dir.size() != static_cast<std::size_t>(n88_config.directory_sectors))
     {
         return 45;
