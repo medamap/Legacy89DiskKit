@@ -71,6 +71,15 @@ add_library(Legacy89DiskKitCpp STATIC
     src/msx_dos_file_entry_writer.cpp
     src/msx_dos_format_rules.cpp
     src/msx_dos_cluster_write_rules.cpp
+    src/msx_dos_write_rules.cpp
+    src/msx_dos_allocation_rules.cpp
+    src/msx_dos_delete_rules.cpp
+    src/msx_dos_rename_rules.cpp
+    src/msx_dos_attribute_update_rules.cpp
+    src/msx_dos_write_transaction.cpp
+    src/msx_dos_delete_transaction.cpp
+    src/msx_dos_rename_transaction.cpp
+    src/msx_dos_attribute_update_transaction.cpp
     src/msx_dos_shell.cpp
 )
 
