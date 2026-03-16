@@ -27,6 +27,14 @@
 #include "legacy89diskkit/cpp/hu_basic_virtual_label_entry_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_write_transaction.hpp"
 #include "legacy89diskkit/cpp/hu_basic_write_rules.hpp"
+#include "legacy89diskkit/cpp/n88_basic_configuration.hpp"
+#include "legacy89diskkit/cpp/n88_basic_default_attribute_rules.hpp"
+#include "legacy89diskkit/cpp/n88_basic_dir_parser.hpp"
+#include "legacy89diskkit/cpp/n88_basic_directory_listing.hpp"
+#include "legacy89diskkit/cpp/n88_basic_fat_rules.hpp"
+#include "legacy89diskkit/cpp/n88_basic_read_rules.hpp"
+#include "legacy89diskkit/cpp/n88_basic_shell.hpp"
+#include "legacy89diskkit/cpp/n88_basic_types.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -374,6 +382,54 @@ int main()
         !shell_delete.has_value())
     {
         return 33;
+    }
+
+    const auto n88_config = N88BasicConfigurationProvider::GetDefault(DiskType::TwoD);
+    std::array<std::uint8_t, 16> n88_entry{};
+    n88_entry.fill(static_cast<std::uint8_t>(' '));
+    n88_entry[0] = 'T';
+    n88_entry[1] = 'E';
+    n88_entry[2] = 'S';
+    n88_entry[3] = 'T';
+    n88_entry[6] = 'B';
+    n88_entry[7] = 'A';
+    n88_entry[8] = 'S';
+    n88_entry[9] = 0x00;
+    n88_entry[10] = 0x05;
+    const auto n88_parsed = N88BasicDirParser::ParseFileEntry(n88_entry);
+    if (n88_parsed.file_name != "TEST" || n88_parsed.extension != "BAS" || !n88_parsed.attributes.is_ascii)
+    {
+        return 34;
+    }
+
+    std::vector<std::uint8_t> n88_fat(256, 0xff);
+    N88BasicFatRules::SetEntry(n88_fat, 0x05, 0xc2);
+    const auto n88_chain = N88BasicFatRules::GetClusterChain(n88_fat, n88_config, 0x05);
+    if (n88_chain.size() != 1 || N88BasicReadRules::ResolveSizeFromFat(n88_chain, n88_fat, n88_config) != 512)
+    {
+        return 35;
+    }
+
+    const auto n88_payload = N88BasicReadRules::ResolveReadPayload(
+        { 'A', 'B', 0x1a, 'C' },
+        N88BasicFileEntry{ "TEST", "BAS", 4, N88BasicFileAttributes{ true, 0x00, false }, 0x05 });
+    if (n88_payload.size() != 2 || n88_payload[0] != 'A' || n88_payload[1] != 'B')
+    {
+        return 36;
+    }
+
+    const auto n88_default_attributes = N88BasicDefaultAttributeRules::CreateDefaultAttributes(false);
+    if (n88_default_attributes.raw_attributes != 0x01 || n88_default_attributes.is_ascii)
+    {
+        return 37;
+    }
+
+    std::vector<std::vector<std::uint8_t>> n88_directory(1, std::vector<std::uint8_t>(n88_config.sector_size, 0xff));
+    std::copy(n88_entry.begin(), n88_entry.end(), n88_directory[0].begin());
+    const auto n88_files = N88BasicDirectoryListing::ListFiles(n88_directory, n88_fat, n88_config);
+    if (n88_files.size() != 1 || n88_files[0].size != 512 || !N88BasicShell::FileExists(n88_directory, n88_fat, n88_config, "TEST.BAS"))
+    {
+        return 38;
     }
 
     return 0;
