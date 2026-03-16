@@ -147,6 +147,9 @@ class Program
         var getBackendImplementation = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_backend_implementation");
         var getBackendTarget = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_backend_target");
         var getBackendSummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_backend_summary");
+        var getExportCount = LoadDelegate<GetCatalogCountDelegate>(libraryHandle, "ldk_get_export_count");
+        var getExportNameAt = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_export_name_at");
+        var getExportGroupAt = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_export_group_at");
         var isHandleValid = LoadDelegate<IsHandleValidDelegate>(libraryHandle, "ldk_is_handle_valid");
         var getOpenHandleCount = LoadDelegate<GetOpenHandleCountDelegate>(libraryHandle, "ldk_get_open_handle_count");
         var closeAllHandles = LoadDelegate<CloseAllHandlesDelegate>(libraryHandle, "ldk_close_all_handles");
@@ -174,6 +177,7 @@ class Program
         Console.WriteLine($"Backend Implementation: {ReadString(getBackendImplementation)}");
         Console.WriteLine($"Backend Target: {ReadString(getBackendTarget)}");
         Console.WriteLine($"Backend Summary: {ReadString(getBackendSummary)}");
+        Console.WriteLine($"Export Catalog: {ReadExportCatalog(getExportCount, getExportNameAt, getExportGroupAt)}");
         Console.WriteLine($"Opening disk: {diskImagePath}");
 
         IntPtr diskPathPtr = Marshal.StringToCoTaskMemUTF8(diskImagePath);
@@ -345,6 +349,33 @@ class Program
             finally
             {
                 Marshal.FreeHGlobal(buffer);
+            }
+        }
+
+        return string.Join(", ", items);
+    }
+
+    private static string ReadExportCatalog(GetCatalogCountDelegate getCount, GetCatalogItemDelegate getName, GetCatalogItemDelegate getGroup)
+    {
+        var count = getCount();
+        var items = new List<string>(count);
+
+        for (var i = 0; i < count; i++)
+        {
+            IntPtr nameBuffer = Marshal.AllocHGlobal(128);
+            IntPtr groupBuffer = Marshal.AllocHGlobal(64);
+            try
+            {
+                var nameLength = getName(i, nameBuffer, 128);
+                var groupLength = getGroup(i, groupBuffer, 64);
+                var name = Marshal.PtrToStringUTF8(nameBuffer, nameLength) ?? string.Empty;
+                var group = Marshal.PtrToStringUTF8(groupBuffer, groupLength) ?? string.Empty;
+                items.Add($"{group}:{name}");
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(nameBuffer);
+                Marshal.FreeHGlobal(groupBuffer);
             }
         }
 
