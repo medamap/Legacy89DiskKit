@@ -130,10 +130,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - Expected C++ target: host-independent controller and medium contracts
   - Structural relocation: newly introduced controller-facing headers should move under `domain/` when the move is low-risk
 
-- [ ] Phase V2-10: Raw preservation domain model
+- [x] Phase V2-10: Raw preservation domain model
   - Layer: Domain
   - C# source area: raw-direction notes and future preservation model
   - Expected C++ target: encoded-track, metadata, integrity, and conversion domain contracts
+  - Structural relocation: newly introduced raw preservation headers should be created directly under `domain/raw/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 ### Infrastructure Phases
 
