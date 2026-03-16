@@ -116,6 +116,9 @@ internal static class NativeExportInvoker
     public static int GetExportGroupAt(int index, IntPtr pointer, int capacity) => GetDelegate<StatusBufferDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetExportGroupAt))(index, pointer, capacity);
     public static int GetMutatingOperationCount() => GetDelegate<NoArgIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetMutatingOperationCount))();
     public static int GetMutatingOperationNameAt(int index, IntPtr pointer, int capacity) => GetDelegate<StatusBufferDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetMutatingOperationNameAt))(index, pointer, capacity);
+    public static int GetOpenModeSummary(IntPtr pointer, int capacity) => GetDelegate<IntPtrIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetOpenModeSummary))(pointer, capacity);
+    public static int GetOpenModeCount() => GetDelegate<NoArgIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetOpenModeCount))();
+    public static int GetOpenModeNameAt(int index, IntPtr pointer, int capacity) => GetDelegate<StatusBufferDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetOpenModeNameAt))(index, pointer, capacity);
     public static int IsHandleValid(int handle) => GetDelegate<IntIntDelegate>(typeof(NativeHandleExports), nameof(NativeHandleExports.IsHandleValid))(handle);
     public static int GetOpenHandleCount() => GetDelegate<NoArgIntDelegate>(typeof(NativeHandleExports), nameof(NativeHandleExports.GetOpenHandleCount))();
     public static int CloseAllHandles() => GetDelegate<NoArgIntDelegate>(typeof(NativeHandleExports), nameof(NativeHandleExports.CloseAllHandles))();

@@ -153,6 +153,9 @@ class Program
         var getExportGroupAt = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_export_group_at");
         var getMutatingOperationCount = LoadDelegate<GetCatalogCountDelegate>(libraryHandle, "ldk_get_mutating_operation_count");
         var getMutatingOperationNameAt = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_mutating_operation_name_at");
+        var getOpenModeSummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_open_mode_summary");
+        var getOpenModeCount = LoadDelegate<GetCatalogCountDelegate>(libraryHandle, "ldk_get_open_mode_count");
+        var getOpenModeNameAt = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_open_mode_name_at");
         var isHandleValid = LoadDelegate<IsHandleValidDelegate>(libraryHandle, "ldk_is_handle_valid");
         var getOpenHandleCount = LoadDelegate<GetOpenHandleCountDelegate>(libraryHandle, "ldk_get_open_handle_count");
         var closeAllHandles = LoadDelegate<CloseAllHandlesDelegate>(libraryHandle, "ldk_close_all_handles");
@@ -183,6 +186,8 @@ class Program
         Console.WriteLine($"Backend Summary: {ReadString(getBackendSummary)}");
         Console.WriteLine($"Export Catalog: {ReadExportCatalog(getExportCount, getExportNameAt, getExportGroupAt)}");
         Console.WriteLine($"Mutating Operations: {ReadCatalog(getMutatingOperationCount, getMutatingOperationNameAt)}");
+        Console.WriteLine($"Open Mode Summary: {ReadString(getOpenModeSummary)}");
+        Console.WriteLine($"Open Modes: {ReadCatalog(getOpenModeCount, getOpenModeNameAt)}");
         Console.WriteLine($"Opening disk: {diskImagePath}");
 
         IntPtr diskPathPtr = Marshal.StringToCoTaskMemUTF8(diskImagePath);
