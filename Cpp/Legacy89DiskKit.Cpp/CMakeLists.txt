@@ -43,6 +43,19 @@ add_library(Legacy89DiskKitCpp STATIC
     src/n88_basic_read_rules.cpp
     src/n88_basic_directory_listing.cpp
     src/n88_basic_default_attribute_rules.cpp
+    src/n88_basic_write_rules.cpp
+    src/n88_basic_allocation_rules.cpp
+    src/n88_basic_delete_rules.cpp
+    src/n88_basic_rename_rules.cpp
+    src/n88_basic_attribute_update_rules.cpp
+    src/n88_basic_format_rules.cpp
+    src/n88_basic_file_lookup.cpp
+    src/n88_basic_filesystem_info_rules.cpp
+    src/n88_basic_file_entry_writer.cpp
+    src/n88_basic_write_transaction.cpp
+    src/n88_basic_delete_transaction.cpp
+    src/n88_basic_rename_transaction.cpp
+    src/n88_basic_attribute_update_transaction.cpp
     src/n88_basic_shell.cpp
 )
 
