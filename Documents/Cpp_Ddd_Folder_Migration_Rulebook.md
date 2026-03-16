@@ -138,6 +138,8 @@ A file belongs to `presentation/` when it primarily defines:
 | created-in-target | V2-14 | Infrastructure | `n/a` | `src/infrastructure/character_encoding/byte_text_encoding_table.cpp` | reusable lookup implementation |
 | created-in-target | V2-14 | Infrastructure | `n/a` | `src/infrastructure/character_encoding/x1_encoding_table.cpp` | X1 concrete table data |
 | created-in-target | V2-14 | Infrastructure | `n/a` | `src/infrastructure/character_encoding/character_encoding_table_catalog.cpp` | concrete table catalog implementation |
+| created-in-target | V2-15 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/filesystem/hu_basic/hu_basic_file_system.hpp` | concrete Hu-BASIC filesystem adapter over raw and D88 containers |
+| created-in-target | V2-15 | Infrastructure | `n/a` | `src/infrastructure/filesystem/hu_basic/hu_basic_file_system.cpp` | Hu-BASIC filesystem implementation over migrated domain rules |
 
 Append new rows as additional phases relocate files.
 
