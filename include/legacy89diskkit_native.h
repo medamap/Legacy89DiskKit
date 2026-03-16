@@ -78,6 +78,8 @@ int32_t LDK_CALL ldk_get_supported_platform_count(void);
 int32_t LDK_CALL ldk_get_supported_platform_name(int32_t index, char* buffer, int32_t capacity);
 int32_t LDK_CALL ldk_get_supported_image_format_count(void);
 int32_t LDK_CALL ldk_get_supported_image_format_name(int32_t index, char* buffer, int32_t capacity);
+int32_t LDK_CALL ldk_get_handle_lifecycle_summary(char* buffer, int32_t capacity);
+int32_t LDK_CALL ldk_get_buffer_string_policy_summary(char* buffer, int32_t capacity);
 int32_t LDK_CALL ldk_is_handle_valid(int32_t handle);
 int32_t LDK_CALL ldk_get_open_handle_count(void);
 int32_t LDK_CALL ldk_close_all_handles(void);

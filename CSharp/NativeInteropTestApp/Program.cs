@@ -73,6 +73,9 @@ class Program
     private delegate int GetCatalogItemDelegate(int index, IntPtr buffer, int capacity);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetSummaryDelegate(IntPtr buffer, int capacity);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int IsHandleValidDelegate(int handle);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -136,6 +139,8 @@ class Program
         var getSupportedPlatformName = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_supported_platform_name");
         var getSupportedImageFormatCount = LoadDelegate<GetCatalogCountDelegate>(libraryHandle, "ldk_get_supported_image_format_count");
         var getSupportedImageFormatName = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_supported_image_format_name");
+        var getHandleLifecycleSummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_handle_lifecycle_summary");
+        var getBufferStringPolicySummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_buffer_string_policy_summary");
         var isHandleValid = LoadDelegate<IsHandleValidDelegate>(libraryHandle, "ldk_is_handle_valid");
         var getOpenHandleCount = LoadDelegate<GetOpenHandleCountDelegate>(libraryHandle, "ldk_get_open_handle_count");
         var closeAllHandles = LoadDelegate<CloseAllHandlesDelegate>(libraryHandle, "ldk_close_all_handles");
@@ -155,6 +160,8 @@ class Program
         Console.WriteLine($"Supported File Systems: {ReadCatalog(getSupportedFileSystemCount, getSupportedFileSystemName)}");
         Console.WriteLine($"Supported Platforms: {ReadCatalog(getSupportedPlatformCount, getSupportedPlatformName)}");
         Console.WriteLine($"Supported Image Formats: {ReadCatalog(getSupportedImageFormatCount, getSupportedImageFormatName)}");
+        Console.WriteLine($"Handle Lifecycle: {ReadString(getHandleLifecycleSummary)}");
+        Console.WriteLine($"Buffer/String Policy: {ReadString(getBufferStringPolicySummary)}");
         Console.WriteLine($"Opening disk: {diskImagePath}");
 
         IntPtr diskPathPtr = Marshal.StringToCoTaskMemUTF8(diskImagePath);
@@ -330,5 +337,19 @@ class Program
         }
 
         return string.Join(", ", items);
+    }
+
+    private static string ReadString(GetSummaryDelegate reader)
+    {
+        IntPtr buffer = Marshal.AllocHGlobal(256);
+        try
+        {
+            var length = reader(buffer, 256);
+            return Marshal.PtrToStringUTF8(buffer, length) ?? string.Empty;
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
+        }
     }
 }

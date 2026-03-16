@@ -95,6 +95,18 @@ public static class NativeInfoExports
         return WriteCatalogItem(NativeSurfaceCatalog.GetSupportedImageFormats(), index, bufferPtr, capacity);
     }
 
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_handle_lifecycle_summary")]
+    public static int GetHandleLifecycleSummary(IntPtr bufferPtr, int capacity)
+    {
+        return NativeStringWriter.WriteUtf8(bufferPtr, capacity, NativeOwnershipPolicy.GetHandleLifecycleSummary());
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_buffer_string_policy_summary")]
+    public static int GetBufferStringPolicySummary(IntPtr bufferPtr, int capacity)
+    {
+        return NativeStringWriter.WriteUtf8(bufferPtr, capacity, NativeOwnershipPolicy.GetBufferStringPolicySummary());
+    }
+
     private static int WriteCatalogItem(IReadOnlyList<string> items, int index, IntPtr bufferPtr, int capacity)
     {
         if (index < 0 || index >= items.Count)
