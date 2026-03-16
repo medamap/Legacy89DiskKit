@@ -18,6 +18,8 @@ public:
 
     static Result<MsxDosFileSystem> Open(RawDiskContainer& container);
     static Result<MsxDosFileSystem> Open(D88DiskContainer& container);
+    static MsxDosFileSystem OpenExplicit(RawDiskContainer& container);
+    static MsxDosFileSystem OpenExplicit(D88DiskContainer& container);
 
     const MsxDosConfiguration& GetConfiguration() const;
     DiskType DiskTypeValue() const;

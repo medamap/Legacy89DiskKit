@@ -76,6 +76,26 @@ Result<MsxDosFileSystem> MsxDosFileSystem::Open(D88DiskContainer& container)
         MsxDosFileSystem(nullptr, &container, parsed->configuration, container.DiskTypeValue(), container.IsReadOnly()));
 }
 
+MsxDosFileSystem MsxDosFileSystem::OpenExplicit(RawDiskContainer& container)
+{
+    return MsxDosFileSystem(
+        &container,
+        nullptr,
+        MsxDosConfigurationProvider::GetDefault(container.DiskTypeValue()),
+        container.DiskTypeValue(),
+        container.IsReadOnly());
+}
+
+MsxDosFileSystem MsxDosFileSystem::OpenExplicit(D88DiskContainer& container)
+{
+    return MsxDosFileSystem(
+        nullptr,
+        &container,
+        MsxDosConfigurationProvider::GetDefault(container.DiskTypeValue()),
+        container.DiskTypeValue(),
+        container.IsReadOnly());
+}
+
 MsxDosFileSystem::MsxDosFileSystem(
     RawDiskContainer* raw_container,
     D88DiskContainer* d88_container,
