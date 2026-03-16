@@ -1,5 +1,6 @@
 #pragma once
 
+#include "legacy89diskkit/cpp/msx_dos_configuration.hpp"
 #include "legacy89diskkit/cpp/msx_dos_directory_listing.hpp"
 #include "legacy89diskkit/cpp/msx_dos_file_lookup.hpp"
 #include "legacy89diskkit/cpp/msx_dos_filesystem_info_rules.hpp"
