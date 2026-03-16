@@ -124,7 +124,7 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - C# source area: implicit supported-surface knowledge spread across providers and bootstrap
   - Expected C++ target: family and capability catalog for migrated filesystem surfaces
 
-- [ ] Phase V2-09: Controller-facing domain contracts
+- [x] Phase V2-09: Controller-facing domain contracts
   - Layer: Domain
   - C# source area: FDC, drive, timing, controller-facing medium contracts
   - Expected C++ target: host-independent controller and medium contracts
