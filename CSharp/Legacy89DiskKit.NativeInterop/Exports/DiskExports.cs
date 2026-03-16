@@ -55,9 +55,11 @@ public static class DiskExports
             if (string.IsNullOrEmpty(path)) return (int)LdkStatus.ErrorInvalidArgument;
 
             var service = new DiskService(null, GetDefaultRegistry());
-            service.OpenDisk(path, NativeBoolean.ToManagedBoolean(readOnlyFlag));
+            var readOnly = NativeBoolean.ToManagedBoolean(readOnlyFlag);
+            var isWritable = !readOnly;
+            service.OpenDisk(path, readOnly);
             
-            return HandleManager.Register(service);
+            return HandleManager.Register(service, new HandleMetadata("open-disk", isWritable));
         }
         catch (Exception ex)
         {
@@ -77,7 +79,7 @@ public static class DiskExports
             var service = new DiskService(null, GetDefaultRegistry());
             service.CreateDisk(path, (Legacy89DiskKit.Domain.DiskImage.Model.DiskType)diskType, name);
             
-            return HandleManager.Register(service);
+            return HandleManager.Register(service, new HandleMetadata("create-disk", true));
         }
         catch (Exception ex)
         {
