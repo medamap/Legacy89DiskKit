@@ -1,5 +1,5 @@
-#include "legacy89diskkit/cpp/controller_runtime_contracts.hpp"
-#include "legacy89diskkit/cpp/fdc_controller_contracts.hpp"
+#include "legacy89diskkit/cpp/domain/controller/controller_runtime_contracts.hpp"
+#include "legacy89diskkit/cpp/domain/fdc/fdc_controller_contracts.hpp"
 
 #include <chrono>
 #include <optional>

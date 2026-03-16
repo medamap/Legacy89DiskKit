@@ -1,6 +1,6 @@
 #pragma once
 
-#include "legacy89diskkit/cpp/fdc_types.hpp"
+#include "legacy89diskkit/cpp/domain/fdc/fdc_types.hpp"
 
 #include <chrono>
 #include <optional>

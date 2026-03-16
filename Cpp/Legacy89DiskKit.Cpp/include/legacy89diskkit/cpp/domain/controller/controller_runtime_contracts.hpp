@@ -1,6 +1,6 @@
 #pragma once
 
-#include "legacy89diskkit/cpp/drive_types.hpp"
+#include "legacy89diskkit/cpp/domain/drive/drive_types.hpp"
 
 #include <chrono>
 #include <cstdint>
