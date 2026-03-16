@@ -59,6 +59,11 @@ public:
         return value_;
     }
 
+    [[nodiscard]] TValue& value()
+    {
+        return value_;
+    }
+
 private:
     Result(Status status, TValue value)
         : status_(std::move(status)), value_(std::move(value))
