@@ -47,7 +47,7 @@ public static class DiskExports
     }
 
     [UnmanagedCallersOnly(EntryPoint = "ldk_open_disk")]
-    public static int OpenDisk(IntPtr pathPtr, bool readOnly)
+    public static int OpenDisk(IntPtr pathPtr, int readOnlyFlag)
     {
         try
         {
@@ -55,7 +55,7 @@ public static class DiskExports
             if (string.IsNullOrEmpty(path)) return (int)LdkStatus.ErrorInvalidArgument;
 
             var service = new DiskService(null, GetDefaultRegistry());
-            service.OpenDisk(path, readOnly);
+            service.OpenDisk(path, NativeBoolean.ToManagedBoolean(readOnlyFlag));
             
             return HandleManager.Register(service);
         }
