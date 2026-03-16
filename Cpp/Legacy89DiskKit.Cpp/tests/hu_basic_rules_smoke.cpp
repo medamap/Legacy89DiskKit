@@ -339,6 +339,7 @@ int main()
     }
 
     const auto shell_files = HuBasicShell::ListFiles({ directory_layout[0] }, config.sector_size);
+    const auto shell_found = HuBasicShell::FindFile({ directory_layout[0] }, config.sector_size, "HELLO.BAS");
     const auto shell_layout = HuBasicShell::ReadDirectoryLayout({ directory_layout[0] }, config.sector_size);
     const auto shell_info = HuBasicShell::GetFileSystemInfo(info_fat, DiskType::TwoD, config);
     const auto shell_write = HuBasicShell::PlanWrite(
@@ -363,6 +364,8 @@ int main()
         config.sector_size,
         "HELLO.BAS");
     if (shell_files.size() != 1 ||
+        !HuBasicShell::FileExists({ directory_layout[0] }, config.sector_size, "HELLO.BAS") ||
+        !shell_found.has_value() ||
         shell_layout.items.size() != 1 ||
         shell_info.cluster_size != config.cluster_size ||
         !shell_write.has_value() ||
