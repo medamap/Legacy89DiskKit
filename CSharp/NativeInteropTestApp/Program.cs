@@ -141,6 +141,10 @@ class Program
         var getSupportedImageFormatName = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_supported_image_format_name");
         var getHandleLifecycleSummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_handle_lifecycle_summary");
         var getBufferStringPolicySummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_buffer_string_policy_summary");
+        var getBackendKind = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_backend_kind");
+        var getBackendImplementation = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_backend_implementation");
+        var getBackendTarget = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_backend_target");
+        var getBackendSummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_backend_summary");
         var isHandleValid = LoadDelegate<IsHandleValidDelegate>(libraryHandle, "ldk_is_handle_valid");
         var getOpenHandleCount = LoadDelegate<GetOpenHandleCountDelegate>(libraryHandle, "ldk_get_open_handle_count");
         var closeAllHandles = LoadDelegate<CloseAllHandlesDelegate>(libraryHandle, "ldk_close_all_handles");
@@ -162,6 +166,10 @@ class Program
         Console.WriteLine($"Supported Image Formats: {ReadCatalog(getSupportedImageFormatCount, getSupportedImageFormatName)}");
         Console.WriteLine($"Handle Lifecycle: {ReadString(getHandleLifecycleSummary)}");
         Console.WriteLine($"Buffer/String Policy: {ReadString(getBufferStringPolicySummary)}");
+        Console.WriteLine($"Backend Kind: {ReadString(getBackendKind)}");
+        Console.WriteLine($"Backend Implementation: {ReadString(getBackendImplementation)}");
+        Console.WriteLine($"Backend Target: {ReadString(getBackendTarget)}");
+        Console.WriteLine($"Backend Summary: {ReadString(getBackendSummary)}");
         Console.WriteLine($"Opening disk: {diskImagePath}");
 
         IntPtr diskPathPtr = Marshal.StringToCoTaskMemUTF8(diskImagePath);

@@ -107,6 +107,30 @@ public static class NativeInfoExports
         return NativeStringWriter.WriteUtf8(bufferPtr, capacity, NativeOwnershipPolicy.GetBufferStringPolicySummary());
     }
 
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_backend_kind")]
+    public static int GetBackendKind(IntPtr bufferPtr, int capacity)
+    {
+        return NativeStringWriter.WriteUtf8(bufferPtr, capacity, NativeBackendIdentity.BackendKind);
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_backend_implementation")]
+    public static int GetBackendImplementation(IntPtr bufferPtr, int capacity)
+    {
+        return NativeStringWriter.WriteUtf8(bufferPtr, capacity, NativeBackendIdentity.BackendImplementation);
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_backend_target")]
+    public static int GetBackendTarget(IntPtr bufferPtr, int capacity)
+    {
+        return NativeStringWriter.WriteUtf8(bufferPtr, capacity, NativeBackendIdentity.BackendTarget);
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_backend_summary")]
+    public static int GetBackendSummary(IntPtr bufferPtr, int capacity)
+    {
+        return NativeStringWriter.WriteUtf8(bufferPtr, capacity, NativeBackendIdentity.GetBackendSummary());
+    }
+
     private static int WriteCatalogItem(IReadOnlyList<string> items, int index, IntPtr bufferPtr, int capacity)
     {
         if (index < 0 || index >= items.Count)
