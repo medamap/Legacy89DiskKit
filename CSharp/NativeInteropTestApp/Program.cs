@@ -139,7 +139,9 @@ class Program
         var getSupportedPlatformName = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_supported_platform_name");
         var getSupportedImageFormatCount = LoadDelegate<GetCatalogCountDelegate>(libraryHandle, "ldk_get_supported_image_format_count");
         var getSupportedImageFormatName = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_supported_image_format_name");
+        var getInvalidHandleValue = LoadDelegate<GetAbiVersionDelegate>(libraryHandle, "ldk_get_invalid_handle_value");
         var getHandleLifecycleSummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_handle_lifecycle_summary");
+        var getHandleValueSummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_handle_value_summary");
         var getBufferStringPolicySummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_buffer_string_policy_summary");
         var getBackendKind = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_backend_kind");
         var getBackendImplementation = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_backend_implementation");
@@ -164,7 +166,9 @@ class Program
         Console.WriteLine($"Supported File Systems: {ReadCatalog(getSupportedFileSystemCount, getSupportedFileSystemName)}");
         Console.WriteLine($"Supported Platforms: {ReadCatalog(getSupportedPlatformCount, getSupportedPlatformName)}");
         Console.WriteLine($"Supported Image Formats: {ReadCatalog(getSupportedImageFormatCount, getSupportedImageFormatName)}");
+        Console.WriteLine($"Invalid Handle Value: {getInvalidHandleValue()}");
         Console.WriteLine($"Handle Lifecycle: {ReadString(getHandleLifecycleSummary)}");
+        Console.WriteLine($"Handle Value Policy: {ReadString(getHandleValueSummary)}");
         Console.WriteLine($"Buffer/String Policy: {ReadString(getBufferStringPolicySummary)}");
         Console.WriteLine($"Backend Kind: {ReadString(getBackendKind)}");
         Console.WriteLine($"Backend Implementation: {ReadString(getBackendImplementation)}");
