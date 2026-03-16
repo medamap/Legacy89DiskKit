@@ -115,8 +115,15 @@ add_executable(Legacy89DiskKitCppSurfaceCatalogSmoke
 
 target_link_libraries(Legacy89DiskKitCppSurfaceCatalogSmoke PRIVATE Legacy89DiskKitCpp)
 
+add_executable(Legacy89DiskKitCppControllerDomainSmoke
+    tests/controller_domain_smoke.cpp
+)
+
+target_link_libraries(Legacy89DiskKitCppControllerDomainSmoke PRIVATE Legacy89DiskKitCpp)
+
 enable_testing()
 add_test(NAME Legacy89DiskKitCppSmoke COMMAND Legacy89DiskKitCppSmoke)
 add_test(NAME Legacy89DiskKitCppHuBasicSmoke COMMAND Legacy89DiskKitCppHuBasicSmoke)
 add_test(NAME Legacy89DiskKitCppMsxDosSmoke COMMAND Legacy89DiskKitCppMsxDosSmoke)
 add_test(NAME Legacy89DiskKitCppSurfaceCatalogSmoke COMMAND Legacy89DiskKitCppSurfaceCatalogSmoke)
+add_test(NAME Legacy89DiskKitCppControllerDomainSmoke COMMAND Legacy89DiskKitCppControllerDomainSmoke)

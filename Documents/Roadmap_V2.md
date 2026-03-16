@@ -13,6 +13,8 @@ It exists to answer these questions clearly:
 
 This roadmap intentionally prefers many small, explicit migration phases over a smaller number of broad product phases.
 
+When a phase touches C++ structure, use [Cpp_Ddd_Folder_Migration_Rulebook.md](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md) to decide whether the touched files should also move into a DDD-oriented folder layout.
+
 ## Layer Model
 
 This roadmap uses the following layers:
@@ -45,6 +47,8 @@ The migration is therefore tracked as:
 This means phases may complete out of order.
 
 That is expected.
+
+The same rule applies to structural relocation work. File moves may happen gradually, as long as they remain tied to an active migration phase and follow the rulebook above.
 
 ## High-Level Direction
 
@@ -120,10 +124,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - C# source area: implicit supported-surface knowledge spread across providers and bootstrap
   - Expected C++ target: family and capability catalog for migrated filesystem surfaces
 
-- [ ] Phase V2-09: Controller-facing domain contracts
+- [x] Phase V2-09: Controller-facing domain contracts
   - Layer: Domain
   - C# source area: FDC, drive, timing, controller-facing medium contracts
   - Expected C++ target: host-independent controller and medium contracts
+  - Structural relocation: newly introduced controller-facing headers should move under `domain/` when the move is low-risk
 
 - [ ] Phase V2-10: Raw preservation domain model
   - Layer: Domain
