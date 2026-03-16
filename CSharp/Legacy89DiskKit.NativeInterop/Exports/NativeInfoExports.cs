@@ -119,6 +119,12 @@ public static class NativeInfoExports
         return NativeStringWriter.WriteUtf8(bufferPtr, capacity, NativeOwnershipPolicy.GetBufferStringPolicySummary());
     }
 
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_mutation_policy_summary")]
+    public static int GetMutationPolicySummary(IntPtr bufferPtr, int capacity)
+    {
+        return NativeStringWriter.WriteUtf8(bufferPtr, capacity, NativeMutationPolicy.GetMutationPolicySummary());
+    }
+
     [UnmanagedCallersOnly(EntryPoint = "ldk_get_backend_kind")]
     public static int GetBackendKind(IntPtr bufferPtr, int capacity)
     {
@@ -171,6 +177,24 @@ public static class NativeInfoExports
         }
 
         return NativeStringWriter.WriteUtf8(bufferPtr, capacity, entries[index].Group);
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_mutating_operation_count")]
+    public static int GetMutatingOperationCount()
+    {
+        return NativeMutationPolicy.GetMutatingOperations().Count;
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_mutating_operation_name_at")]
+    public static int GetMutatingOperationNameAt(int index, IntPtr bufferPtr, int capacity)
+    {
+        var operations = NativeMutationPolicy.GetMutatingOperations();
+        if (index < 0 || index >= operations.Count)
+        {
+            return (int)LdkStatus.ErrorInvalidArgument;
+        }
+
+        return NativeStringWriter.WriteUtf8(bufferPtr, capacity, operations[index]);
     }
 
     private static int WriteCatalogItem(IReadOnlyList<string> items, int index, IntPtr bufferPtr, int capacity)
