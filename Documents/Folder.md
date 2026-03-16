@@ -8,6 +8,8 @@ Use these files first when you need the current project direction.
 
 - `handoff/task.md`: current implementation checklist and deferred work
 - `ROADMAP.md`: broader long-term direction
+- `Roadmap_V2_Preparation.md`: rationale and construction rules for the DDD-oriented migration roadmap rewrite
+- `Roadmap_V2.md`: DDD-oriented C# to C++ migration roadmap with per-layer phase status
 - `Technical_Vision.md`: high-level technical intent
 - `plans/RealImageTestPlan.md`: planned real-image verification work
 - `Release_Process.md`: release procedure
