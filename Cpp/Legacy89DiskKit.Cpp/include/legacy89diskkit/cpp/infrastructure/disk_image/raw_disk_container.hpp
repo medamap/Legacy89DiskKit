@@ -12,6 +12,8 @@ namespace legacy89diskkit::cpp
 class RawDiskContainer
 {
 public:
+    RawDiskContainer() = default;
+
     static Result<RawDiskContainer> OpenFromBuffer(std::span<const std::uint8_t> image_data, bool read_only = true);
 
     const std::string& FilePath() const;
