@@ -47,7 +47,7 @@ public static class DiskExports
     }
 
     [UnmanagedCallersOnly(EntryPoint = "ldk_open_disk")]
-    public static int OpenDisk(IntPtr pathPtr, bool readOnly)
+    public static int OpenDisk(IntPtr pathPtr, int readOnlyFlag)
     {
         try
         {
@@ -55,13 +55,15 @@ public static class DiskExports
             if (string.IsNullOrEmpty(path)) return (int)LdkStatus.ErrorInvalidArgument;
 
             var service = new DiskService(null, GetDefaultRegistry());
+            var readOnly = NativeBoolean.ToManagedBoolean(readOnlyFlag);
+            var isWritable = !readOnly;
             service.OpenDisk(path, readOnly);
             
-            return HandleManager.Register(service);
+            return HandleManager.Register(service, new HandleMetadata("open-disk", isWritable));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 
@@ -77,11 +79,11 @@ public static class DiskExports
             var service = new DiskService(null, GetDefaultRegistry());
             service.CreateDisk(path, (Legacy89DiskKit.Domain.DiskImage.Model.DiskType)diskType, name);
             
-            return HandleManager.Register(service);
+            return HandleManager.Register(service, new HandleMetadata("create-disk", true));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 
@@ -116,6 +118,20 @@ public static class DiskExports
         };
 
         Marshal.StructureToPtr(nativeInfo, infoPtr, false);
+        return (int)LdkStatus.Success;
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_container_metadata")]
+    public static int GetContainerMetadata(int handle, IntPtr metadataPtr)
+    {
+        if (!HandleManager.TryGet(handle, out var service) || service == null)
+            return (int)LdkStatus.ErrorInvalidHandle;
+
+        var metadata = service.GetContainerMetadata();
+        if (metadata == null) return (int)LdkStatus.ErrorFileNotFound;
+
+        var nativeMetadata = NativeDiskContainerMetadataFactory.Create(metadata);
+        Marshal.StructureToPtr(nativeMetadata, metadataPtr, false);
         return (int)LdkStatus.Success;
     }
 
@@ -185,9 +201,9 @@ public static class DiskExports
             Marshal.Copy(data, 0, bufferPtr, size);
             return size;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 
@@ -207,9 +223,9 @@ public static class DiskExports
             fs.WriteBootArea(data);
             return (int)LdkStatus.Success;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 
@@ -227,9 +243,9 @@ public static class DiskExports
             fs.Format();
             return (int)LdkStatus.Success;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 }

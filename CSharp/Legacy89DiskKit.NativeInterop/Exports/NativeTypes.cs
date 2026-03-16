@@ -54,6 +54,21 @@ public struct NativeFileSystemInfo
     public string PlatformId;
 }
 
+[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+public struct NativeDiskContainerMetadata
+{
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 16)]
+    public string ImageFormat;
+
+    public int DiskType;
+    public int Cylinders;
+    public int Heads;
+    public int SectorsPerTrack;
+    public int BytesPerSector;
+    public int IsWriteProtected;
+    public long DeclaredImageSize;
+}
+
 /// <summary>
 /// Disk types for creation.
 /// </summary>

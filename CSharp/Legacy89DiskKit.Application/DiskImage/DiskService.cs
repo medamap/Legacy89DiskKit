@@ -5,6 +5,7 @@ using Legacy89DiskKit.Domain.FileSystem.Interface.Registry;
 using Legacy89DiskKit.Infrastructure.DiskImage.Factory;
 using Legacy89DiskKit.Application.FileSystem;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
+using Legacy89DiskKit.Domain.DiskImage.Model;
 
 namespace Legacy89DiskKit.Application.DiskImage;
 
@@ -56,6 +57,11 @@ public class DiskService : IDisposable
     }
 
     public IFileSystem? FileSystem => _currentFileSystem;
+
+    public DiskContainerMetadata? GetContainerMetadata()
+    {
+        return _currentContainer?.GetMetadata();
+    }
 
     public void CloseDisk()
     {
