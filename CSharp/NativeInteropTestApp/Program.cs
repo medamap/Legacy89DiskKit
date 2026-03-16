@@ -58,6 +58,15 @@ class Program
     private delegate int GetStatusNameDelegate(int statusCode, IntPtr buffer, int capacity);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetStatusCountDelegate();
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetStatusCodeAtDelegate(int index);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetStatusNameAtDelegate(int index, IntPtr buffer, int capacity);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int GetCatalogCountDelegate();
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -118,6 +127,9 @@ class Program
         var getCapabilityFlags = LoadDelegate<GetCapabilityFlagsDelegate>(libraryHandle, "ldk_get_capability_flags");
         var getCapabilitySummary = LoadDelegate<GetCapabilitySummaryDelegate>(libraryHandle, "ldk_get_capability_summary");
         var getStatusName = LoadDelegate<GetStatusNameDelegate>(libraryHandle, "ldk_get_status_name");
+        var getStatusCount = LoadDelegate<GetStatusCountDelegate>(libraryHandle, "ldk_get_status_count");
+        var getStatusCodeAt = LoadDelegate<GetStatusCodeAtDelegate>(libraryHandle, "ldk_get_status_code_at");
+        var getStatusNameAt = LoadDelegate<GetStatusNameAtDelegate>(libraryHandle, "ldk_get_status_name_at");
         var getSupportedFileSystemCount = LoadDelegate<GetCatalogCountDelegate>(libraryHandle, "ldk_get_supported_file_system_count");
         var getSupportedFileSystemName = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_supported_file_system_name");
         var getSupportedPlatformCount = LoadDelegate<GetCatalogCountDelegate>(libraryHandle, "ldk_get_supported_platform_count");
@@ -139,6 +151,7 @@ class Program
         Console.WriteLine($"Capability Flags: 0x{getCapabilityFlags():X}");
         Console.WriteLine($"Capability Summary: {ReadString(getCapabilitySummary)}");
         Console.WriteLine($"Success Status Name: {ReadStatusName(getStatusName, 0)}");
+        Console.WriteLine($"Status Catalog: {ReadStatusCatalog(getStatusCount, getStatusCodeAt, getStatusNameAt)}");
         Console.WriteLine($"Supported File Systems: {ReadCatalog(getSupportedFileSystemCount, getSupportedFileSystemName)}");
         Console.WriteLine($"Supported Platforms: {ReadCatalog(getSupportedPlatformCount, getSupportedPlatformName)}");
         Console.WriteLine($"Supported Image Formats: {ReadCatalog(getSupportedImageFormatCount, getSupportedImageFormatName)}");
@@ -286,6 +299,29 @@ class Program
             {
                 var length = getItem(i, buffer, 256);
                 items.Add(Marshal.PtrToStringUTF8(buffer, length) ?? string.Empty);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(buffer);
+            }
+        }
+
+        return string.Join(", ", items);
+    }
+
+    private static string ReadStatusCatalog(GetStatusCountDelegate getCount, GetStatusCodeAtDelegate getCode, GetStatusNameAtDelegate getName)
+    {
+        var count = getCount();
+        var items = new List<string>(count);
+
+        for (var i = 0; i < count; i++)
+        {
+            IntPtr buffer = Marshal.AllocHGlobal(256);
+            try
+            {
+                var length = getName(i, buffer, 256);
+                var name = Marshal.PtrToStringUTF8(buffer, length) ?? string.Empty;
+                items.Add($"{getCode(i)}:{name}");
             }
             finally
             {
