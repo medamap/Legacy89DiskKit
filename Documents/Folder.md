@@ -10,6 +10,7 @@ Use these files first when you need the current project direction.
 - `ROADMAP.md`: broader long-term direction
 - `Roadmap_V2_Preparation.md`: rationale and construction rules for the DDD-oriented migration roadmap rewrite
 - `Roadmap_V2.md`: DDD-oriented C# to C++ migration roadmap with per-layer phase status
+- `Cpp_Ddd_Folder_Migration_Rulebook.md`: staged relocation policy and mapping ledger for moving C++ work into a DDD-oriented folder layout
 - `Technical_Vision.md`: high-level technical intent
 - `plans/RealImageTestPlan.md`: planned real-image verification work
 - `Release_Process.md`: release procedure
