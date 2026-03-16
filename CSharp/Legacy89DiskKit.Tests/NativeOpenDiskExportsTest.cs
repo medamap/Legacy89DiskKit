@@ -1,6 +1,7 @@
 using Legacy89DiskKit.NativeInterop.Core;
 using Legacy89DiskKit.NativeInterop.Types;
 using Xunit;
+using System.Runtime.InteropServices;
 
 namespace Legacy89DiskKit.Tests;
 
@@ -21,7 +22,19 @@ public class NativeOpenDiskExportsTest
         {
             Assert.True(handle > 0);
             Assert.Equal(1, NativeExportInvoker.IsHandleValid(handle));
+            Assert.Equal(0, NativeExportInvoker.GetHandleIsWritable(handle));
             Assert.True(NativeExportInvoker.GetOpenHandleCount() >= 1);
+
+            var buffer = Marshal.AllocHGlobal(128);
+            try
+            {
+                var length = NativeExportInvoker.GetHandleSourceOperation(handle, buffer, 128);
+                Assert.Equal("open-disk", Marshal.PtrToStringUTF8(buffer, length));
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(buffer);
+            }
         }
         finally
         {
