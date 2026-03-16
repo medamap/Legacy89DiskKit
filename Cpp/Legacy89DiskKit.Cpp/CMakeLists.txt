@@ -15,6 +15,10 @@ add_library(Legacy89DiskKitCpp STATIC
     src/hu_basic_mode_rules.cpp
     src/hu_basic_dir_parser.cpp
     src/hu_basic_boot_record_parser.cpp
+    src/hu_basic_boot_record_codec.cpp
+    src/hu_basic_file_entry_writer.cpp
+    src/hu_basic_directory_layout_rules.cpp
+    src/hu_basic_filesystem_info_rules.cpp
     src/hu_basic_label_rules.cpp
     src/hu_basic_directory_sector_rules.cpp
     src/hu_basic_write_transaction.cpp
