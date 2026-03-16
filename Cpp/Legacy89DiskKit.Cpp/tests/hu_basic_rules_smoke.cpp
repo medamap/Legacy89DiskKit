@@ -2,8 +2,10 @@
 #include "legacy89diskkit/cpp/hu_basic_directory_rules.hpp"
 #include "legacy89diskkit/cpp/disk_image_types.hpp"
 #include "legacy89diskkit/cpp/hu_basic_configuration.hpp"
+#include "legacy89diskkit/cpp/hu_basic_dir_parser.hpp"
 #include "legacy89diskkit/cpp/hu_basic_directory_entry_codec.hpp"
 #include "legacy89diskkit/cpp/hu_basic_fat_rules.hpp"
+#include "legacy89diskkit/cpp/hu_basic_mode_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_name_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_read_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_types.hpp"
@@ -110,6 +112,13 @@ int main()
         return 11;
     }
 
+    if (HuBasicModeRules::GetFileType(0x01) != HuBasicFileType::Binary ||
+        HuBasicModeRules::BuildModeByte(created.metadata) != 0x01 ||
+        HuBasicModeRules::BuildModeByte(HuBasicFileAttributes{ true, 0x00, false, true, true }) != 0x54)
+    {
+        return 12;
+    }
+
     std::array<std::uint8_t, 32> entry_bytes{};
     entry_bytes.fill(static_cast<std::uint8_t>(' '));
     entry_bytes[0] = 0x01;
@@ -129,13 +138,24 @@ int main()
     const auto entry = HuBasicDirectoryEntryCodec::Parse(entry_bytes);
     if (entry.file_name != "HELLO" || entry.extension != "BAS" || entry.recorded_size != 0x1234)
     {
-        return 12;
+        return 13;
     }
 
     const auto roundtrip = HuBasicDirectoryEntryCodec::Write(entry);
     if (roundtrip[1] != 'H' || roundtrip[0x0e] != 'B' || roundtrip[0x12] != 0x34 || roundtrip[0x13] != 0x12)
     {
-        return 13;
+        return 14;
+    }
+
+    const auto parsed_entry = HuBasicDirParser::Parse(entry);
+    if (parsed_entry.file_name != "HELLO" ||
+        parsed_entry.extension != "BAS" ||
+        parsed_entry.size != 0x1234 ||
+        parsed_entry.attributes.is_ascii ||
+        parsed_entry.metadata.file_type != HuBasicFileType::Binary ||
+        parsed_entry.metadata.password_byte != 0x20)
+    {
+        return 15;
     }
 
     return 0;
