@@ -1,10 +1,14 @@
+using Legacy89DiskKit.NativeInterop.Core;
+
 namespace Legacy89DiskKit.NativeInterop.Exports;
 
 public static class NativeBackendIdentity
 {
-    public const string BackendKind = "managed-bridge";
-    public const string BackendImplementation = "Legacy89DiskKit.NativeInterop";
-    public const string BackendTarget = "Legacy89DiskKit.Application";
+    public static string BackendKind => NativeBridgeBackend.Current.BackendKind;
+
+    public static string BackendImplementation => NativeBridgeBackend.Current.BackendImplementation;
+
+    public static string BackendTarget => NativeBridgeBackend.Current.BackendTarget;
 
     public static string GetBackendSummary()
     {

@@ -5,7 +5,7 @@ using Legacy89DiskKit.NativeInterop.Types;
 namespace Legacy89DiskKit.NativeInterop.Core;
 
 /// <summary>
-/// Manages DiskService instances and maps them to integer handles.
+/// Manages native disk sessions and maps them to integer handles.
 /// </summary>
 public static class HandleManager
 {
@@ -20,23 +20,33 @@ public static class HandleManager
 
     public static int Register(DiskService service, HandleMetadata metadata)
     {
+        return Register(NativeSessionFactory.FromService(service), metadata);
+    }
+
+    public static int Register(INativeDiskSession session)
+    {
+        return Register(session, new HandleMetadata("register", false));
+    }
+
+    public static int Register(INativeDiskSession session, HandleMetadata metadata)
+    {
         lock (_lock)
         {
             int handle = _nextHandle++;
-            _entries[handle] = new HandleEntry(service, metadata);
+            _entries[handle] = new HandleEntry(session, metadata);
             return handle;
         }
     }
 
-    public static bool TryGet(int handle, out DiskService? service)
+    public static bool TryGet(int handle, out INativeDiskSession? session)
     {
         if (_entries.TryGetValue(handle, out var entry))
         {
-            service = entry.Service;
+            session = entry.Session;
             return true;
         }
 
-        service = null;
+        session = null;
         return false;
     }
 
@@ -56,7 +66,7 @@ public static class HandleManager
     {
         if (_entries.TryRemove(handle, out var entry))
         {
-            entry.Service.Dispose();
+            entry.Session.Dispose();
             return true;
         }
         return false;
@@ -80,5 +90,5 @@ public static class HandleManager
         }
     }
 
-    private sealed record HandleEntry(DiskService Service, HandleMetadata Metadata);
+    private sealed record HandleEntry(INativeDiskSession Session, HandleMetadata Metadata);
 }
