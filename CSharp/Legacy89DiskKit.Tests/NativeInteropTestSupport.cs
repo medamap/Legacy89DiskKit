@@ -93,6 +93,9 @@ internal static class NativeExportInvoker
     public static int GetCapabilityFlags() => GetDelegate<NoArgIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetCapabilityFlags))();
     public static int GetCapabilitySummary(IntPtr pointer, int capacity) => GetDelegate<IntPtrIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetCapabilitySummary))(pointer, capacity);
     public static int GetStatusName(int statusCode, IntPtr pointer, int capacity) => GetDelegate<StatusBufferDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetStatusName))(statusCode, pointer, capacity);
+    public static int GetStatusCount() => GetDelegate<NoArgIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetStatusCount))();
+    public static int GetStatusCodeAt(int index) => GetDelegate<IntIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetStatusCodeAt))(index);
+    public static int GetStatusNameAt(int index, IntPtr pointer, int capacity) => GetDelegate<StatusBufferDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetStatusNameAt))(index, pointer, capacity);
     public static int GetSupportedFileSystemCount() => GetDelegate<NoArgIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetSupportedFileSystemCount))();
     public static int GetSupportedFileSystemName(int index, IntPtr pointer, int capacity) => GetDelegate<StatusBufferDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetSupportedFileSystemName))(index, pointer, capacity);
     public static int GetSupportedPlatformCount() => GetDelegate<NoArgIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetSupportedPlatformCount))();
