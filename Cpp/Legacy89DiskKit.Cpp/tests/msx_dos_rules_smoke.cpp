@@ -2,13 +2,16 @@
 #include "legacy89diskkit/cpp/msx_dos_boot_sector_parser.hpp"
 #include "legacy89diskkit/cpp/msx_dos_configuration.hpp"
 #include "legacy89diskkit/cpp/msx_dos_default_attribute_rules.hpp"
+#include "legacy89diskkit/cpp/msx_dos_file_entry_writer.hpp"
 #include "legacy89diskkit/cpp/msx_dos_dir_parser.hpp"
 #include "legacy89diskkit/cpp/msx_dos_directory_listing.hpp"
 #include "legacy89diskkit/cpp/msx_dos_fat_rules.hpp"
 #include "legacy89diskkit/cpp/msx_dos_file_lookup.hpp"
+#include "legacy89diskkit/cpp/msx_dos_format_rules.hpp"
 #include "legacy89diskkit/cpp/msx_dos_mode_rules.hpp"
 #include "legacy89diskkit/cpp/msx_dos_read_rules.hpp"
 #include "legacy89diskkit/cpp/msx_dos_shell.hpp"
+#include "legacy89diskkit/cpp/msx_dos_cluster_write_rules.hpp"
 
 #include <algorithm>
 #include <array>
@@ -113,6 +116,35 @@ int main()
     if (info.cluster_size != config.ClusterSize() || info.first_data_sector != config.FirstDataSector())
     {
         return 11;
+    }
+
+    const auto rewritten_entry = MsxDosFileEntryWriter::Write(parsed_entry);
+    if (rewritten_entry[0] != 'M' || rewritten_entry[11] != 0x20)
+    {
+        return 12;
+    }
+
+    const auto format_fat = MsxDosFormatRules::CreateFatData(config);
+    const auto format_directory = MsxDosFormatRules::CreateRootDirectorySectors(config);
+    if (format_fat.empty() || format_directory.size() != static_cast<std::size_t>(config.RootDirectorySectors()))
+    {
+        return 13;
+    }
+
+    const auto shell_fat = MsxDosShell::CreateFatData(config);
+    const auto shell_directory = MsxDosShell::CreateRootDirectorySectors(config);
+    if (shell_fat.size() != format_fat.size() || shell_directory.size() != format_directory.size())
+    {
+        return 14;
+    }
+
+    const auto cluster_buffers = MsxDosClusterWriteRules::SplitIntoClusterBuffers(
+        { 1, 2, 3, 4, 5 },
+        { 2, 3 },
+        config);
+    if (cluster_buffers.size() != 2 || cluster_buffers[0][0] != 1 || cluster_buffers[0][4] != 5 || cluster_buffers[1][0] != 0)
+    {
+        return 15;
     }
 
     return 0;
