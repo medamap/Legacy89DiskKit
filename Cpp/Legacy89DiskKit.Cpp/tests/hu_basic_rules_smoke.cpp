@@ -1,3 +1,5 @@
+#include "legacy89diskkit/cpp/hu_basic_allocation_rules.hpp"
+#include "legacy89diskkit/cpp/hu_basic_directory_rules.hpp"
 #include "legacy89diskkit/cpp/disk_image_types.hpp"
 #include "legacy89diskkit/cpp/hu_basic_configuration.hpp"
 #include "legacy89diskkit/cpp/hu_basic_directory_entry_codec.hpp"
@@ -5,7 +7,9 @@
 #include "legacy89diskkit/cpp/hu_basic_name_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_read_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_types.hpp"
+#include "legacy89diskkit/cpp/hu_basic_write_rules.hpp"
 
+#include <algorithm>
 #include <cstdint>
 #include <vector>
 
@@ -33,32 +37,71 @@ int main()
         return 3;
     }
 
-    HuBasicFileEntry binary_file{ 3, HuBasicFileAttributes{ false } };
-    const auto trimmed = HuBasicReadRules::ResolveReadPayload({ 0x10, 0x20, 0x30, 0x40 }, binary_file, DiskType::TwoD, config, 1, 0xff);
-    if (trimmed.size() != 3 || trimmed[2] != 0x30)
+    const auto two_hd_config = HuBasicConfigurationProvider::GetDefault(DiskType::TwoHD);
+    if (HuBasicAllocationRules::IsAllocatableCluster(DiskType::TwoHD, two_hd_config, 0x80) ||
+        !HuBasicAllocationRules::IsAllocatableCluster(DiskType::TwoHD, two_hd_config, 0x100))
     {
         return 4;
     }
 
-    HuBasicFileEntry ascii_file{ 0, HuBasicFileAttributes{ true } };
-    const auto ascii = HuBasicReadRules::ResolveReadPayload({ 'A', 'B', 0x1a, 'C' }, ascii_file, DiskType::TwoD, config, 1, 0xff);
-    if (ascii.size() != 2 || ascii[0] != 'A' || ascii[1] != 'B')
+    std::vector<std::uint8_t> free_fat(512, 0x00);
+    HuBasicFatRules::SetEntry(free_fat, two_hd_config.reserved_clusters, 0x8f);
+    const auto free_clusters = HuBasicAllocationRules::CollectFreeClusters(free_fat, DiskType::TwoHD, two_hd_config, 4);
+    if (free_clusters.size() != 4 || std::find(free_clusters.begin(), free_clusters.end(), 0x80) != free_clusters.end())
     {
         return 5;
     }
 
-    HuBasicFileEntry two_hd_file{ 0, HuBasicFileAttributes{ false } };
+    HuBasicFileEntry binary_file{ "BIN", "DAT", 3, HuBasicFileAttributes{ false, 0x01, false, false, false }, 0, 0, 0, 0 };
+    const auto trimmed = HuBasicReadRules::ResolveReadPayload({ 0x10, 0x20, 0x30, 0x40 }, binary_file, DiskType::TwoD, config, 1, 0xff);
+    if (trimmed.size() != 3 || trimmed[2] != 0x30)
+    {
+        return 6;
+    }
+
+    HuBasicFileEntry ascii_file{ "ASC", "TXT", 0, HuBasicFileAttributes{ true, 0x04, false, false, false }, 0, 0, 0, 0 };
+    const auto ascii = HuBasicReadRules::ResolveReadPayload({ 'A', 'B', 0x1a, 'C' }, ascii_file, DiskType::TwoD, config, 1, 0xff);
+    if (ascii.size() != 2 || ascii[0] != 'A' || ascii[1] != 'B')
+    {
+        return 7;
+    }
+
+    HuBasicFileEntry two_hd_file{ "HD", "BIN", 0, HuBasicFileAttributes{ false, 0x01, false, false, false }, 0, 0, 0, 0 };
     std::vector<std::uint8_t> two_hd_data(700, 0x5a);
     const auto two_hd = HuBasicReadRules::ResolveReadPayload(
         two_hd_data,
         two_hd_file,
         DiskType::TwoHD,
-        HuBasicConfigurationProvider::GetDefault(DiskType::TwoHD),
+        two_hd_config,
         1,
         0x82);
     if (two_hd.size() != 768)
     {
-        return 6;
+        return 8;
+    }
+
+    const auto prepared_ascii = HuBasicWriteRules::PrepareWritePayload({ 'A', 'B' }, HuBasicFileAttributes{ true, 0x04, false, false, false });
+    if (prepared_ascii.size() != 3 || prepared_ascii.back() != 0x1a)
+    {
+        return 9;
+    }
+
+    if (HuBasicWriteRules::GetClustersNeeded(config.cluster_size + 1, config) != 2 ||
+        HuBasicWriteRules::GetTerminalFlagForLength(config.cluster_size + (3 * config.sector_size), config) != 0x82)
+    {
+        return 10;
+    }
+
+    const auto created = HuBasicDirectoryRules::CreateFileEntryForWrite(
+        "ABCDEFGHIJKLMN.BINARY",
+        std::vector<std::uint8_t>(16, 0x20),
+        HuBasicFileAttributes{ false, 0x01, false, false, false },
+        5,
+        0x1000,
+        0x1200);
+    if (created.file_name != "ABCDEFGHIJKLM" || created.extension != "BIN" || created.start_cluster != 5 || created.end_address != 0x100f)
+    {
+        return 11;
     }
 
     std::array<std::uint8_t, 32> entry_bytes{};
@@ -80,13 +123,13 @@ int main()
     const auto entry = HuBasicDirectoryEntryCodec::Parse(entry_bytes);
     if (entry.file_name != "HELLO" || entry.extension != "BAS" || entry.recorded_size != 0x1234)
     {
-        return 7;
+        return 12;
     }
 
     const auto roundtrip = HuBasicDirectoryEntryCodec::Write(entry);
     if (roundtrip[1] != 'H' || roundtrip[0x0e] != 'B' || roundtrip[0x12] != 0x34 || roundtrip[0x13] != 0x12)
     {
-        return 8;
+        return 13;
     }
 
     return 0;
