@@ -1,5 +1,7 @@
 #include "legacy89diskkit/cpp/hu_basic_allocation_rules.hpp"
+#include "legacy89diskkit/cpp/hu_basic_boot_record_codec.hpp"
 #include "legacy89diskkit/cpp/hu_basic_boot_record_parser.hpp"
+#include "legacy89diskkit/cpp/hu_basic_directory_layout_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_directory_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_directory_sector_rules.hpp"
 #include "legacy89diskkit/cpp/disk_image_types.hpp"
@@ -7,6 +9,8 @@
 #include "legacy89diskkit/cpp/hu_basic_dir_parser.hpp"
 #include "legacy89diskkit/cpp/hu_basic_directory_entry_codec.hpp"
 #include "legacy89diskkit/cpp/hu_basic_fat_rules.hpp"
+#include "legacy89diskkit/cpp/hu_basic_file_entry_writer.hpp"
+#include "legacy89diskkit/cpp/hu_basic_filesystem_info_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_label_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_mode_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_name_rules.hpp"
@@ -230,6 +234,32 @@ int main()
         plan->file_entry.metadata.file_type != HuBasicFileType::Ascii)
     {
         return 20;
+    }
+
+    const auto written_entry = HuBasicFileEntryWriter::ToDirectoryEntry(plan->file_entry);
+    if (written_entry.file_name != "HELLO" || written_entry.extension != "BAS" || written_entry.mode_byte != 0x04)
+    {
+        return 21;
+    }
+
+    const auto directory_layout = HuBasicDirectoryLayoutRules::BuildDirectorySectors({ plan->file_entry }, config.sector_size, 2);
+    if (directory_layout.size() != 2 || directory_layout[0][0] != 0x04 || directory_layout[0][32] != 0xff)
+    {
+        return 22;
+    }
+
+    std::vector<std::uint8_t> info_fat(256, 0x00);
+    HuBasicFatRules::SetEntry(info_fat, config.reserved_clusters, 0x8f);
+    const auto info = HuBasicFileSystemInfoRules::BuildInfo(info_fat, DiskType::TwoD, config);
+    if (info.total_size <= 0 || info.free_space <= 0 || info.cluster_size != config.cluster_size)
+    {
+        return 23;
+    }
+
+    const auto boot_roundtrip = HuBasicBootRecordCodec::Write(*boot_record);
+    if (boot_roundtrip[0] != 0x01 || boot_roundtrip[1] != 'S' || boot_roundtrip[0x1e] != 0x08)
+    {
+        return 24;
     }
 
     return 0;
