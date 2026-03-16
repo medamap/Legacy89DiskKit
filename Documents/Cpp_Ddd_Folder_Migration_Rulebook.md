@@ -142,6 +142,8 @@ A file belongs to `presentation/` when it primarily defines:
 | created-in-target | V2-15 | Infrastructure | `n/a` | `src/infrastructure/filesystem/hu_basic/hu_basic_file_system.cpp` | Hu-BASIC filesystem implementation over migrated domain rules |
 | created-in-target | V2-16 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/filesystem/n88_basic/n88_basic_file_system.hpp` | concrete N88-BASIC filesystem adapter over raw and D88 containers |
 | created-in-target | V2-16 | Infrastructure | `n/a` | `src/infrastructure/filesystem/n88_basic/n88_basic_file_system.cpp` | N88-BASIC filesystem implementation over migrated domain rules |
+| created-in-target | V2-17 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/filesystem/msx_dos/msx_dos_file_system.hpp` | concrete MSX-DOS filesystem adapter over raw and D88 containers |
+| created-in-target | V2-17 | Infrastructure | `n/a` | `src/infrastructure/filesystem/msx_dos/msx_dos_file_system.cpp` | MSX-DOS filesystem implementation over migrated domain rules |
 
 Append new rows as additional phases relocate files.
 
