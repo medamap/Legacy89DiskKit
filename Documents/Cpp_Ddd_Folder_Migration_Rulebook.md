@@ -114,6 +114,8 @@ A file belongs to `presentation/` when it primarily defines:
 | moved | V2-09 | Domain | `include/legacy89diskkit/cpp/fdc_types.hpp` | `include/legacy89diskkit/cpp/domain/fdc/fdc_types.hpp` | controller-facing FDC model |
 | moved | V2-09 | Domain | `include/legacy89diskkit/cpp/fdc_controller_contracts.hpp` | `include/legacy89diskkit/cpp/domain/fdc/fdc_controller_contracts.hpp` | controller contracts |
 | moved | V2-09 | Domain | `include/legacy89diskkit/cpp/drive_types.hpp` | `include/legacy89diskkit/cpp/domain/drive/drive_types.hpp` | drive state model |
+| created-in-target | V2-09 | Domain | `n/a` | `include/legacy89diskkit/cpp/domain/drive/mounted_medium_contracts.hpp` | mounted medium contract created directly in target layout |
+| created-in-target | V2-09 | Domain | `n/a` | `include/legacy89diskkit/cpp/domain/drive/sector_addressable_medium_contracts.hpp` | sector-addressable medium contract created directly in target layout |
 | moved | V2-09 | Domain | `include/legacy89diskkit/cpp/controller_runtime_contracts.hpp` | `include/legacy89diskkit/cpp/domain/controller/controller_runtime_contracts.hpp` | medium, drive, and clock contracts |
 
 Append new rows as additional phases relocate files.
