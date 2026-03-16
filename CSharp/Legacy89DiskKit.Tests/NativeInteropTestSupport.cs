@@ -102,7 +102,9 @@ internal static class NativeExportInvoker
     public static int GetSupportedPlatformName(int index, IntPtr pointer, int capacity) => GetDelegate<StatusBufferDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetSupportedPlatformName))(index, pointer, capacity);
     public static int GetSupportedImageFormatCount() => GetDelegate<NoArgIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetSupportedImageFormatCount))();
     public static int GetSupportedImageFormatName(int index, IntPtr pointer, int capacity) => GetDelegate<StatusBufferDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetSupportedImageFormatName))(index, pointer, capacity);
+    public static int GetInvalidHandleValue() => GetDelegate<NoArgIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetInvalidHandleValue))();
     public static int GetHandleLifecycleSummary(IntPtr pointer, int capacity) => GetDelegate<IntPtrIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetHandleLifecycleSummary))(pointer, capacity);
+    public static int GetHandleValueSummary(IntPtr pointer, int capacity) => GetDelegate<IntPtrIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetHandleValueSummary))(pointer, capacity);
     public static int GetBufferStringPolicySummary(IntPtr pointer, int capacity) => GetDelegate<IntPtrIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetBufferStringPolicySummary))(pointer, capacity);
     public static int GetBackendKind(IntPtr pointer, int capacity) => GetDelegate<IntPtrIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetBackendKind))(pointer, capacity);
     public static int GetBackendImplementation(IntPtr pointer, int capacity) => GetDelegate<IntPtrIntDelegate>(typeof(NativeInfoExports), nameof(NativeInfoExports.GetBackendImplementation))(pointer, capacity);
