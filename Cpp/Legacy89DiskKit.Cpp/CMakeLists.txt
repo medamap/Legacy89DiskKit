@@ -4,6 +4,9 @@ add_library(Legacy89DiskKitCpp STATIC
     src/character_encoding.cpp
     src/raw_disk_geometry.cpp
     src/d88_parser.cpp
+    src/hu_basic_name_rules.cpp
+    src/hu_basic_fat_rules.cpp
+    src/hu_basic_read_rules.cpp
 )
 
 target_include_directories(Legacy89DiskKitCpp
@@ -19,5 +22,12 @@ add_executable(Legacy89DiskKitCppSmoke
 
 target_link_libraries(Legacy89DiskKitCppSmoke PRIVATE Legacy89DiskKitCpp)
 
+add_executable(Legacy89DiskKitCppHuBasicSmoke
+    tests/hu_basic_rules_smoke.cpp
+)
+
+target_link_libraries(Legacy89DiskKitCppHuBasicSmoke PRIVATE Legacy89DiskKitCpp)
+
 enable_testing()
 add_test(NAME Legacy89DiskKitCppSmoke COMMAND Legacy89DiskKitCppSmoke)
+add_test(NAME Legacy89DiskKitCppHuBasicSmoke COMMAND Legacy89DiskKitCppHuBasicSmoke)
