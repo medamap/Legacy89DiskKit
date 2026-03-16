@@ -150,10 +150,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - Expected C++ target: concrete raw container adapters over migrated domain rules
   - Structural relocation: newly introduced raw container infrastructure should be created directly under `infrastructure/disk_image/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
 
-- [ ] Phase V2-13: D88 container infrastructure
+- [x] Phase V2-13: D88 container infrastructure
   - Layer: Infrastructure
   - C# source area: D88 container shell and concrete sector access
   - Expected C++ target: concrete D88 container adapters over migrated parser and domain rules
+  - Structural relocation: newly introduced D88 container infrastructure should be created directly under `infrastructure/disk_image/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 - [ ] Phase V2-14: Character encoding table infrastructure
   - Layer: Infrastructure
