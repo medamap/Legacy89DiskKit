@@ -1,5 +1,6 @@
 #pragma once
 
+#include "legacy89diskkit/cpp/msx_dos_configuration.hpp"
 #include "legacy89diskkit/cpp/msx_dos_types.hpp"
 
 #include <cstdint>
