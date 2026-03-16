@@ -1,4 +1,5 @@
 #include "legacy89diskkit/cpp/disk_image_types.hpp"
+#include "legacy89diskkit/cpp/hu_basic_directory_entry_codec.hpp"
 #include "legacy89diskkit/cpp/hu_basic_fat_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_name_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_read_rules.hpp"
@@ -57,6 +58,33 @@ int main()
     if (two_hd.size() != 768)
     {
         return 6;
+    }
+
+    std::array<std::uint8_t, 32> entry_bytes{};
+    entry_bytes[0] = 0x01;
+    entry_bytes[1] = 'H';
+    entry_bytes[2] = 'E';
+    entry_bytes[3] = 'L';
+    entry_bytes[4] = 'L';
+    entry_bytes[5] = 'O';
+    entry_bytes[0x0e] = 'B';
+    entry_bytes[0x0f] = 'A';
+    entry_bytes[0x10] = 'S';
+    entry_bytes[0x11] = 0x20;
+    entry_bytes[0x12] = 0x34;
+    entry_bytes[0x13] = 0x12;
+    entry_bytes[0x1e] = 0x21;
+    entry_bytes[0x1f] = 0x01;
+    const auto entry = HuBasicDirectoryEntryCodec::Parse(entry_bytes);
+    if (entry.file_name != "HELLO" || entry.extension != "BAS" || entry.recorded_size != 0x1234)
+    {
+        return 7;
+    }
+
+    const auto roundtrip = HuBasicDirectoryEntryCodec::Write(entry);
+    if (roundtrip[1] != 'H' || roundtrip[0x0e] != 'B' || roundtrip[0x12] != 0x34 || roundtrip[0x13] != 0x12)
+    {
+        return 8;
     }
 
     return 0;

@@ -7,6 +7,7 @@ add_library(Legacy89DiskKitCpp STATIC
     src/hu_basic_name_rules.cpp
     src/hu_basic_fat_rules.cpp
     src/hu_basic_read_rules.cpp
+    src/hu_basic_directory_entry_codec.cpp
 )
 
 target_include_directories(Legacy89DiskKitCpp
