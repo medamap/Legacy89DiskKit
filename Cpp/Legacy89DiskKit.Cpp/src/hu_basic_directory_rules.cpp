@@ -18,11 +18,17 @@ HuBasicFileMetadata HuBasicDirectoryRules::CreateMetadataForWrite(
     return HuBasicFileMetadata
     {
         file_type,
+        false,
+        false,
+        false,
+        attributes.is_read_only,
+        attributes.is_directory,
         static_cast<std::uint16_t>(data.size()),
         load_address,
         execution_address,
         start_cluster,
-        attributes.raw_attributes
+        attributes.raw_attributes,
+        0x20
     };
 }
 
@@ -46,7 +52,8 @@ HuBasicFileEntry HuBasicDirectoryRules::CreateFileEntryForWrite(
         start_cluster,
         load_address,
         end_address,
-        execution_address
+        execution_address,
+        CreateMetadataForWrite(data, attributes, start_cluster, load_address, execution_address)
     };
 }
 }

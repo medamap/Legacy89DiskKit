@@ -52,21 +52,27 @@ int main()
         return 5;
     }
 
-    HuBasicFileEntry binary_file{ "BIN", "DAT", 3, HuBasicFileAttributes{ false, 0x01, false, false, false }, 0, 0, 0, 0 };
+    HuBasicFileEntry binary_file{
+        "BIN", "DAT", 3, HuBasicFileAttributes{ false, 0x01, false, false, false }, 0, 0, 0, 0,
+        HuBasicFileMetadata{ HuBasicFileType::Binary, false, false, false, false, false, 3, 0, 0, 0, 0x01, 0x20 } };
     const auto trimmed = HuBasicReadRules::ResolveReadPayload({ 0x10, 0x20, 0x30, 0x40 }, binary_file, DiskType::TwoD, config, 1, 0xff);
     if (trimmed.size() != 3 || trimmed[2] != 0x30)
     {
         return 6;
     }
 
-    HuBasicFileEntry ascii_file{ "ASC", "TXT", 0, HuBasicFileAttributes{ true, 0x04, false, false, false }, 0, 0, 0, 0 };
+    HuBasicFileEntry ascii_file{
+        "ASC", "TXT", 0, HuBasicFileAttributes{ true, 0x04, false, false, false }, 0, 0, 0, 0,
+        HuBasicFileMetadata{ HuBasicFileType::Ascii, false, false, false, false, false, 0, 0, 0, 0, 0x04, 0x20 } };
     const auto ascii = HuBasicReadRules::ResolveReadPayload({ 'A', 'B', 0x1a, 'C' }, ascii_file, DiskType::TwoD, config, 1, 0xff);
     if (ascii.size() != 2 || ascii[0] != 'A' || ascii[1] != 'B')
     {
         return 7;
     }
 
-    HuBasicFileEntry two_hd_file{ "HD", "BIN", 0, HuBasicFileAttributes{ false, 0x01, false, false, false }, 0, 0, 0, 0 };
+    HuBasicFileEntry two_hd_file{
+        "HD", "BIN", 0, HuBasicFileAttributes{ false, 0x01, false, false, false }, 0, 0, 0, 0,
+        HuBasicFileMetadata{ HuBasicFileType::Binary, false, false, false, false, false, 0, 0, 0, 0, 0x01, 0x20 } };
     std::vector<std::uint8_t> two_hd_data(700, 0x5a);
     const auto two_hd = HuBasicReadRules::ResolveReadPayload(
         two_hd_data,

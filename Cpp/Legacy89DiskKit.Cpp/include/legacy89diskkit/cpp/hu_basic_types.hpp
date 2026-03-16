@@ -23,18 +23,6 @@ struct HuBasicFileAttributes
     bool is_hidden;
 };
 
-struct HuBasicFileEntry
-{
-    std::string file_name;
-    std::string extension;
-    std::uint32_t size;
-    HuBasicFileAttributes attributes;
-    int start_cluster;
-    std::uint16_t load_address;
-    std::uint16_t end_address;
-    std::uint16_t execution_address;
-};
-
 enum class HuBasicFileType : std::uint8_t
 {
     Unknown = 0,
@@ -46,10 +34,29 @@ enum class HuBasicFileType : std::uint8_t
 struct HuBasicFileMetadata
 {
     HuBasicFileType file_type;
+    bool has_password;
+    bool is_hidden;
+    bool is_verify;
+    bool is_write_protected;
+    bool is_directory;
     std::uint16_t recorded_size;
     std::uint16_t load_address;
     std::uint16_t execution_address;
     int start_cluster;
     std::uint8_t raw_mode_byte;
+    std::uint8_t password_byte;
+};
+
+struct HuBasicFileEntry
+{
+    std::string file_name;
+    std::string extension;
+    std::uint32_t size;
+    HuBasicFileAttributes attributes;
+    int start_cluster;
+    std::uint16_t load_address;
+    std::uint16_t end_address;
+    std::uint16_t execution_address;
+    HuBasicFileMetadata metadata;
 };
 }
