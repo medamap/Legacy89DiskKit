@@ -1,7 +1,10 @@
 #include "legacy89diskkit/cpp/disk_image_types.hpp"
 #include "legacy89diskkit/cpp/msx_dos_boot_sector_parser.hpp"
+#include "legacy89diskkit/cpp/msx_dos_attribute_update_rules.hpp"
 #include "legacy89diskkit/cpp/msx_dos_configuration.hpp"
+#include "legacy89diskkit/cpp/msx_dos_allocation_rules.hpp"
 #include "legacy89diskkit/cpp/msx_dos_default_attribute_rules.hpp"
+#include "legacy89diskkit/cpp/msx_dos_delete_rules.hpp"
 #include "legacy89diskkit/cpp/msx_dos_file_entry_writer.hpp"
 #include "legacy89diskkit/cpp/msx_dos_dir_parser.hpp"
 #include "legacy89diskkit/cpp/msx_dos_directory_listing.hpp"
@@ -10,8 +13,10 @@
 #include "legacy89diskkit/cpp/msx_dos_format_rules.hpp"
 #include "legacy89diskkit/cpp/msx_dos_mode_rules.hpp"
 #include "legacy89diskkit/cpp/msx_dos_read_rules.hpp"
+#include "legacy89diskkit/cpp/msx_dos_rename_rules.hpp"
 #include "legacy89diskkit/cpp/msx_dos_shell.hpp"
 #include "legacy89diskkit/cpp/msx_dos_cluster_write_rules.hpp"
+#include "legacy89diskkit/cpp/msx_dos_write_rules.hpp"
 
 #include <algorithm>
 #include <array>
@@ -145,6 +150,62 @@ int main()
     if (cluster_buffers.size() != 2 || cluster_buffers[0][0] != 1 || cluster_buffers[0][4] != 5 || cluster_buffers[1][0] != 0)
     {
         return 15;
+    }
+
+    const auto write_payload = MsxDosWriteRules::PrepareWritePayload(
+        { 'A', 'B' },
+        MsxDosFileAttributes{ true, 0x00, false, false, false, false, false });
+    if (write_payload.size() != 3 || write_payload.back() != 0x1a)
+    {
+        return 16;
+    }
+
+    const auto free_clusters = MsxDosAllocationRules::CollectFreeClusters(format_fat, config, 3);
+    if (free_clusters.size() != 3 || free_clusters[0] != 2)
+    {
+        return 17;
+    }
+
+    auto renamed = MsxDosRenameRules::Rename(parsed_entry, "DATA.BIN");
+    if (renamed.file_name != "DATA" || renamed.extension != "BIN")
+    {
+        return 18;
+    }
+
+    renamed = MsxDosAttributeUpdateRules::UpdateAttributes(
+        renamed,
+        MsxDosFileAttributes{ false, 0x00, true, false, false, false, true });
+    if (!renamed.attributes.is_read_only || !renamed.attributes.is_archive)
+    {
+        return 19;
+    }
+
+    auto delete_fat = fat;
+    MsxDosDeleteRules::FreeClusters(delete_fat, chain);
+    if (MsxDosFatRules::GetEntry(delete_fat, 2) != 0x000 || MsxDosFatRules::GetEntry(delete_fat, 3) != 0x000)
+    {
+        return 20;
+    }
+
+    const auto write_plan = MsxDosShell::PlanWrite(
+        "DATA.BIN",
+        { 0x10, 0x20, 0x30 },
+        MsxDosFileAttributes{ false, 0x01, false, false, false, false, false },
+        config,
+        format_fat);
+    const auto rename_plan = MsxDosShell::PlanRename(directory, config, "MSX.BAS", "DATA.BIN");
+    const auto attribute_plan = MsxDosShell::PlanAttributeUpdate(
+        directory,
+        config,
+        "MSX.BAS",
+        MsxDosFileAttributes{ false, 0x00, true, false, false, false, true });
+    const auto delete_plan = MsxDosShell::PlanDelete(fat, chain, directory, config, "MSX.BAS");
+    if (!write_plan.has_value() ||
+        !rename_plan.has_value() ||
+        !attribute_plan.has_value() ||
+        !delete_plan.has_value())
+    {
+        return 21;
     }
 
     return 0;
