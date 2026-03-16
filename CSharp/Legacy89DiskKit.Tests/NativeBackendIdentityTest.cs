@@ -1,4 +1,6 @@
 using System.Runtime.InteropServices;
+using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.NativeInterop.Core;
 using Legacy89DiskKit.NativeInterop.Exports;
 using Xunit;
 
@@ -7,6 +9,11 @@ namespace Legacy89DiskKit.Tests;
 [Collection("NativeInterop")]
 public class NativeBackendIdentityTest
 {
+    public NativeBackendIdentityTest()
+    {
+        NativeBridgeBackend.Reset();
+    }
+
     [Fact]
     public void BackendIdentity_ReturnsExpectedManagedValues()
     {
@@ -25,6 +32,17 @@ public class NativeBackendIdentityTest
         Assert.Contains("managed-bridge", ReadSummary(NativeExportInvoker.GetBackendSummary));
     }
 
+    [Fact]
+    public void BackendIdentity_FollowsConfiguredBackend()
+    {
+        NativeBridgeBackend.SetCurrent(new FakeNativeBridgeBackend());
+
+        Assert.Equal("cpp-bridge", NativeBackendIdentity.BackendKind);
+        Assert.Equal("Legacy89DiskKit.CppBridge", NativeBackendIdentity.BackendImplementation);
+        Assert.Equal("Legacy89DiskKit.Cpp", NativeBackendIdentity.BackendTarget);
+        Assert.Contains("cpp-bridge", NativeBackendIdentity.GetBackendSummary());
+    }
+
     private static string ReadSummary(Func<IntPtr, int, int> reader)
     {
         var buffer = Marshal.AllocHGlobal(256);
@@ -36,6 +54,25 @@ public class NativeBackendIdentityTest
         finally
         {
             Marshal.FreeHGlobal(buffer);
+        }
+    }
+
+    private sealed class FakeNativeBridgeBackend : INativeBridgeBackend
+    {
+        public string BackendKind => "cpp-bridge";
+
+        public string BackendImplementation => "Legacy89DiskKit.CppBridge";
+
+        public string BackendTarget => "Legacy89DiskKit.Cpp";
+
+        public INativeDiskSession CreateDisk(string path, DiskType diskType, string diskName)
+        {
+            throw new NotSupportedException();
+        }
+
+        public INativeDiskSession OpenDisk(string path, bool readOnly)
+        {
+            throw new NotSupportedException();
         }
     }
 }

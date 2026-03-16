@@ -1,14 +1,5 @@
 using System.Runtime.InteropServices;
 using System.Linq;
-using Legacy89DiskKit.Application.DiskImage;
-using Legacy89DiskKit.Domain.FileSystem.Interface.Registry;
-using Legacy89DiskKit.Application.CharacterEncoding;
-using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
-using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
-using Legacy89DiskKit.Application.FileSystem;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
-using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;
-using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
 using Legacy89DiskKit.NativeInterop.Types;
 using Legacy89DiskKit.NativeInterop.Core;
 
@@ -16,36 +7,6 @@ namespace Legacy89DiskKit.NativeInterop.Exports;
 
 public static class DiskExports
 {
-    private static IFileSystemRegistry? _defaultRegistry;
-    private static IEncoderRegistry? _defaultEncoderRegistry;
-
-    private static IEncoderRegistry GetDefaultEncoderRegistry()
-    {
-        if (_defaultEncoderRegistry == null)
-        {
-            var registry = new EncoderRegistry();
-            registry.Register("X1", new X1CharacterEncoder());
-            registry.Register("PC88", new Pc8801CharacterEncoder());
-            registry.Register("MSX", new Msx1CharacterEncoder());
-            _defaultEncoderRegistry = registry;
-        }
-        return _defaultEncoderRegistry;
-    }
-
-    private static IFileSystemRegistry GetDefaultRegistry()
-    {
-        if (_defaultRegistry == null)
-        {
-            var registry = new FileSystemRegistry();
-            registry.Register(new HuBasicFileSystemProvider());
-            registry.Register(new N88BasicFileSystemProvider());
-            registry.Register(new MsxDosFileSystemProvider());
-            // Add other providers here as they are implemented
-            _defaultRegistry = registry;
-        }
-        return _defaultRegistry;
-    }
-
     [UnmanagedCallersOnly(EntryPoint = "ldk_open_disk")]
     public static int OpenDisk(IntPtr pathPtr, int readOnlyFlag)
     {
@@ -56,7 +17,7 @@ public static class DiskExports
 
             var readOnly = NativeBoolean.ToManagedBoolean(readOnlyFlag);
             var isWritable = !readOnly;
-            var session = NativeSessionFactory.OpenDisk(path, readOnly, GetDefaultRegistry());
+            var session = NativeBridgeBackend.Current.OpenDisk(path, readOnly);
             return HandleManager.Register(session, new HandleMetadata("open-disk", isWritable));
         }
         catch (Exception ex)
@@ -74,11 +35,10 @@ public static class DiskExports
             string? name = Marshal.PtrToStringUTF8(namePtr) ?? "";
             if (string.IsNullOrEmpty(path)) return (int)LdkStatus.ErrorInvalidArgument;
 
-            var session = NativeSessionFactory.CreateDisk(
+            var session = NativeBridgeBackend.Current.CreateDisk(
                 path,
                 (Legacy89DiskKit.Domain.DiskImage.Model.DiskType)diskType,
-                name,
-                GetDefaultRegistry());
+                name);
             return HandleManager.Register(session, new HandleMetadata("create-disk", true));
         }
         catch (Exception ex)
