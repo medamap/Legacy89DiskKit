@@ -117,6 +117,9 @@ A file belongs to `presentation/` when it primarily defines:
 | created-in-target | V2-09 | Domain | `n/a` | `include/legacy89diskkit/cpp/domain/drive/mounted_medium_contracts.hpp` | mounted medium contract created directly in target layout |
 | created-in-target | V2-09 | Domain | `n/a` | `include/legacy89diskkit/cpp/domain/drive/sector_addressable_medium_contracts.hpp` | sector-addressable medium contract created directly in target layout |
 | moved | V2-09 | Domain | `include/legacy89diskkit/cpp/controller_runtime_contracts.hpp` | `include/legacy89diskkit/cpp/domain/controller/controller_runtime_contracts.hpp` | medium, drive, and clock contracts |
+| created-in-target | V2-10 | Domain | `n/a` | `include/legacy89diskkit/cpp/domain/raw/raw_preservation_types.hpp` | raw preservation identity, metadata, and integrity types |
+| created-in-target | V2-10 | Domain | `n/a` | `include/legacy89diskkit/cpp/domain/raw/encoded_track_contracts.hpp` | encoded-track payload and surface contract |
+| created-in-target | V2-10 | Domain | `n/a` | `include/legacy89diskkit/cpp/domain/raw/raw_conversion_contracts.hpp` | raw conversion direction and lossiness catalog |
 
 Append new rows as additional phases relocate files.
 
