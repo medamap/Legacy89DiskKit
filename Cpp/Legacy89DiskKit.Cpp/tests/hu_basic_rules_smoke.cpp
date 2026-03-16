@@ -28,13 +28,23 @@
 #include "legacy89diskkit/cpp/hu_basic_write_transaction.hpp"
 #include "legacy89diskkit/cpp/hu_basic_write_rules.hpp"
 #include "legacy89diskkit/cpp/n88_basic_configuration.hpp"
+#include "legacy89diskkit/cpp/n88_basic_allocation_rules.hpp"
+#include "legacy89diskkit/cpp/n88_basic_attribute_update_rules.hpp"
 #include "legacy89diskkit/cpp/n88_basic_default_attribute_rules.hpp"
+#include "legacy89diskkit/cpp/n88_basic_delete_rules.hpp"
 #include "legacy89diskkit/cpp/n88_basic_dir_parser.hpp"
 #include "legacy89diskkit/cpp/n88_basic_directory_listing.hpp"
 #include "legacy89diskkit/cpp/n88_basic_fat_rules.hpp"
+#include "legacy89diskkit/cpp/n88_basic_format_rules.hpp"
+#include "legacy89diskkit/cpp/n88_basic_file_entry_writer.hpp"
 #include "legacy89diskkit/cpp/n88_basic_read_rules.hpp"
+#include "legacy89diskkit/cpp/n88_basic_file_lookup.hpp"
+#include "legacy89diskkit/cpp/n88_basic_filesystem_info_rules.hpp"
+#include "legacy89diskkit/cpp/n88_basic_rename_rules.hpp"
 #include "legacy89diskkit/cpp/n88_basic_shell.hpp"
 #include "legacy89diskkit/cpp/n88_basic_types.hpp"
+#include "legacy89diskkit/cpp/n88_basic_write_rules.hpp"
+#include "legacy89diskkit/cpp/n88_basic_write_transaction.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -430,6 +440,87 @@ int main()
     if (n88_files.size() != 1 || n88_files[0].size != 512 || !N88BasicShell::FileExists(n88_directory, n88_fat, n88_config, "TEST.BAS"))
     {
         return 38;
+    }
+
+    const auto n88_written = N88BasicWriteRules::PrepareWritePayload(
+        { 'A', 'B' },
+        N88BasicFileAttributes{ true, 0x00, false });
+    if (n88_written.size() != 3 || n88_written.back() != 0x1a)
+    {
+        return 39;
+    }
+
+    if (N88BasicWriteRules::GetClustersNeeded(n88_config.cluster_size + 1, n88_config) != 2 ||
+        N88BasicWriteRules::GetTerminalFlagForLength(n88_config.cluster_size + 1, n88_config) != 0xc1)
+    {
+        return 40;
+    }
+
+    std::vector<std::uint8_t> n88_free_fat(256, 0x00);
+    n88_free_fat[0] = 0xff;
+    const auto n88_allocated = N88BasicAllocationRules::CollectFreeClusters(n88_free_fat, n88_config, 3);
+    if (n88_allocated.size() != 3 || n88_allocated[0] != 1)
+    {
+        return 41;
+    }
+
+    auto n88_renamed = N88BasicRenameRules::Rename(
+        N88BasicFileEntry{ "TEST", "BAS", 512, N88BasicFileAttributes{ true, 0x00, false }, 0x05 },
+        "DATA.BIN");
+    if (n88_renamed.file_name != "DATA" || n88_renamed.extension != "BIN")
+    {
+        return 42;
+    }
+
+    n88_renamed = N88BasicAttributeUpdateRules::UpdateAttributes(
+        n88_renamed,
+        N88BasicFileAttributes{ false, 0x11, true });
+    if (!n88_renamed.attributes.is_read_only || n88_renamed.attributes.raw_attributes != 0x11)
+    {
+        return 43;
+    }
+
+    N88BasicDeleteRules::FreeClusters(n88_free_fat, { 1, 2 });
+    if (n88_free_fat[1] != 0x00 || n88_free_fat[2] != 0x00)
+    {
+        return 44;
+    }
+
+    const auto n88_formatted_fat = N88BasicFormatRules::CreateFatData(n88_config);
+    const auto n88_formatted_dir = N88BasicFormatRules::CreateDirectorySectors(n88_config);
+    if (n88_formatted_fat.empty() || n88_formatted_fat[0] != 0xff ||
+        n88_formatted_dir.size() != static_cast<std::size_t>(n88_config.directory_sectors))
+    {
+        return 45;
+    }
+
+    const auto n88_rename_plan = N88BasicShell::PlanRename(n88_directory, n88_config, "TEST.BAS", "DATA.BIN");
+    const auto n88_update_plan = N88BasicShell::PlanAttributeUpdate(
+        n88_directory,
+        n88_config,
+        "TEST.BAS",
+        N88BasicFileAttributes{ false, 0x11, true });
+    const auto n88_delete_plan = N88BasicShell::PlanDelete(n88_fat, n88_chain, n88_directory, n88_config, "TEST.BAS");
+    const auto n88_find = N88BasicShell::FindFile(n88_directory, n88_fat, n88_config, "TEST.BAS");
+    const auto n88_info = N88BasicShell::GetFileSystemInfo(n88_fat, n88_config);
+    const auto n88_write_plan = N88BasicShell::PlanWrite(
+        "DATA.BIN",
+        { 0x10, 0x20, 0x30 },
+        N88BasicFileAttributes{ false, 0x01, false },
+        n88_config,
+        n88_formatted_fat);
+    const auto n88_written_entry = N88BasicFileEntryWriter::Write(
+        N88BasicFileEntry{ "DATA", "BIN", 3, N88BasicFileAttributes{ false, 0x01, false }, 1 });
+    if (!n88_rename_plan.has_value() ||
+        !n88_update_plan.has_value() ||
+        !n88_delete_plan.has_value() ||
+        !n88_find.has_value() ||
+        !n88_write_plan.has_value() ||
+        n88_info.cluster_size != n88_config.cluster_size ||
+        n88_written_entry[0] != 'D' ||
+        n88_delete_plan->entry_offset != 0)
+    {
+        return 46;
     }
 
     return 0;
