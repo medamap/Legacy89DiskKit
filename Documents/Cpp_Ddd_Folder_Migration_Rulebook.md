@@ -130,6 +130,8 @@ A file belongs to `presentation/` when it primarily defines:
 | created-in-target | V2-11 | Infrastructure | `n/a` | `src/infrastructure/disk_image/raw_buffer_loader.cpp` | raw buffer loader implementation |
 | created-in-target | V2-12 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/disk_image/raw_disk_container.hpp` | in-memory raw container adapter |
 | created-in-target | V2-12 | Infrastructure | `n/a` | `src/infrastructure/disk_image/raw_disk_container.cpp` | raw container implementation over migrated geometry rules |
+| created-in-target | V2-13 | Infrastructure | `n/a` | `include/legacy89diskkit/cpp/infrastructure/disk_image/d88_disk_container.hpp` | in-memory D88 container adapter |
+| created-in-target | V2-13 | Infrastructure | `n/a` | `src/infrastructure/disk_image/d88_disk_container.cpp` | D88 container implementation over migrated parser and domain rules |
 
 Append new rows as additional phases relocate files.
 

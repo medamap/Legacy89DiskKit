@@ -10,6 +10,7 @@ add_library(Legacy89DiskKitCpp STATIC
     src/infrastructure/disk_image/raw_buffer_loader.cpp
     src/infrastructure/disk_image/disk_image_buffer_loader.cpp
     src/infrastructure/disk_image/raw_disk_container.cpp
+    src/infrastructure/disk_image/d88_disk_container.cpp
     src/hu_basic_configuration.cpp
     src/hu_basic_name_rules.cpp
     src/hu_basic_fat_rules.cpp
@@ -144,6 +145,12 @@ add_executable(Legacy89DiskKitCppRawDiskContainerSmoke
 
 target_link_libraries(Legacy89DiskKitCppRawDiskContainerSmoke PRIVATE Legacy89DiskKitCpp)
 
+add_executable(Legacy89DiskKitCppD88DiskContainerSmoke
+    tests/d88_disk_container_smoke.cpp
+)
+
+target_link_libraries(Legacy89DiskKitCppD88DiskContainerSmoke PRIVATE Legacy89DiskKitCpp)
+
 enable_testing()
 add_test(NAME Legacy89DiskKitCppSmoke COMMAND Legacy89DiskKitCppSmoke)
 add_test(NAME Legacy89DiskKitCppHuBasicSmoke COMMAND Legacy89DiskKitCppHuBasicSmoke)
@@ -153,3 +160,4 @@ add_test(NAME Legacy89DiskKitCppControllerDomainSmoke COMMAND Legacy89DiskKitCpp
 add_test(NAME Legacy89DiskKitCppRawPreservationDomainSmoke COMMAND Legacy89DiskKitCppRawPreservationDomainSmoke)
 add_test(NAME Legacy89DiskKitCppBufferLoaderSmoke COMMAND Legacy89DiskKitCppBufferLoaderSmoke)
 add_test(NAME Legacy89DiskKitCppRawDiskContainerSmoke COMMAND Legacy89DiskKitCppRawDiskContainerSmoke)
+add_test(NAME Legacy89DiskKitCppD88DiskContainerSmoke COMMAND Legacy89DiskKitCppD88DiskContainerSmoke)
