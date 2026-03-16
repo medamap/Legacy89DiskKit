@@ -29,6 +29,36 @@ public static class NativeInfoExports
         return NativeStringWriter.WriteUtf8(bufferPtr, capacity, NativeStatusCatalog.GetName((LdkStatus)statusCode));
     }
 
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_status_count")]
+    public static int GetStatusCount()
+    {
+        return NativeStatusCatalog.GetEntries().Count;
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_status_code_at")]
+    public static int GetStatusCodeAt(int index)
+    {
+        var entries = NativeStatusCatalog.GetEntries();
+        if (index < 0 || index >= entries.Count)
+        {
+            return (int)LdkStatus.ErrorInvalidArgument;
+        }
+
+        return (int)entries[index].Status;
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_status_name_at")]
+    public static int GetStatusNameAt(int index, IntPtr bufferPtr, int capacity)
+    {
+        var entries = NativeStatusCatalog.GetEntries();
+        if (index < 0 || index >= entries.Count)
+        {
+            return (int)LdkStatus.ErrorInvalidArgument;
+        }
+
+        return NativeStringWriter.WriteUtf8(bufferPtr, capacity, entries[index].Name);
+    }
+
     [UnmanagedCallersOnly(EntryPoint = "ldk_get_supported_file_system_count")]
     public static int GetSupportedFileSystemCount()
     {
