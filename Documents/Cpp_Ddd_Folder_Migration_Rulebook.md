@@ -80,6 +80,12 @@ A file belongs to `infrastructure/` when it primarily defines:
 - runtime construction helpers
 - native bridge backing implementations
 
+Current migration notes:
+
+- `V2-21` native bridge infrastructure is placed under `Cpp/Legacy89DiskKit.Cpp/include/legacy89diskkit/cpp/infrastructure/native/` and `Cpp/Legacy89DiskKit.Cpp/src/infrastructure/native/`
+- `native_file_system_session.*` is treated as infrastructure because it composes concrete container loading, filesystem selection/detection, and runtime-backed operations
+- `native_bridge_exports.*` is treated as infrastructure because it provides ABI-shaped concrete bridge entry points over C++ implementations
+
 ### Application
 
 A file belongs to `application/` when it primarily defines:
