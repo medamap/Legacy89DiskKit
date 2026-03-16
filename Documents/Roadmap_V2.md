@@ -168,10 +168,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - Expected C++ target: concrete Hu-BASIC container-backed infrastructure over domain rules
   - Structural relocation: newly introduced Hu-BASIC filesystem infrastructure should be created directly under `infrastructure/filesystem/hu_basic/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
 
-- [ ] Phase V2-16: N88-BASIC filesystem infrastructure
+- [x] Phase V2-16: N88-BASIC filesystem infrastructure
   - Layer: Infrastructure
   - C# source area: N88-BASIC filesystem implementation shell
   - Expected C++ target: concrete N88-BASIC container-backed infrastructure over domain rules
+  - Structural relocation: newly introduced N88-BASIC filesystem infrastructure should be created directly under `infrastructure/filesystem/n88_basic/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 - [ ] Phase V2-17: MSX-DOS filesystem infrastructure
   - Layer: Infrastructure
