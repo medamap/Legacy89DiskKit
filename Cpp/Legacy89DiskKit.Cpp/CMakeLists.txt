@@ -43,6 +43,7 @@ add_library(Legacy89DiskKitCpp STATIC
     src/n88_basic_read_rules.cpp
     src/n88_basic_directory_listing.cpp
     src/n88_basic_default_attribute_rules.cpp
+    src/n88_basic_mode_rules.cpp
     src/n88_basic_write_rules.cpp
     src/n88_basic_allocation_rules.cpp
     src/n88_basic_delete_rules.cpp
