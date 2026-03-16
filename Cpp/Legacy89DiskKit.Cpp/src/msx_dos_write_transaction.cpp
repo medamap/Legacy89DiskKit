@@ -6,12 +6,12 @@
 
 namespace legacy89diskkit::cpp
 {
-MsxDosWriteTransaction::CreatePlan(
+std::optional<MsxDosWriteTransactionPlan> MsxDosWriteTransaction::CreatePlan(
     const std::string& file_name,
     const std::vector<std::uint8_t>& data,
     const MsxDosFileAttributes& attributes,
     const MsxDosConfiguration& config,
-    const std::vector<std::uint8_t>& fat_data) -> std::optional<MsxDosWriteTransactionPlan>
+    const std::vector<std::uint8_t>& fat_data)
 {
     const auto parsed = HuBasicNameRules::ParseFileName(file_name);
     const auto payload = MsxDosWriteRules::PrepareWritePayload(data, attributes);
