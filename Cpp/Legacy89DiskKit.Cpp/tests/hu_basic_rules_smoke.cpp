@@ -1,4 +1,5 @@
 #include "legacy89diskkit/cpp/disk_image_types.hpp"
+#include "legacy89diskkit/cpp/hu_basic_configuration.hpp"
 #include "legacy89diskkit/cpp/hu_basic_directory_entry_codec.hpp"
 #include "legacy89diskkit/cpp/hu_basic_fat_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_name_rules.hpp"
@@ -23,7 +24,7 @@ int main()
         return 2;
     }
 
-    HuBasicConfiguration config{ 0x10, 0x100, 1024, 256 };
+    const auto config = HuBasicConfigurationProvider::GetDefault(DiskType::TwoD);
     std::vector<std::uint8_t> fat(256, 0x00);
     HuBasicFatRules::ApplyChain(fat, { 0x10, 0x11 }, 0x83);
     const auto chain = HuBasicFatRules::GetClusterChain(fat, config, 0x10);
@@ -52,7 +53,7 @@ int main()
         two_hd_data,
         two_hd_file,
         DiskType::TwoHD,
-        HuBasicConfiguration{ 0x10, 0x100, 1024, 256 },
+        HuBasicConfigurationProvider::GetDefault(DiskType::TwoHD),
         1,
         0x82);
     if (two_hd.size() != 768)
