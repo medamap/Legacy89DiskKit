@@ -62,7 +62,7 @@ typedef struct LdkDiskContainerMetadata {
     int64_t declared_image_size;
 } LdkDiskContainerMetadata;
 
-int32_t LDK_CALL ldk_open_disk(const char* path, bool read_only);
+int32_t LDK_CALL ldk_open_disk(const char* path, int32_t read_only_flag);
 int32_t LDK_CALL ldk_create_disk(const char* path, int32_t disk_type, const char* name);
 int32_t LDK_CALL ldk_close_disk(int32_t handle);
 int32_t LDK_CALL ldk_get_abi_version(void);

@@ -85,7 +85,7 @@ class Program
     private delegate int CloseAllHandlesDelegate();
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    private delegate int OpenDiskDelegate(IntPtr path, bool readOnly);
+    private delegate int OpenDiskDelegate(IntPtr path, int readOnlyFlag);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int CloseDiskDelegate(int handle);
@@ -168,7 +168,7 @@ class Program
         int handle;
         try
         {
-            handle = openDisk(diskPathPtr, true);
+            handle = openDisk(diskPathPtr, 1);
         }
         finally
         {
