@@ -197,6 +197,30 @@ public static class NativeInfoExports
         return NativeStringWriter.WriteUtf8(bufferPtr, capacity, operations[index]);
     }
 
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_open_mode_summary")]
+    public static int GetOpenModeSummary(IntPtr bufferPtr, int capacity)
+    {
+        return NativeStringWriter.WriteUtf8(bufferPtr, capacity, NativeOpenModeCatalog.GetOpenModeSummary());
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_open_mode_count")]
+    public static int GetOpenModeCount()
+    {
+        return NativeOpenModeCatalog.GetModes().Count;
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_open_mode_name_at")]
+    public static int GetOpenModeNameAt(int index, IntPtr bufferPtr, int capacity)
+    {
+        var modes = NativeOpenModeCatalog.GetModes();
+        if (index < 0 || index >= modes.Count)
+        {
+            return (int)LdkStatus.ErrorInvalidArgument;
+        }
+
+        return NativeStringWriter.WriteUtf8(bufferPtr, capacity, modes[index]);
+    }
+
     private static int WriteCatalogItem(IReadOnlyList<string> items, int index, IntPtr bufferPtr, int capacity)
     {
         if (index < 0 || index >= items.Count)

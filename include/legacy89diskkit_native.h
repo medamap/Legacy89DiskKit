@@ -92,6 +92,9 @@ int32_t LDK_CALL ldk_get_export_name_at(int32_t index, char* buffer, int32_t cap
 int32_t LDK_CALL ldk_get_export_group_at(int32_t index, char* buffer, int32_t capacity);
 int32_t LDK_CALL ldk_get_mutating_operation_count(void);
 int32_t LDK_CALL ldk_get_mutating_operation_name_at(int32_t index, char* buffer, int32_t capacity);
+int32_t LDK_CALL ldk_get_open_mode_summary(char* buffer, int32_t capacity);
+int32_t LDK_CALL ldk_get_open_mode_count(void);
+int32_t LDK_CALL ldk_get_open_mode_name_at(int32_t index, char* buffer, int32_t capacity);
 int32_t LDK_CALL ldk_is_handle_valid(int32_t handle);
 int32_t LDK_CALL ldk_get_open_handle_count(void);
 int32_t LDK_CALL ldk_close_all_handles(void);
