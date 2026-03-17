@@ -216,10 +216,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - C# source area: disk open, create, format, and metadata orchestration
   - Expected C++ target: application service for disk-level use cases
 
-- [ ] Phase V2-24: File transfer application layer in C++
+- [x] Phase V2-24: File transfer application layer in C++
   - Layer: Application
   - C# source area: import, export, overwrite, and payload transfer orchestration
   - Expected C++ target: application service for file-level use cases
+  - Completion Note: Implemented `FileTransferService` and `CharacterEncodingService`. Note: Current implementation uses a simplified ASCII check (bit 0) and maps PC88/MSX encoding to X1 table as a temporary measure. Full parity verification belongs to V2-30.
 
 - [ ] Phase V2-25: Directory layout application layer in C++
   - Layer: Application
