@@ -15,6 +15,7 @@ public:
     RawDiskContainer() = default;
 
     static Result<RawDiskContainer> OpenFromBuffer(std::span<const std::uint8_t> image_data, bool read_only = true);
+    static Result<RawDiskContainer> CreateNew(DiskType type);
 
     const std::string& FilePath() const;
     bool IsReadOnly() const;

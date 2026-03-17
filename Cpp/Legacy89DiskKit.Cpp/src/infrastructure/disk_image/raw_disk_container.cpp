@@ -2,6 +2,7 @@
 
 #include "legacy89diskkit/cpp/infrastructure/disk_image/raw_buffer_loader.hpp"
 #include "legacy89diskkit/cpp/raw_disk_geometry.hpp"
+#include "legacy89diskkit/cpp/disk_image_types.hpp"
 
 namespace legacy89diskkit::cpp
 {
@@ -17,6 +18,51 @@ Result<RawDiskContainer> RawDiskContainer::OpenFromBuffer(const std::span<const 
     metadata.is_write_protected = metadata.is_write_protected || read_only;
     return Result<RawDiskContainer>::Success(
         RawDiskContainer(std::vector<std::uint8_t>(image_data.begin(), image_data.end()), std::move(metadata), read_only, {}));
+}
+
+Result<RawDiskContainer> RawDiskContainer::CreateNew(DiskType type)
+{
+    std::size_t size = 0;
+    int cylinders = 40;
+    int heads = 2;
+    int sectors_per_track = 16;
+    int sector_size = 256;
+
+    switch (type)
+    {
+    case DiskType::TwoD:
+        size = 327680;
+        cylinders = 40;
+        heads = 2;
+        sectors_per_track = 16;
+        sector_size = 256;
+        break;
+    case DiskType::TwoDD:
+        size = 720 * 1024;
+        cylinders = 80;
+        heads = 2;
+        sectors_per_track = 9;
+        sector_size = 512;
+        break;
+    case DiskType::TwoHD:
+        size = 1440 * 1024;
+        cylinders = 80;
+        heads = 2;
+        sectors_per_track = 18;
+        sector_size = 512;
+        break;
+    default:
+        return Result<RawDiskContainer>::Failure(StatusCode::InvalidArgument, "Unsupported disk type for raw creation.");
+    }
+
+    DiskContainerMetadata metadata{};
+    metadata.disk_type = type;
+    metadata.geometry = DiskGeometryInfo{cylinders, heads, sectors_per_track, sector_size};
+    metadata.is_write_protected = false;
+    metadata.image_format = "raw-sector-container";
+
+    return Result<RawDiskContainer>::Success(
+        RawDiskContainer(std::vector<std::uint8_t>(size, 0x00), std::move(metadata), false, {}));
 }
 
 RawDiskContainer::RawDiskContainer(
@@ -80,9 +126,9 @@ Status RawDiskContainer::WriteSector(const int cylinder, const int head, const i
         return {StatusCode::InvalidArgument, "Raw disk container is read-only."};
     }
 
-    if (data.size() != static_cast<std::size_t>(metadata_.geometry.bytes_per_sector))
+    if (data.size() > static_cast<std::size_t>(metadata_.geometry.bytes_per_sector))
     {
-        return {StatusCode::InvalidArgument, "Sector size does not match container geometry."};
+        return {StatusCode::InvalidArgument, "Data size exceeds sector size."};
     }
 
     RawSectorAddressCalculator calculator(RawDiskGeometry{

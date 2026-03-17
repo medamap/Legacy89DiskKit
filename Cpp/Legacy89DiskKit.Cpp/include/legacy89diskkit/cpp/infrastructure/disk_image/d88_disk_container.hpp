@@ -15,6 +15,7 @@ public:
     D88DiskContainer() = default;
 
     static Result<D88DiskContainer> OpenFromBuffer(std::span<const std::uint8_t> image_data, bool read_only = true);
+    static Result<D88DiskContainer> CreateNew(DiskType type, const std::string& name);
 
     const std::string& FilePath() const;
     bool IsReadOnly() const;
