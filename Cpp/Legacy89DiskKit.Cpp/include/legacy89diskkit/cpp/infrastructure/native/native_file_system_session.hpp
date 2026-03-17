@@ -87,6 +87,18 @@ public:
     Status Format();
     Status Save();
 
+    template <typename TVisitor>
+    auto ApplyToContainer(TVisitor&& visitor)
+    {
+        return std::visit(std::forward<TVisitor>(visitor), container_);
+    }
+
+    template <typename TVisitor>
+    auto ApplyToContainer(TVisitor&& visitor) const
+    {
+        return std::visit(std::forward<TVisitor>(visitor), container_);
+    }
+
     Result<std::vector<std::uint8_t>> ReadBootArea() const;
     Status WriteBootArea(const std::vector<std::uint8_t>& data);
 
