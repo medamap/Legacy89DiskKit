@@ -120,7 +120,7 @@ N88BasicFileAttributes ToN88Attributes(const std::uint16_t attributes)
     return {
         (mode & 0x0c) != 0, // is_ascii
         mode,               // raw_attributes
-        (mode & 0x40) != 0  // is_read_only
+        (mode & 0x10) != 0  // is_read_only (Changed from 0x40 to 0x10)
     };
 }
 
@@ -803,6 +803,30 @@ Status NativeFileSystemSession::WriteBootArea(const std::vector<std::uint8_t>& d
             }
         },
         file_system_);
+}
+
+Result<std::vector<std::uint8_t>> NativeFileSystemSession::ReadSector(int cylinder, int head, int sector) const
+{
+    return ApplyToContainer([cylinder, head, sector](const auto& container) -> Result<std::vector<std::uint8_t>> {
+        using T = std::decay_t<decltype(container)>;
+        if constexpr (std::is_same_v<T, std::monostate>) {
+            return Result<std::vector<std::uint8_t>>::Failure(StatusCode::InvalidArgument, "Container is not initialized.");
+        } else {
+            return container.ReadSector(cylinder, head, sector);
+        }
+    });
+}
+
+Status NativeFileSystemSession::WriteSector(int cylinder, int head, int sector, const std::vector<std::uint8_t>& data)
+{
+    return ApplyToContainer([cylinder, head, sector, &data](auto& container) -> Status {
+        using T = std::decay_t<decltype(container)>;
+        if constexpr (std::is_same_v<T, std::monostate>) {
+            return {StatusCode::InvalidArgument, "Container is not initialized."};
+        } else {
+            return container.WriteSector(cylinder, head, sector, data);
+        }
+    });
 }
 
 NativeFileSystemSession::~NativeFileSystemSession()

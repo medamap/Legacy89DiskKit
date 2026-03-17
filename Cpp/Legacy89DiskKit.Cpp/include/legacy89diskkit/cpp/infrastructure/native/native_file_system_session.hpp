@@ -102,6 +102,9 @@ public:
     Result<std::vector<std::uint8_t>> ReadBootArea() const;
     Status WriteBootArea(const std::vector<std::uint8_t>& data);
 
+    Result<std::vector<std::uint8_t>> ReadSector(int cylinder, int head, int sector) const;
+    Status WriteSector(int cylinder, int head, int sector, const std::vector<std::uint8_t>& data);
+
     Result<DirectoryLayout> ReadDirectoryLayout() const;
     Status ApplyDirectoryLayout(const DirectoryLayout& layout);
 

@@ -117,8 +117,10 @@ LDK_API int32_t LDK_CALL ldk_get_container_metadata(int32_t handle, LdkDiskConta
 LDK_API int32_t LDK_CALL ldk_get_files_count(int32_t handle, int32_t* out_count);
 LDK_API int32_t LDK_CALL ldk_get_files(int32_t handle, LdkFileEntry* buffer, int32_t capacity);
 LDK_API int32_t LDK_CALL ldk_read_file(int32_t handle, const char* name, void* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_read_sector(int32_t handle, int32_t cylinder, int32_t head, int32_t sector, void* buffer, int32_t capacity);
 LDK_API int32_t LDK_CALL ldk_delete_file(int32_t handle, const char* name);
 LDK_API int32_t LDK_CALL ldk_write_file(int32_t handle, const char* name, const void* data, int32_t length, uint16_t attributes, uint16_t load_address, uint16_t execution_address);
+LDK_API int32_t LDK_CALL ldk_write_sector(int32_t handle, int32_t cylinder, int32_t head, int32_t sector, const void* data, int32_t length);
 LDK_API int32_t LDK_CALL ldk_rename_file(int32_t handle, const char* old_name, const char* new_name);
 LDK_API int32_t LDK_CALL ldk_update_attributes(int32_t handle, const char* name, uint16_t attributes);
 LDK_API int32_t LDK_CALL ldk_read_boot_area(int32_t handle, void* buffer, int32_t capacity);

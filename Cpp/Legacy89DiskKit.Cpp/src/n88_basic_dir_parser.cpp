@@ -14,7 +14,9 @@ std::string DecodeTrimmed(const std::uint8_t* data, const std::size_t length)
     text.reserve(length);
     for (std::size_t index = 0; index < length; ++index)
     {
-        text.push_back(static_cast<char>(data[index]));
+        const char ch = static_cast<char>(data[index]);
+        if (ch == '\0') break;
+        text.push_back(ch);
     }
 
     while (!text.empty() && text.back() == ' ')
