@@ -395,6 +395,14 @@ int NativeBridgeExports::Format(std::int32_t handle)
     if (entry == nullptr) return LDK_STATUS_ERROR_INVALID_HANDLE;
     return LdkStatusFromStatus(entry->session.Format());
 }
+
+int NativeBridgeExports::Save(std::int32_t handle)
+{
+    std::lock_guard<std::mutex> lock(EntriesMutex());
+    auto* entry = FindEntry(handle);
+    if (entry == nullptr) return LDK_STATUS_ERROR_INVALID_HANDLE;
+    return LdkStatusFromStatus(entry->session.Save());
+}
 } // namespace legacy89diskkit::cpp::native
 
 using namespace legacy89diskkit::cpp;
@@ -670,6 +678,11 @@ LDK_API std::int32_t LDK_CALL ldk_write_boot_area(int32_t handle, const void* da
 LDK_API std::int32_t LDK_CALL ldk_format(int32_t handle)
 {
     return NativeBridgeExports::Format(handle);
+}
+
+LDK_API std::int32_t LDK_CALL ldk_save(int32_t handle)
+{
+    return NativeBridgeExports::Save(handle);
 }
 
 } // extern "C"

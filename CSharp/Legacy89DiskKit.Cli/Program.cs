@@ -37,8 +37,29 @@ var rootCommand = new RootCommand(localizer.RootDescription);
 
 var languageOption = new Option<string?>(new[] { "--language", "-l" }, localizer.LanguageOptionDescription);
 var encodingOption = new Option<string?>(new[] { "--encoding", "-e" }, localizer.EncodingOptionDescription);
+var nativeOption = new Option<bool>(new[] { "--native", "-n" }, "Use C++ native implementation via NativeBridge");
 rootCommand.AddGlobalOption(languageOption);
 rootCommand.AddGlobalOption(encodingOption);
+rootCommand.AddGlobalOption(nativeOption);
+
+// Initialize backend based on command line args
+if (effectiveArgs.Contains("--native") || effectiveArgs.Contains("-n"))
+{
+    try 
+    {
+        NativeBridgeBackend.SetCurrent(new Legacy89DiskKit.NativeInterop.Core.CppLibraryNativeBridgeBackend());
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Warning: Failed to initialize native backend: {ex.Message}");
+        Console.Error.WriteLine("Falling back to managed implementation.");
+        NativeBridgeBackend.SetCurrent(new Legacy89DiskKit.NativeInterop.Core.ManagedNativeBridgeBackend());
+    }
+}
+else
+{
+    NativeBridgeBackend.SetCurrent(new Legacy89DiskKit.NativeInterop.Core.ManagedNativeBridgeBackend());
+}
 
 var imageArgument = new Argument<string>("image", localizer.ImageArgumentDescription);
 
@@ -913,7 +934,7 @@ static bool IsBootSubcommand(string value)
 
 static DiskService CreateDiskService()
 {
-    return Legacy89DiskKitApplication.CreateDiskService();
+    return new DiskService();
 }
 
 static DiskType ParseDiskType(string diskTypeName)

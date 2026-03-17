@@ -1,4 +1,5 @@
 using Legacy89DiskKit.Application;
+using Legacy89DiskKit.Application.DiskImage;
 using Legacy89DiskKit.NativeInterop.Core;
 using Legacy89DiskKit.NativeInterop.Exports;
 using Xunit;
@@ -12,9 +13,10 @@ public class NativeHandleExportsTest
     public void HandleExports_ReflectRegisteredHandleState()
     {
         HandleManager.Clear();
+        NativeBridgeBackend.SetCurrent(new ManagedNativeBridgeBackend());
 
         using var service = Legacy89DiskKitApplication.CreateDiskService();
-        var handle = HandleManager.Register(service);
+        var handle = HandleManager.Register(service.Session!);
 
         Assert.Equal(1, NativeExportInvoker.IsHandleValid(handle));
         Assert.True(NativeExportInvoker.GetOpenHandleCount() >= 1);
@@ -28,11 +30,12 @@ public class NativeHandleExportsTest
     public void CloseAllHandles_ClearsRegisteredHandleState()
     {
         HandleManager.Clear();
+        NativeBridgeBackend.SetCurrent(new ManagedNativeBridgeBackend());
 
         using var first = Legacy89DiskKitApplication.CreateDiskService();
         using var second = Legacy89DiskKitApplication.CreateDiskService();
-        var firstHandle = HandleManager.Register(first);
-        var secondHandle = HandleManager.Register(second);
+        var firstHandle = HandleManager.Register(first.Session!);
+        var secondHandle = HandleManager.Register(second.Session!);
 
         Assert.True(NativeExportInvoker.GetOpenHandleCount() >= 2);
 

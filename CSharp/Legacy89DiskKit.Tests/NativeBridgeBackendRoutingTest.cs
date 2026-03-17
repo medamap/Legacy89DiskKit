@@ -1,5 +1,7 @@
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
+using Legacy89DiskKit.Domain.Native;
+using Legacy89DiskKit.Application.DiskImage;
 using Legacy89DiskKit.NativeInterop.Core;
 using Legacy89DiskKit.NativeInterop.Types;
 using Xunit;
@@ -82,6 +84,11 @@ public class NativeBridgeBackendRoutingTest
             LastCreatedPath = path;
             LastCreatedDiskType = diskType;
             LastCreatedDiskName = diskName;
+            return new FakeNativeDiskSession();
+        }
+
+        public INativeDiskSession OpenDisk(byte[] imageData, string imageFormat, bool readOnly)
+        {
             return new FakeNativeDiskSession();
         }
     }

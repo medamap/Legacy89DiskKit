@@ -4,6 +4,7 @@
     <ProjectReference Include="..\Legacy89DiskKit.Domain\Legacy89DiskKit.Domain.csproj" />
     <ProjectReference Include="..\Legacy89DiskKit.Infrastructure\Legacy89DiskKit.Infrastructure.csproj" />
     <ProjectReference Include="..\Legacy89DiskKit.Application\Legacy89DiskKit.Application.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.NativeInterop\Legacy89DiskKit.NativeInterop.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,4 +1,5 @@
 using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.Domain.Native;
 
 namespace Legacy89DiskKit.NativeInterop.Core;
 
@@ -31,6 +32,13 @@ public sealed class ValidationNativeBridgeBackend : INativeBridgeBackend
         var refSession = _reference.OpenDisk(path, readOnly);
         var targetSession = _target.OpenDisk(targetPath, readOnly);
         return new ValidationDiskSession(refSession, targetSession, targetPath);
+    }
+
+    public INativeDiskSession OpenDisk(byte[] imageData, string imageFormat, bool readOnly)
+    {
+        var refSession = _reference.OpenDisk(imageData, imageFormat, readOnly);
+        var targetSession = _target.OpenDisk(imageData, imageFormat, readOnly);
+        return new ValidationDiskSession(refSession, targetSession);
     }
 
     public INativeDiskSession CreateDisk(string path, DiskType diskType, string diskName)

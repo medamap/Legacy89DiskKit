@@ -38,7 +38,7 @@ public class ArchiveService
 
     public void CloneBootable(string srcPath, string destPath, string[] filesToCopy)
     {
-        using var srcDisk = new DiskService(_containerFactory, _fsRegistry);
+        using var srcDisk = new DiskService();
         var srcContainer = srcDisk.OpenDisk(srcPath, true);
         var srcFs = srcDisk.FileSystem;
         if (srcFs == null) throw new Exception("Source file system not detected.");
@@ -62,7 +62,7 @@ public class ArchiveService
         destContainer.Save();
 
         // Open target to get FS
-        using var destDisk = new DiskService(_containerFactory, _fsRegistry);
+        using var destDisk = new DiskService();
         destDisk.OpenDisk(destPath, false);
         var destFs = destDisk.FileSystem;
         if (destFs == null) throw new Exception("Target FS detection failed.");
@@ -94,7 +94,7 @@ public class ArchiveService
     }
     public void InjectFile(string diskPath, string hostFilePath, string? targetFileName = null, string? encodingOverride = null)
     {
-        using var diskService = new DiskService(_containerFactory, _fsRegistry);
+        using var diskService = new DiskService();
         diskService.OpenDisk(diskPath, false); // Open for writing
         
         var fs = diskService.FileSystem;

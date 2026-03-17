@@ -3,7 +3,9 @@ using Legacy89DiskKit.Application.FileSystem;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.Registry;
+using Legacy89DiskKit.Domain.Native;
 using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
+using Legacy89DiskKit.Infrastructure.DiskImage.Factory;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;
@@ -14,6 +16,7 @@ public sealed class ManagedNativeBridgeBackend : INativeBridgeBackend
 {
     private IFileSystemRegistry? _defaultRegistry;
     private IEncoderRegistry? _defaultEncoderRegistry;
+    private readonly DiskContainerFactory _containerFactory = new();
 
     public string BackendKind => "managed-bridge";
 
@@ -23,12 +26,23 @@ public sealed class ManagedNativeBridgeBackend : INativeBridgeBackend
 
     public INativeDiskSession OpenDisk(string path, bool readOnly)
     {
-        return NativeSessionFactory.OpenDisk(path, readOnly, GetDefaultRegistry());
+        var container = _containerFactory.Open(path, readOnly);
+        var fs = GetDefaultRegistry().DetectAndCreate(container);
+        return new ManagedNativeDiskSession(container, fs);
+    }
+
+    public INativeDiskSession OpenDisk(byte[] imageData, string imageFormat, bool readOnly)
+    {
+        var container = _containerFactory.Open(imageData, imageFormat, readOnly);
+        var fs = GetDefaultRegistry().DetectAndCreate(container);
+        return new ManagedNativeDiskSession(container, fs);
     }
 
     public INativeDiskSession CreateDisk(string path, DiskType diskType, string diskName)
     {
-        return NativeSessionFactory.CreateDisk(path, diskType, diskName, GetDefaultRegistry());
+        var container = _containerFactory.Create(path, diskType, diskName);
+        var fs = GetDefaultRegistry().DetectAndCreate(container);
+        return new ManagedNativeDiskSession(container, fs);
     }
 
     public IFileSystemRegistry GetDefaultRegistry()

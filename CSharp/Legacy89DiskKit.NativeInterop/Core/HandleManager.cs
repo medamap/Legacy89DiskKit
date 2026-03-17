@@ -1,5 +1,5 @@
+using Legacy89DiskKit.Domain.Native;
 using System.Collections.Concurrent;
-using Legacy89DiskKit.Application.DiskImage;
 using Legacy89DiskKit.NativeInterop.Types;
 
 namespace Legacy89DiskKit.NativeInterop.Core;
@@ -12,16 +12,6 @@ public static class HandleManager
     private static int _nextHandle = 1;
     private static readonly ConcurrentDictionary<int, HandleEntry> _entries = new();
     private static readonly object _lock = new();
-
-    public static int Register(DiskService service)
-    {
-        return Register(service, new HandleMetadata("register", false));
-    }
-
-    public static int Register(DiskService service, HandleMetadata metadata)
-    {
-        return Register(NativeSessionFactory.FromService(service), metadata);
-    }
 
     public static int Register(INativeDiskSession session)
     {

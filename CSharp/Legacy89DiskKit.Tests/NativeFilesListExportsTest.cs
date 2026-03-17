@@ -1,4 +1,5 @@
 using Legacy89DiskKit.Application;
+using Legacy89DiskKit.Application.DiskImage;
 using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.NativeInterop.Core;
 using Legacy89DiskKit.NativeInterop.Types;
@@ -14,6 +15,7 @@ public class NativeFilesListExportsTest
     public void GetFiles_ReturnsNativeEntriesForWrittenFiles()
     {
         HandleManager.Clear();
+        NativeBridgeBackend.SetCurrent(new ManagedNativeBridgeBackend());
 
         using var disk = new TempFormattedDiskScope();
         using var service = Legacy89DiskKitApplication.CreateDiskService();
@@ -21,7 +23,7 @@ public class NativeFilesListExportsTest
         service.FileSystem!.WriteFile("HELLO", [0x01, 0x02], new ExtendedFileAttributes(DiskFileAttributes.None, 0, false));
         service.FileSystem!.WriteFile("WORLD", [0x03, 0x04, 0x05], new ExtendedFileAttributes(DiskFileAttributes.ReadOnly, 0, false));
 
-        var handle = HandleManager.Register(service);
+        var handle = HandleManager.Register(service.Session!);
 
         try
         {
@@ -63,7 +65,7 @@ public class NativeFilesListExportsTest
         service.FileSystem!.WriteFile("HELLO", [0x01], new ExtendedFileAttributes(DiskFileAttributes.None, 0, false));
         service.FileSystem!.WriteFile("WORLD", [0x02], new ExtendedFileAttributes(DiskFileAttributes.None, 0, false));
 
-        var handle = HandleManager.Register(service);
+        var handle = HandleManager.Register(service.Session!);
 
         try
         {

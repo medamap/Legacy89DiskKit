@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.NativeInterop.Core;
+using Legacy89DiskKit.Domain.Native;
+using Legacy89DiskKit.Application.DiskImage;
 using Legacy89DiskKit.NativeInterop.Exports;
 using Xunit;
 
@@ -71,6 +72,11 @@ public class NativeBackendIdentityTest
         }
 
         public INativeDiskSession OpenDisk(string path, bool readOnly)
+        {
+            throw new NotSupportedException();
+        }
+
+        public INativeDiskSession OpenDisk(byte[] imageData, string imageFormat, bool readOnly)
         {
             throw new NotSupportedException();
         }

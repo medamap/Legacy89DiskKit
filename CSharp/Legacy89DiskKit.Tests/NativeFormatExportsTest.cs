@@ -1,4 +1,5 @@
 using Legacy89DiskKit.Application;
+using Legacy89DiskKit.Application.DiskImage;
 using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.NativeInterop.Core;
 using Legacy89DiskKit.NativeInterop.Types;
@@ -14,13 +15,14 @@ public class NativeFormatExportsTest
     public void Format_ClearsWrittenFiles()
     {
         HandleManager.Clear();
+        NativeBridgeBackend.SetCurrent(new ManagedNativeBridgeBackend());
 
         using var disk = new TempFormattedDiskScope();
         using var service = Legacy89DiskKitApplication.CreateDiskService();
         service.OpenDisk(disk.ImagePath, readOnly: false);
         service.FileSystem!.WriteFile("HELLO", [0x01], new ExtendedFileAttributes(DiskFileAttributes.None, 0, false));
 
-        var handle = HandleManager.Register(service);
+        var handle = HandleManager.Register(service.Session!);
 
         try
         {
