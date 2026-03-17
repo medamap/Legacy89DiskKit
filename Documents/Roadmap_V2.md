@@ -240,10 +240,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - Expected C++ target: native or C++ bootstrap for supported application services
   - Completion Note: Implemented `legacy89diskkit::cpp::application` namespace with factory functions for all services. Added `ExplicitFileSystemResolver` with `InitializeForDetection` to enable scoring-based Hu-BASIC detection.
 
-- [ ] Phase V2-28: Controller-facing application layer in C++
+- [x] Phase V2-28: Controller-facing application layer in C++
   - Layer: Application
   - C# source area: mounted-medium binding, FDC access, and host adapter orchestration
   - Expected C++ target: application services for controller-shaped and host-facing runtime flows
+  - Completion Note: Implemented `DriveMountService`, `MountedMediumBindingService`, `FdcAccessService`, and `EventDrivenEmulatorFdcHostAdapter`. Introduced `FdcMediumController` in Infrastructure to bridge mediums to FDC interface.
 
 - [ ] Phase V2-29: Managed-to-native validation bridge
   - Layer: Application
