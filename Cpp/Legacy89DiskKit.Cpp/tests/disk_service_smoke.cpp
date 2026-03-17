@@ -10,6 +10,21 @@ using namespace legacy89diskkit::cpp::application;
 
 namespace
 {
+struct TempFile
+{
+    std::filesystem::path path;
+    explicit TempFile(std::filesystem::path p) : path(std::move(p)) 
+    {
+        if (std::filesystem::exists(path)) std::filesystem::remove(path);
+    }
+    ~TempFile()
+    {
+        if (std::filesystem::exists(path)) std::filesystem::remove(path);
+    }
+    std::string string() const { return path.string(); }
+    operator std::filesystem::path() const { return path; }
+};
+
 std::vector<std::uint8_t> CreateHuBasicImage()
 {
     std::vector<std::uint8_t> image(327680, 0x00);
@@ -28,13 +43,13 @@ std::filesystem::path GetTempPath(const std::string& filename)
 
 int main()
 {
-    const auto image_path = GetTempPath("disk_service_smoke_test.img");
-    const auto new_d88_path = GetTempPath("disk_service_smoke_new.d88");
-    const auto ghost_path = GetTempPath("disk_service_smoke_ghost.img");
+    TempFile image_file(GetTempPath("disk_service_smoke_test.img"));
+    TempFile new_d88_file(GetTempPath("disk_service_smoke_new.d88"));
+    TempFile ghost_file(GetTempPath("disk_service_smoke_ghost.img"));
     
-    if (std::filesystem::exists(image_path)) std::filesystem::remove(image_path);
-    if (std::filesystem::exists(new_d88_path)) std::filesystem::remove(new_d88_path);
-    if (std::filesystem::exists(ghost_path)) std::filesystem::remove(ghost_path);
+    const auto image_path = image_file.path;
+    const auto new_d88_path = new_d88_file.path;
+    const auto ghost_path = ghost_file.path;
 
     // Setup valid image
     {
@@ -83,6 +98,15 @@ int main()
         // Verify file was actually created on disk
         assert(std::filesystem::exists(new_d88_path));
         assert(std::filesystem::file_size(new_d88_path) > 0);
+        
+        // Explicitly verify D88 header to ensure persistence parity (not just in-memory)
+        {
+            std::ifstream check_stream(new_d88_path, std::ios::binary);
+            char header[17] = {0};
+            check_stream.read(header, 17);
+            std::string header_name(header);
+            assert(header_name == "PERSIST_TEST");
+        }
 
         // 2. Format it (this should also update the file on disk)
         std::cout << "Formatting..." << std::endl;
@@ -110,6 +134,31 @@ int main()
         auto metadata = service.GetContainerMetadata();
         assert(metadata->image_format == "d88-sector-container");
 
+        // 5. Test WriteFile persistence
+        std::cout << "Testing WriteFile Persistence..." << std::endl;
+        std::vector<std::uint8_t> test_data(256, 0xAA);
+        test_data[0] = 0xDE;
+        test_data[1] = 0xAD;
+        test_data[2] = 0xBE;
+        test_data[3] = 0xEF;
+        auto write_status = service.GetSession()->WriteFile("TEST.BIN", test_data);
+        assert(write_status.ok());
+
+        std::cout << "Testing Explicit Save..." << std::endl;
+        auto save_status = service.Save();
+        assert(save_status.ok());
+
+        service.CloseDisk();
+
+        // Re-open and verify file exists
+        auto reopen_write_status = service.OpenDisk(new_d88_path.string(), true);
+        assert(reopen_write_status.ok());
+        
+        assert(service.GetSession()->FileExists("TEST.BIN"));
+        auto read_result = service.GetSession()->ReadFile("TEST.BIN");
+        assert(read_result.ok());
+        assert(read_result.value() == test_data);
+
         service.CloseDisk();
     }
 
@@ -129,10 +178,7 @@ int main()
         assert(!service.IsDiskOpen()); 
     }
 
-    // Cleanup
-    std::filesystem::remove(image_path);
-    std::filesystem::remove(new_d88_path);
-
     std::cout << "DiskService refined smoke tests passed!" << std::endl;
     return 0;
 }
+

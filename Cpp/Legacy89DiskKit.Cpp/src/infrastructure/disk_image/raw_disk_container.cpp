@@ -145,6 +145,7 @@ Status RawDiskContainer::WriteSector(const int cylinder, const int head, const i
     }
 
     std::copy(data.begin(), data.end(), image_data_.begin() + offset.value());
+    dirty_ = true;
     return Status::OkStatus();
 }
 
@@ -178,6 +179,16 @@ std::vector<SectorInfo> RawDiskContainer::GetAllSectors() const
     }
 
     return sectors;
+}
+
+bool RawDiskContainer::HasChanges() const
+{
+    return dirty_;
+}
+
+void RawDiskContainer::ResetChanges()
+{
+    dirty_ = false;
 }
 
 std::vector<std::uint8_t> RawDiskContainer::ToImageData() const

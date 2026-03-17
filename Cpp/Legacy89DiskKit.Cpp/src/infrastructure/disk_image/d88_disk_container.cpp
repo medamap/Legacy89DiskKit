@@ -164,6 +164,7 @@ Status D88DiskContainer::WriteSector(const int cylinder, const int head, const i
 
     it->sector.size = static_cast<int>(data.size());
     it->data.assign(data.begin(), data.end());
+    dirty_ = true;
     return Status::OkStatus();
 }
 
@@ -189,6 +190,16 @@ std::vector<SectorInfo> D88DiskContainer::GetAllSectors() const
         sectors.push_back(block.sector);
     }
     return sectors;
+}
+
+bool D88DiskContainer::HasChanges() const
+{
+    return dirty_;
+}
+
+void D88DiskContainer::ResetChanges()
+{
+    dirty_ = false;
 }
 
 std::vector<std::uint8_t> D88DiskContainer::ToImageData() const

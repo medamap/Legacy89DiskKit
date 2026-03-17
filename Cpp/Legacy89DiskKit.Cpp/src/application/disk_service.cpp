@@ -68,6 +68,16 @@ Status DiskService::Format()
     return session_->Format();
 }
 
+Status DiskService::Save()
+{
+    if (!session_)
+    {
+        return {StatusCode::InvalidArgument, "No disk open to save."};
+    }
+
+    return session_->Save();
+}
+
 void DiskService::CloseDisk()
 {
     session_.reset();

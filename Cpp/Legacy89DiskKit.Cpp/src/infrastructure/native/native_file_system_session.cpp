@@ -612,26 +612,81 @@ Status NativeFileSystemSession::Format()
         }
     }
 
-    if (file_path_ != "memory-buffer")
+    return Save();
+}
+
+Status NativeFileSystemSession::Save()
+{
+    if (file_path_ == "memory-buffer" || file_path_.empty())
     {
-         const auto image_data = std::visit(
-            [](const auto& container) -> std::vector<std::uint8_t>
-            {
-                using T = std::decay_t<decltype(container)>;
-                if constexpr (std::is_same_v<T, std::monostate>) return std::vector<std::uint8_t>{};
-                if constexpr (std::is_same_v<T, RawDiskContainer>) return container.ToImageData();
-                if constexpr (std::is_same_v<T, D88DiskContainer>) return container.ToImageData();
-                return std::vector<std::uint8_t>{};
-            },
-            container_);
-        
-        if (!image_data.empty())
-        {
-            return WriteAllBytes(file_path_, image_data);
-        }
+        return Status::OkStatus();
     }
 
-    return Status::OkStatus();
+    if (IsReadOnly())
+    {
+        return Status::OkStatus();
+    }
+
+    const bool has_changes = std::visit(
+        [](const auto& container) -> bool
+        {
+            using T = std::decay_t<decltype(container)>;
+            if constexpr (std::is_same_v<T, std::monostate>)
+            {
+                return false;
+            }
+            else
+            {
+                return container.HasChanges();
+            }
+        },
+        container_);
+
+    if (!has_changes)
+    {
+        return Status::OkStatus();
+    }
+
+    const auto image_data = std::visit(
+        [](const auto& container) -> std::vector<std::uint8_t>
+        {
+            using T = std::decay_t<decltype(container)>;
+            if constexpr (std::is_same_v<T, std::monostate>)
+            {
+                return std::vector<std::uint8_t>{};
+            }
+            else
+            {
+                return container.ToImageData();
+            }
+        },
+        container_);
+    
+    if (image_data.empty())
+    {
+        return Status::OkStatus();
+    }
+
+    auto status = WriteAllBytes(file_path_, image_data);
+    if (status.ok())
+    {
+        std::visit(
+            [](auto& container)
+            {
+                using T = std::decay_t<decltype(container)>;
+                if constexpr (!std::is_same_v<T, std::monostate>)
+                {
+                    container.ResetChanges();
+                }
+            },
+            container_);
+    }
+    return status;
+}
+
+NativeFileSystemSession::~NativeFileSystemSession()
+{
+    Save();
 }
 
 NativeFileSystemSession::NativeFileSystemSession(
