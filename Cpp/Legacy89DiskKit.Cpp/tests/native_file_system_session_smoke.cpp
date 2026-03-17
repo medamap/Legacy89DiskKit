@@ -28,6 +28,53 @@ int main()
         stream.write(reinterpret_cast<const char*>(image.data()), static_cast<std::streamsize>(image.size()));
     }
 
+    {
+        // 1. Path-based open with .img (Raw routing)
+        const auto opened = NativeFileSystemSession::Open(image_path, true);
+        if (!opened.ok() || opened.value().Family() != FileSystemFamily::HuBasic)
+        {
+            std::filesystem::remove(image_path);
+            return 1;
+        }
+
+        // Verify it use Raw backend for .img
+        const auto metadata = opened.value().GetContainerMetadata();
+        if (metadata.image_format != "raw-sector-container")
+        {
+            std::filesystem::remove(image_path);
+            return 101;
+        }
+    }
+
+    {
+        // 2. Buffer-based open with explicit Raw hint
+        const auto image = CreateHuBasicImage();
+        const auto opened = NativeFileSystemSession::OpenFromBuffer(image, true, BufferDiskImageFormat::Raw);
+        if (!opened.ok() || opened.value().Family() != FileSystemFamily::HuBasic)
+        {
+            std::filesystem::remove(image_path);
+            return 2;
+        }
+
+        const auto metadata = opened.value().GetContainerMetadata();
+        if (metadata.image_format != "raw-sector-container")
+        {
+            std::filesystem::remove(image_path);
+            return 102;
+        }
+    }
+
+    {
+        // 3. Buffer-based open with Auto hint (Probing)
+        const auto image = CreateHuBasicImage();
+        const auto opened = NativeFileSystemSession::OpenFromBuffer(image, true, std::nullopt);
+        if (!opened.ok() || opened.value().Family() != FileSystemFamily::HuBasic)
+        {
+            std::filesystem::remove(image_path);
+            return 3;
+        }
+    }
+
     const auto detected = NativeFileSystemSession::Open(image_path, false);
     if (!detected.ok())
     {
