@@ -252,10 +252,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - Expected C++ target: validation path that allows C# side workflows to exercise C++ slices early
   - Completion Note: Implemented `ValidationNativeBridgeBackend` which routes calls to both C# reference and C++ implementation. Created a C++ SHARED library and C# P/Invoke backend to enable this interop.
 
-- [ ] Phase V2-30: Representative workflow parity verification
+- [x] Phase V2-30: Representative workflow parity verification
   - Layer: Application
   - C# source area: list, extract, inject, rename, delete, format, info, and clone flows
   - Expected C++ target: workflow-level comparison between the C# reference and the C++-backed path
+  - Completion Note: Verified all major workflows using `ValidationNativeBridgeBackend`. Fixed attribute mapping disparities between C# and C++.
 
 ### Presentation Phases
 
@@ -264,10 +265,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - C# source area: current test and verification harnesses
   - Expected C++ target: minimal executables that prove migrated slices directly
 
-- [ ] Phase V2-32: Native test app and host-side verification presentation
+- [x] Phase V2-32: Native test app and host-side verification presentation
   - Layer: Presentation
   - C# source area: native test app and diagnostic host usage
   - Expected C++ target: equivalent verification-facing entrypoints over C++-backed native infrastructure
+  - Completion Note: Implemented `ldk-verify` C++ tool for comprehensive disk verification and bootable disk creation. Extended `NativeBridge` and `NativeFileSystemSession` with raw sector access (`ldk_read_sector`/`ldk_write_sector`).
 
 - [ ] Phase V2-33: CLI backend substitution bridge
   - Layer: Presentation

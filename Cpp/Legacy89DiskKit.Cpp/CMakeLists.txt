@@ -289,6 +289,12 @@ add_executable(Legacy89DiskKitCppFdcApplicationSmoke
 
 target_link_libraries(Legacy89DiskKitCppFdcApplicationSmoke PRIVATE Legacy89DiskKitCpp)
 
+add_executable(ldk-verify
+    src/presentation/ldk_verify.cpp
+)
+
+target_link_libraries(ldk-verify PRIVATE Legacy89DiskKitCpp)
+
 enable_testing()
 add_test(NAME Legacy89DiskKitCppSmoke COMMAND Legacy89DiskKitCppSmoke)
 add_test(NAME Legacy89DiskKitCppHuBasicSmoke COMMAND Legacy89DiskKitCppHuBasicSmoke)
