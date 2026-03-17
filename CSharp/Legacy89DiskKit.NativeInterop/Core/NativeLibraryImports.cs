@@ -32,7 +32,7 @@ public static class NativeLibraryImports
     public static extern int ReadFile(int handle, [MarshalAs(UnmanagedType.LPUTF8Str)] string name, byte[] buffer, int capacity);
 
     [DllImport(LibName, EntryPoint = "ldk_write_file")]
-    public static extern int WriteFile(int handle, [MarshalAs(UnmanagedType.LPUTF8Str)] string name, byte[] data, int length, ushort attributes);
+    public static extern int WriteFile(int handle, [MarshalAs(UnmanagedType.LPUTF8Str)] string name, byte[] data, int length, ushort attributes, ushort loadAddress, ushort executionAddress);
 
     [DllImport(LibName, EntryPoint = "ldk_delete_file")]
     public static extern int DeleteFile(int handle, [MarshalAs(UnmanagedType.LPUTF8Str)] string name);

@@ -356,7 +356,7 @@ int NativeBridgeExports::DeleteFile(std::int32_t handle, const char* name)
     return ldkStatusFromStatus(entry->session.DeleteFile(name));
 }
 
-int NativeBridgeExports::WriteFile(std::int32_t handle, const char* name, const void* data, std::int32_t length, std::uint16_t attributes)
+int NativeBridgeExports::WriteFile(std::int32_t handle, const char* name, const void* data, std::int32_t length, std::uint16_t attributes, std::uint16_t load_address, std::uint16_t execution_address)
 {
     std::lock_guard<std::mutex> lock(EntriesMutex());
     auto* entry = FindEntry(handle);
@@ -369,7 +369,7 @@ int NativeBridgeExports::WriteFile(std::int32_t handle, const char* name, const 
         bytes.assign(static_cast<const uint8_t*>(data), static_cast<const uint8_t*>(data) + length);
     }
     
-    return ldkStatusFromStatus(entry->session.WriteFile(name, bytes, attributes));
+    return ldkStatusFromStatus(entry->session.WriteFile(name, bytes, attributes, load_address, execution_address));
 }
 
 int NativeBridgeExports::RenameFile(std::int32_t handle, const char* old_name, const char* new_name)
@@ -689,9 +689,9 @@ LDK_API std::int32_t LDK_CALL ldk_delete_file(int32_t handle, const char* name)
     return NativeBridgeExports::DeleteFile(handle, name);
 }
 
-LDK_API std::int32_t LDK_CALL ldk_write_file(int32_t handle, const char* name, const void* data, int32_t length, uint16_t attributes)
+LDK_API std::int32_t LDK_CALL ldk_write_file(int32_t handle, const char* name, const void* data, int32_t length, uint16_t attributes, uint16_t load_address, uint16_t execution_address)
 {
-    return NativeBridgeExports::WriteFile(handle, name, data, length, attributes);
+    return NativeBridgeExports::WriteFile(handle, name, data, length, attributes, load_address, execution_address);
 }
 
 LDK_API std::int32_t LDK_CALL ldk_rename_file(int32_t handle, const char* old_name, const char* new_name)
