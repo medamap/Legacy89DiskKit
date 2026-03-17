@@ -21,7 +21,7 @@ Result<const ByteTextEncodingTable*> CharacterEncodingTableCatalog::Find(const s
         normalized.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(ch))));
     }
 
-    if (normalized == "x1")
+    if (normalized == "x1" || normalized == "pc88" || normalized == "msx")
     {
         return Result<const ByteTextEncodingTable*>::Success(&X1EncodingTable::Get());
     }
