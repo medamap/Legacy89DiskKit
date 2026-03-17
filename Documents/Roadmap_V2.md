@@ -222,10 +222,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - Expected C++ target: application service for file-level use cases
   - Completion Note: Implemented `FileTransferService` and `CharacterEncodingService`. Note: Current implementation uses a simplified ASCII check (bit 0) and maps PC88/MSX encoding to X1 table as a temporary measure. Full parity verification belongs to V2-30.
 
-- [ ] Phase V2-25: Directory layout application layer in C++
+- [x] Phase V2-25: Directory layout application layer in C++
   - Layer: Application
   - C# source area: layout-oriented listing, ordering, and plan handling
   - Expected C++ target: application service for directory layout operations
+  - Completion Note: Implemented `DirectoryLayoutService` with plan-based orchestration. Supported Hu-BASIC directory layout reconstruction and label insertion. Fixed a session bug where `Format()` misidentified Hu-BASIC as N88-BASIC.
 
 - [ ] Phase V2-26: Boot and clone application layer in C++
   - Layer: Application

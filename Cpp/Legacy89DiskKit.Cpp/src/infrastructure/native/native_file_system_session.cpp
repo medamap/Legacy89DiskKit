@@ -1,5 +1,7 @@
 #include "legacy89diskkit/cpp/infrastructure/native/native_file_system_session.hpp"
 
+#include "legacy89diskkit/cpp/hu_basic_shell.hpp"
+#include "legacy89diskkit/cpp/hu_basic_virtual_label_entry_rules.hpp"
 #include "legacy89diskkit/cpp/infrastructure/disk_image/buffer_image_format.hpp"
 #include "legacy89diskkit/cpp/infrastructure/filesystem/explicit_filesystem_selector.hpp"
 #include "legacy89diskkit/cpp/infrastructure/filesystem/filesystem_detection.hpp"
@@ -591,28 +593,102 @@ Status NativeFileSystemSession::Format()
         return format_status;
     }
 
-    auto fs_result = DetectAndOpenFileSystem(container_);
+    auto fs_result = OpenDetectedFileSystem(family_, container_);
     if (fs_result.ok())
     {
         file_system_ = std::move(fs_result.value());
-        family_ = std::visit([](const auto& fs) -> FileSystemFamily {
-            using T = std::decay_t<decltype(fs)>;
-            if constexpr (std::is_same_v<T, HuBasicFileSystem>) return FileSystemFamily::HuBasic;
-            if constexpr (std::is_same_v<T, N88BasicFileSystem>) return FileSystemFamily::N88Basic;
-            if constexpr (std::is_same_v<T, MsxDosFileSystem>) return FileSystemFamily::MsxDos;
-            return FileSystemFamily::HuBasic;
-        }, file_system_);
-    }
-    else
-    {
-        auto fallback = OpenDetectedFileSystem(family_, container_);
-        if (fallback.ok())
-        {
-            file_system_ = std::move(fallback.value());
-        }
     }
 
     return Save();
+}
+
+Result<DirectoryLayout> NativeFileSystemSession::ReadDirectoryLayout() const
+{
+    return std::visit(
+        [](const auto& fs) -> Result<DirectoryLayout>
+        {
+            using TFileSystem = std::decay_t<decltype(fs)>;
+            if constexpr (std::is_same_v<TFileSystem, HuBasicFileSystem>)
+            {
+                const auto hu_layout = fs.ReadDirectoryLayout();
+                DirectoryLayout layout;
+                for (const auto& item : hu_layout.items)
+                {
+                    DirectoryLayoutItem common_item;
+                    common_item.id = item.id;
+                    common_item.order = item.order;
+                    common_item.display_name = item.display_name;
+                    common_item.kind = (item.kind == HuBasicDirectoryLayoutItemKind::FileEntry) 
+                        ? DirectoryLayoutItemKind::FileEntry 
+                        : DirectoryLayoutItemKind::VirtualLabel;
+                    layout.items.push_back(std::move(common_item));
+                }
+                return Result<DirectoryLayout>::Success(std::move(layout));
+            }
+            else
+            {
+                return Result<DirectoryLayout>::Failure(StatusCode::UnsupportedFormat, "Directory layout is not supported for this file system.");
+            }
+        },
+        file_system_);
+}
+
+Status NativeFileSystemSession::ApplyDirectoryLayout(const DirectoryLayout& layout)
+{
+    return std::visit(
+        [&layout](auto& fs) -> Status
+        {
+            using TFileSystem = std::decay_t<decltype(fs)>;
+            if constexpr (std::is_same_v<TFileSystem, HuBasicFileSystem>)
+            {
+                HuBasicDirectoryLayout hu_layout;
+                const auto original_hu_layout = fs.ReadDirectoryLayout();
+
+                for (const auto& common_item : layout.items)
+                {
+                    auto it = std::find_if(original_hu_layout.items.begin(), original_hu_layout.items.end(), 
+                        [&](const auto& candidate) { return candidate.id == common_item.id; });
+
+                    if (it != original_hu_layout.items.end())
+                    {
+                        hu_layout.items.push_back(*it);
+                    }
+                    else if (common_item.kind == DirectoryLayoutItemKind::VirtualLabel)
+                    {
+                        // Create a new Hu-BASIC label entry
+                        const auto& name = common_item.display_name;
+                        std::string file_name = name.substr(0, std::min<size_t>(name.length(), 13));
+                        std::string extension = (name.length() > 13) ? name.substr(13, std::min<size_t>(name.length() - 13, 3)) : "";
+
+                        auto new_entry = HuBasicVirtualLabelEntryRules::CreateEntry(
+                            file_name,
+                            extension,
+                            0x03, // ASCII mode for labels
+                            0xFF, // Password flag
+                            0,    // Size
+                            0xFFFF, // Load address
+                            0xFFFF, // End address
+                            0xFFFF, // Execution address
+                            0x7FFF  // Special cluster for labels
+                        );
+
+                        HuBasicDirectoryLayoutItem hu_item;
+                        hu_item.id = common_item.id;
+                        hu_item.kind = HuBasicDirectoryLayoutItemKind::VirtualLabel;
+                        hu_item.display_name = name;
+                        hu_item.entry = std::move(new_entry);
+                        hu_layout.items.push_back(std::move(hu_item));
+                    }
+                }
+
+                return fs.ApplyDirectoryLayout(hu_layout);
+            }
+            else
+            {
+                return {StatusCode::UnsupportedFormat, "Directory layout is not supported for this file system."};
+            }
+        },
+        file_system_);
 }
 
 Status NativeFileSystemSession::Save()

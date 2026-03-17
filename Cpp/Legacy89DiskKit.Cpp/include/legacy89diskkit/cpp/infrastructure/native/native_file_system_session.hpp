@@ -1,5 +1,6 @@
 #pragma once
 
+#include "legacy89diskkit/cpp/domain/directory_layout_types.hpp"
 #include "legacy89diskkit/cpp/filesystem_surface_catalog.hpp"
 #include "legacy89diskkit/cpp/infrastructure/disk_image/buffer_image_format.hpp"
 #include "legacy89diskkit/cpp/infrastructure/disk_image/d88_disk_container.hpp"
@@ -83,6 +84,9 @@ public:
     Status UpdateAttributes(std::string_view file_name, std::uint16_t attributes);
     Status Format();
     Status Save();
+
+    Result<DirectoryLayout> ReadDirectoryLayout() const;
+    Status ApplyDirectoryLayout(const DirectoryLayout& layout);
 
     ~NativeFileSystemSession();
 

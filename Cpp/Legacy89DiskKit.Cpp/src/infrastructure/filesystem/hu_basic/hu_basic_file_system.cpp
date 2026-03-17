@@ -17,6 +17,8 @@
 #include "legacy89diskkit/cpp/hu_basic_record_address_rules.hpp"
 #include "legacy89diskkit/cpp/hu_basic_rename_transaction.hpp"
 #include "legacy89diskkit/cpp/hu_basic_write_transaction.hpp"
+#include "legacy89diskkit/cpp/hu_basic_shell.hpp"
+#include "legacy89diskkit/cpp/hu_basic_directory_layout_rules.hpp"
 
 #include <algorithm>
 #include <array>
@@ -129,6 +131,37 @@ Result<std::vector<std::uint8_t>> HuBasicFileSystem::ReadFile(const std::string_
 
     return Result<std::vector<std::uint8_t>>::Success(
         HuBasicReadRules::ResolveReadPayload(data, *it, disk_type_, config_, static_cast<int>(chain_result.chain.size()), chain_result.terminal_flag));
+}
+
+HuBasicDirectoryLayout HuBasicFileSystem::ReadDirectoryLayout() const
+{
+    return HuBasicShell::ReadDirectoryLayout(ReadDirectorySectors(), config_.sector_size);
+}
+
+Status HuBasicFileSystem::ApplyDirectoryLayout(const HuBasicDirectoryLayout& layout)
+{
+    if (read_only_)
+    {
+        return {StatusCode::InvalidArgument, "Filesystem is read-only."};
+    }
+
+    std::vector<HuBasicFileEntry> entries;
+    for (const auto& item : layout.items)
+    {
+        entries.push_back(item.entry);
+    }
+
+    const auto sectors = HuBasicDirectoryLayoutRules::BuildDirectorySectors(entries, config_.sector_size, config_.directory_sectors);
+    for (std::size_t i = 0; i < sectors.size(); ++i)
+    {
+        const auto status = WriteDirectorySector(static_cast<int>(i), sectors[i]);
+        if (!status.ok())
+        {
+            return status;
+        }
+    }
+
+    return Status::OkStatus();
 }
 
 Status HuBasicFileSystem::WriteFile(
