@@ -7,10 +7,20 @@ namespace Legacy89DiskKit.NativeInterop.Core;
 public sealed class LibraryNativeFileSystem : IFileSystem
 {
     private readonly int _handle;
+    private readonly string _fileSystemName;
 
     public LibraryNativeFileSystem(int handle)
     {
         _handle = handle;
+        
+        if (NativeLibraryImports.GetFileSystemInfo(_handle, out var info) == 0)
+        {
+            _fileSystemName = info.FileSystemName;
+        }
+        else
+        {
+            _fileSystemName = "Unknown";
+        }
     }
 
     public DiskFileSystemInfo GetFileSystemInfo()
@@ -29,30 +39,66 @@ public sealed class LibraryNativeFileSystem : IFileSystem
         throw new Exception("Failed to get file system info.");
     }
 
-    public FileSystemCapabilities Capabilities => FileSystemCapabilities.SupportsBootArea | FileSystemCapabilities.SupportsAttributes | FileSystemCapabilities.SupportsRename;
+    public FileSystemCapabilities Capabilities 
+    {
+        get
+        {
+            var caps = FileSystemCapabilities.None;
+            if (_fileSystemName == "Hu-BASIC" || _fileSystemName == "N88-BASIC")
+                caps |= FileSystemCapabilities.SupportsBootArea | FileSystemCapabilities.SupportsAttributes | FileSystemCapabilities.SupportsRename;
+            if (_fileSystemName == "MSX-DOS")
+                caps |= FileSystemCapabilities.SupportsBootArea | FileSystemCapabilities.SupportsAttributes | FileSystemCapabilities.SupportsRename | FileSystemCapabilities.SupportsSubdirectories;
+            return caps;
+        }
+    }
 
     public IEnumerable<FileEntry> GetFiles()
     {
-        if (NativeLibraryImports.GetFilesCount(_handle, out int count) != 0)
+        int result = NativeLibraryImports.GetFilesCount(_handle, out int count);
+        if (result != 0)
         {
             return Enumerable.Empty<FileEntry>();
         }
 
         var buffer = new NativeFileEntry[count];
-        if (NativeLibraryImports.GetFiles(_handle, buffer, count) == 0)
+        if (count > 0)
         {
-            return buffer.Select(e => new FileEntry(
-                e.FileName,
-                e.Extension,
-                e.Size,
-                null, // CreatedAt
-                null, // LastModifiedAt
-                new ExtendedFileAttributes(Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes.None, (byte)e.Attributes, (e.Attributes & 0x01) != 0),
-                0, // StartCluster
-                e.LoadAddress,
-                null, // EndAddress
-                e.ExecutionAddress
-            ));
+            int getFilesResult = NativeLibraryImports.GetFiles(_handle, buffer, count);
+            if (getFilesResult > 0)
+            {
+                return buffer.Take(getFilesResult).Select(e => {
+                    bool isReadOnly = false;
+                    bool isAscii = false;
+                    
+                    if (_fileSystemName == "Hu-BASIC")
+                    {
+                        isReadOnly = (e.Attributes & 0x40) != 0;
+                        isAscii = (e.Attributes & 0x0C) != 0;
+                    }
+                    else if (_fileSystemName == "N88-BASIC")
+                    {
+                        isReadOnly = (e.Attributes & 0x40) != 0;
+                        isAscii = (e.Attributes & 0x0C) != 0;
+                    }
+                    else if (_fileSystemName == "MSX-DOS")
+                    {
+                        isReadOnly = (e.Attributes & 0x01) != 0;
+                    }
+                    
+                    return new FileEntry(
+                        e.FileName,
+                        e.Extension,
+                        e.Size,
+                        null, // CreatedAt
+                        null, // LastModifiedAt
+                        new ExtendedFileAttributes(Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes.None, (byte)e.Attributes, isAscii),
+                        0, // StartCluster
+                        e.LoadAddress,
+                        null, // EndAddress
+                        e.ExecutionAddress
+                    );
+                });
+            }
         }
         return Enumerable.Empty<FileEntry>();
     }
@@ -76,9 +122,7 @@ public sealed class LibraryNativeFileSystem : IFileSystem
 
     public void WriteFile(string fileName, byte[] data, ExtendedFileAttributes attributes, ushort? loadAddress = null, ushort? executionAddress = null)
     {
-        // Currently native WriteFile might not handle explicit addresses yet, but the API was extended in V2-28.
-        // Let's assume NativeLibraryImports reflects the latest state.
-        int result = NativeLibraryImports.WriteFile(_handle, fileName, data, data.Length, attributes.RawAttributes);
+        int result = NativeLibraryImports.WriteFile(_handle, fileName, data, data.Length, attributes.RawAttributes, loadAddress ?? 0, executionAddress ?? 0);
         if (result < 0) throw new Exception($"Failed to write file: {fileName} (Error: {result})");
     }
 
@@ -110,7 +154,12 @@ public sealed class LibraryNativeFileSystem : IFileSystem
 
     public ExtendedFileAttributes CreateDefaultAttributes(bool isAscii)
     {
-        return new ExtendedFileAttributes(Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes.None, (byte)(isAscii ? 0x01 : 0x00), isAscii);
+        byte raw = 0x00;
+        if (_fileSystemName == "Hu-BASIC") raw = (byte)(isAscii ? 0x04 : 0x01);
+        else if (_fileSystemName == "N88-BASIC") raw = (byte)(isAscii ? 0x04 : 0x01);
+        else if (_fileSystemName == "MSX-DOS") raw = 0x00;
+        
+        return new ExtendedFileAttributes(Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes.None, raw, isAscii);
     }
 
     public void Format()
@@ -119,14 +168,14 @@ public sealed class LibraryNativeFileSystem : IFileSystem
         if (result < 0) throw new Exception($"Failed to format (Error: {result})");
     }
 
-    private const int DefaultBootAreaSize = 256;
+    private const int MaxBootAreaSize = 8192; // Large enough for any known supported boot area
 
     public byte[] ReadBootArea()
     {
-        byte[] buffer = new byte[DefaultBootAreaSize];
+        byte[] buffer = new byte[MaxBootAreaSize];
         int result = NativeLibraryImports.ReadBootArea(_handle, buffer, buffer.Length);
         if (result < 0) throw new Exception($"Failed to read boot area (Error: {result})");
-        return buffer;
+        return buffer.Take(result).ToArray();
     }
 
     public void WriteBootArea(byte[] data)

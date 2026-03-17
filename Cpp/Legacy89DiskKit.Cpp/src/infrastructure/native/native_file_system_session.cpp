@@ -104,17 +104,24 @@ NativeBridgeFileSystemInfo ToNativeInfo(const MsxDosFileSystemInfo& info)
 
 HuBasicFileAttributes ToHuAttributes(const std::uint16_t attributes)
 {
+    const auto mode = static_cast<std::uint8_t>(attributes & 0xff);
     return {
-        false,
-        static_cast<std::uint8_t>(attributes & 0xff),
-        false,
-        (attributes & 0x01u) != 0,
-        false};
+        (mode & 0x0c) != 0, // is_ascii
+        mode,               // raw_attributes
+        (mode & 0x80) != 0, // is_directory
+        (mode & 0x40) != 0, // is_read_only
+        (mode & 0x10) != 0  // is_hidden
+    };
 }
 
 N88BasicFileAttributes ToN88Attributes(const std::uint16_t attributes)
 {
-    return {false, static_cast<std::uint8_t>(attributes & 0xff), (attributes & 0x01u) != 0};
+    const auto mode = static_cast<std::uint8_t>(attributes & 0xff);
+    return {
+        (mode & 0x0c) != 0, // is_ascii
+        mode,               // raw_attributes
+        (mode & 0x40) != 0  // is_read_only
+    };
 }
 
 MsxDosFileAttributes ToMsxAttributes(const std::uint16_t attributes)
