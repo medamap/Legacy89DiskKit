@@ -28,6 +28,8 @@ public:
     bool SectorExists(int cylinder, int head, int sector) const;
     std::vector<SectorInfo> GetAllSectors() const;
     std::vector<std::uint8_t> ToImageData() const;
+    bool HasChanges() const;
+    void ResetChanges();
 
 private:
     RawDiskContainer(
@@ -40,5 +42,6 @@ private:
     DiskContainerMetadata metadata_;
     bool read_only_;
     std::string file_path_;
+    bool dirty_{false};
 };
 }

@@ -82,6 +82,9 @@ public:
     Status RenameFile(std::string_view old_name, std::string_view new_name);
     Status UpdateAttributes(std::string_view file_name, std::uint16_t attributes);
     Status Format();
+    Status Save();
+
+    ~NativeFileSystemSession();
 
 private:
     using ContainerVariant = std::variant<std::monostate, RawDiskContainer, D88DiskContainer>;

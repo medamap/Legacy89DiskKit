@@ -44,7 +44,10 @@ public:
 
     Status Format();
 
+    Status Save();
+
     void CloseDisk();
+
 
     std::optional<DiskContainerMetadata> GetContainerMetadata() const;
 
