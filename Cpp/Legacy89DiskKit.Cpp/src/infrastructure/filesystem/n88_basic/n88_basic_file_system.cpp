@@ -333,6 +333,25 @@ Status N88BasicFileSystem::Format()
     return Status::OkStatus();
 }
 
+Result<std::vector<std::uint8_t>> N88BasicFileSystem::ReadBootArea() const
+{
+    return ReadSector(0, 0, 1);
+}
+
+Status N88BasicFileSystem::WriteBootArea(const std::vector<std::uint8_t>& data)
+{
+    if (read_only_)
+    {
+        return {StatusCode::InvalidArgument, "Filesystem is read-only."};
+    }
+
+    std::vector<std::uint8_t> sector_data(config_.sector_size, 0x00);
+    const size_t copy_size = std::min<size_t>(data.size(), config_.sector_size);
+    std::copy(data.begin(), data.begin() + copy_size, sector_data.begin());
+
+    return WriteSector(0, 0, 1, sector_data);
+}
+
 Result<std::vector<std::uint8_t>> N88BasicFileSystem::ReadSector(const int cylinder, const int head, const int sector) const
 {
     if (raw_container_ != nullptr)

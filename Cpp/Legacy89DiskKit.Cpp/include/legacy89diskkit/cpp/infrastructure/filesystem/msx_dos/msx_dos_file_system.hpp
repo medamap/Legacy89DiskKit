@@ -40,8 +40,8 @@ public:
     Status UpdateAttributes(std::string_view file_name, const MsxDosFileAttributes& attributes);
     Status Format();
 
-    Result<std::vector<std::uint8_t>> ReadBootSector() const;
-    Status WriteBootSector(const std::vector<std::uint8_t>& sector_data);
+    Result<std::vector<std::uint8_t>> ReadBootArea() const;
+    Status WriteBootArea(const std::vector<std::uint8_t>& data);
 
 private:
     MsxDosFileSystem(

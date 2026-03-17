@@ -164,6 +164,25 @@ Status HuBasicFileSystem::ApplyDirectoryLayout(const HuBasicDirectoryLayout& lay
     return Status::OkStatus();
 }
 
+Result<std::vector<std::uint8_t>> HuBasicFileSystem::ReadBootArea() const
+{
+    return ReadSector(0, 0, 1);
+}
+
+Status HuBasicFileSystem::WriteBootArea(const std::vector<std::uint8_t>& data)
+{
+    if (read_only_)
+    {
+        return {StatusCode::InvalidArgument, "Filesystem is read-only."};
+    }
+
+    std::vector<std::uint8_t> sector_data(config_.sector_size, 0x00);
+    const size_t copy_size = std::min<size_t>(data.size(), config_.sector_size);
+    std::copy(data.begin(), data.begin() + copy_size, sector_data.begin());
+
+    return WriteSector(0, 0, 1, sector_data);
+}
+
 Status HuBasicFileSystem::WriteFile(
     const std::string_view file_name,
     const std::vector<std::uint8_t>& data,

@@ -77,13 +77,18 @@ public:
     Status WriteFile(
         std::string_view file_name,
         const std::vector<std::uint8_t>& data,
-        std::uint16_t attributes = 0);
+        std::uint16_t attributes = 0,
+        std::optional<std::uint16_t> load_address = std::nullopt,
+        std::optional<std::uint16_t> execution_address = std::nullopt);
 
     Status DeleteFile(std::string_view file_name);
     Status RenameFile(std::string_view old_name, std::string_view new_name);
     Status UpdateAttributes(std::string_view file_name, std::uint16_t attributes);
     Status Format();
     Status Save();
+
+    Result<std::vector<std::uint8_t>> ReadBootArea() const;
+    Status WriteBootArea(const std::vector<std::uint8_t>& data);
 
     Result<DirectoryLayout> ReadDirectoryLayout() const;
     Status ApplyDirectoryLayout(const DirectoryLayout& layout);

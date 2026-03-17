@@ -109,6 +109,7 @@ add_library(Legacy89DiskKitCpp STATIC
     src/application/character_encoding_service.cpp
     src/application/file_transfer_service.cpp
     src/application/directory_layout_service.cpp
+    src/application/boot_and_clone_service.cpp
 )
 
 target_include_directories(Legacy89DiskKitCpp
@@ -245,6 +246,12 @@ add_executable(Legacy89DiskKitCppDirectoryLayoutServiceSmoke
 
 target_link_libraries(Legacy89DiskKitCppDirectoryLayoutServiceSmoke PRIVATE Legacy89DiskKitCpp)
 
+add_executable(Legacy89DiskKitCppBootAndCloneServiceSmoke
+    tests/boot_and_clone_service_smoke.cpp
+)
+
+target_link_libraries(Legacy89DiskKitCppBootAndCloneServiceSmoke PRIVATE Legacy89DiskKitCpp)
+
 enable_testing()
 add_test(NAME Legacy89DiskKitCppSmoke COMMAND Legacy89DiskKitCppSmoke)
 add_test(NAME Legacy89DiskKitCppHuBasicSmoke COMMAND Legacy89DiskKitCppHuBasicSmoke)
@@ -267,3 +274,4 @@ add_test(NAME Legacy89DiskKitCppNativeBridgeExportsSmoke COMMAND Legacy89DiskKit
 add_test(NAME Legacy89DiskKitCppDiskServiceSmoke COMMAND Legacy89DiskKitCppDiskServiceSmoke)
 add_test(NAME Legacy89DiskKitCppFileTransferServiceSmoke COMMAND Legacy89DiskKitCppFileTransferServiceSmoke)
 add_test(NAME Legacy89DiskKitCppDirectoryLayoutServiceSmoke COMMAND Legacy89DiskKitCppDirectoryLayoutServiceSmoke)
+add_test(NAME Legacy89DiskKitCppBootAndCloneServiceSmoke COMMAND Legacy89DiskKitCppBootAndCloneServiceSmoke)

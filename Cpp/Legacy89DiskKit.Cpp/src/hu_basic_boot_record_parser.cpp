@@ -14,7 +14,9 @@ std::string DecodePaddedText(const std::vector<std::uint8_t>& data, const std::s
 
     for (std::size_t index = 0; index < length; ++index)
     {
-        text.push_back(static_cast<char>(data[offset + index]));
+        const char ch = static_cast<char>(data[offset + index]);
+        if (ch == '\0') break;
+        text.push_back(ch);
     }
 
     while (!text.empty() && text.back() == ' ')
