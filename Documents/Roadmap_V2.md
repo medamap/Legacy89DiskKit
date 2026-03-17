@@ -228,10 +228,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - Expected C++ target: application service for directory layout operations
   - Completion Note: Implemented `DirectoryLayoutService` with plan-based orchestration. Supported Hu-BASIC directory layout reconstruction and label insertion. Fixed a session bug where `Format()` misidentified Hu-BASIC as N88-BASIC.
 
-- [ ] Phase V2-26: Boot and clone application layer in C++
+- [x] Phase V2-26: Boot and clone application layer in C++
   - Layer: Application
   - C# source area: boot area and disk clone orchestration
   - Expected C++ target: application service for boot and clone workflows
+  - Completion Note: Implemented `BootAndCloneService` for transferring boot areas and files between disks. Standardized `ReadBootArea` / `WriteBootArea` across all C++ file systems.
 
 - [ ] Phase V2-27: Explicit resolver and bootstrap application layer in C++
   - Layer: Application

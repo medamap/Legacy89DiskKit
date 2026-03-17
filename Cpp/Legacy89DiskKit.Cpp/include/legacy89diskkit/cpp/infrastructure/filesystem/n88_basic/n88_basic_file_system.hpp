@@ -36,6 +36,9 @@ public:
     Status UpdateAttributes(std::string_view file_name, const N88BasicFileAttributes& attributes);
     Status Format();
 
+    Result<std::vector<std::uint8_t>> ReadBootArea() const;
+    Status WriteBootArea(const std::vector<std::uint8_t>& data);
+
 private:
     N88BasicFileSystem(
         RawDiskContainer* raw_container,

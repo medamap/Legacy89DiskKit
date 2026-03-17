@@ -358,12 +358,12 @@ Status MsxDosFileSystem::Format()
     return Status::OkStatus();
 }
 
-Result<std::vector<std::uint8_t>> MsxDosFileSystem::ReadBootSector() const
+Result<std::vector<std::uint8_t>> MsxDosFileSystem::ReadBootArea() const
 {
     return ReadSector(0, 0, 1);
 }
 
-Status MsxDosFileSystem::WriteBootSector(const std::vector<std::uint8_t>& sector_data)
+Status MsxDosFileSystem::WriteBootArea(const std::vector<std::uint8_t>& sector_data)
 {
     if (read_only_)
     {

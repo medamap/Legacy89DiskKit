@@ -43,6 +43,9 @@ public:
     HuBasicDirectoryLayout ReadDirectoryLayout() const;
     Status ApplyDirectoryLayout(const HuBasicDirectoryLayout& layout);
 
+    Result<std::vector<std::uint8_t>> ReadBootArea() const;
+    Status WriteBootArea(const std::vector<std::uint8_t>& data);
+
 private:
     HuBasicFileSystem(
         RawDiskContainer* raw_container,

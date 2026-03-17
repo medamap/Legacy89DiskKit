@@ -483,10 +483,12 @@ Result<std::vector<std::uint8_t>> NativeFileSystemSession::ReadFile(const std::s
 Status NativeFileSystemSession::WriteFile(
     const std::string_view file_name,
     const std::vector<std::uint8_t>& data,
-    const std::uint16_t attributes)
+    const std::uint16_t attributes,
+    const std::optional<std::uint16_t> load_address,
+    const std::optional<std::uint16_t> execution_address)
 {
     return std::visit(
-        [file_name, &data, attributes](auto& fs) -> Status
+        [file_name, &data, attributes, load_address, execution_address](auto& fs) -> Status
         {
             using TFileSystem = std::decay_t<decltype(fs)>;
             if constexpr (std::is_same_v<TFileSystem, std::monostate>)
@@ -495,7 +497,7 @@ Status NativeFileSystemSession::WriteFile(
             }
             else if constexpr (std::is_same_v<TFileSystem, HuBasicFileSystem>)
             {
-                return fs.WriteFile(file_name, data, ToHuAttributes(attributes));
+                return fs.WriteFile(file_name, data, ToHuAttributes(attributes), load_address.value_or(0), execution_address.value_or(0));
             }
             else if constexpr (std::is_same_v<TFileSystem, N88BasicFileSystem>)
             {
@@ -758,6 +760,42 @@ Status NativeFileSystemSession::Save()
             container_);
     }
     return status;
+}
+
+Result<std::vector<std::uint8_t>> NativeFileSystemSession::ReadBootArea() const
+{
+    return std::visit(
+        [](const auto& fs) -> Result<std::vector<std::uint8_t>>
+        {
+            using TFileSystem = std::decay_t<decltype(fs)>;
+            if constexpr (std::is_same_v<TFileSystem, std::monostate>)
+            {
+                return Result<std::vector<std::uint8_t>>::Failure(StatusCode::InvalidArgument, "Native session is not initialized.");
+            }
+            else
+            {
+                return fs.ReadBootArea();
+            }
+        },
+        file_system_);
+}
+
+Status NativeFileSystemSession::WriteBootArea(const std::vector<std::uint8_t>& data)
+{
+    return std::visit(
+        [&data](auto& fs) -> Status
+        {
+            using TFileSystem = std::decay_t<decltype(fs)>;
+            if constexpr (std::is_same_v<TFileSystem, std::monostate>)
+            {
+                return {StatusCode::InvalidArgument, "Native session is not initialized."};
+            }
+            else
+            {
+                return fs.WriteBootArea(data);
+            }
+        },
+        file_system_);
 }
 
 NativeFileSystemSession::~NativeFileSystemSession()

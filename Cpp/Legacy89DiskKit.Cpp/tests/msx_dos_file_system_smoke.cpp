@@ -102,7 +102,7 @@ int main()
         return 12;
     }
 
-    const auto boot_read = file_system.ReadBootSector();
+    const auto boot_read = file_system.ReadBootArea();
     if (!boot_read.ok() || boot_read.value().size() != 512)
     {
         return 13;
