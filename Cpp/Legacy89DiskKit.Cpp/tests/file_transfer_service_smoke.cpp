@@ -68,16 +68,24 @@ int main()
         }
         assert(import_status.ok());
 
+        // Verify attribute is set to ASCII (bit 0)
+        auto files = disk_service.GetSession()->GetFiles();
+        auto it = std::find_if(files.begin(), files.end(), [](const auto& f) {
+            return f.file_name == "TEST" && f.extension == "TXT";
+        });
+        assert(it != files.end());
+        assert((it->attributes & 0x01) != 0); // Must be ASCII
+
         auto export_status = transfer_service.ExportFile("TEST.TXT", host_export_file.string());
         assert(export_status.ok());
 
-        std::ifstream stream(host_export_file.path);
+        std::ifstream stream(host_export_file.path, std::ios::binary);
         std::string exported_content((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
         
-        // Hu-BASIC ASCII might have trailing 0x1A or spaces depending on implementation, 
-        // but here our Decode should have handled it or we compare prefix.
+        // Hu-BASIC ASCII import adds 0x1A, but export should remove it (via DecodeText)
         std::cout << "Exported: [" << exported_content << "]" << std::endl;
-        assert(exported_content.find(test_content) == 0);
+        assert(exported_content == test_content);
+        assert(exported_content.find('\x1A') == std::string::npos); // Should NOT contain EOF
     }
 
     // --- Binary Transfer Test ---

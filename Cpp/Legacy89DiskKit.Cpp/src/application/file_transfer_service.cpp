@@ -92,7 +92,12 @@ Status FileTransferService::ExportFile(
     bool is_ascii = false;
     const auto files = session_->GetFiles();
     auto it = std::find_if(files.begin(), files.end(), [&](const auto& f) {
-        return f.file_name == disk_file_name;
+        std::string full_name = f.file_name;
+        if (!f.extension.empty())
+        {
+            full_name += "." + f.extension;
+        }
+        return full_name == disk_file_name;
     });
 
     if (it != files.end())
