@@ -2,6 +2,7 @@
 
 #include "legacy89diskkit/cpp/hu_basic_types.hpp"
 #include "legacy89diskkit/cpp/hu_basic_filesystem_info_rules.hpp"
+#include "legacy89diskkit/cpp/hu_basic_directory_layout_types.hpp"
 #include "legacy89diskkit/cpp/infrastructure/disk_image/d88_disk_container.hpp"
 #include "legacy89diskkit/cpp/infrastructure/disk_image/raw_disk_container.hpp"
 #include "legacy89diskkit/cpp/status.hpp"
@@ -38,6 +39,9 @@ public:
     Status RenameFile(std::string_view old_name, std::string_view new_name);
     Status UpdateAttributes(std::string_view file_name, const HuBasicFileAttributes& attributes);
     Status Format();
+
+    HuBasicDirectoryLayout ReadDirectoryLayout() const;
+    Status ApplyDirectoryLayout(const HuBasicDirectoryLayout& layout);
 
 private:
     HuBasicFileSystem(
