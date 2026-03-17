@@ -14,6 +14,16 @@ extern "C" {
 #define LDK_CALL
 #endif
 
+#ifdef _WIN32
+  #ifdef LEGACY89DISKKIT_EXPORTS
+    #define LDK_API __declspec(dllexport)
+  #else
+    #define LDK_API __declspec(dllimport)
+  #endif
+#else
+  #define LDK_API __attribute__((visibility("default")))
+#endif
+
 typedef enum LdkStatus {
     LDK_STATUS_SUCCESS = 0,
     LDK_STATUS_ERROR_GENERIC = -1,
@@ -62,58 +72,58 @@ typedef struct LdkDiskContainerMetadata {
     int64_t declared_image_size;
 } LdkDiskContainerMetadata;
 
-int32_t LDK_CALL ldk_open_disk(const char* path, int32_t read_only_flag);
-int32_t LDK_CALL ldk_open_disk_from_buffer(const void* data, int32_t length, int32_t read_only_flag);
-int32_t LDK_CALL ldk_create_disk(const char* path, int32_t disk_type, const char* name);
-int32_t LDK_CALL ldk_close_disk(int32_t handle);
-int32_t LDK_CALL ldk_get_abi_version(void);
-int32_t LDK_CALL ldk_get_capability_flags(void);
-int32_t LDK_CALL ldk_get_capability_summary(char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_status_name(int32_t status_code, char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_status_count(void);
-int32_t LDK_CALL ldk_get_status_code_at(int32_t index);
-int32_t LDK_CALL ldk_get_status_name_at(int32_t index, char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_supported_file_system_count(void);
-int32_t LDK_CALL ldk_get_supported_file_system_name(int32_t index, char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_supported_platform_count(void);
-int32_t LDK_CALL ldk_get_supported_platform_name(int32_t index, char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_supported_image_format_count(void);
-int32_t LDK_CALL ldk_get_supported_image_format_name(int32_t index, char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_invalid_handle_value(void);
-int32_t LDK_CALL ldk_get_handle_lifecycle_summary(char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_handle_value_summary(char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_buffer_string_policy_summary(char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_mutation_policy_summary(char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_backend_kind(char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_backend_implementation(char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_backend_target(char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_backend_summary(char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_export_count(void);
-int32_t LDK_CALL ldk_get_export_name_at(int32_t index, char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_export_group_at(int32_t index, char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_mutating_operation_count(void);
-int32_t LDK_CALL ldk_get_mutating_operation_name_at(int32_t index, char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_open_mode_summary(char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_open_mode_count(void);
-int32_t LDK_CALL ldk_get_open_mode_name_at(int32_t index, char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_is_handle_valid(int32_t handle);
-int32_t LDK_CALL ldk_get_open_handle_count(void);
-int32_t LDK_CALL ldk_get_handle_source_operation(int32_t handle, char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_get_handle_is_writable(int32_t handle);
-int32_t LDK_CALL ldk_get_handle_summary(int32_t handle, char* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_close_all_handles(void);
-int32_t LDK_CALL ldk_get_file_system_info(int32_t handle, LdkFileSystemInfo* info);
-int32_t LDK_CALL ldk_get_container_metadata(int32_t handle, LdkDiskContainerMetadata* metadata);
-int32_t LDK_CALL ldk_get_files_count(int32_t handle, int32_t* out_count);
-int32_t LDK_CALL ldk_get_files(int32_t handle, LdkFileEntry* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_read_file(int32_t handle, const char* name, void* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_delete_file(int32_t handle, const char* name);
-int32_t LDK_CALL ldk_write_file(int32_t handle, const char* name, const void* data, int32_t length, uint16_t attributes);
-int32_t LDK_CALL ldk_rename_file(int32_t handle, const char* old_name, const char* new_name);
-int32_t LDK_CALL ldk_update_attributes(int32_t handle, const char* name, uint16_t attributes);
-int32_t LDK_CALL ldk_read_boot_area(int32_t handle, void* buffer, int32_t capacity);
-int32_t LDK_CALL ldk_write_boot_area(int32_t handle, const void* data, int32_t length);
-int32_t LDK_CALL ldk_format(int32_t handle);
+LDK_API int32_t LDK_CALL ldk_open_disk(const char* path, int32_t read_only_flag);
+LDK_API int32_t LDK_CALL ldk_open_disk_from_buffer(const void* data, int32_t length, int32_t read_only_flag);
+LDK_API int32_t LDK_CALL ldk_create_disk(const char* path, int32_t disk_type, const char* name);
+LDK_API int32_t LDK_CALL ldk_close_disk(int32_t handle);
+LDK_API int32_t LDK_CALL ldk_get_abi_version(void);
+LDK_API int32_t LDK_CALL ldk_get_capability_flags(void);
+LDK_API int32_t LDK_CALL ldk_get_capability_summary(char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_status_name(int32_t status_code, char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_status_count(void);
+LDK_API int32_t LDK_CALL ldk_get_status_code_at(int32_t index);
+LDK_API int32_t LDK_CALL ldk_get_status_name_at(int32_t index, char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_supported_file_system_count(void);
+LDK_API int32_t LDK_CALL ldk_get_supported_file_system_name(int32_t index, char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_supported_platform_count(void);
+LDK_API int32_t LDK_CALL ldk_get_supported_platform_name(int32_t index, char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_supported_image_format_count(void);
+LDK_API int32_t LDK_CALL ldk_get_supported_image_format_name(int32_t index, char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_invalid_handle_value(void);
+LDK_API int32_t LDK_CALL ldk_get_handle_lifecycle_summary(char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_handle_value_summary(char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_buffer_string_policy_summary(char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_mutation_policy_summary(char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_backend_kind(char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_backend_implementation(char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_backend_target(char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_backend_summary(char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_export_count(void);
+LDK_API int32_t LDK_CALL ldk_get_export_name_at(int32_t index, char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_export_group_at(int32_t index, char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_mutating_operation_count(void);
+LDK_API int32_t LDK_CALL ldk_get_mutating_operation_name_at(int32_t index, char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_open_mode_summary(char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_open_mode_count(void);
+LDK_API int32_t LDK_CALL ldk_get_open_mode_name_at(int32_t index, char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_is_handle_valid(int32_t handle);
+LDK_API int32_t LDK_CALL ldk_get_open_handle_count(void);
+LDK_API int32_t LDK_CALL ldk_get_handle_source_operation(int32_t handle, char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_get_handle_is_writable(int32_t handle);
+LDK_API int32_t LDK_CALL ldk_get_handle_summary(int32_t handle, char* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_close_all_handles(void);
+LDK_API int32_t LDK_CALL ldk_get_file_system_info(int32_t handle, LdkFileSystemInfo* info);
+LDK_API int32_t LDK_CALL ldk_get_container_metadata(int32_t handle, LdkDiskContainerMetadata* metadata);
+LDK_API int32_t LDK_CALL ldk_get_files_count(int32_t handle, int32_t* out_count);
+LDK_API int32_t LDK_CALL ldk_get_files(int32_t handle, LdkFileEntry* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_read_file(int32_t handle, const char* name, void* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_delete_file(int32_t handle, const char* name);
+LDK_API int32_t LDK_CALL ldk_write_file(int32_t handle, const char* name, const void* data, int32_t length, uint16_t attributes);
+LDK_API int32_t LDK_CALL ldk_rename_file(int32_t handle, const char* old_name, const char* new_name);
+LDK_API int32_t LDK_CALL ldk_update_attributes(int32_t handle, const char* name, uint16_t attributes);
+LDK_API int32_t LDK_CALL ldk_read_boot_area(int32_t handle, void* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_write_boot_area(int32_t handle, const void* data, int32_t length);
+LDK_API int32_t LDK_CALL ldk_format(int32_t handle);
 
 #ifdef __cplusplus
 }

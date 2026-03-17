@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 
-add_library(Legacy89DiskKitCpp STATIC
+option(LEGACY89DISKKIT_BUILD_SHARED "Build shared library for P/Invoke" OFF)
+
+set(SOURCES
     src/character_encoding.cpp
     src/raw_disk_geometry.cpp
     src/d88_parser.cpp
@@ -119,6 +121,8 @@ add_library(Legacy89DiskKitCpp STATIC
     src/application/event_driven_emulator_fdc_host_adapter.cpp
 )
 
+add_library(Legacy89DiskKitCpp STATIC ${SOURCES})
+
 target_include_directories(Legacy89DiskKitCpp
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -126,6 +130,20 @@ target_include_directories(Legacy89DiskKitCpp
 )
 
 target_compile_features(Legacy89DiskKitCpp PUBLIC cxx_std_20)
+
+if(LEGACY89DISKKIT_BUILD_SHARED)
+    add_library(Legacy89DiskKitCppShared SHARED ${SOURCES})
+    target_include_directories(Legacy89DiskKitCppShared
+        PUBLIC
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/../../include
+    )
+    target_compile_features(Legacy89DiskKitCppShared PUBLIC cxx_std_20)
+    target_compile_definitions(Legacy89DiskKitCppShared PRIVATE LEGACY89DISKKIT_EXPORTS)
+    set_target_properties(Legacy89DiskKitCppShared PROPERTIES
+        OUTPUT_NAME "Legacy89DiskKitCpp"
+    )
+endif()
 
 add_executable(Legacy89DiskKitCppSmoke
     tests/raw_and_d88_smoke.cpp
