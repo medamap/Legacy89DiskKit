@@ -234,10 +234,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - Expected C++ target: application service for boot and clone workflows
   - Completion Note: Implemented `BootAndCloneService` for transferring boot areas and files between disks. Standardized `ReadBootArea` / `WriteBootArea` across all C++ file systems.
 
-- [ ] Phase V2-27: Explicit resolver and bootstrap application layer in C++
+- [x] Phase V2-27: Explicit resolver and bootstrap application layer in C++
   - Layer: Application
   - C# source area: managed bootstrap and supported default wiring
   - Expected C++ target: native or C++ bootstrap for supported application services
+  - Completion Note: Implemented `legacy89diskkit::cpp::application` namespace with factory functions for all services. Added `ExplicitFileSystemResolver` with `InitializeForDetection` to enable scoring-based Hu-BASIC detection.
 
 - [ ] Phase V2-28: Controller-facing application layer in C++
   - Layer: Application
