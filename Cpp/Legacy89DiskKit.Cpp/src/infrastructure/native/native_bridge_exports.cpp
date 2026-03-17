@@ -91,7 +91,7 @@ int NativeBridgeExports::OpenDisk(const char* const path, const std::int32_t rea
         return LDK_STATUS_ERROR_INVALID_ARGUMENT;
     }
 
-    const auto opened = NativeFileSystemSession::Open(path, read_only_flag != 0);
+    auto opened = NativeFileSystemSession::Open(path, read_only_flag != 0);
     if (!opened.ok())
     {
         return ToLdkStatus(opened.status().code);
@@ -111,7 +111,7 @@ int NativeBridgeExports::OpenDiskFromBuffer(const void* const data, const std::i
     }
 
     const auto buffer = std::span<const std::uint8_t>(static_cast<const std::uint8_t*>(data), static_cast<std::size_t>(length));
-    const auto opened = NativeFileSystemSession::OpenFromBuffer(buffer, read_only_flag != 0);
+    auto opened = NativeFileSystemSession::OpenFromBuffer(buffer, read_only_flag != 0);
     if (!opened.ok())
     {
         return ToLdkStatus(opened.status().code);
@@ -119,7 +119,7 @@ int NativeBridgeExports::OpenDiskFromBuffer(const void* const data, const std::i
 
     const bool is_writable = !opened.value().IsReadOnly();
     return RegisterSession(
-        std::move(opened.value()),
+        static_cast<NativeFileSystemSession&&>(opened.value()),
         NativeBridgeHandleMetadata{"open-disk-from-buffer", is_writable});
 }
 

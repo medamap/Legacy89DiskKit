@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cctype>
 #include <fstream>
+#include <iostream>
 
 namespace legacy89diskkit::cpp
 {
@@ -34,6 +35,21 @@ std::vector<std::uint8_t> ReadAllBytes(const std::filesystem::path& image_path)
 {
     std::ifstream stream(image_path, std::ios::binary);
     return std::vector<std::uint8_t>(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+}
+
+Status WriteAllBytes(const std::filesystem::path& path, const std::vector<std::uint8_t>& data)
+{
+    std::ofstream stream(path, std::ios::binary);
+    if (!stream)
+    {
+        return {StatusCode::InvalidArgument, "Could not open file for writing."};
+    }
+    stream.write(reinterpret_cast<const char*>(data.data()), static_cast<std::streamsize>(data.size()));
+    if (!stream)
+    {
+        return {StatusCode::InvalidArgument, "Failed to write data to file."};
+    }
+    return Status::OkStatus();
 }
 
 NativeBridgeFileEntry ToNativeEntry(const HuBasicFileEntry& entry)
@@ -182,6 +198,77 @@ Result<NativeFileSystemSession> NativeFileSystemSession::Open(
         NativeFileSystemSession(image_path.string(), family, std::move(container_variant), std::move(file_system.value())));
 }
 
+Result<NativeFileSystemSession> NativeFileSystemSession::Create(
+    const std::filesystem::path& image_path,
+    DiskType type,
+    const std::string& name)
+{
+    const auto ext = image_path.extension().string();
+    std::string ext_lower;
+    for (const auto ch : ext)
+    {
+        ext_lower.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(ch))));
+    }
+
+    ContainerVariant container_variant;
+    std::vector<std::uint8_t> initial_data;
+    if (ext_lower == ".d88")
+    {
+        auto container = D88DiskContainer::CreateNew(type, name);
+        if (!container.ok())
+        {
+            return Result<NativeFileSystemSession>::Failure(container.status().code, container.status().message);
+        }
+        initial_data = container.value().ToImageData();
+        container_variant = ContainerVariant{std::in_place_index<2>, std::move(container.value())};
+    }
+    else
+    {
+        auto raw = RawDiskContainer::CreateNew(type);
+        if (!raw.ok())
+        {
+            return Result<NativeFileSystemSession>::Failure(raw.status().code, raw.status().message);
+        }
+        initial_data = raw.value().ToImageData();
+        container_variant = ContainerVariant{std::in_place_index<1>, std::move(raw.value())};
+    }
+
+    const auto write_status = WriteAllBytes(image_path, initial_data);
+    if (!write_status.ok())
+    {
+        return Result<NativeFileSystemSession>::Failure(write_status.code, write_status.message);
+    }
+
+    auto fs_result = DetectAndOpenFileSystem(container_variant);
+    
+    FileSystemFamily family = FileSystemFamily::HuBasic;
+    FileSystemVariant fs_variant = std::monostate{};
+
+    if (fs_result.ok())
+    {
+        fs_variant = std::move(fs_result.value());
+        family = std::visit([](const auto& fs) -> FileSystemFamily {
+            using T = std::decay_t<decltype(fs)>;
+            if constexpr (std::is_same_v<T, HuBasicFileSystem>) return FileSystemFamily::HuBasic;
+            if constexpr (std::is_same_v<T, N88BasicFileSystem>) return FileSystemFamily::N88Basic;
+            if constexpr (std::is_same_v<T, MsxDosFileSystem>) return FileSystemFamily::MsxDos;
+            return FileSystemFamily::HuBasic;
+        }, fs_variant);
+    }
+    else
+    {
+        auto fallback = OpenDetectedFileSystem(FileSystemFamily::HuBasic, container_variant);
+        if (fallback.ok())
+        {
+            fs_variant = std::move(fallback.value());
+            family = FileSystemFamily::HuBasic;
+        }
+    }
+
+    return Result<NativeFileSystemSession>::Success(
+        NativeFileSystemSession(image_path.string(), family, std::move(container_variant), std::move(fs_variant)));
+}
+
 Result<NativeFileSystemSession> NativeFileSystemSession::OpenFromBuffer(
     std::span<const std::uint8_t> buffer,
     const bool read_only,
@@ -209,7 +296,6 @@ Result<NativeFileSystemSession> NativeFileSystemSession::OpenFromBuffer(
     }
     else
     {
-        // Auto (std::nullopt): try D88 if size suggests it might have a header, otherwise Raw
         bool d88_success = false;
         if (buffer.size() >= 0x2b0)
         {
@@ -338,19 +424,18 @@ std::vector<NativeBridgeFileEntry> NativeFileSystemSession::GetFiles() const
     return std::visit(
         [](const auto& fs)
         {
-            std::vector<NativeBridgeFileEntry> files;
             using TFileSystem = std::decay_t<decltype(fs)>;
             if constexpr (std::is_same_v<TFileSystem, std::monostate>)
             {
-                return files;
+                return std::vector<NativeBridgeFileEntry>{};
             }
             else
             {
+                std::vector<NativeBridgeFileEntry> files;
                 for (const auto& entry : fs.GetFiles())
                 {
                     files.push_back(ToNativeEntry(entry));
                 }
-
                 return files;
             }
         },
@@ -486,7 +571,7 @@ Status NativeFileSystemSession::UpdateAttributes(const std::string_view file_nam
 
 Status NativeFileSystemSession::Format()
 {
-    return std::visit(
+    const auto format_status = std::visit(
         [](auto& fs) -> Status
         {
             using TFileSystem = std::decay_t<decltype(fs)>;
@@ -500,6 +585,53 @@ Status NativeFileSystemSession::Format()
             }
         },
         file_system_);
+
+    if (!format_status.ok())
+    {
+        return format_status;
+    }
+
+    auto fs_result = DetectAndOpenFileSystem(container_);
+    if (fs_result.ok())
+    {
+        file_system_ = std::move(fs_result.value());
+        family_ = std::visit([](const auto& fs) -> FileSystemFamily {
+            using T = std::decay_t<decltype(fs)>;
+            if constexpr (std::is_same_v<T, HuBasicFileSystem>) return FileSystemFamily::HuBasic;
+            if constexpr (std::is_same_v<T, N88BasicFileSystem>) return FileSystemFamily::N88Basic;
+            if constexpr (std::is_same_v<T, MsxDosFileSystem>) return FileSystemFamily::MsxDos;
+            return FileSystemFamily::HuBasic;
+        }, file_system_);
+    }
+    else
+    {
+        auto fallback = OpenDetectedFileSystem(family_, container_);
+        if (fallback.ok())
+        {
+            file_system_ = std::move(fallback.value());
+        }
+    }
+
+    if (file_path_ != "memory-buffer")
+    {
+         const auto image_data = std::visit(
+            [](const auto& container) -> std::vector<std::uint8_t>
+            {
+                using T = std::decay_t<decltype(container)>;
+                if constexpr (std::is_same_v<T, std::monostate>) return std::vector<std::uint8_t>{};
+                if constexpr (std::is_same_v<T, RawDiskContainer>) return container.ToImageData();
+                if constexpr (std::is_same_v<T, D88DiskContainer>) return container.ToImageData();
+                return std::vector<std::uint8_t>{};
+            },
+            container_);
+        
+        if (!image_data.empty())
+        {
+            return WriteAllBytes(file_path_, image_data);
+        }
+    }
+
+    return Status::OkStatus();
 }
 
 NativeFileSystemSession::NativeFileSystemSession(
@@ -545,6 +677,59 @@ Result<NativeFileSystemSession::FileSystemVariant> NativeFileSystemSession::Open
             }
         },
         container);
+}
+
+NativeFileSystemSession::NativeFileSystemSession(NativeFileSystemSession&& other) noexcept
+    : file_path_(std::move(other.file_path_)),
+      family_(other.family_),
+      container_(std::move(other.container_)),
+      file_system_(std::move(other.file_system_))
+{
+    RelinkFileSystem();
+}
+
+NativeFileSystemSession& NativeFileSystemSession::operator=(NativeFileSystemSession&& other) noexcept
+{
+    if (this != &other)
+    {
+        file_path_ = std::move(other.file_path_);
+        family_ = other.family_;
+        container_ = std::move(other.container_);
+        file_system_ = std::move(other.file_system_);
+        RelinkFileSystem();
+    }
+    return *this;
+}
+
+void NativeFileSystemSession::RelinkFileSystem()
+{
+    std::visit(
+        [this](auto& container)
+        {
+            using TContainer = std::decay_t<decltype(container)>;
+            if constexpr (!std::is_same_v<TContainer, std::monostate>)
+            {
+                std::visit(
+                    [&container](auto& fs)
+                    {
+                        using TFS = std::decay_t<decltype(fs)>;
+                        if constexpr (std::is_same_v<TFS, HuBasicFileSystem>)
+                        {
+                            fs = HuBasicFileSystem::Open(container);
+                        }
+                        else if constexpr (std::is_same_v<TFS, N88BasicFileSystem>)
+                        {
+                            fs = N88BasicFileSystem::Open(container);
+                        }
+                        else if constexpr (std::is_same_v<TFS, MsxDosFileSystem>)
+                        {
+                            fs = MsxDosFileSystem::OpenExplicit(container);
+                        }
+                    },
+                    file_system_);
+            }
+        },
+        container_);
 }
 
 Result<NativeFileSystemSession::FileSystemVariant> NativeFileSystemSession::DetectAndOpenFileSystem(ContainerVariant& container)

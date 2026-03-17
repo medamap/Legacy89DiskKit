@@ -1,17 +1,18 @@
 ---
 name: legacy89-v2-review
-description: Reviews Legacy89DiskKit changes against the Roadmap V2 migration rules, DDD layer boundaries, ABI stability, and C# to C++ parity expectations. Use after each V2 phase implementation or when a change touches native bridge, filesystem infrastructure, or roadmap-tracked migration work.
+description: Reviews Legacy89DiskKit changes against Roadmap V2 as a migration step, with emphasis on DDD layer discipline, C# to C++ parity, ABI safety, semantic regressions, and project-specific failure patterns. Use after each V2 phase implementation or when a change touches native bridge, filesystem infrastructure, application services, or roadmap-tracked migration work.
 ---
 
 # Legacy89 V2 Review
 
-Use this skill when reviewing implementation work in this repository, especially for:
+This skill is for reviewing Legacy89DiskKit changes as **migration work**, not as isolated code.
 
-- `Roadmap_V2.md` phases
-- C# to C++ migration work
-- native bridge changes
-- filesystem or container infrastructure
-- C++ DDD folder migration
+The standard is:
+
+- the change must fit the declared V2 phase
+- the change must stay in the correct DDD layer
+- the change must not silently alter already-stable semantics
+- the change must keep the path from C# reference behavior to C++ replacement behavior intelligible
 
 ## Read First
 
@@ -22,147 +23,336 @@ Read these in order before reviewing:
 3. `Documents/Roadmap_V2.md`
 4. `Documents/Cpp_Ddd_Folder_Migration_Rulebook.md`
 
-If the change is phase-scoped, identify the exact V2 phase first.
+Then identify the exact V2 phase being reviewed.
 
-## Review Goal
+Do not start by asking "does this compile?"
 
-The goal is not "is this code acceptable in general?"
+Start by asking:
 
-The goal is:
+- what responsibility is being migrated
+- what layer owns that responsibility
+- what semantics must remain stable while this phase lands
 
-- does this change satisfy the intended V2 phase
-- does it stay inside the correct DDD layer
-- does it avoid regressing already-stable behavior
-- does it preserve a clean migration path from C# to C++
+## Review Posture
 
-## Required Review Questions
+Do not review in a school-solution style.
 
-Always answer these questions during review.
+Do not just check whether the implementation "looks reasonable."
 
-### 1. Is the change in the correct layer?
+Review with the assumption that migration work usually fails in these ways:
 
-Check whether the implementation belongs to:
+- scope drift into the wrong phase
+- leakage across DDD layers
+- silent semantic regression of an older entrypoint
+- parity claims based only on signatures, not behavior
+- C++ ownership or ABI mistakes hidden by passing smoke tests
 
-- Domain
-- Infrastructure
-- Application
-- Presentation
+Your job is to **actively search for the most likely migration mistake**, not to passively summarize the patch.
 
-Flag it if:
+## Mandatory Review Flow
 
-- Domain absorbs host/path/runtime concerns
-- Infrastructure starts doing Application orchestration
-- Application starts formatting UI output
-- Presentation starts owning filesystem parsing or mutation rules
+Follow this order.
 
-### 2. Is the change actually inside the declared V2 phase?
+### 1. Identify the migration promise
 
-Review against the current phase in `Documents/Roadmap_V2.md`.
+Before reading code deeply, write down:
 
-Flag it if:
+- V2 phase
+- expected layer
+- C# source responsibility being replaced
+- C++ replacement surface being introduced
 
-- the change silently pulls in responsibilities from a later phase
-- the change broadens scope beyond the phase boundary
-- the implementation is technically useful but belongs to a different V2 phase
+If that cannot be stated in one or two lines, the review is already weak.
 
-### 3. Does it preserve existing semantics?
+### 2. Locate the semantic risk
 
-This is critical for migration work.
+Every V2 change has a most-dangerous regression surface.
 
-Flag it if:
+Find it first.
 
-- a path-based API changes behavior while adding a buffer-based API
-- explicit selection semantics change while adding detection
-- read-only or write semantics change as a side effect
-- file/container format routing changes without a strong reason
+Examples:
 
-When a new entrypoint is added, check that old entrypoints still mean the same thing.
+- buffer-based entrypoint added: risk is that path-based meaning changed
+- detection change: risk is that explicit selection or format routing changed
+- application service added: risk is that it is only thin forwarding, or that it absorbs infrastructure policy
+- native bridge export added: risk is ABI drift, handle drift, or status drift
+- folder move: risk is no behavior change, but wrong layer placement or stale include/CMake wiring
 
-### 4. Does it introduce C++ lifetime or ownership hazards?
+If you do not identify the main risk first, the review will become shallow.
 
-Pay special attention to:
+### 3. Demand evidence, not claims
 
-- use-after-move
+A statement such as "parity is preserved" is not evidence.
+
+For every major claim, require one of:
+
+- file and line evidence
+- direct code path evidence
+- matching test coverage
+- explicit residual-risk statement
+
+If a reviewer says "same signature" or "same abstraction," that is not enough.
+
+Parity means behavior, not naming.
+
+### 4. Separate success-path proof from regression proof
+
+A lot of weak reviews only prove the new path works.
+
+This skill requires both:
+
+- the new path works
+- the old path still means the same thing
+
+If only the success path is tested, report residual risk or a finding.
+
+## Layer Discipline
+
+Always classify the change by DDD layer.
+
+### Domain
+
+Domain owns:
+
+- rules
+- models
+- parse/transform logic
+- transaction-planning logic
+- host-independent controller contracts
+
+Red flag:
+
+- Domain begins to know about paths, files, host handles, CLI formatting, or runtime wiring
+
+### Infrastructure
+
+Infrastructure owns:
+
+- concrete adapters
+- container shells
+- path/buffer loading
+- provider wiring
+- runtime-backed bindings
+- bridge entrypoints
+
+Red flag:
+
+- Infrastructure starts becoming `DiskService` or `FileTransferService`
+- Infrastructure silently embeds workflow policy that belongs in Application
+
+### Application
+
+Application owns:
+
+- use-case orchestration
+- workflow composition
+- service facades
+- explicit control over lower-layer collaborators
+
+Red flag:
+
+- Application is only thin forwarding with no orchestration value
+- Application starts formatting output or parsing raw filesystem structures
+
+### Presentation
+
+Presentation owns:
+
+- executables
+- CLI commands
+- frontend/runtime entrypoints
+- view-oriented formatting
+
+Red flag:
+
+- Presentation directly owns filesystem mutation rules or low-level parsing
+
+## Change-Type Review Heuristics
+
+Use the relevant section below based on the patch.
+
+### A. Path API or Buffer API Change
+
+Always ask:
+
+- did the existing path-based API keep the same routing semantics
+- did the new buffer path accidentally broaden detection
+- is there now a missing format hint problem
+- is the change truly path-independent, or just path logic pasted into memory form
+
+Project-specific suspicion:
+
+- a permissive D88 parse is used as implicit detection
+- raw images can now be reclassified as D88 because probing moved
+
+### B. Detection or Explicit Selection Change
+
+Always ask:
+
+- did explicit selection remain authoritative
+- did detection change outside a detection phase
+- did a fallback alter the meaning of an existing stable call path
+
+Project-specific suspicion:
+
+- explicit selection and detection get mixed
+- filesystem family best-match logic leaks into unrelated phases
+
+### C. Native Bridge or ABI Change
+
+Always ask:
+
+- did the public C header change intentionally
+- are status mappings coherent
+- are handle lifecycle semantics still consistent
+- are strings and buffers written safely
+- is a moved-from object read after handle registration
+- are unimplemented exports being exposed too early
+
+Project-specific suspicion:
+
+- ABI surface grows faster than the backing implementation
+- placeholder exports make the bridge look more mature than it is
+
+### D. Application Service Addition
+
+Always ask:
+
+- is this real orchestration, or just forwarding
+- what C# Application responsibility is actually being mirrored
+- are dependencies explicit and minimal
+- are null/close/reopen/error states handled
+
+Project-specific suspicion:
+
+- "same method names as C#" is treated as proof of parity
+- service is introduced before infrastructure responsibilities are mature
+
+### E. Folder Migration / DDD Placement
+
+Always ask:
+
+- is the file under the correct DDD path now
+- if not, was the rulebook updated
+- are include and CMake paths still correct
+
+Project-specific suspicion:
+
+- old flat layout grows further even though the phase is already in DDD migration mode
+
+## C++ Hazard Checklist
+
+Always look for these, even if the change is otherwise clean:
+
 - moved-from object access
-- invalid span or pointer lifetimes
-- handle table ownership
-- buffer length and null handling
-- ABI-facing string and struct writes
+- use-after-move
+- span lifetime errors
+- pointer lifetime mistakes
+- ownership ambiguity
+- stale handle-table state
+- missing null or length validation
+- public headers missing their own STL includes
+- hidden reliance on transitive includes
 
-If a value is moved into storage, do not allow later reads from that same source object.
+For this repository, moved-from access and hidden transitive includes are common enough to check every time.
 
-### 5. Are public headers self-contained?
+## Legacy89-Specific Red Flags
 
-For any changed public header, verify:
+Treat these as high suspicion by default.
 
-- required STL headers are included directly
-- the header does not rely on transitive includes
-- exported types are visible without include-order tricks
+- A new buffer entrypoint changes the old path-based behavior
+- Detection is broadened inside a phase that is not about detection
+- A parser is used as a de facto format detector without a hint
+- A native bridge export does more than the current V2 phase requires
+- A phase marked Infrastructure starts looking like `DiskService` or `FileTransferService`
+- A parity claim is based on matching signatures instead of matching semantics
+- A smoke test proves only compile/success path, not regression resistance
+- A file is added under the old flat C++ layout even though a DDD destination is obvious
 
-### 6. Does it preserve ABI stability?
+## What Counts As A Good Review
 
-When `include/legacy89diskkit_native.h` or native bridge exports change:
+A good review does all of these:
 
-- confirm new exports are added intentionally
-- confirm existing exported signatures are not silently broken
-- confirm status-code mapping is sane
-- confirm handle semantics stay coherent
+- names the phase
+- names the layer
+- identifies the most likely regression surface
+- shows concrete evidence from files and lines
+- distinguishes confirmed behavior from unverified assumptions
+- states residual risk when coverage is incomplete
 
-Flag placeholder exports if they create a misleading "implemented" surface.
+If there are no findings, you still must say what was actually checked.
 
-### 7. Is the file placement correct under the DDD rulebook?
+## Required Output Shape
 
-When new C++ files are added, verify they are under the intended folder:
+Use this output shape when reviewing.
 
-- `domain/...`
-- `infrastructure/...`
-- `application/...`
-- presentation/test executables where appropriate
+### Findings
 
-If not moved yet, check whether the rulebook should have been updated.
+List findings first, ordered by severity.
 
-## Project-Specific Red Flags
+Each finding should include:
 
-Treat these as high-suspicion patterns.
+- file and line reference
+- what is wrong
+- why it matters in V2 / DDD / parity terms
+- what should change
 
-- A new buffer-based path changes the old path-based route selection
-- Detection logic is broadened inside a phase that is not about detection
-- A permissive parser is used as format detection without a format hint
-- A native bridge export starts doing more than the current phase requires
-- A phase marked as Infrastructure starts resembling `DiskService` or `FileTransferService`
-- A review report claims success without matching tests for the new path
-- A smoke test only proves "it compiles" but not the specific new behavior
+### Open Questions or Residual Risks
 
-## Preferred Review Output
+If no bug is confirmed but something is weakly covered, say so explicitly.
 
-When findings exist, report:
+Examples:
 
-1. findings first, ordered by severity
-2. file and line references
-3. why it matters in V2 / DDD terms
-4. what should be changed
+- success path covered, regression path not covered
+- signature parity present, semantic parity not demonstrated
+- smoke exists, but no error-path verification exists
 
-If there are no findings, still mention:
+### Short Summary
 
-- what phase was reviewed
-- what was validated
-- any residual risk or missing deeper verification
+Only after findings.
+
+Summarize:
+
+- phase reviewed
+- layer reviewed
+- what is solid
+- what still needs caution
 
 ## Minimal Verification Expectations
 
-For V2 work, look for relevant verification:
+For V2 work, expect relevant proof.
 
-- C++ phases:
-  - `cmake -S Cpp -B /tmp/legacy89-cpp-build`
-  - `cmake --build /tmp/legacy89-cpp-build`
-  - `ctest --test-dir /tmp/legacy89-cpp-build/Legacy89DiskKit.Cpp --output-on-failure`
+### C++ migration phases
 
-- Native bridge changes:
-  - targeted managed tests around `NativeInterop`
-  - targeted C++ smoke for the touched native bridge path
+Look for:
 
-Flag the review if the claimed behavior is not actually covered by tests.
+- `cmake -S Cpp -B /tmp/legacy89-cpp-build`
+- `cmake --build /tmp/legacy89-cpp-build`
+- `ctest --test-dir /tmp/legacy89-cpp-build/Legacy89DiskKit.Cpp --output-on-failure`
 
-## One-Sentence Review Standard
+### Native bridge work
 
-Review every change as a migration step, not just as isolated code: it must fit the declared V2 phase, the declared DDD layer, and the reference-implementation parity strategy.
+Also look for:
+
+- targeted managed tests around `NativeInterop`
+- targeted C++ smoke for the touched native bridge route
+
+### Application-layer work
+
+Also check:
+
+- the service is not just forwarding
+- state transitions are covered
+- invalid/open/close/reopen/error paths were considered
+
+If the implementation claim is broader than the tests, say so.
+
+## Final Rule
+
+Review each patch as a **replacement step in a migration**, not as a standalone feature.
+
+The central question is:
+
+- does this patch make the future C++ system more trustworthy without making the current migration path less trustworthy
+
+If the answer is mixed, report the risk plainly.

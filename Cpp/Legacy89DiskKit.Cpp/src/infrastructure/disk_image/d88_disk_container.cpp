@@ -51,6 +51,43 @@ Result<D88DiskContainer> D88DiskContainer::OpenFromBuffer(const std::span<const 
         {}));
 }
 
+Result<D88DiskContainer> D88DiskContainer::CreateNew(DiskType type, const std::string& name)
+{
+    const int cylinders = (type == DiskType::TwoHD) ? 77 : 40;
+    const int heads = 2;
+    const int sectors_per_track = (type == DiskType::TwoHD) ? 26 : 16;
+    const int sector_size = (type == DiskType::TwoHD) ? 1024 : 256;
+
+    std::vector<SectorDataBlock> sectors;
+    sectors.reserve(static_cast<std::size_t>(cylinders * heads * sectors_per_track));
+
+    for (int c = 0; c < cylinders; ++c)
+    {
+        for (int h = 0; h < heads; ++h)
+        {
+            for (int s = 1; s <= sectors_per_track; ++s)
+            {
+                sectors.push_back(SectorDataBlock{
+                    SectorInfo{c, h, s, sector_size, false, false},
+                    std::vector<std::uint8_t>(static_cast<std::size_t>(sector_size), 0x00)});
+            }
+        }
+    }
+
+    DiskContainerMetadata metadata{};
+    metadata.image_format = "d88-sector-container";
+    metadata.disk_type = type;
+    metadata.geometry = DiskGeometryInfo{cylinders, heads, sectors_per_track, sector_size};
+    metadata.is_write_protected = false;
+
+    return Result<D88DiskContainer>::Success(D88DiskContainer(
+        name,
+        std::move(sectors),
+        std::move(metadata),
+        false,
+        {}));
+}
+
 D88DiskContainer::D88DiskContainer(
     std::string image_name,
     std::vector<SectorDataBlock> sectors,

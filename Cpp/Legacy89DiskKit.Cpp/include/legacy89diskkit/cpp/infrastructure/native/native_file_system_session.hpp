@@ -48,11 +48,19 @@ public:
         bool read_only,
         std::optional<FileSystemFamily> explicit_family = std::nullopt);
 
+    static Result<NativeFileSystemSession> Create(
+        const std::filesystem::path& image_path,
+        DiskType type,
+        const std::string& name = "");
+
     static Result<NativeFileSystemSession> OpenFromBuffer(
         std::span<const std::uint8_t> buffer,
         bool read_only,
         std::optional<BufferDiskImageFormat> format_hint = std::nullopt,
         std::optional<FileSystemFamily> explicit_family = std::nullopt);
+
+    NativeFileSystemSession(NativeFileSystemSession&& other) noexcept;
+    NativeFileSystemSession& operator=(NativeFileSystemSession&& other) noexcept;
 
     const std::string& FilePath() const;
     FileSystemFamily Family() const;
@@ -90,6 +98,8 @@ private:
         ContainerVariant& container);
 
     static Result<FileSystemVariant> DetectAndOpenFileSystem(ContainerVariant& container);
+
+    void RelinkFileSystem();
 
     std::string file_path_;
     FileSystemFamily family_;

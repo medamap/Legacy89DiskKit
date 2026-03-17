@@ -105,6 +105,7 @@ add_library(Legacy89DiskKitCpp STATIC
     src/msx_dos_rename_transaction.cpp
     src/msx_dos_attribute_update_transaction.cpp
     src/msx_dos_shell.cpp
+    src/application/disk_service.cpp
 )
 
 target_include_directories(Legacy89DiskKitCpp
@@ -223,6 +224,12 @@ add_executable(Legacy89DiskKitCppNativeBridgeExportsSmoke
 
 target_link_libraries(Legacy89DiskKitCppNativeBridgeExportsSmoke PRIVATE Legacy89DiskKitCpp)
 
+add_executable(Legacy89DiskKitCppDiskServiceSmoke
+    tests/disk_service_smoke.cpp
+)
+
+target_link_libraries(Legacy89DiskKitCppDiskServiceSmoke PRIVATE Legacy89DiskKitCpp)
+
 enable_testing()
 add_test(NAME Legacy89DiskKitCppSmoke COMMAND Legacy89DiskKitCppSmoke)
 add_test(NAME Legacy89DiskKitCppHuBasicSmoke COMMAND Legacy89DiskKitCppHuBasicSmoke)
@@ -242,3 +249,4 @@ add_test(NAME Legacy89DiskKitCppFileSystemDetectionSmoke COMMAND Legacy89DiskKit
 add_test(NAME Legacy89DiskKitCppMountedMediumInfrastructureSmoke COMMAND Legacy89DiskKitCppMountedMediumInfrastructureSmoke)
 add_test(NAME Legacy89DiskKitCppNativeFileSystemSessionSmoke COMMAND Legacy89DiskKitCppNativeFileSystemSessionSmoke)
 add_test(NAME Legacy89DiskKitCppNativeBridgeExportsSmoke COMMAND Legacy89DiskKitCppNativeBridgeExportsSmoke)
+add_test(NAME Legacy89DiskKitCppDiskServiceSmoke COMMAND Legacy89DiskKitCppDiskServiceSmoke)

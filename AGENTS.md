@@ -103,3 +103,8 @@ Standalone CLI release automation:
 
 - `legacy89-v2-review`: `.agents/skills/legacy89-v2-review/SKILL.md`
   - Use for Roadmap V2 phase reviews, especially native bridge, infrastructure, and C# to C++ parity changes.
+
+## Project-Local Implementation Skill
+
+- `legacy89-v2-implementation`: `.agents/skills/legacy89-v2-implementation/SKILL.md`
+  - Use for Roadmap V2 implementation work when deciding phase scope, DDD layer ownership, migration boundaries, and completion conditions.

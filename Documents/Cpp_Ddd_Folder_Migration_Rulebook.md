@@ -170,6 +170,9 @@ A file belongs to `presentation/` when it primarily defines:
 | created-in-target | V2-20 | Infrastructure | `n/a` | `src/infrastructure/fdc/medium/raw_backed_controller_facing_medium.cpp` | raw-backed controller-facing medium implementation |
 | created-in-target | V2-20 | Infrastructure | `n/a` | `src/infrastructure/fdc/medium/d88_backed_controller_facing_medium.cpp` | D88-backed controller-facing medium implementation |
 
+| created-in-target | V2-23 | Application | `n/a` | `include/legacy89diskkit/cpp/application/disk_service.hpp` | disk service application façade |
+| created-in-target | V2-23 | Application | `n/a` | `src/application/disk_service.cpp` | disk service implementation |
+
 Append new rows as additional phases relocate files.
 
 ## Workflow For Each Phase
