@@ -347,3 +347,9 @@ For example:
 - which means the end-user CLI still cannot rely on that C++ implementation path directly
 
 This distinction is essential to keeping the migration roadmap honest.
+
+## Future Refinements
+
+- **Multi-byte Filename Encoding**: Current C++ parsers (`DecodeTrimmed`) perform simple `char` casting, which causes ShiftJIS kanji filenames to appear corrupted in UTF-8 terminals. A proper encoding-aware decoder or raw byte preservation in the Domain layer is required.
+- **Stable ID Parity**: `DirectoryLayoutService` uses `std::hash`, which lacks binary parity with C# SHA256 IDs.
+- **D88 Template Maturity**: `NativeFileSystemSession::Create` uses fixed geometry templates which may conflict with source disks during cloning (V2-32 finding).
