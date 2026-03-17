@@ -7,8 +7,10 @@
 #include <mutex>
 #include <string_view>
 #include <unordered_map>
+#include <cstdint>
+#include <span>
 
-namespace legacy89diskkit::cpp
+namespace legacy89diskkit::cpp::native
 {
 namespace
 {
@@ -66,9 +68,23 @@ NativeBridgeHandleEntry* FindEntry(const std::int32_t handle)
     const auto iterator = entries.find(handle);
     return iterator == entries.end() ? nullptr : &iterator->second;
 }
+
+LdkStatus ToLdkStatus(const StatusCode code)
+{
+    switch (code)
+    {
+        case StatusCode::Ok: return LDK_STATUS_SUCCESS;
+        case StatusCode::InvalidArgument: return LDK_STATUS_ERROR_INVALID_ARGUMENT;
+        case StatusCode::UnsupportedFormat: return LDK_STATUS_ERROR_NOT_IMPLEMENTED;
+        case StatusCode::ParseError: return LDK_STATUS_ERROR_GENERIC;
+        case StatusCode::OutOfRange: return LDK_STATUS_ERROR_INVALID_ARGUMENT;
+        default: return LDK_STATUS_ERROR_GENERIC;
+    }
 }
 
-int NativeBridgeExports::OpenDisk(const char* path, const std::int32_t read_only_flag)
+} // anonymous namespace
+
+int NativeBridgeExports::OpenDisk(const char* const path, const std::int32_t read_only_flag)
 {
     if (path == nullptr || path[0] == '\0')
     {
@@ -78,12 +94,33 @@ int NativeBridgeExports::OpenDisk(const char* path, const std::int32_t read_only
     const auto opened = NativeFileSystemSession::Open(path, read_only_flag != 0);
     if (!opened.ok())
     {
-        return LDK_STATUS_ERROR_GENERIC;
+        return ToLdkStatus(opened.status().code);
     }
 
+    const bool is_writable = !opened.value().IsReadOnly();
     return RegisterSession(
-        opened.value(),
-        NativeBridgeHandleMetadata{"open-disk", !opened.value().IsReadOnly()});
+        std::move(opened.value()),
+        NativeBridgeHandleMetadata{"open-disk", is_writable});
+}
+
+int NativeBridgeExports::OpenDiskFromBuffer(const void* const data, const std::int32_t length, const std::int32_t read_only_flag)
+{
+    if (data == nullptr || length <= 0)
+    {
+        return LDK_STATUS_ERROR_INVALID_ARGUMENT;
+    }
+
+    const auto buffer = std::span<const std::uint8_t>(static_cast<const std::uint8_t*>(data), static_cast<std::size_t>(length));
+    const auto opened = NativeFileSystemSession::OpenFromBuffer(buffer, read_only_flag != 0);
+    if (!opened.ok())
+    {
+        return ToLdkStatus(opened.status().code);
+    }
+
+    const bool is_writable = !opened.value().IsReadOnly();
+    return RegisterSession(
+        std::move(opened.value()),
+        NativeBridgeHandleMetadata{"open-disk-from-buffer", is_writable});
 }
 
 int NativeBridgeExports::CloseDisk(const std::int32_t handle)
@@ -168,11 +205,29 @@ int NativeBridgeExports::GetBackendSummary(char* buffer, const std::int32_t capa
     return WriteUtf8(buffer, capacity, "cpp-bridge:Legacy89DiskKit.Cpp->NativeFileSystemSession");
 }
 
+} // namespace legacy89diskkit::cpp::native
+
+using namespace legacy89diskkit::cpp;
+using namespace legacy89diskkit::cpp::native;
+
 extern "C"
 {
-std::int32_t LDK_CALL ldk_open_disk(const char* path, std::int32_t read_only_flag)
+std::int32_t LDK_CALL ldk_open_disk(const char* const path, const std::int32_t read_only_flag)
 {
     return NativeBridgeExports::OpenDisk(path, read_only_flag);
+}
+
+std::int32_t LDK_CALL ldk_open_disk_from_buffer(const void* const data, const std::int32_t length, const std::int32_t read_only_flag)
+{
+    return NativeBridgeExports::OpenDiskFromBuffer(data, length, read_only_flag);
+}
+
+std::int32_t LDK_CALL ldk_create_disk(const char* const path, const std::int32_t disk_type, const char* const name)
+{
+    static_cast<void>(path);
+    static_cast<void>(disk_type);
+    static_cast<void>(name);
+    return LDK_STATUS_ERROR_NOT_IMPLEMENTED;
 }
 
 std::int32_t LDK_CALL ldk_close_disk(std::int32_t handle)
@@ -229,5 +284,5 @@ std::int32_t LDK_CALL ldk_get_backend_summary(char* buffer, std::int32_t capacit
 {
     return NativeBridgeExports::GetBackendSummary(buffer, capacity);
 }
-}
+
 }

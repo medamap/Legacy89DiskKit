@@ -118,16 +118,42 @@ Result<NativeFileSystemSession> NativeFileSystemSession::Open(
     const bool read_only,
     const std::optional<FileSystemFamily> explicit_family)
 {
-    const auto container = OpenContainer(image_path, read_only);
-    if (!container.ok())
+    const auto bytes = ReadAllBytes(image_path);
+    if (bytes.empty())
     {
-        return Result<NativeFileSystemSession>::Failure(container.status().code, container.status().message);
+        return Result<NativeFileSystemSession>::Failure(StatusCode::InvalidArgument, "Image path could not be read.");
     }
 
-    auto container_value = container.value();
+    const auto ext = image_path.extension().string();
+    std::string ext_lower;
+    for (const auto ch : ext)
+    {
+        ext_lower.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(ch))));
+    }
+
+    ContainerVariant container_variant;
+    if (ext_lower == ".d88")
+    {
+        auto container = D88DiskContainer::OpenFromBuffer(bytes, read_only);
+        if (!container.ok())
+        {
+            return Result<NativeFileSystemSession>::Failure(container.status().code, container.status().message);
+        }
+        container_variant = ContainerVariant{std::in_place_index<2>, std::move(container.value())};
+    }
+    else
+    {
+        auto raw = RawDiskContainer::OpenFromBuffer(bytes, read_only);
+        if (!raw.ok())
+        {
+            return Result<NativeFileSystemSession>::Failure(raw.status().code, raw.status().message);
+        }
+        container_variant = ContainerVariant{std::in_place_index<1>, std::move(raw.value())};
+    }
+
     Result<FileSystemVariant> file_system = explicit_family.has_value()
-        ? OpenDetectedFileSystem(explicit_family.value(), container_value)
-        : DetectAndOpenFileSystem(container_value);
+        ? OpenDetectedFileSystem(explicit_family.value(), container_variant)
+        : DetectAndOpenFileSystem(container_variant);
 
     if (!file_system.ok())
     {
@@ -153,7 +179,88 @@ Result<NativeFileSystemSession> NativeFileSystemSession::Open(
             file_system.value());
 
     return Result<NativeFileSystemSession>::Success(
-        NativeFileSystemSession(image_path.string(), family, std::move(container_value), std::move(file_system.value())));
+        NativeFileSystemSession(image_path.string(), family, std::move(container_variant), std::move(file_system.value())));
+}
+
+Result<NativeFileSystemSession> NativeFileSystemSession::OpenFromBuffer(
+    std::span<const std::uint8_t> buffer,
+    const bool read_only,
+    std::optional<BufferDiskImageFormat> format_hint,
+    const std::optional<FileSystemFamily> explicit_family)
+{
+    ContainerVariant container_variant;
+    if (format_hint.has_value() && format_hint.value() == BufferDiskImageFormat::D88)
+    {
+        auto container = D88DiskContainer::OpenFromBuffer(buffer, read_only);
+        if (!container.ok())
+        {
+            return Result<NativeFileSystemSession>::Failure(container.status().code, container.status().message);
+        }
+        container_variant = ContainerVariant{std::in_place_index<2>, std::move(container.value())};
+    }
+    else if (format_hint.has_value() && format_hint.value() == BufferDiskImageFormat::Raw)
+    {
+        auto raw = RawDiskContainer::OpenFromBuffer(buffer, read_only);
+        if (!raw.ok())
+        {
+            return Result<NativeFileSystemSession>::Failure(raw.status().code, raw.status().message);
+        }
+        container_variant = ContainerVariant{std::in_place_index<1>, std::move(raw.value())};
+    }
+    else
+    {
+        // Auto (std::nullopt): try D88 if size suggests it might have a header, otherwise Raw
+        bool d88_success = false;
+        if (buffer.size() >= 0x2b0)
+        {
+            auto container = D88DiskContainer::OpenFromBuffer(buffer, read_only);
+            if (container.ok() && !container.value().GetAllSectors().empty())
+            {
+                container_variant = ContainerVariant{std::in_place_index<2>, std::move(container.value())};
+                d88_success = true;
+            }
+        }
+
+        if (!d88_success)
+        {
+            auto raw = RawDiskContainer::OpenFromBuffer(buffer, read_only);
+            if (!raw.ok())
+            {
+                return Result<NativeFileSystemSession>::Failure(raw.status().code, raw.status().message);
+            }
+            container_variant = ContainerVariant{std::in_place_index<1>, std::move(raw.value())};
+        }
+    }
+
+    Result<FileSystemVariant> file_system = explicit_family.has_value()
+        ? OpenDetectedFileSystem(explicit_family.value(), container_variant)
+        : DetectAndOpenFileSystem(container_variant);
+
+    if (!file_system.ok())
+    {
+        return Result<NativeFileSystemSession>::Failure(file_system.status().code, file_system.status().message);
+    }
+
+    const auto family = explicit_family.has_value()
+        ? explicit_family.value()
+        : std::visit(
+            [](const auto& value)
+            {
+                using TValue = std::decay_t<decltype(value)>;
+                if constexpr (std::is_same_v<TValue, HuBasicFileSystem>)
+                {
+                    return FileSystemFamily::HuBasic;
+                }
+                if constexpr (std::is_same_v<TValue, N88BasicFileSystem>)
+                {
+                    return FileSystemFamily::N88Basic;
+                }
+                return FileSystemFamily::MsxDos;
+            },
+            file_system.value());
+
+    return Result<NativeFileSystemSession>::Success(
+        NativeFileSystemSession("memory-buffer", family, std::move(container_variant), std::move(file_system.value())));
 }
 
 const std::string& NativeFileSystemSession::FilePath() const
@@ -405,36 +512,6 @@ NativeFileSystemSession::NativeFileSystemSession(
       container_(std::move(container)),
       file_system_(std::move(file_system))
 {
-}
-
-Result<NativeFileSystemSession::ContainerVariant> NativeFileSystemSession::OpenContainer(
-    const std::filesystem::path& image_path,
-    const bool read_only)
-{
-    const auto bytes = ReadAllBytes(image_path);
-    if (bytes.empty())
-    {
-        return Result<ContainerVariant>::Failure(StatusCode::InvalidArgument, "Image path could not be read.");
-    }
-
-    if (IsD88Path(image_path))
-    {
-        auto result = D88DiskContainer::OpenFromBuffer(bytes, read_only);
-        if (!result.ok())
-        {
-            return Result<ContainerVariant>::Failure(result.status().code, result.status().message);
-        }
-
-        return Result<ContainerVariant>::Success(ContainerVariant{std::in_place_index<2>, std::move(result.value())});
-    }
-
-    auto result = RawDiskContainer::OpenFromBuffer(bytes, read_only);
-    if (!result.ok())
-    {
-        return Result<ContainerVariant>::Failure(result.status().code, result.status().message);
-    }
-
-    return Result<ContainerVariant>::Success(ContainerVariant{std::in_place_index<1>, std::move(result.value())});
 }
 
 Result<NativeFileSystemSession::FileSystemVariant> NativeFileSystemSession::OpenDetectedFileSystem(

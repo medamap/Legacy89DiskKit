@@ -1,6 +1,7 @@
 #pragma once
 
 #include "legacy89diskkit/cpp/filesystem_surface_catalog.hpp"
+#include "legacy89diskkit/cpp/infrastructure/disk_image/buffer_image_format.hpp"
 #include "legacy89diskkit/cpp/infrastructure/disk_image/d88_disk_container.hpp"
 #include "legacy89diskkit/cpp/infrastructure/disk_image/raw_disk_container.hpp"
 #include "legacy89diskkit/cpp/infrastructure/filesystem/hu_basic/hu_basic_file_system.hpp"
@@ -10,6 +11,7 @@
 
 #include <filesystem>
 #include <optional>
+#include <span>
 #include <string>
 #include <variant>
 #include <vector>
@@ -46,6 +48,12 @@ public:
         bool read_only,
         std::optional<FileSystemFamily> explicit_family = std::nullopt);
 
+    static Result<NativeFileSystemSession> OpenFromBuffer(
+        std::span<const std::uint8_t> buffer,
+        bool read_only,
+        std::optional<BufferDiskImageFormat> format_hint = std::nullopt,
+        std::optional<FileSystemFamily> explicit_family = std::nullopt);
+
     const std::string& FilePath() const;
     FileSystemFamily Family() const;
     std::string_view FileSystemName() const;
@@ -76,10 +84,6 @@ private:
         FileSystemFamily family,
         ContainerVariant container,
         FileSystemVariant file_system);
-
-    static Result<ContainerVariant> OpenContainer(
-        const std::filesystem::path& image_path,
-        bool read_only);
 
     static Result<FileSystemVariant> OpenDetectedFileSystem(
         FileSystemFamily family,

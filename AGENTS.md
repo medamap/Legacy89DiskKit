@@ -98,3 +98,8 @@ Standalone CLI release automation:
 - Inspect disk images with `hexdump -C`.
 - Check sector-level behavior through `IDiskContainer.ReadSector()`.
 - Check detection behavior through the filesystem factory and CLI help/output.
+
+## Project-Local Review Skill
+
+- `legacy89-v2-review`: `.agents/skills/legacy89-v2-review/SKILL.md`
+  - Use for Roadmap V2 phase reviews, especially native bridge, infrastructure, and C# to C++ parity changes.

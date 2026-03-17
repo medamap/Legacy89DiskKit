@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <string>
 
-namespace legacy89diskkit::cpp
+namespace legacy89diskkit::cpp::native
 {
 struct NativeBridgeHandleMetadata
 {
@@ -17,6 +17,7 @@ class NativeBridgeExports
 {
 public:
     static int OpenDisk(const char* path, std::int32_t read_only_flag);
+    static int OpenDiskFromBuffer(const void* data, std::int32_t length, std::int32_t read_only_flag);
     static int CloseDisk(std::int32_t handle);
     static int IsHandleValid(std::int32_t handle);
     static int GetOpenHandleCount();
