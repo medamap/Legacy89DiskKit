@@ -370,14 +370,20 @@ X-DOS is a Sharp X1-exclusive OS distributed by C&S Soft. Its filesystem is stru
 
 The following layout is confirmed by binary analysis of `XDOS_SYS.D88`:
 
-| Area | Physical Track | Sector geometry | Content |
+X-DOS uses **both sides** of the disk with an interleaved (zigzag) track layout:
+logical cluster N → `cylinder = N/2, head = N%2`
+
+| Logical Track | Physical Address | Sector geometry | Content |
 | :--- | :--- | :--- | :--- |
-| IPL + Volume Record | Track 0 (C=0, H=0) | R=1–16, N=1 (256 bytes each) | IPL boot code; R=1 is the X-DOS Volume Record |
-| FAT + Directory | Track 1 (C=1, H=0) | R=1–10, N=2 (512 bytes each) | R=1 = FAT bitmap; R=2–10 = directory entries |
-| FAM + system code | Track 2 (C=2, H=0) | R=1–10, N=2 (512 bytes each) | R=1 = FAM cluster chain table; R=2 = bdir (Z80 system code) |
-| File data | Track 3+ (C=3–39, H=0) | R=1–10, N=2 (512 bytes each) | File content; 10 × 512B = 5120 bytes per track |
+| Track 0 (cluster 0) | C=0, H=0 | R=1–16, N=1 (256 bytes each) | IPL boot code; R=1 is the X-DOS Volume Record |
+| Track 1 (cluster 1) | C=0, H=1 | R=1–10, N=2 (512 bytes each) | R=1 = FAT bitmap; R=2–10 = directory entries |
+| Track 2 (cluster 2) | C=1, H=0 | R=1–10, N=2 (512 bytes each) | R=1 = FAM cluster chain table; R=2 = bdir (Z80 system code) |
+| Track 3+ (cluster 3+) | C=1,H=1 / C=2,H=0 / C=2,H=1 / … | R=1–10, N=2 (512 bytes each) | File content; 10 × 512B = 5120 bytes per logical track |
 
 This mixed-geometry layout (Track 0 uses 256B sectors; Track 1+ uses 512B sectors) means the disk cannot be read using a single uniform sector-size assumption. Container construction must handle both sector sizes.
+
+The interleaved dual-sided layout is **confirmed by Z80 binary analysis** of the X-DOS kernel:
+the FDC access routine at C=1,H=1,R=8 contains `EE 10` (XOR 0x10 = toggle MB8877A MSDR bit4 = head select) and `14` (INC D = advance cylinder only when returning to H=0). This produces the zigzag pattern across both disk sides.
 
 #### Volume Record Format (Track 0, R=1, 256 bytes)
 
@@ -390,7 +396,7 @@ This mixed-geometry layout (Track 0 uses 256B sectors; Track 1+ uses 512B sector
 
 Bytes outside the above ranges are present in the sector but their semantics are not yet fully confirmed by analysis and must be treated as reserved during initial implementation.
 
-#### FAT Format (Track 1, R=1, 512 bytes)
+#### FAT Format (Track 1 = C=0,H=1, R=1, 512 bytes)
 
 The FAT is a flat allocation bitmap. Each byte represents one cluster. Confirmed byte values:
 
@@ -402,9 +408,9 @@ The FAT is a flat allocation bitmap. Each byte represents one cluster. Confirmed
 | 0x3F | Observed in the FAT beyond the last used entry; exact meaning TBD |
 | 0xC0, 0xFF | Observed beyond used range; exact meaning TBD |
 
-Index 0 and index 1 are reserved. Index 2 onwards addresses the data cluster pool. The precise mapping between FAT index and physical track/sector address must be confirmed from X-DOS source or from additional disk images during implementation. An important design constraint: unlike FAT12/FAT16, there are no cluster chain links in the FAT itself — the FAT is purely an occupancy bitmap. Cluster chain navigation for multi-cluster files is handled by the **FAM** (File Allocation Map) at Track 2, R=1; see the FAM section in `X-DOS_Filesystem_Analysis.md` for details.
+Index 0 and index 1 are reserved (0x00 and 0x01 respectively). Index 2 onwards addresses data clusters. Cluster N → `cylinder = N/2, head = N%2` (interleaved mapping confirmed by directory entry cross-reference). Unlike FAT12/FAT16, the FAT is purely an occupancy bitmap — it contains no cluster chain links. Cluster chain navigation for multi-cluster files is handled by the **FAM** (File Allocation Map) at C=1,H=0,R=1; see the FAM section in `X-DOS_Filesystem_Analysis.md` for details.
 
-#### Directory Entry Format (Track 1, R=2–10, 32 bytes each)
+#### Directory Entry Format (Track 1 = C=0,H=1, R=2–10, 32 bytes each)
 
 | Offset | Size | Content |
 | :--- | :--- | :--- |
@@ -417,7 +423,7 @@ Index 0 and index 1 are reserved. Index 2 onwards addresses the data cluster poo
 | [26:28] | 2 | Unknown (observed as checksum or timestamp fragment; do not rely on) |
 | [28] | 1 | Flags byte (0x80 is common; exact bit semantics TBD) |
 | [29] | 1 | First FAM cluster index (chain head; provisional — see Known Pitfalls) |
-| [30] | 1 | Starting sector R within the first cluster (observed always 0x01; provisional) |
+| [30] | 1 | Starting sector R within the first cluster (R=1–10; confirmed range from directory analysis) |
 | [31] | 1 | Always 0x01 in observed data (purpose unknown) |
 
 A directory entry with [0] = 0x00 or [0] = 0xFF is treated as an empty/deleted slot.
@@ -461,7 +467,7 @@ The following phases are required to support X-DOS in both the C# reference and 
 **Phase XD-04: X-DOS write and format support**
 - Layer: Domain + Infrastructure
 - Write path: allocation bitmap update, directory entry creation, contiguous-track write
-- Format path: write Volume Record to Track 0, R=1; write empty FAT bitmap to Track 1, R=1; zero directory area Track 1, R=2–10
+- Format path: write Volume Record to C=0,H=0,R=1; write empty FAT bitmap to C=0,H=1,R=1; zero directory area C=0,H=1,R=2–10
 - Note: the end address / allocation boundary encoding in entry[29] must be resolved before write support is correct
 
 **Phase XD-05: X-DOS application and CLI integration**
@@ -478,21 +484,24 @@ Track 0 uses 256-byte sectors (N=1). Tracks 1 and above use 512-byte sectors (N=
 
 **FAT and FAM roles are distinct**
 
-The FAT (Track 1, R=1) is a flat occupancy bitmap where 0x4A means allocated and 0x00 means free. It does not encode cluster chains.
-Cluster chain navigation is handled by the **FAM** (File Allocation Map, Track 2, R=1 = logical record 20), where FAM[cluster] = next cluster in chain, 0x00 = end of chain.
+The FAT (C=0,H=1,R=1) is a flat occupancy bitmap where 0x4A means allocated and 0x00 means free. It does not encode cluster chains.
+Cluster chain navigation is handled by the **FAM** (File Allocation Map, C=1,H=0,R=1), where FAM[cluster] = next cluster in chain, 0x00 = end of chain.
 Files may therefore be allocated in **non-contiguous clusters**. The FAT indicates whether a cluster is in use; the FAM traces the actual chain for each file.
+Confirmed: FAM[2]=9, FAM[9]=0 → "X-DOS System" file spans clusters 2 and 9 (= C=1,H=0 and C=4,H=1).
 
-**Directory entry[29] and entry[30] encoding is not yet fully confirmed**
+**Directory entry[29] and entry[30] encoding — CONFIRMED**
 
-The current best interpretation based on XDOSUTIL.D88 analysis:
 - `entry[29]` = first cluster index (FAM chain head for the file)
-- `entry[30]` = starting sector R within that first cluster (observed value always 0x01)
+- `entry[30]` = starting sector R within that first cluster (1–10)
 
-Evidence: multiple files share the same `entry[29]` value with different `entry[30]` values (e.g., four files all have `entry[29]=0x44` but `entry[30]=0x03, 0x05, 0x07, 0x09`), which is consistent with `entry[29]` being a FAM allocation boundary and `entry[30]` disambiguating the starting sector within that cluster. The exact encoding must be confirmed from X-DOS documentation or additional disk image analysis before write support can be implemented safely.
+Multiple files share the same `entry[29]` value with different `entry[30]` values, consistent with multiple small files packed into a single cluster (one logical track). The physical location is: `cylinder = entry[29]/2, head = entry[29]%2, sectorR = entry[30]`.
 
-**Cluster-to-physical-track mapping is not yet fully confirmed**
+**Cluster-to-physical-track mapping — CONFIRMED**
 
-The working hypothesis is that 1 cluster = 4 data tracks = 20480 bytes, derived from the observation that the X-DOS System binary (~40 KB) corresponds to a 2-entry FAM chain. This has not been verified for all file sizes across both disk images. Confirm this formula before implementing FAM-based cluster resolution.
+Cluster N → `cylinder = N/2, head = N%2` (interleaved dual-sided layout).
+1 cluster = 1 logical track = 10 sectors × 512 bytes = 5120 bytes.
+Verified by cross-referencing all directory entries in XDOS_SYS.D88 against the D88 sector map.
+Note: **H=0 only is WRONG**. X-DOS uses both sides. This was confirmed by Z80 disassembly of the FDC access routine.
 
 **16-character filename with no extension**
 
