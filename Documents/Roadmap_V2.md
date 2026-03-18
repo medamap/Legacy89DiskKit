@@ -277,10 +277,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - Expected C++ target: C# CLI paths able to call C++-backed services through a stable bridge
   - Completion Note: Refactored `DiskService` to support `INativeBridgeBackend` substitution. Added `--native` option to C# CLI to switch between managed and C++ backends. Updated `ValidationNativeBridgeBackend` to support full `IDiskContainer` parity.
 
-- [ ] Phase V2-34: CLI command migration to C++-backed workflows
+- [x] Phase V2-34: CLI command migration to C++-backed workflows
   - Layer: Presentation
   - C# source area: `list`, `info`, `file`, `disk`, `boot`, and host-facing commands
   - Expected C++ target: selected commands routed through validated C++-backed application paths
+  - Completion Note: Validated all major CLI commands (`list`, `file`, `disk`, `boot`, `layout`) through the native bridge (`--native`). Resolved encoding differences by moving `NativeFileEntry` string fields to byte arrays and using the file system's target encoder in the `NativeInterop` facade. Implemented C API bindings for directory layout manipulation (`ldk_read_directory_layout` / `ldk_apply_directory_layout`).
 
 - [ ] Phase V2-35: Full C++ CLI
   - Layer: Presentation

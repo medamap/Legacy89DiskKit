@@ -131,8 +131,8 @@ public static class DiskExports
             var file = files[i];
             var nativeFile = new NativeFileEntry
             {
-                FileName = file.FileName,
-                Extension = file.Extension,
+                FileName = CreatePaddedBytes(file.RawFileName, file.FileName, 16),
+                Extension = CreatePaddedBytes(file.RawExtension, file.Extension, 8),
                 Size = (int)file.Size,
                 LoadAddress = file.LoadAddress ?? 0,
                 ExecutionAddress = file.ExecutionAddress ?? 0,
@@ -144,6 +144,21 @@ public static class DiskExports
         }
 
         return count;
+    }
+
+    private static byte[] CreatePaddedBytes(byte[]? rawBytes, string fallbackString, int length)
+    {
+        var result = new byte[length];
+        if (rawBytes != null && rawBytes.Length > 0)
+        {
+            Array.Copy(rawBytes, result, Math.Min(rawBytes.Length, length));
+        }
+        else
+        {
+            var bytes = System.Text.Encoding.ASCII.GetBytes(fallbackString);
+            Array.Copy(bytes, result, Math.Min(bytes.Length, length));
+        }
+        return result;
     }
 
     [UnmanagedCallersOnly(EntryPoint = "ldk_read_boot_area")]

@@ -1,26 +1,26 @@
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
+using Legacy89DiskKit.Domain.FileSystem.Interface.Layout;
 using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.NativeInterop.Types;
+using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
+using Legacy89DiskKit.Application;
+using System.Text;
 
 namespace Legacy89DiskKit.NativeInterop.Core;
 
-public sealed class LibraryNativeFileSystem : IFileSystem
+public sealed class LibraryNativeFileSystem : IFileSystem, IDirectoryLayoutProvider
 {
     private readonly int _handle;
     private readonly string _fileSystemName;
+    private readonly ICharacterEncoder _encoder;
 
     public LibraryNativeFileSystem(int handle)
     {
         _handle = handle;
         
-        if (NativeLibraryImports.GetFileSystemInfo(_handle, out var info) == 0)
-        {
-            _fileSystemName = info.FileSystemName;
-        }
-        else
-        {
-            _fileSystemName = "Unknown";
-        }
+        var fsInfo = GetFileSystemInfo();
+        _fileSystemName = fsInfo.FileSystemName;
+        _encoder = Legacy89DiskKitApplication.ResolveEncoder(fsInfo);
     }
 
     public DiskFileSystemInfo GetFileSystemInfo()
@@ -84,18 +84,25 @@ public sealed class LibraryNativeFileSystem : IFileSystem
                     {
                         isReadOnly = (e.Attributes & 0x01) != 0;
                     }
+
+                    var rawFileName = e.FileName.TakeWhile(b => b != 0).ToArray();
+                    var rawExtension = e.Extension.TakeWhile(b => b != 0).ToArray();
+                    var fileName = _encoder.DecodeText(rawFileName);
+                    var extension = _encoder.DecodeText(rawExtension);
                     
                     return new FileEntry(
-                        e.FileName,
-                        e.Extension,
+                        fileName,
+                        extension,
                         e.Size,
-                        null, // CreatedAt
-                        null, // LastModifiedAt
+                        null,
+                        null,
                         new ExtendedFileAttributes(Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes.None, (byte)e.Attributes, isAscii),
-                        0, // StartCluster
+                        0,
                         e.LoadAddress,
-                        null, // EndAddress
-                        e.ExecutionAddress
+                        null,
+                        e.ExecutionAddress,
+                        rawFileName,
+                        rawExtension
                     );
                 });
             }
@@ -115,14 +122,16 @@ public sealed class LibraryNativeFileSystem : IFileSystem
         if (file == null) throw new FileNotFoundException(fileName);
 
         byte[] buffer = new byte[file.Size];
-        int result = NativeLibraryImports.ReadFile(_handle, fileName, buffer, buffer.Length);
+        var encodedName = _encoder.EncodeText(fileName).Append((byte)0).ToArray();
+        int result = NativeLibraryImports.ReadFile(_handle, encodedName, buffer, buffer.Length);
         if (result < 0) throw new Exception($"Failed to read file: {fileName} (Error: {result})");
         return buffer;
     }
 
     public void WriteFile(string fileName, byte[] data, ExtendedFileAttributes attributes, ushort? loadAddress = null, ushort? executionAddress = null)
     {
-        int result = NativeLibraryImports.WriteFile(_handle, fileName, data, data.Length, attributes.RawAttributes, loadAddress ?? 0, executionAddress ?? 0);
+        var encodedName = _encoder.EncodeText(fileName).Append((byte)0).ToArray();
+        int result = NativeLibraryImports.WriteFile(_handle, encodedName, data, data.Length, attributes.RawAttributes, loadAddress ?? 0, executionAddress ?? 0);
         if (result < 0) throw new Exception($"Failed to write file: {fileName} (Error: {result})");
     }
 
@@ -136,19 +145,23 @@ public sealed class LibraryNativeFileSystem : IFileSystem
 
     public void DeleteFile(string fileName)
     {
-        int result = NativeLibraryImports.DeleteFile(_handle, fileName);
+        var encodedName = _encoder.EncodeText(fileName).Append((byte)0).ToArray();
+        int result = NativeLibraryImports.DeleteFile(_handle, encodedName);
         if (result < 0) throw new Exception($"Failed to delete file: {fileName} (Error: {result})");
     }
 
     public void RenameFile(string oldName, string newName)
     {
-        int result = NativeLibraryImports.RenameFile(_handle, oldName, newName);
+        var encodedOldName = _encoder.EncodeText(oldName).Append((byte)0).ToArray();
+        var encodedNewName = _encoder.EncodeText(newName).Append((byte)0).ToArray();
+        int result = NativeLibraryImports.RenameFile(_handle, encodedOldName, encodedNewName);
         if (result < 0) throw new Exception($"Failed to rename file: {oldName} to {newName} (Error: {result})");
     }
 
     public void UpdateAttributes(string fileName, ExtendedFileAttributes attributes)
     {
-        int result = NativeLibraryImports.UpdateAttributes(_handle, fileName, attributes.RawAttributes);
+        var encodedName = _encoder.EncodeText(fileName).Append((byte)0).ToArray();
+        int result = NativeLibraryImports.UpdateAttributes(_handle, encodedName, attributes.RawAttributes);
         if (result < 0) throw new Exception($"Failed to update attributes: {fileName} (Error: {result})");
     }
 
@@ -168,7 +181,7 @@ public sealed class LibraryNativeFileSystem : IFileSystem
         if (result < 0) throw new Exception($"Failed to format (Error: {result})");
     }
 
-    private const int MaxBootAreaSize = 8192; // Large enough for any known supported boot area
+    private const int MaxBootAreaSize = 8192;
 
     public byte[] ReadBootArea()
     {
@@ -182,6 +195,63 @@ public sealed class LibraryNativeFileSystem : IFileSystem
     {
         int result = NativeLibraryImports.WriteBootArea(_handle, data, data.Length);
         if (result < 0) throw new Exception($"Failed to write boot area (Error: {result})");
+    }
+
+    public DirectoryEntryLayout ReadDirectoryLayout()
+    {
+        var buffer = new NativeDirectoryLayoutItem[256]; // Assuming max 256 entries
+        int count = NativeLibraryImports.ReadDirectoryLayout(_handle, buffer, buffer.Length);
+        if (count < 0) throw new Exception($"Failed to read directory layout (Error: {count})");
+
+        var files = GetFiles().ToList();
+        var items = new List<DirectoryLayoutItem>(count);
+
+        for (int i = 0; i < count; i++)
+        {
+            var e = buffer[i];
+            string id = Encoding.ASCII.GetString(e.Id.TakeWhile(b => b != 0).ToArray());
+            string displayName = _encoder.DecodeText(e.DisplayName.TakeWhile(b => b != 0).ToArray());
+            var kind = (DirectoryLayoutItemKind)e.Kind;
+
+            FileEntry? entry = null;
+            if (kind == DirectoryLayoutItemKind.FileEntry)
+            {
+                entry = files.FirstOrDefault(f => f.FullName.Equals(displayName, StringComparison.OrdinalIgnoreCase));
+            }
+
+            items.Add(new DirectoryLayoutItem(id, e.Order, kind, displayName, entry, null));
+        }
+
+        return new DirectoryEntryLayout(_fileSystemName, items);
+    }
+
+    public void ApplyDirectoryLayout(DirectoryEntryLayout layout)
+    {
+        var items = layout.Items;
+        var buffer = new NativeDirectoryLayoutItem[items.Count];
+
+        for (int i = 0; i < items.Count; i++)
+        {
+            var item = items[i];
+            buffer[i] = new NativeDirectoryLayoutItem
+            {
+                Id = CreatePaddedBytes(Encoding.ASCII.GetBytes(item.Id), 64),
+                StableId = new byte[64],
+                DisplayName = CreatePaddedBytes(_encoder.EncodeText(item.DisplayName), 64),
+                Order = item.Order,
+                Kind = (int)item.Kind
+            };
+        }
+
+        int result = NativeLibraryImports.ApplyDirectoryLayout(_handle, buffer, buffer.Length);
+        if (result < 0) throw new Exception($"Failed to apply directory layout (Error: {result})");
+    }
+
+    private static byte[] CreatePaddedBytes(byte[] source, int length)
+    {
+        var result = new byte[length];
+        Array.Copy(source, result, Math.Min(source.Length, length));
+        return result;
     }
 
     public void Dispose()

@@ -32,25 +32,25 @@ public static class NativeLibraryImports
     public static extern int GetFiles(int handle, [Out] NativeFileEntry[] buffer, int capacity);
 
     [DllImport(LibName, EntryPoint = "ldk_read_file")]
-    public static extern int ReadFile(int handle, [MarshalAs(UnmanagedType.LPUTF8Str)] string name, byte[] buffer, int capacity);
+    public static extern int ReadFile(int handle, byte[] name, byte[] buffer, int capacity);
 
     [DllImport(LibName, EntryPoint = "ldk_read_sector")]
     public static extern int ReadSector(int handle, int cylinder, int head, int sector, byte[] buffer, int capacity);
 
     [DllImport(LibName, EntryPoint = "ldk_write_file")]
-    public static extern int WriteFile(int handle, [MarshalAs(UnmanagedType.LPUTF8Str)] string name, byte[] data, int length, ushort attributes, ushort loadAddress, ushort executionAddress);
+    public static extern int WriteFile(int handle, byte[] name, byte[] data, int length, ushort attributes, ushort loadAddress, ushort executionAddress);
 
     [DllImport(LibName, EntryPoint = "ldk_write_sector")]
     public static extern int WriteSector(int handle, int cylinder, int head, int sector, byte[] data, int length);
 
     [DllImport(LibName, EntryPoint = "ldk_delete_file")]
-    public static extern int DeleteFile(int handle, [MarshalAs(UnmanagedType.LPUTF8Str)] string name);
+    public static extern int DeleteFile(int handle, byte[] name);
 
     [DllImport(LibName, EntryPoint = "ldk_rename_file")]
-    public static extern int RenameFile(int handle, [MarshalAs(UnmanagedType.LPUTF8Str)] string oldName, [MarshalAs(UnmanagedType.LPUTF8Str)] string newName);
+    public static extern int RenameFile(int handle, byte[] oldName, byte[] newName);
 
     [DllImport(LibName, EntryPoint = "ldk_update_attributes")]
-    public static extern int UpdateAttributes(int handle, [MarshalAs(UnmanagedType.LPUTF8Str)] string name, ushort attributes);
+    public static extern int UpdateAttributes(int handle, byte[] name, ushort attributes);
 
     [DllImport(LibName, EntryPoint = "ldk_read_boot_area")]
     public static extern int ReadBootArea(int handle, byte[] buffer, int capacity);
@@ -63,6 +63,12 @@ public static class NativeLibraryImports
 
     [DllImport(LibName, EntryPoint = "ldk_save")]
     public static extern int Save(int handle);
+
+    [DllImport(LibName, EntryPoint = "ldk_read_directory_layout")]
+    public static extern int ReadDirectoryLayout(int handle, [Out] NativeDirectoryLayoutItem[] buffer, int capacity);
+
+    [DllImport(LibName, EntryPoint = "ldk_apply_directory_layout")]
+    public static extern int ApplyDirectoryLayout(int handle, NativeDirectoryLayoutItem[] items, int count);
     
     [DllImport(LibName, EntryPoint = "ldk_get_backend_implementation")]
     public static extern int GetBackendImplementation(byte[] buffer, int capacity);

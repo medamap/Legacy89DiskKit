@@ -24,11 +24,11 @@ public enum LdkStatus : int
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 public struct NativeFileEntry
 {
-    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 16)]
-    public string FileName;
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
+    public byte[] FileName;
     
-    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 8)]
-    public string Extension;
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
+    public byte[] Extension;
     
     public int Size;
     public ushort LoadAddress;
@@ -67,6 +67,16 @@ public struct NativeDiskContainerMetadata
     public int BytesPerSector;
     public int IsWriteProtected;
     public long DeclaredImageSize;
+}
+
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct NativeDirectoryLayoutItem
+{
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 64)] public byte[] Id;
+    public int Order;
+    public int Kind;
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 64)] public byte[] DisplayName;
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 64)] public byte[] StableId;
 }
 
 /// <summary>

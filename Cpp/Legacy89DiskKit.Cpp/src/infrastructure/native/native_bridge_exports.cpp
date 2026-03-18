@@ -403,6 +403,55 @@ int NativeBridgeExports::Save(std::int32_t handle)
     if (entry == nullptr) return LDK_STATUS_ERROR_INVALID_HANDLE;
     return LdkStatusFromStatus(entry->session.Save());
 }
+
+int NativeBridgeExports::ReadDirectoryLayout(std::int32_t handle, void* buffer, std::int32_t capacity)
+{
+    std::lock_guard<std::mutex> lock(EntriesMutex());
+    auto* entry = FindEntry(handle);
+    if (entry == nullptr) return LDK_STATUS_ERROR_INVALID_HANDLE;
+    if (buffer == nullptr || capacity < 0) return LDK_STATUS_ERROR_INVALID_ARGUMENT;
+
+    auto result = entry->session.ReadDirectoryLayout();
+    if (!result.ok()) return LdkStatusFromStatus(result.status());
+
+    auto& layout = result.value();
+    auto* ldk_items = static_cast<LdkDirectoryLayoutItem*>(buffer);
+    const int32_t count = std::min(static_cast<int32_t>(layout.items.size()), capacity);
+
+    for (int32_t i = 0; i < count; ++i)
+    {
+        std::memset(&ldk_items[i], 0, sizeof(LdkDirectoryLayoutItem));
+        WriteUtf8(ldk_items[i].id, sizeof(ldk_items[i].id), layout.items[i].id);
+        ldk_items[i].order = layout.items[i].order;
+        ldk_items[i].kind = static_cast<int32_t>(layout.items[i].kind);
+        WriteUtf8(ldk_items[i].display_name, sizeof(ldk_items[i].display_name), layout.items[i].display_name);
+        WriteUtf8(ldk_items[i].stable_id, sizeof(ldk_items[i].stable_id), layout.items[i].stable_id);
+    }
+    return count;
+}
+
+int NativeBridgeExports::ApplyDirectoryLayout(std::int32_t handle, const void* items, std::int32_t count)
+{
+    std::lock_guard<std::mutex> lock(EntriesMutex());
+    auto* entry = FindEntry(handle);
+    if (entry == nullptr) return LDK_STATUS_ERROR_INVALID_HANDLE;
+    if (items == nullptr || count < 0) return LDK_STATUS_ERROR_INVALID_ARGUMENT;
+
+    const auto* ldk_items = static_cast<const LdkDirectoryLayoutItem*>(items);
+    DirectoryLayout layout;
+    for (int32_t i = 0; i < count; ++i)
+    {
+        DirectoryLayoutItem item;
+        item.id = ldk_items[i].id;
+        item.order = ldk_items[i].order;
+        item.kind = static_cast<DirectoryLayoutItemKind>(ldk_items[i].kind);
+        item.display_name = ldk_items[i].display_name;
+        item.stable_id = ldk_items[i].stable_id;
+        layout.items.push_back(std::move(item));
+    }
+
+    return LdkStatusFromStatus(entry->session.ApplyDirectoryLayout(layout));
+}
 } // namespace legacy89diskkit::cpp::native
 
 using namespace legacy89diskkit::cpp;
@@ -428,6 +477,16 @@ LDK_API std::int32_t LDK_CALL ldk_create_disk(const char* const path, const std:
 LDK_API std::int32_t LDK_CALL ldk_close_disk(std::int32_t handle)
 {
     return NativeBridgeExports::CloseDisk(handle);
+}
+
+LDK_API std::int32_t LDK_CALL ldk_read_directory_layout(int32_t handle, LdkDirectoryLayoutItem* buffer, int32_t capacity)
+{
+    return NativeBridgeExports::ReadDirectoryLayout(handle, buffer, capacity);
+}
+
+LDK_API std::int32_t LDK_CALL ldk_apply_directory_layout(int32_t handle, const LdkDirectoryLayoutItem* items, int32_t count)
+{
+    return NativeBridgeExports::ApplyDirectoryLayout(handle, items, count);
 }
 
 LDK_API std::int32_t LDK_CALL ldk_get_abi_version(void)

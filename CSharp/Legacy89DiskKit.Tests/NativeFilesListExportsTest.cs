@@ -35,7 +35,7 @@ public class NativeFilesListExportsTest
 
             var names = Enumerable.Range(0, count)
                 .Select(buffer.ReadEntry)
-                .Select(entry => entry.FileName.TrimEnd('\0'))
+                .Select(entry => System.Text.Encoding.ASCII.GetString(entry.FileName).TrimEnd('\0', ' '))
                 .ToList();
 
             Assert.Contains("HELLO", names);

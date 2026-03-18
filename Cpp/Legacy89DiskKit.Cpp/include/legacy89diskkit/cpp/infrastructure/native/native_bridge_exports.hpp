@@ -75,5 +75,7 @@ public:
     static int WriteBootArea(std::int32_t handle, const void* data, std::int32_t length);
     static int Format(std::int32_t handle);
     static int Save(std::int32_t handle);
+    static int ReadDirectoryLayout(std::int32_t handle, void* buffer, std::int32_t capacity);
+    static int ApplyDirectoryLayout(std::int32_t handle, const void* items, std::int32_t count);
 };
 }
