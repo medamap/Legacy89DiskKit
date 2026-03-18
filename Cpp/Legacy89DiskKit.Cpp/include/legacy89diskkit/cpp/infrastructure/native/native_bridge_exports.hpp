@@ -74,5 +74,6 @@ public:
     static int ReadBootArea(std::int32_t handle, void* buffer, std::int32_t capacity);
     static int WriteBootArea(std::int32_t handle, const void* data, std::int32_t length);
     static int Format(std::int32_t handle);
+    static int Save(std::int32_t handle);
 };
 }

@@ -1,5 +1,7 @@
+using Legacy89DiskKit.Application.Native;
 using System.Runtime.InteropServices;
 using Legacy89DiskKit.Application;
+using Legacy89DiskKit.Application.DiskImage;
 using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.NativeInterop.Core;
 using Legacy89DiskKit.NativeInterop.Types;
@@ -14,6 +16,7 @@ public class NativeDiskExportsTest
     [Fact]
     public void GetFileSystemInfoAndFilesCount_ReturnExpectedNativeSurface()
     {
+        NativeBridgeBackend.SetCurrent(new ManagedNativeBridgeBackend());
         HandleManager.Clear();
 
         using var disk = new TempFormattedDiskScope();
@@ -24,7 +27,7 @@ public class NativeDiskExportsTest
             [0x01, 0x02, 0x03],
             new ExtendedFileAttributes(DiskFileAttributes.None, 0, false));
 
-        var handle = HandleManager.Register(service);
+        var handle = HandleManager.Register(service.Session!);
 
         try
         {

@@ -1,3 +1,4 @@
+using Legacy89DiskKit.Application.Native;
 using Xunit;
 using Legacy89DiskKit.NativeInterop.Core;
 using Legacy89DiskKit.Application;
@@ -9,39 +10,24 @@ namespace Legacy89DiskKit.Tests;
 
 public class ManagedToNativeValidationTest
 {
-    static ManagedToNativeValidationTest()
-    {
-        // 1. Setup C++ library path for interop globally for the test class
-        string libPath = "/tmp/legacy89-cpp-build/Legacy89DiskKit.Cpp/";
-        string libName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "Legacy89DiskKitCpp.dll" :
-                         RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "libLegacy89DiskKitCpp.dylib" : "libLegacy89DiskKitCpp.so";
-        
-        string fullLibPath = Path.Combine(libPath, libName);
-
-        NativeLibrary.SetDllImportResolver(typeof(NativeLibraryImports).Assembly, (name, assembly, path) => {
-            if (name == "Legacy89DiskKitCpp") 
-            {
-                if (File.Exists(fullLibPath)) return NativeLibrary.Load(fullLibPath);
-                return NativeLibrary.Load(libName);
-            }
-            return IntPtr.Zero;
-        });
-    }
-
     [Fact]
     public void FullWorkflow_ValidationMode_ShouldMatch()
     {
-        // 2. Setup Validation Backend
+        // 1. Setup Validation Backend
         var managed = new ManagedNativeBridgeBackend();
         var native = new CppLibraryNativeBridgeBackend();
         var validation = new ValidationNativeBridgeBackend(managed, native);
+
+        // Configure the global backend switch
+        NativeBridgeBackend.SetCurrent(validation);
 
         string tempDisk = Path.Combine(Path.GetTempPath(), $"validation-{Guid.NewGuid():N}.d88");
 
         try
         {
-            // 3. Exercise Workflows directly through the Validation backend
-            using (var diskService = new DiskService(validation, validation.GetDefaultRegistry()))
+            // 2. Exercise Workflows through DiskService using the Validation backend
+            // ValidationBackend doesn't provide registries, we use the managed reference's registry for discovery
+            using (var diskService = new DiskService(validation, managed.GetRegistry()))
             {
                 // Create
                 diskService.CreateDisk(tempDisk, DiskType.TwoD, "VALTEST");
@@ -69,7 +55,6 @@ public class ManagedToNativeValidationTest
                 Assert.Equal(data, readData.Take(data.Length).ToArray());
 
                 // Rename Flow
-                // Use a short name to avoid N88-BASIC's 6.3 truncation logic issues in exact matching
                 fs.RenameFile("TEST.BIN", "NEW.BIN");
                 files = fs.GetFiles().ToList();
                 Assert.DoesNotContain(files, f => f.FullName == "TEST.BIN");
@@ -99,6 +84,7 @@ public class ManagedToNativeValidationTest
         finally
         {
             if (File.Exists(tempDisk)) File.Delete(tempDisk);
+            NativeBridgeBackend.Reset();
         }
     }
 }

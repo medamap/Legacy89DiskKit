@@ -126,6 +126,7 @@ LDK_API int32_t LDK_CALL ldk_update_attributes(int32_t handle, const char* name,
 LDK_API int32_t LDK_CALL ldk_read_boot_area(int32_t handle, void* buffer, int32_t capacity);
 LDK_API int32_t LDK_CALL ldk_write_boot_area(int32_t handle, const void* data, int32_t length);
 LDK_API int32_t LDK_CALL ldk_format(int32_t handle);
+LDK_API int32_t LDK_CALL ldk_save(int32_t handle);
 
 #ifdef __cplusplus
 }

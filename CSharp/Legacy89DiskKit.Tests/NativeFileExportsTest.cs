@@ -1,5 +1,7 @@
+using Legacy89DiskKit.Application.Native;
 using System.Runtime.InteropServices;
 using Legacy89DiskKit.Application;
+using Legacy89DiskKit.Application.DiskImage;
 using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.NativeInterop.Core;
 using Legacy89DiskKit.NativeInterop.Types;
@@ -32,12 +34,13 @@ public class NativeFileExportsTest
     public void WriteReadRenameAndDeleteFile_RoundTripsThroughNativeExports()
     {
         HandleManager.Clear();
+        NativeBridgeBackend.SetCurrent(new ManagedNativeBridgeBackend());
 
         using var disk = new TempFormattedDiskScope();
         using var service = Legacy89DiskKitApplication.CreateDiskService();
         service.OpenDisk(disk.ImagePath, readOnly: false);
 
-        var handle = HandleManager.Register(service);
+        var handle = HandleManager.Register(service.Session!);
 
         try
         {

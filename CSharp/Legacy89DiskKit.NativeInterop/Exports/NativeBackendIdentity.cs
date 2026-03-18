@@ -1,3 +1,4 @@
+using Legacy89DiskKit.Application.DiskImage;
 using Legacy89DiskKit.NativeInterop.Core;
 
 namespace Legacy89DiskKit.NativeInterop.Exports;

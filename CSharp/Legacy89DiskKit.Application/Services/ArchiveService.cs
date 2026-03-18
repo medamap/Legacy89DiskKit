@@ -9,6 +9,7 @@ using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
 using Legacy89DiskKit.Infrastructure.DiskImage.Factory;
 
 using Legacy89DiskKit.Application.CharacterEncoding;
+using Legacy89DiskKit.Application.Native;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
 
 namespace Legacy89DiskKit.Application.Services;
@@ -33,12 +34,11 @@ public class ArchiveService
         _encoderRegistry.Register("X1", new X1CharacterEncoder());
         _encoderRegistry.Register("SJIS", new ShiftJisCharacterEncoder());
         _encoderRegistry.Register("Shift-JIS", new ShiftJisCharacterEncoder());
-        // TODO: Register other encoders as they are implemented
     }
 
     public void CloneBootable(string srcPath, string destPath, string[] filesToCopy)
     {
-        using var srcDisk = new DiskService(_containerFactory, _fsRegistry);
+        using var srcDisk = new DiskService(new ManagedNativeBridgeBackend(), _fsRegistry);
         var srcContainer = srcDisk.OpenDisk(srcPath, true);
         var srcFs = srcDisk.FileSystem;
         if (srcFs == null) throw new Exception("Source file system not detected.");
@@ -62,7 +62,7 @@ public class ArchiveService
         destContainer.Save();
 
         // Open target to get FS
-        using var destDisk = new DiskService(_containerFactory, _fsRegistry);
+        using var destDisk = new DiskService(new ManagedNativeBridgeBackend(), _fsRegistry);
         destDisk.OpenDisk(destPath, false);
         var destFs = destDisk.FileSystem;
         if (destFs == null) throw new Exception("Target FS detection failed.");
@@ -94,7 +94,7 @@ public class ArchiveService
     }
     public void InjectFile(string diskPath, string hostFilePath, string? targetFileName = null, string? encodingOverride = null)
     {
-        using var diskService = new DiskService(_containerFactory, _fsRegistry);
+        using var diskService = new DiskService(new ManagedNativeBridgeBackend(), _fsRegistry);
         diskService.OpenDisk(diskPath, false); // Open for writing
         
         var fs = diskService.FileSystem;

@@ -271,10 +271,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - Expected C++ target: equivalent verification-facing entrypoints over C++-backed native infrastructure
   - Completion Note: Implemented `ldk-verify` C++ tool for comprehensive disk verification and bootable disk creation. Extended `NativeBridge` and `NativeFileSystemSession` with raw sector access (`ldk_read_sector`/`ldk_write_sector`).
 
-- [ ] Phase V2-33: CLI backend substitution bridge
+- [x] Phase V2-33: CLI backend substitution bridge
   - Layer: Presentation
   - C# source area: managed CLI command handlers
   - Expected C++ target: C# CLI paths able to call C++-backed services through a stable bridge
+  - Completion Note: Refactored `DiskService` to support `INativeBridgeBackend` substitution. Added `--native` option to C# CLI to switch between managed and C++ backends. Updated `ValidationNativeBridgeBackend` to support full `IDiskContainer` parity.
 
 - [ ] Phase V2-34: CLI command migration to C++-backed workflows
   - Layer: Presentation
@@ -347,3 +348,9 @@ For example:
 - which means the end-user CLI still cannot rely on that C++ implementation path directly
 
 This distinction is essential to keeping the migration roadmap honest.
+
+## Future Refinements
+
+- **Multi-byte Filename Encoding**: Current C++ parsers (`DecodeTrimmed`) perform simple `char` casting, which causes ShiftJIS kanji filenames to appear corrupted in UTF-8 terminals. A proper encoding-aware decoder or raw byte preservation in the Domain layer is required.
+- **Stable ID Parity**: `DirectoryLayoutService` uses `std::hash`, which lacks binary parity with C# SHA256 IDs.
+- **D88 Template Maturity**: `NativeFileSystemSession::Create` uses fixed geometry templates which may conflict with source disks during cloning (V2-32 finding).

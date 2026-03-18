@@ -6,69 +6,67 @@ using Legacy89DiskKit.Infrastructure.DiskImage.Factory;
 using Legacy89DiskKit.Application.FileSystem;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
 using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.Domain.Native;
+using Legacy89DiskKit.Application.Native;
 
 namespace Legacy89DiskKit.Application.DiskImage;
 
 public class DiskService : IDisposable
 {
-    private readonly IDiskContainerFactory _containerFactory;
-    private readonly IFileSystemRegistry _fsRegistry;
-    private IDiskContainer? _currentContainer;
-    private IFileSystem? _currentFileSystem;
+    private readonly INativeBridgeBackend _backend;
+    
+    private INativeDiskSession? _currentSession;
 
-    public DiskService(IDiskContainerFactory? containerFactory = null, IFileSystemRegistry? fsRegistry = null)
+    public DiskService(INativeBridgeBackend? backend = null, IFileSystemRegistry? fsRegistry = null)
     {
-        _containerFactory = containerFactory ?? new DiskContainerFactory();
-        
-        if (fsRegistry == null)
+        if (backend != null)
         {
-            var defaultRegistry = new FileSystemRegistry();
-            defaultRegistry.Register(new HuBasicFileSystemProvider());
-            _fsRegistry = defaultRegistry;
+            _backend = backend;
+        }
+        else if (fsRegistry != null)
+        {
+            _backend = new ManagedNativeBridgeBackend(fsRegistry);
         }
         else
         {
-            _fsRegistry = fsRegistry;
+            _backend = NativeBridgeBackend.Current;
         }
     }
 
     public IDiskContainer OpenDisk(string filePath, bool readOnly = true)
     {
         CloseDisk();
-        _currentContainer = _containerFactory.Open(filePath, readOnly);
-        _currentFileSystem = _fsRegistry.DetectAndCreate(_currentContainer);
-        return _currentContainer;
+        _currentSession = _backend.OpenDisk(filePath, readOnly);
+        return _currentSession;
     }
 
     public IDiskContainer OpenDisk(byte[] imageData, string imageFormat, bool readOnly = true)
     {
         CloseDisk();
-        _currentContainer = _containerFactory.Open(imageData, imageFormat, readOnly);
-        _currentFileSystem = _fsRegistry.DetectAndCreate(_currentContainer);
-        return _currentContainer;
+        _currentSession = _backend.OpenDisk(imageData, imageFormat, readOnly);
+        return _currentSession;
     }
 
-    public IDiskContainer CreateDisk(string filePath, Legacy89DiskKit.Domain.DiskImage.Model.DiskType diskType, string diskName = "")
+    public IDiskContainer CreateDisk(string filePath, DiskType diskType, string diskName = "")
     {
         CloseDisk();
-        _currentContainer = _containerFactory.Create(filePath, diskType, diskName);
-        _currentFileSystem = _fsRegistry.DetectAndCreate(_currentContainer);
-        return _currentContainer;
+        _currentSession = _backend.CreateDisk(filePath, diskType, diskName);
+        return _currentSession;
     }
 
-    public IFileSystem? FileSystem => _currentFileSystem;
+    public IFileSystem? FileSystem => _currentSession?.FileSystem;
+
+    public INativeDiskSession? Session => _currentSession;
 
     public DiskContainerMetadata? GetContainerMetadata()
     {
-        return _currentContainer?.GetMetadata();
+        return _currentSession?.GetContainerMetadata();
     }
 
     public void CloseDisk()
     {
-        _currentFileSystem?.Dispose();
-        _currentFileSystem = null;
-        _currentContainer?.Dispose();
-        _currentContainer = null;
+        _currentSession?.Dispose();
+        _currentSession = null;
     }
 
     public void Dispose()
