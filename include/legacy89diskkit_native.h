@@ -43,6 +43,17 @@ typedef enum LdkDiskType {
     LDK_DISK_TYPE_HARD_DISK = 3
 } LdkDiskType;
 
+typedef struct LdkDirectoryLayoutItem {
+    char id[64];
+    int32_t order;
+    int32_t kind;
+    char display_name[64];
+    char stable_id[64];
+} LdkDirectoryLayoutItem;
+
+LDK_API int32_t LDK_CALL ldk_read_directory_layout(int32_t handle, LdkDirectoryLayoutItem* buffer, int32_t capacity);
+LDK_API int32_t LDK_CALL ldk_apply_directory_layout(int32_t handle, const LdkDirectoryLayoutItem* items, int32_t count);
+
 typedef struct LdkFileEntry {
     char file_name[16];
     char extension[8];
@@ -51,6 +62,7 @@ typedef struct LdkFileEntry {
     uint16_t execution_address;
     uint16_t attributes;
 } LdkFileEntry;
+
 
 typedef struct LdkFileSystemInfo {
     char file_system_name[32];
