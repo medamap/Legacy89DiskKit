@@ -12,6 +12,7 @@ using Legacy89DiskKit.Infrastructure.DiskImage.Factory;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;
+using Legacy89DiskKit.Infrastructure.FileSystem.XDos.Provider;
 
 namespace Legacy89DiskKit.Application;
 
@@ -197,6 +198,7 @@ public static class Legacy89DiskKitApplication
     public static IFileSystemRegistry CreateFileSystemRegistry()
     {
         var registry = new FileSystem.FileSystemRegistry();
+        registry.Register(new XDosFileSystemProvider());
         registry.Register(new HuBasicFileSystemProvider());
         registry.Register(new N88BasicFileSystemProvider());
         registry.Register(new MsxDosFileSystemProvider());
