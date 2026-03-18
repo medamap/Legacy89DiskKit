@@ -283,10 +283,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - Expected C++ target: selected commands routed through validated C++-backed application paths
   - Completion Note: Validated all major CLI commands (`list`, `file`, `disk`, `boot`, `layout`) through the native bridge (`--native`). Resolved encoding differences by moving `NativeFileEntry` string fields to byte arrays and using the file system's target encoder in the `NativeInterop` facade. Implemented C API bindings for directory layout manipulation (`ldk_read_directory_layout` / `ldk_apply_directory_layout`).
 
-- [ ] Phase V2-35: Full C++ CLI
+- [x] Phase V2-35: Full C++ CLI
   - Layer: Presentation
   - C# source area: current `Legacy89DiskKit.Cli`
   - Expected C++ target: standalone CLI over C++ application and infrastructure layers
+  - Completion Note: Implemented standalone `ldk` C++ CLI mirroring the command surface of the C# CLI (`list`, `file`, `disk`, `boot`, `layout`). Integrated `CliLocalizer` for multi-language support (ja/en) and enabled basic encoding resolution via `CharacterEncodingTableCatalog`.
 
 - [ ] Phase V2-36: WASM presentation runtime
   - Layer: Presentation
@@ -355,3 +356,85 @@ This distinction is essential to keeping the migration roadmap honest.
 - **Multi-byte Filename Encoding**: Current C++ parsers (`DecodeTrimmed`) perform simple `char` casting, which causes ShiftJIS kanji filenames to appear corrupted in UTF-8 terminals. A proper encoding-aware decoder or raw byte preservation in the Domain layer is required.
 - **Stable ID Parity**: `DirectoryLayoutService` uses `std::hash`, which lacks binary parity with C# SHA256 IDs.
 - **D88 Template Maturity**: `NativeFileSystemSession::Create` uses fixed geometry templates which may conflict with source disks during cloning (V2-32 finding).
+
+## Post-V2 Considerations
+
+The following items are out of scope for the V2 roadmap and should be considered only after V2-36 is complete.
+
+### PC-9801 Disk Image Format Support (FDI / HDI)
+
+References:
+- FDI/HDI specification: https://www.pc98.org/project/doc/hdi.html
+- Anex86 PC-98 floppy image: http://justsolve.archiveteam.org/wiki/Anex86_PC98_floppy_image
+- Reference tools: https://github.com/tsdko/98imgtools
+
+#### Format Overview
+
+- **FDI**: PC-9801 floppy disk image. Header is nominally 4096 bytes, followed by raw sector data. The `HeaderSize` field at offset 0x08 must be read to determine the actual data start offset rather than assuming a fixed value.
+- **HDI**: PC-9801 hard disk image. Contains a fixed-size header with geometry fields (Cylinders, Surfaces, Sectors, SectorSize). Partition table analysis is required for filesystem access. Image size and header geometry should be cross-validated because malformed images exist.
+- Both formats store filenames in Shift-JIS. FAT12/FAT16 filesystem naming must go through the same encoding layer used by MSX-DOS.
+
+#### Implementation Constraints
+
+The following constraints must be enforced at implementation time. These are not optional.
+
+1. **No implicit struct padding**: All header structures (FDI, HDI) must use `#pragma pack(push, 1)` or `[[gnu::packed]]`. Each structure must include a `static_assert` verifying the byte size matches the specification (FDI header: 4096 bytes, etc.).
+
+2. **Explicit little-endian conversion**: Multi-byte fields must not be read by casting a byte pointer directly to `uint32_t*` or by `fread` into a struct. Each field must be extracted via an explicit conversion function (e.g., `read_u32_le(buffer, offset)`) that is safe on both little-endian and big-endian hosts.
+
+3. **`HeaderSize` field must be respected**: The data start offset must be derived from the `HeaderSize` field in the header, not from a hardcoded constant. This applies to both FDI and HDI.
+
+4. **`FDDType` magic number validation**: The `FDDType` field at offset 0x04 must be validated against known magic values (e.g., `PDA0`) before any further parsing proceeds.
+
+5. **Buffer-safe serialization**: Raw pointer arithmetic over heap buffers is not acceptable. All buffer access must go through `std::vector<uint8_t>` or an equivalent bounds-checked span type to prevent buffer overrun.
+
+#### Design Recommendations
+
+- **Linear storage abstraction**: FDI and HDI are essentially raw images with a header prefix. They should be abstracted as a `LinearDiskContainer` (or equivalent) rather than reusing the D88 sector-pointer model. This abstraction would also accommodate future NHD (T98-Next format) support without structural changes.
+
+- **Value-object byte extraction**: Header fields should be read through a value object that wraps a `std::vector<uint8_t>` and exposes named accessors (e.g., `header.header_size()`, `header.fdd_type()`). Direct struct casting from a raw buffer is prohibited per constraint 2 above.
+
+- **Encoding layer reuse**: PC-9801 Shift-JIS filenames must reuse the existing `CharacterEncoding` infrastructure. No new hardcoded encoding paths should be introduced.
+
+- **Dependency injection for allocation**: If bare-metal or OS-less targets are in scope at that time, memory allocation should be injectable from the outside rather than relying on `new` or `malloc` directly inside the container implementation.
+
+#### Scope at Implementation Time
+
+- New Domain phases will be required for FDI/HDI geometry rules and HDI partition table rules.
+- New Infrastructure phases will be required for FDI and HDI container adapters.
+- The existing FAT12/MSX-DOS filesystem infrastructure should be reusable for the FAT layer on top of an HDI container, provided the container abstraction is compatible.
+
+#### Reference Resources
+
+| Topic | Source | URL |
+| :--- | :--- | :--- |
+| HDI partition structure | えぬまのページ | http://www.n-uma.jp |
+| FAT12/FAT16 BPB and cluster calculation | OSDev Wiki | https://wiki.osdev.org |
+| FD geometry (2HD/2DD sector counts and track layout) | ジャンク・ハーツ | http://www.junk-hearts.com |
+| BIOS-level disk I/O conventions | PC-9801 Technical Data Book | physical book / archive |
+
+#### Known Implementation Pitfalls
+
+The following pitfalls are documented based on known PC-98 format behavior. Each one has caused silent data corruption or incorrect parsing in existing tools and must be explicitly addressed at implementation time.
+
+**HDI: Partition table physical layout**
+
+- The first sector of the HDI data area (immediately after the header) contains the IPL and partition table.
+- Each partition entry is 16 bytes. Up to 16 partition entries exist.
+- Each entry includes an OS type code in addition to an active flag (0x80). MS-DOS partitions use type 0x01. Treating all partitions as FAT without checking the type code risks treating FreeBSD or other OS partitions as FAT and corrupting them.
+
+**FAT: Sector size is not always 512 bytes**
+
+- PC-98 2HD (1.2 MB) disks use 1024 bytes per sector as the standard, not 512.
+- `BytesPerSector` must always be read from the image header or BPB at runtime. Hardcoding 512 is incorrect.
+- The cluster offset formula `(ClusterIndex - 2) * SectorsPerCluster * BytesPerSector` must use the dynamically obtained `BytesPerSector` value.
+
+**FAT: Filename encoding and the 0xE5 deletion flag**
+
+- FAT directory entries are 32 bytes: 8-byte name, 3-byte extension. Long File Names (LFN) do not exist in PC-98 MS-DOS environments and must not be implemented.
+- The 0xE5 byte marks a deleted entry, but it also collides with the first byte of some Shift-JIS characters (e.g., filenames starting with certain kana). The historical workaround substitutes 0x05 for a leading 0xE5 in live entries. This must be handled correctly in both read and write paths.
+
+**Geometry consistency validation**
+
+- FDI and HDI headers both contain CHS geometry fields (Cylinders, Heads, Sectors per track, Bytes per sector).
+- The invariant `ImageDataSize == Cylinders * Heads * SectorsPerTrack * BytesPerSector` must be verified during container construction. Images that violate this invariant exist in the wild and must be rejected or flagged rather than silently accepted.
