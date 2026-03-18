@@ -5,6 +5,7 @@ using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
 using Legacy89DiskKit.Infrastructure.FileSystem.Msx;
 using Legacy89DiskKit.Infrastructure.FileSystem.Pc88;
+using Legacy89DiskKit.Infrastructure.FileSystem.XDos;
 
 namespace Legacy89DiskKit.Application.FileSystem;
 
@@ -17,6 +18,7 @@ public sealed class ExplicitFileSystemResolver
             "hubasic" => "Hu-BASIC",
             "n88basic" => "N88-BASIC",
             "msxdos" => "MSX-DOS",
+            "xdos" => "X-DOS",
             _ => throw new InvalidOperationException($"Unsupported file system: {fileSystemName}")
         };
     }
@@ -28,6 +30,7 @@ public sealed class ExplicitFileSystemResolver
             "hubasic" => new HuBasicFileSystem(container),
             "n88basic" => CreateN88Basic(container),
             "msxdos" => CreateMsxDos(container),
+            "xdos" => new XDosFileSystem(container),
             _ => throw new InvalidOperationException($"Unsupported file system: {fileSystemName}")
         };
     }

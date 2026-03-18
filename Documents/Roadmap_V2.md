@@ -362,6 +362,154 @@ This distinction is essential to keeping the migration roadmap honest.
 
 The following items are out of scope for the V2 roadmap and should be considered only after V2-36 is complete.
 
+### X-DOS Filesystem Support (First Post-V2 Priority)
+
+X-DOS is a Sharp X1-exclusive OS distributed by C&S Soft. Its filesystem is structurally unlike every other filesystem currently supported by Legacy89DiskKit: it uses a directly-addressed track/sector layout, a flat allocation bitmap, and a mixed-geometry disk structure that cannot be handled by reusing the existing FAT12, Hu-BASIC, or N88-BASIC infrastructure. This work should begin before any other Post-V2 item.
+
+#### Disk Physical Layout
+
+The following layout is confirmed by binary analysis of `XDOS_SYS.D88`:
+
+| Area | Physical Track | Sector geometry | Content |
+| :--- | :--- | :--- | :--- |
+| IPL + Volume Record | Track 0 (C=0, H=0) | R=1–16, N=1 (256 bytes each) | IPL boot code; R=1 is the X-DOS Volume Record |
+| FAT + Directory | Track 1 (C=1, H=0) | R=1–10, N=2 (512 bytes each) | R=1 = FAT bitmap; R=2–10 = directory entries |
+| FAM + system code | Track 2 (C=2, H=0) | R=1–10, N=2 (512 bytes each) | R=1 = FAM cluster chain table; R=2 = bdir (Z80 system code) |
+| File data | Track 3+ (C=3–39, H=0) | R=1–10, N=2 (512 bytes each) | File content; 10 × 512B = 5120 bytes per track |
+
+This mixed-geometry layout (Track 0 uses 256B sectors; Track 1+ uses 512B sectors) means the disk cannot be read using a single uniform sector-size assumption. Container construction must handle both sector sizes.
+
+#### Volume Record Format (Track 0, R=1, 256 bytes)
+
+| Offset | Size | Content |
+| :--- | :--- | :--- |
+| [0] | 1 | Record type identifier: 0x01 |
+| [1:17] | 16 | Disk label, ASCII, space-padded |
+| [24] | 1 | Format type byte (0x88 = Sharp X1 2D) |
+| [25:28] | 3 | BCD date: year, month, day (e.g. 0x24, 0x04, 0x17 = April 17, 1984) |
+
+Bytes outside the above ranges are present in the sector but their semantics are not yet fully confirmed by analysis and must be treated as reserved during initial implementation.
+
+#### FAT Format (Track 1, R=1, 512 bytes)
+
+The FAT is a flat allocation bitmap. Each byte represents one cluster. Confirmed byte values:
+
+| Value | Meaning |
+| :--- | :--- |
+| 0x00 | Free cluster |
+| 0x01 | Reserved (appears only at index 1) |
+| 0x4A | Allocated/used |
+| 0x3F | Observed in the FAT beyond the last used entry; exact meaning TBD |
+| 0xC0, 0xFF | Observed beyond used range; exact meaning TBD |
+
+Index 0 and index 1 are reserved. Index 2 onwards addresses the data cluster pool. The precise mapping between FAT index and physical track/sector address must be confirmed from X-DOS source or from additional disk images during implementation. An important design constraint: unlike FAT12/FAT16, there are no cluster chain links in the FAT itself — the FAT is purely an occupancy bitmap. Cluster chain navigation for multi-cluster files is handled by the **FAM** (File Allocation Map) at Track 2, R=1; see the FAM section in `X-DOS_Filesystem_Analysis.md` for details.
+
+#### Directory Entry Format (Track 1, R=2–10, 32 bytes each)
+
+| Offset | Size | Content |
+| :--- | :--- | :--- |
+| [0] | 1 | File type (see table below) |
+| [1] | 1 | Attribute byte |
+| [2:18] | 16 | Filename, ASCII, space-padded (no extension separator) |
+| [20:22] | 2 | Load address, little-endian |
+| [22:24] | 2 | End address (binary files) or record descriptor (text files), little-endian |
+| [24:26] | 2 | Execution address, little-endian |
+| [26:28] | 2 | Unknown (observed as checksum or timestamp fragment; do not rely on) |
+| [28] | 1 | Flags byte (0x80 is common; exact bit semantics TBD) |
+| [29] | 1 | First FAM cluster index (chain head; provisional — see Known Pitfalls) |
+| [30] | 1 | Starting sector R within the first cluster (observed always 0x01; provisional) |
+| [31] | 1 | Always 0x01 in observed data (purpose unknown) |
+
+A directory entry with [0] = 0x00 or [0] = 0xFF is treated as an empty/deleted slot.
+
+#### File Type Codes
+
+| Value | Type | Notes |
+| :--- | :--- | :--- |
+| 0x02 | BASIC text program | `end` field stores record descriptor, not end address |
+| 0x03 | Binary (machine code) | `load`/`end`/`exec` all meaningful |
+| 0x04 | Help / auxiliary data | `end` stores a page count |
+| 0x05 | Overlay / system module | Loaded by the OS on demand |
+| 0x06 | Script / batch | Similar to `.BAT` |
+| 0x07 | Core system file | Used by X-DOS kernel and BIOS |
+
+Values with bit 7 set (e.g. 0x85, 0xAE, 0xB4, 0xC0) have been observed in directory entries. These may represent application-defined extensions or corrupted entries and should be treated as unknown during initial implementation.
+
+#### Implementation Phases
+
+The following phases are required to support X-DOS in both the C# reference and C++ implementations.
+
+**Phase XD-01: X-DOS filesystem domain core**
+- Layer: Domain
+- New domain types: `XDosFileType`, `XDosVolumeRecord`, `XDosDirectoryEntry`, `XDosAllocationBitmap`
+- New domain rules: directory parsing rules, allocation bitmap rules, file type classification rules, load/end/exec address triple rules, track/sector address rules
+- Note: the mixed-geometry track 0 structure requires an explicit Track-0 domain model separate from the data-track model
+
+**Phase XD-02: X-DOS filesystem infrastructure**
+- Layer: Infrastructure
+- New infrastructure: `XDosFileSystem` backed by D88 container
+- Key requirement: container must be able to read Track 0 sectors (N=1, 256B) and Track 1+ sectors (N=2, 512B) within the same session
+- File read path: start from `entry[29]` (first FAM cluster), follow FAM chain until 0x00, read each cluster's sectors to reconstruct payload
+- Structural relocation: files should be created under `infrastructure/filesystem/x_dos/`
+
+**Phase XD-03: X-DOS detection and registration**
+- Layer: Infrastructure
+- Detection heuristic: Track 0, R=1, byte[0] = 0x01 (Volume Record identifier), format type byte[24] = 0x88
+- Registration: add X-DOS to `FilesystemSurfaceCatalog` and `FilesystemDetection` infrastructure
+- Explicit selector: add `XDosExplicitFileSystem` alongside existing explicit selectors
+
+**Phase XD-04: X-DOS write and format support**
+- Layer: Domain + Infrastructure
+- Write path: allocation bitmap update, directory entry creation, contiguous-track write
+- Format path: write Volume Record to Track 0, R=1; write empty FAT bitmap to Track 1, R=1; zero directory area Track 1, R=2–10
+- Note: the end address / allocation boundary encoding in entry[29] must be resolved before write support is correct
+
+**Phase XD-05: X-DOS application and CLI integration**
+- Layer: Application + Presentation
+- C# application: integrate X-DOS into `FileTransferService`, `DiskService`, and `DirectoryLayoutService`
+- C++ application: same integration into C++ application services
+- C++ CLI: add X-DOS as a recognized `--fs` value in `ldk`
+
+#### Known Implementation Pitfalls
+
+**Mixed-geometry sector size**
+
+Track 0 uses 256-byte sectors (N=1). Tracks 1 and above use 512-byte sectors (N=2). Any code that assumes a uniform sector size across the entire disk will fail on Track 0 reads. The container must report the correct sector size per track and the filesystem layer must account for this when reading the Volume Record.
+
+**FAT and FAM roles are distinct**
+
+The FAT (Track 1, R=1) is a flat occupancy bitmap where 0x4A means allocated and 0x00 means free. It does not encode cluster chains.
+Cluster chain navigation is handled by the **FAM** (File Allocation Map, Track 2, R=1 = logical record 20), where FAM[cluster] = next cluster in chain, 0x00 = end of chain.
+Files may therefore be allocated in **non-contiguous clusters**. The FAT indicates whether a cluster is in use; the FAM traces the actual chain for each file.
+
+**Directory entry[29] and entry[30] encoding is not yet fully confirmed**
+
+The current best interpretation based on XDOSUTIL.D88 analysis:
+- `entry[29]` = first cluster index (FAM chain head for the file)
+- `entry[30]` = starting sector R within that first cluster (observed value always 0x01)
+
+Evidence: multiple files share the same `entry[29]` value with different `entry[30]` values (e.g., four files all have `entry[29]=0x44` but `entry[30]=0x03, 0x05, 0x07, 0x09`), which is consistent with `entry[29]` being a FAM allocation boundary and `entry[30]` disambiguating the starting sector within that cluster. The exact encoding must be confirmed from X-DOS documentation or additional disk image analysis before write support can be implemented safely.
+
+**Cluster-to-physical-track mapping is not yet fully confirmed**
+
+The working hypothesis is that 1 cluster = 4 data tracks = 20480 bytes, derived from the observation that the X-DOS System binary (~40 KB) corresponds to a 2-entry FAM chain. This has not been verified for all file sizes across both disk images. Confirm this formula before implementing FAM-based cluster resolution.
+
+**16-character filename with no extension**
+
+X-DOS filenames are 16 bytes, ASCII, space-padded, with no `.extension` concept. Filename matching must be case-sensitive and space-exact. Tools that assume 8.3 naming or that strip trailing spaces before comparison will not behave correctly.
+
+**File type byte values above 0x07**
+
+Values such as 0x85, 0xAE, 0xB4, 0xC0 appear in the analyzed directory. These are likely application-defined extensions. The implementation should not reject entries with unknown type bytes — it should expose the raw byte and leave interpretation to the caller.
+
+#### Reference Resources
+
+| Topic | Source | Notes |
+| :--- | :--- | :--- |
+| X-DOS disk structure (primary) | Binary analysis of `XDOS_SYS.D88` | Direct sector-level inspection; see above |
+| X-DOS user documentation | Sharp X1 technical archives | Physical or scanned documentation |
+| X-DOS sector R numbering | Cross-reference with D88 sector headers | All R values in analyzed image are 1-indexed |
+
 - **WASM Linker Dead Code Elimination**: Existing C APIs in `native_bridge_exports.cpp` do not have `EMSCRIPTEN_KEEPALIVE`. When performing a production WASM build, ensure that `-s EXPORTED_FUNCTIONS` is used in CMake or `EMSCRIPTEN_KEEPALIVE` is added to all required entrypoints to prevent the linker from stripping them.
 
 ### PC-9801 Disk Image Format Support (FDI / HDI)

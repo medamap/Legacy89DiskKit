@@ -396,9 +396,9 @@ public static class FileListLocalizer
         public override string BootFilesOptionDescription => "Comma-separated list of files to copy or 'all'";
         public override string TargetFileNameOptionDescription => "Override the filename on the target disk";
         public override string DiskCreateDiskTypeOptionDescription => "Disk media type: 2d, 2dd, or 2hd";
-        public override string DiskCreateFileSystemOptionDescription => "File system to initialize: hu-basic, n88-basic, or msx-dos";
+        public override string DiskCreateFileSystemOptionDescription => "File system to initialize: hu-basic, n88-basic, msx-dos, or xdos";
         public override string DiskCreateNameOptionDescription => "Optional disk name for image containers that support it";
-        public override string DiskFormatFsOptionDescription => "Explicit file system to format: hu-basic, n88-basic, or msx-dos";
+        public override string DiskFormatFsOptionDescription => "Explicit file system to format: hu-basic, n88-basic, msx-dos, or xdos";
         public override string ListingFilesForMessage => "Listing files for";
         public override string UsingEncodingMessage => "Using Encoding";
         public override string SuccessPrefix => "Success";
@@ -530,9 +530,9 @@ public static class FileListLocalizer
         public override string BootFilesOptionDescription => "コピーするファイル一覧。all も指定可能";
         public override string TargetFileNameOptionDescription => "ターゲットディスク上のファイル名を上書きします";
         public override string DiskCreateDiskTypeOptionDescription => "ディスク種別: 2d, 2dd, 2hd";
-        public override string DiskCreateFileSystemOptionDescription => "初期化するファイルシステム: hu-basic, n88-basic, msx-dos";
+        public override string DiskCreateFileSystemOptionDescription => "初期化するファイルシステム: hu-basic, n88-basic, msx-dos, xdos";
         public override string DiskCreateNameOptionDescription => "対応コンテナに設定する任意のディスク名";
-        public override string DiskFormatFsOptionDescription => "明示的にフォーマットするファイルシステム: hu-basic, n88-basic, msx-dos";
+        public override string DiskFormatFsOptionDescription => "明示的にフォーマットするファイルシステム: hu-basic, n88-basic, msx-dos, xdos";
         public override string ListingFilesForMessage => "Listing files for";
         public override string UsingEncodingMessage => "Using Encoding";
         public override string SuccessPrefix => "Success";
