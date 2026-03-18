@@ -289,10 +289,11 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - Expected C++ target: standalone CLI over C++ application and infrastructure layers
   - Completion Note: Implemented standalone `ldk` C++ CLI mirroring the command surface of the C# CLI (`list`, `file`, `disk`, `boot`, `layout`). Integrated `CliLocalizer` for multi-language support (ja/en) and enabled basic encoding resolution via `CharacterEncodingTableCatalog`.
 
-- [ ] Phase V2-36: WASM presentation runtime
+- [x] Phase V2-36: WASM presentation runtime
   - Layer: Presentation
   - C# source area: current documented-only WASM direction
   - Expected C++ target: browser-facing or WASI-facing runtime entrypoint over path-independent core and infrastructure
+  - Completion Note: Implemented `ldk_wasm.cpp` entrypoint exposing path-independent Core and Infrastructure services. Validated WASM configuration via CMake `ldk-wasm` target, utilizing existing C API `native_bridge_exports` and memory helpers for JS/browser contexts.
 
 ## Current Repository Reading
 
@@ -360,6 +361,8 @@ This distinction is essential to keeping the migration roadmap honest.
 ## Post-V2 Considerations
 
 The following items are out of scope for the V2 roadmap and should be considered only after V2-36 is complete.
+
+- **WASM Linker Dead Code Elimination**: Existing C APIs in `native_bridge_exports.cpp` do not have `EMSCRIPTEN_KEEPALIVE`. When performing a production WASM build, ensure that `-s EXPORTED_FUNCTIONS` is used in CMake or `EMSCRIPTEN_KEEPALIVE` is added to all required entrypoints to prevent the linker from stripping them.
 
 ### PC-9801 Disk Image Format Support (FDI / HDI)
 
