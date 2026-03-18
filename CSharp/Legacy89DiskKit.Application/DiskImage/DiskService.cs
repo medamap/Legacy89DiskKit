@@ -7,41 +7,51 @@ using Legacy89DiskKit.Application.FileSystem;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.Native;
+using Legacy89DiskKit.Application.Native;
 
 namespace Legacy89DiskKit.Application.DiskImage;
 
 public class DiskService : IDisposable
 {
     private readonly INativeBridgeBackend _backend;
-    private readonly IFileSystemRegistry? _fsRegistry;
     
     private INativeDiskSession? _currentSession;
 
     public DiskService(INativeBridgeBackend? backend = null, IFileSystemRegistry? fsRegistry = null)
     {
-        _backend = backend ?? NativeBridgeBackend.Current;
-        _fsRegistry = fsRegistry;
+        if (backend != null)
+        {
+            _backend = backend;
+        }
+        else if (fsRegistry != null)
+        {
+            _backend = new ManagedNativeBridgeBackend(fsRegistry);
+        }
+        else
+        {
+            _backend = NativeBridgeBackend.Current;
+        }
     }
 
     public IDiskContainer OpenDisk(string filePath, bool readOnly = true)
     {
         CloseDisk();
         _currentSession = _backend.OpenDisk(filePath, readOnly);
-        return _currentSession as IDiskContainer ?? throw new InvalidOperationException("Backend session does not support container access.");
+        return _currentSession;
     }
 
     public IDiskContainer OpenDisk(byte[] imageData, string imageFormat, bool readOnly = true)
     {
         CloseDisk();
         _currentSession = _backend.OpenDisk(imageData, imageFormat, readOnly);
-        return _currentSession as IDiskContainer ?? throw new InvalidOperationException("Backend session does not support container access.");
+        return _currentSession;
     }
 
     public IDiskContainer CreateDisk(string filePath, DiskType diskType, string diskName = "")
     {
         CloseDisk();
         _currentSession = _backend.CreateDisk(filePath, diskType, diskName);
-        return _currentSession as IDiskContainer ?? throw new InvalidOperationException("Backend session does not support container access.");
+        return _currentSession;
     }
 
     public IFileSystem? FileSystem => _currentSession?.FileSystem;

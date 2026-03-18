@@ -1,3 +1,4 @@
+using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Domain.Native;
@@ -22,26 +23,5 @@ public class NativeDiskSessionHandleManagerTest
         Assert.Same(session, storedSession);
         Assert.True(HandleManager.Unregister(handle));
         Assert.True(session.IsDisposed);
-    }
-
-    private sealed class FakeNativeDiskSession : INativeDiskSession
-    {
-        public bool IsDisposed { get; private set; }
-
-        public IFileSystem? FileSystem => null;
-
-        public DiskContainerMetadata? GetContainerMetadata()
-        {
-            return null;
-        }
-
-        public void CloseDisk()
-        {
-        }
-
-        public void Dispose()
-        {
-            IsDisposed = true;
-        }
     }
 }

@@ -10,11 +10,11 @@ using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;
 
-namespace Legacy89DiskKit.NativeInterop.Core;
+namespace Legacy89DiskKit.Application.Native;
 
 public sealed class ManagedNativeBridgeBackend : INativeBridgeBackend
 {
-    private IFileSystemRegistry? _defaultRegistry;
+    private readonly IFileSystemRegistry _registry;
     private IEncoderRegistry? _defaultEncoderRegistry;
     private readonly DiskContainerFactory _containerFactory = new();
 
@@ -24,39 +24,42 @@ public sealed class ManagedNativeBridgeBackend : INativeBridgeBackend
 
     public string BackendTarget => "Legacy89DiskKit.Application";
 
+    public ManagedNativeBridgeBackend(IFileSystemRegistry? registry = null)
+    {
+        _registry = registry ?? CreateDefaultRegistry();
+    }
+
     public INativeDiskSession OpenDisk(string path, bool readOnly)
     {
         var container = _containerFactory.Open(path, readOnly);
-        var fs = GetDefaultRegistry().DetectAndCreate(container);
+        var fs = _registry.DetectAndCreate(container);
         return new ManagedNativeDiskSession(container, fs);
     }
 
     public INativeDiskSession OpenDisk(byte[] imageData, string imageFormat, bool readOnly)
     {
         var container = _containerFactory.Open(imageData, imageFormat, readOnly);
-        var fs = GetDefaultRegistry().DetectAndCreate(container);
+        var fs = _registry.DetectAndCreate(container);
         return new ManagedNativeDiskSession(container, fs);
     }
 
     public INativeDiskSession CreateDisk(string path, DiskType diskType, string diskName)
     {
         var container = _containerFactory.Create(path, diskType, diskName);
-        var fs = GetDefaultRegistry().DetectAndCreate(container);
+        var fs = _registry.DetectAndCreate(container);
         return new ManagedNativeDiskSession(container, fs);
     }
 
-    public IFileSystemRegistry GetDefaultRegistry()
+    private static IFileSystemRegistry CreateDefaultRegistry()
     {
-        if (_defaultRegistry == null)
-        {
-            var registry = new FileSystemRegistry();
-            registry.Register(new HuBasicFileSystemProvider());
-            registry.Register(new N88BasicFileSystemProvider());
-            registry.Register(new MsxDosFileSystemProvider());
-            _defaultRegistry = registry;
-        }
-        return _defaultRegistry;
+        var registry = new FileSystemRegistry();
+        registry.Register(new HuBasicFileSystemProvider());
+        registry.Register(new N88BasicFileSystemProvider());
+        registry.Register(new MsxDosFileSystemProvider());
+        return registry;
     }
+
+    public IFileSystemRegistry GetRegistry() => _registry;
 
     public IEncoderRegistry GetDefaultEncoderRegistry()
     {

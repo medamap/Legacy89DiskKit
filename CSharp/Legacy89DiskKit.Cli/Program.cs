@@ -53,12 +53,12 @@ if (effectiveArgs.Contains("--native") || effectiveArgs.Contains("-n"))
     {
         Console.Error.WriteLine($"Warning: Failed to initialize native backend: {ex.Message}");
         Console.Error.WriteLine("Falling back to managed implementation.");
-        NativeBridgeBackend.SetCurrent(new Legacy89DiskKit.NativeInterop.Core.ManagedNativeBridgeBackend());
+        NativeBridgeBackend.SetCurrent(new Legacy89DiskKit.Application.Native.ManagedNativeBridgeBackend());
     }
 }
 else
 {
-    NativeBridgeBackend.SetCurrent(new Legacy89DiskKit.NativeInterop.Core.ManagedNativeBridgeBackend());
+    NativeBridgeBackend.SetCurrent(new Legacy89DiskKit.Application.Native.ManagedNativeBridgeBackend());
 }
 
 var imageArgument = new Argument<string>("image", localizer.ImageArgumentDescription);

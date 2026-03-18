@@ -1,10 +1,47 @@
 using System.Runtime.InteropServices;
 using Legacy89DiskKit.Application;
+using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
+using Legacy89DiskKit.Domain.Native;
 using Legacy89DiskKit.NativeInterop.Exports;
 using Legacy89DiskKit.NativeInterop.Types;
 
 namespace Legacy89DiskKit.Tests;
+
+internal sealed class FakeNativeDiskSession : INativeDiskSession
+{
+    public bool IsDisposed { get; private set; }
+
+    public IFileSystem? FileSystem => null;
+
+    public DiskContainerMetadata? GetContainerMetadata()
+    {
+        return null;
+    }
+
+    public void CloseDisk()
+    {
+    }
+
+    // IDiskContainer
+    public string FilePath => "";
+    public bool IsReadOnly => true;
+    public DiskType DiskType => DiskType.TwoD;
+    public DiskContainerMetadata GetMetadata() => throw new NotImplementedException();
+    public byte[] ReadSector(int cylinder, int head, int sector) => throw new NotImplementedException();
+    public byte[] ReadSector(int cylinder, int head, int sector, bool allowCorrupted) => throw new NotImplementedException();
+    public void WriteSector(int cylinder, int head, int sector, byte[] data) => throw new NotImplementedException();
+    public bool SectorExists(int cylinder, int head, int sector) => false;
+    public IEnumerable<SectorInfo> GetAllSectors() => Enumerable.Empty<SectorInfo>();
+    public void Save() { }
+    public void SaveAs(string filePath) => throw new NotImplementedException();
+
+    public void Dispose()
+    {
+        IsDisposed = true;
+    }
+}
 
 internal sealed class Utf8StringScope : IDisposable
 {

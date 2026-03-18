@@ -1,3 +1,4 @@
+using Legacy89DiskKit.Application.Native;
 using Legacy89DiskKit.Domain.Native;
 
 namespace Legacy89DiskKit.Application.DiskImage;
@@ -8,7 +9,7 @@ public static class NativeBridgeBackend
 
     public static INativeBridgeBackend Current
     {
-        get => _current ?? throw new InvalidOperationException("Native bridge backend not initialized. Please call SetCurrent before using DiskService.");
+        get => _current ?? new ManagedNativeBridgeBackend();
         private set => _current = value;
     }
 

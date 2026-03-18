@@ -1,3 +1,4 @@
+using Legacy89DiskKit.Application.Native;
 using Xunit;
 using Legacy89DiskKit.NativeInterop.Core;
 using Legacy89DiskKit.Application;
@@ -26,7 +27,7 @@ public class ManagedToNativeValidationTest
         {
             // 2. Exercise Workflows through DiskService using the Validation backend
             // ValidationBackend doesn't provide registries, we use the managed reference's registry for discovery
-            using (var diskService = new DiskService(validation, managed.GetDefaultRegistry()))
+            using (var diskService = new DiskService(validation, managed.GetRegistry()))
             {
                 // Create
                 diskService.CreateDisk(tempDisk, DiskType.TwoD, "VALTEST");

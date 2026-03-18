@@ -3,20 +3,19 @@ using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Domain.Native;
 
-namespace Legacy89DiskKit.NativeInterop.Core;
+namespace Legacy89DiskKit.Application.Native;
 
 public sealed class ManagedNativeDiskSession : INativeDiskSession, IDiskContainer
 {
     private readonly IDiskContainer _container;
-    private readonly IFileSystem _fileSystem;
+    private readonly IFileSystem? _fileSystem;
 
-    public ManagedNativeDiskSession(IDiskContainer container, IFileSystem fileSystem)
+    public ManagedNativeDiskSession(IDiskContainer container, IFileSystem? fileSystem)
     {
         _container = container;
         _fileSystem = fileSystem;
     }
 
-    // INativeDiskSession
     public IFileSystem? FileSystem => _fileSystem;
 
     public DiskContainerMetadata? GetContainerMetadata()
@@ -29,7 +28,6 @@ public sealed class ManagedNativeDiskSession : INativeDiskSession, IDiskContaine
         Dispose();
     }
 
-    // IDiskContainer
     public string FilePath => _container.FilePath;
     public bool IsReadOnly => _container.IsReadOnly;
     public DiskType DiskType => _container.DiskType;
@@ -44,7 +42,7 @@ public sealed class ManagedNativeDiskSession : INativeDiskSession, IDiskContaine
 
     public void Dispose()
     {
-        _fileSystem.Dispose();
+        _fileSystem?.Dispose();
         _container.Dispose();
     }
 }

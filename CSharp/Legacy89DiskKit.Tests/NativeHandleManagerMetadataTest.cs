@@ -1,5 +1,5 @@
-using Legacy89DiskKit.Application;
 using Legacy89DiskKit.Application.DiskImage;
+using Legacy89DiskKit.Application.Native;
 using Legacy89DiskKit.NativeInterop.Core;
 using Xunit;
 
@@ -14,8 +14,8 @@ public class NativeHandleManagerMetadataTest
         HandleManager.Clear();
         NativeBridgeBackend.SetCurrent(new ManagedNativeBridgeBackend());
 
-        using var service = Legacy89DiskKitApplication.CreateDiskService();
-        var handle = HandleManager.Register(service.Session!, new HandleMetadata("open-disk", true));
+        var session = new FakeNativeDiskSession();
+        var handle = HandleManager.Register(session, new HandleMetadata("open-disk", true));
 
         try
         {
