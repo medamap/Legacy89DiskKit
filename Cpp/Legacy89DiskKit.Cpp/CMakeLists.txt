@@ -301,6 +301,12 @@ add_executable(ldk
 
 target_link_libraries(ldk PRIVATE Legacy89DiskKitCpp)
 
+add_executable(ldk-wasm
+    src/presentation/ldk_wasm.cpp
+)
+
+target_link_libraries(ldk-wasm PRIVATE Legacy89DiskKitCpp)
+
 enable_testing()
 add_test(NAME Legacy89DiskKitCppSmoke COMMAND Legacy89DiskKitCppSmoke)
 add_test(NAME Legacy89DiskKitCppHuBasicSmoke COMMAND Legacy89DiskKitCppHuBasicSmoke)
