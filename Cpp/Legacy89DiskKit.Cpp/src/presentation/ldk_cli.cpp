@@ -192,21 +192,21 @@ int main(int argc, char* argv[])
         {
             if (options.args.size() < 4) { std::cerr << "Usage: ldk file delete <image> <disk-file>" << std::endl; return 1; }
             auto disk_service = CreateDiskService();
-            if (disk_service.OpenDisk(options.args[2], false).ok())
-            {
-                if (disk_service.GetSession()->DeleteFile(options.args[3]).ok())
-                    std::cout << g_localizer->Get(MessageKey::FileDeletedMessage) << std::endl;
-            }
+            auto open_st = disk_service.OpenDisk(options.args[2], false);
+            if (!open_st.ok()) { std::cerr << "Error: " << open_st.message << std::endl; return 1; }
+            auto del_st = disk_service.GetSession()->DeleteFile(options.args[3]);
+            if (!del_st.ok()) { std::cerr << "Error: " << del_st.message << std::endl; return 1; }
+            std::cout << g_localizer->Get(MessageKey::FileDeletedMessage) << std::endl;
         }
         else if (sub == "rename")
         {
             if (options.args.size() < 5) { std::cerr << "Usage: ldk file rename <image> <old-name> <new-name>" << std::endl; return 1; }
             auto disk_service = CreateDiskService();
-            if (disk_service.OpenDisk(options.args[2], false).ok())
-            {
-                if (disk_service.GetSession()->RenameFile(options.args[3], options.args[4]).ok())
-                    std::cout << g_localizer->Get(MessageKey::FileRenamedMessage) << std::endl;
-            }
+            auto open_st = disk_service.OpenDisk(options.args[2], false);
+            if (!open_st.ok()) { std::cerr << "Error: " << open_st.message << std::endl; return 1; }
+            auto rename_st = disk_service.GetSession()->RenameFile(options.args[3], options.args[4]);
+            if (!rename_st.ok()) { std::cerr << "Error: " << rename_st.message << std::endl; return 1; }
+            std::cout << g_localizer->Get(MessageKey::FileRenamedMessage) << std::endl;
         }
     }
     else if (cmd == "disk")
@@ -217,16 +217,15 @@ int main(int argc, char* argv[])
         {
             if (options.args.size() < 3) { std::cerr << "Usage: ldk disk format <image>" << std::endl; return 1; }
             auto disk_service = CreateDiskService();
-            if (disk_service.OpenDisk(options.args[2], false).ok())
-            {
-                if (disk_service.GetSession()->Format().ok())
-                    std::cout << g_localizer->Get(MessageKey::DiskFormattedMessage) << std::endl;
-            }
+            auto open_st = disk_service.OpenDisk(options.args[2], false);
+            if (!open_st.ok()) { std::cerr << "Error: " << open_st.message << std::endl; return 1; }
+            auto format_st = disk_service.GetSession()->Format();
+            if (!format_st.ok()) { std::cerr << "Error: " << format_st.message << std::endl; return 1; }
+            std::cout << g_localizer->Get(MessageKey::DiskFormattedMessage) << std::endl;
         }
         else if (sub == "create")
         {
             if (options.args.size() < 3) { std::cerr << "Usage: ldk disk create <image> -d <type> -f <fs>" << std::endl; return 1; }
-            // For now, hardcode 2D/Hu-BASIC or parse more flags
             auto create_status = NativeFileSystemSession::Create(options.args[2], DiskType::TwoD, options.target_name);
             if (create_status.ok())
             {
