@@ -142,13 +142,14 @@ public class XDosFileSystemTest
             .Where(e => e.FirstSectorR > 0)
             .ToList();
 
-        // 2. Create Target
+        // 2. Create Target — clone source D88 to inherit exact sector geometry
+        //    (CreateDisk would create all tracks as 256-byte/16-sector,
+        //     but X-DOS data tracks are 512-byte/10-sector)
         var outputPath = GetRepoPath("images/test/XDOS_RECONST.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
-        if (File.Exists(outputPath)) File.Delete(outputPath);
+        File.Copy(XDosSysPath, outputPath, overwrite: true);
 
         using var destService = Legacy89DiskKitApplication.CreateDiskService();
-        destService.CreateDisk(outputPath, DiskType.TwoDD, "XD_RECONST");
         var destContainer = destService.OpenDisk(outputPath, false);
         var destFs = new XDosFileSystem(destContainer);
 
