@@ -21,9 +21,8 @@ public class XDosDirParser
             for (int offset = 0; offset + EntrySize <= sector.Length; offset += EntrySize)
             {
                 var entry = ParseEntry(sector, offset);
-                // Strict validation: type must be 0x01-0x07 for a valid X-DOS entry
-                byte type = (byte)(entry.RawFileType & 0x7F);
-                if (!entry.IsEmpty && type >= 0x01 && type <= 0x07)
+                // 変更後:（IsEmpty でない全エントリを有効とする）
+                if (!entry.IsEmpty)
                 {
                     entries.Add(entry);
                 }
@@ -37,13 +36,17 @@ public class XDosDirParser
         byte attr    = sector[offset + 1];
         var rawName  = sector[(offset + 2)..(offset + 18)];
         string name  = Encoding.ASCII.GetString(rawName).TrimEnd(' ');
-        ushort load  = BinaryPrimitives.ReadUInt16LittleEndian(sector.AsSpan(offset + 20));
-        ushort end   = BinaryPrimitives.ReadUInt16LittleEndian(sector.AsSpan(offset + 22));
-        ushort exec  = BinaryPrimitives.ReadUInt16LittleEndian(sector.AsSpan(offset + 24));
+        ushort load  = BinaryPrimitives.ReadUInt16LittleEndian(sector.AsSpan(offset + 18)); // 修正: +20 → +18
+        ushort size  = BinaryPrimitives.ReadUInt16LittleEndian(sector.AsSpan(offset + 20)); // 修正: +22 → +20
+        ushort exec  = BinaryPrimitives.ReadUInt16LittleEndian(sector.AsSpan(offset + 22)); // 修正: +24 → +22
+        // 24-25: packed date (big-endian on disk)
+        ushort date  = BinaryPrimitives.ReadUInt16BigEndian(sector.AsSpan(offset + 24));
+        // 26-27: packed time (big-endian on disk)
+        ushort time  = BinaryPrimitives.ReadUInt16BigEndian(sector.AsSpan(offset + 26));
         byte flags   = sector[offset + 28];
         byte cluster = sector[offset + 29];
         byte startR  = sector[offset + 30];
         byte always1 = sector[offset + 31];
-        return new XDosDirectoryEntry(rawType, attr, name, rawName, load, end, exec, flags, cluster, startR, always1);
+        return new XDosDirectoryEntry(rawType, attr, name, rawName, load, size, exec, date, time, flags, cluster, startR, always1);
     }
 }

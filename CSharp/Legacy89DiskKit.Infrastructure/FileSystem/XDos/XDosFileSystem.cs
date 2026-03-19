@@ -127,7 +127,16 @@ public class XDosFileSystem : IFileSystem
             }
         }
         
-        var entry = new XDosDirectoryEntry(RawFileType: rawType, Attribute: attributes.RawAttributes, FileName: fileName, RawFileName: rawName, LoadAddress: loadAddress ?? 0, EndAddress: (ushort)((loadAddress ?? 0) + data.Length), ExecutionAddress: executionAddress ?? 0, Flags: 0x80, FirstCluster: (byte)startTrack, FirstSectorR: (byte)startSectorR, AlwaysOne: 0x01);
+        var entry = new XDosDirectoryEntry(
+            RawFileType: rawType, Attribute: attributes.RawAttributes,
+            FileName: fileName, RawFileName: rawName,
+            LoadAddress: loadAddress ?? 0,
+            ByteSize: (ushort)data.Length,      // 修正: 実バイト数をそのまま格納
+            ExecutionAddress: executionAddress ?? 0,
+            DatePacked: 0,                       // 書き込み時はタイムスタンプ未実装 → 0
+            TimePacked: 0,
+            Flags: 0x80,
+            FirstCluster: (byte)startTrack, FirstSectorR: (byte)startSectorR, AlwaysOne: 0x01);
         _dirWriter.WriteEntry(entry);
         _cachedDirectory = null;
     }
@@ -156,6 +165,22 @@ public class XDosFileSystem : IFileSystem
     public void Dispose() { }
     private IReadOnlyList<XDosDirectoryEntry> GetDirectory() => _cachedDirectory ??= _dirParser.Parse(_container);
     private static XDosVolumeRecord ReadVolumeRecord(IDiskContainer c) { var s = c.ReadSector(0, 0, 1); return new XDosVolumeRecord(Encoding.ASCII.GetString(s, 1, 16).TrimEnd(), s[24], s[25], s[26], s[27]); }
-    private static FileEntry ToFileEntry(XDosDirectoryEntry e) => new FileEntry(FileName: e.FileName, Extension: string.Empty, Size: e.FileSize, CreatedAt: null, LastModifiedAt: null, Attributes: new ExtendedFileAttributes(FileAttributes.None, e.Attribute, false, "X-DOS"), StartCluster: e.FirstCluster, LoadAddress: e.LoadAddress, EndAddress: e.EndAddress, ExecutionAddress: e.ExecutionAddress, RawFileName: e.RawFileName);
+    private static FileEntry ToFileEntry(XDosDirectoryEntry e) => new FileEntry(
+        FileName: e.FileName,
+        Extension: string.Empty,
+        Size: e.FileSize,
+        CreatedAt: null,
+        LastModifiedAt: null,
+        Attributes: new ExtendedFileAttributes(FileAttributes.None, e.Attribute, false, "X-DOS"),
+        StartCluster: e.FirstCluster,
+        LoadAddress: e.LoadAddress,
+        EndAddress: (ushort)(e.LoadAddress + e.ByteSize),  // 修正: ByteSize から再計算
+        ExecutionAddress: e.ExecutionAddress,
+        RawFileName: e.RawFileName);
     private const int SectorsPerTrack = 10;
+
+    public static (int sectors, ushort size, byte density)? XDosTrackGeometry(int c, int h)
+        => (c == 0 && h == 0)
+            ? (16, (ushort)256, (byte)0x00)
+            : (10, (ushort)512, (byte)0x00);
 }

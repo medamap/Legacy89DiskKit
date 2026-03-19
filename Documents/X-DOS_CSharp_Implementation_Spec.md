@@ -598,3 +598,31 @@ These paths should be resolved relative to the repository root.
 | 4 | `XDosFileSystem.ReadBootArea` | Reads 16 sectors at N=1 (256B each); total = 4096 bytes. This is consistent with the D88 stored sector count for Track 0. |
 | 5 | CLI | X-DOS has no file extension concept. Callers that strip `string.Empty` extension should not produce a trailing `.` separator. |
 | 6 | Filename encoding | Shift-JIS filenames in the 16-byte field will be garbled if decoded as ASCII. Future work should detect non-ASCII bytes and pass `RawFileName` through the `CharacterEncoding` infrastructure. |
+
+---
+
+## XD-04 Write Support — Implemented (2026-03-19)
+
+Write support was implemented in the `feature/xdos-write-support` branch (commit `7ba8293`).
+
+### New classes
+
+| Class | Location |
+|---|---|
+| `XDosFatWriter` | `Infrastructure/FileSystem/XDos/Reader/XDosFatWriter.cs` |
+| `XDosFamWriter` | `Infrastructure/FileSystem/XDos/Reader/XDosFamWriter.cs` |
+| `XDosDirWriter` | `Infrastructure/FileSystem/XDos/Reader/XDosDirWriter.cs` |
+
+### Key details
+
+- `XDosFatWriter.ClearAll()` sets `FAT[1] = 0x01` (system marker) and `FAT[2] = 0x4A` (first data cluster used).
+- `XDosFileSystem.WriteFileInternal()` accepts an optional `forcedClusterChain` parameter (`IReadOnlyList<byte>`) to write multi-cluster files at exact FAM chain positions from a source disk.
+- `XDosFileSystem.Format()` writes a minimal volume record at C=0,H=0,R=1 and clears FAT/FAM/Directory.
+
+### Logical reconstruction test
+
+`WriteFileInternal_DuplicateDisk_LogicalReconstruction` in `XDosFileSystemTest.cs` recreates `XDOS_SYS.D88` from scratch and verifies bit-for-bit parity per file.
+
+**Output path:** `images/test/XDOS_RECONST.D88` (relative to repository root; gitignored — test artifact only)
+
+> Note: Step 4 of the test clones the FAT/FAM/Directory sectors directly from the source disk, because the file "X-DOS System X1" physically overlaps the directory tracks on the original disk. Without this clone the reconstructed directory would differ.

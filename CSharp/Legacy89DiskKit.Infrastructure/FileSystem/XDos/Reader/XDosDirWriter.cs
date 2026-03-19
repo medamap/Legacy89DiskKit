@@ -43,9 +43,11 @@ public class XDosDirWriter
         buffer[offset + 1] = entry.Attribute;
         Array.Copy(entry.RawFileName, 0, buffer, offset + 2, Math.Min(entry.RawFileName.Length, 16));
         for (int i = entry.RawFileName.Length; i < 16; i++) buffer[offset + 2 + i] = 0x20;
-        BinaryPrimitives.WriteUInt16LittleEndian(buffer.AsSpan(offset + 20), entry.LoadAddress);
-        BinaryPrimitives.WriteUInt16LittleEndian(buffer.AsSpan(offset + 22), entry.EndAddress);
-        BinaryPrimitives.WriteUInt16LittleEndian(buffer.AsSpan(offset + 24), entry.ExecutionAddress);
+        BinaryPrimitives.WriteUInt16LittleEndian(buffer.AsSpan(offset + 18), entry.LoadAddress);      // 修正: +20 → +18
+        BinaryPrimitives.WriteUInt16LittleEndian(buffer.AsSpan(offset + 20), entry.ByteSize);         // 修正: +22 → +20, EndAddress → ByteSize
+        BinaryPrimitives.WriteUInt16LittleEndian(buffer.AsSpan(offset + 22), entry.ExecutionAddress); // 修正: +24 → +22
+        BinaryPrimitives.WriteUInt16BigEndian   (buffer.AsSpan(offset + 24), entry.DatePacked);       // 追加: big-endian
+        BinaryPrimitives.WriteUInt16BigEndian   (buffer.AsSpan(offset + 26), entry.TimePacked);       // 追加: big-endian
         buffer[offset + 28] = entry.Flags;
         buffer[offset + 29] = entry.FirstCluster;
         buffer[offset + 30] = entry.FirstSectorR;
