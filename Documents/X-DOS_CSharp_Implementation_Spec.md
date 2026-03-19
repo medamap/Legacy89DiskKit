@@ -124,7 +124,9 @@ public record XDosDirectoryEntry(
 
 ### XDosFatReader.cs
 
-Reads the flat allocation bitmap from Track 1, R=1 (512 bytes).
+Reads the flat allocation bitmap from C=0, H=1, R=1 (512 bytes).
+`FAT[N] == 0x4A` means cluster N is occupied; `FAT[N] == 0x00` means free.
+`FAT[0]` = 0x00 (IPL track reserved), `FAT[1]` = 0x01 (system marker).
 
 ```csharp
 public class XDosFatReader
@@ -133,7 +135,7 @@ public class XDosFatReader
 
     public XDosFatReader(IDiskContainer container)
     {
-        _fat = container.ReadSector(1, 0, 1);   // C=1, H=0, R=1
+        _fat = container.ReadSector(0, 1, 1);   // C=0, H=1, R=1  ← FAT track
     }
 
     public bool IsClusterFree(int clusterIndex) => _fat[clusterIndex] == 0x00;
@@ -144,7 +146,9 @@ public class XDosFatReader
 
 ### XDosFamReader.cs
 
-Reads and traverses the cluster chain table from Track 2, R=1 (512 bytes).
+Reads and traverses the cluster chain table from C=1, H=0, R=1 (512 bytes).
+`FAM[N]` = next cluster in the chain for files whose chain passes through cluster N.
+`FAM[N] == 0x00` means end of chain.
 
 ```csharp
 public class XDosFamReader
@@ -154,7 +158,7 @@ public class XDosFamReader
 
     public XDosFamReader(IDiskContainer container)
     {
-        _fam = container.ReadSector(2, 0, 1);   // C=2, H=0, R=1
+        _fam = container.ReadSector(1, 0, 1);   // C=1, H=0, R=1  ← FAM track
     }
 
     public IReadOnlyList<byte> GetChain(byte firstCluster)
@@ -174,21 +178,22 @@ public class XDosFamReader
 
 ### XDosDirParser.cs
 
-Parses the 9 directory sectors (Track 1, R=2–10) into directory entries.
+Parses 9 directory sectors from C=0, H=1, R=2–10 (2D format).
+The directory shares the same physical track (C=0,H=1) as the FAT: FAT=R=1, Dir=R=2–10.
 
 ```csharp
 public class XDosDirParser
 {
     private const int EntrySize = 32;
     private const int FirstDirR = 2;
-    private const int LastDirR  = 10;
+    private const int LastDirR  = 10;   // 2D: R=2–10; 2DD/2HD: R=2–16
 
     public IReadOnlyList<XDosDirectoryEntry> Parse(IDiskContainer container)
     {
         var entries = new List<XDosDirectoryEntry>();
         for (int r = FirstDirR; r <= LastDirR; r++)
         {
-            var sector = container.ReadSector(1, 0, r);   // C=1, H=0, R=r
+            var sector = container.ReadSector(0, 1, r);   // C=0, H=1, R=r  ← FAT/Dir track
             for (int offset = 0; offset + EntrySize <= sector.Length; offset += EntrySize)
             {
                 var entry = ParseEntry(sector, offset);
@@ -223,9 +228,17 @@ public class XDosDirParser
 
 Reads raw sector bytes for a cluster chain and assembles file payload.
 
-**Important**: The cluster-to-physical-track mapping is provisional and marked
-with TODO comments. The current formula is `physical_track = cluster_index`.
-This must be verified when X-DOS documentation is obtained.
+**Physical mapping formula (CONFIRMED by binary analysis of Z80 kernel code)**:
+```
+cylinder = clusterIndex / 2
+head     = clusterIndex % 2
+```
+This interleaved dual-sided layout is confirmed by:
+1. Z80 kernel code at C=1,H=1,R=8 containing `EE 10` (XOR 0x10 = toggle head bit)
+2. Directory entries verified against actual D88 sector positions:
+   - cluster=2, sector=1 → ReadSector(1, 0, 1) = C=1,H=0,R=1 ✓ (FAM sector = part of kernel binary)
+   - cluster=16, sector=1 → ReadSector(8, 0, 1) = C=8,H=0,R=1 ✓
+   - cluster=6, sector=8 → ReadSector(3, 0, 8) = C=3,H=0,R=8 ✓
 
 ```csharp
 public class XDosClusterReader
@@ -250,15 +263,14 @@ public class XDosClusterReader
 
         for (int i = 0; i < chain.Count && result.Count < targetSize; i++)
         {
-            byte cluster = chain[i];
-            int startR   = (i == 0) ? entry.FirstSectorR : 1;
-            // TODO: confirm cluster-to-physical-track formula
-            // Provisional: physical_track = cluster_index (direct mapping)
-            int physicalTrack = cluster;
+            byte cluster  = chain[i];
+            int startR    = (i == 0) ? entry.FirstSectorR : 1;
+            int cylinder  = cluster / 2;   // interleaved dual-sided mapping
+            int head      = cluster % 2;
 
             for (int r = startR; r <= SectorsPerTrack && result.Count < targetSize; r++)
             {
-                var sector = _container.ReadSector(physicalTrack, 0, r);
+                var sector = _container.ReadSector(cylinder, head, r);
                 int take = Math.Min(sector.Length, targetSize - result.Count);
                 result.AddRange(sector[..take]);
             }
@@ -485,21 +497,27 @@ using Legacy89DiskKit.Infrastructure.FileSystem.XDos;
 
 ## IDiskContainer ReadSector call convention for X-DOS
 
-X-DOS Track 0 has 256-byte sectors (N=1). Track 1 and above have 512-byte sectors (N=2).
+X-DOS Track 0 (C=0,H=0) has 256-byte sectors (N=1, 16 sectors).
+All other tracks have 512-byte sectors (N=2, 10 sectors each).
 The D88 container reads each sector at its stored data size, so:
 
 ```
-container.ReadSector(cylinder: 0, head: 0, sector: 1)   // returns 256 bytes
-container.ReadSector(cylinder: 1, head: 0, sector: 1)   // returns 512 bytes
+container.ReadSector(cylinder: 0, head: 0, sector: 1)   // returns 256 bytes (Track 0 IPL)
+container.ReadSector(cylinder: 0, head: 1, sector: 1)   // returns 512 bytes (FAT)
+container.ReadSector(cylinder: 1, head: 0, sector: 1)   // returns 512 bytes (FAM)
 ```
 
 No special flag is needed — `D88DiskContainer` returns the sector data at the stored
 length for that sector record. Confirm this behaviour during implementation.
 All XDos reader classes assume the returned byte[] is the correct length.
 
-**Important**: `ReadSector` uses **(cylinder, head, sectorR)** addressing, not a flat
-track index. The formulas in this document express physical tracks as cylinder numbers;
-they are equivalent since X-DOS uses single-sided media (H=0 only).
+**Important**: `ReadSector` uses **(cylinder, head, sectorR)** addressing.
+X-DOS uses **both sides of the disk** (H=0 and H=1) with an interleaved layout:
+```
+logical cluster N → cylinder = N/2,  head = N%2
+```
+This is confirmed by Z80 binary analysis of the X-DOS kernel (EE 10 = XOR 0x10 in
+FDC access routine, toggling bit4 of the MB8877A MSDR register = side select).
 
 ---
 
@@ -525,30 +543,47 @@ These paths should be resolved relative to the repository root.
    - Returns non-null `DiskFileSystemInfo`
    - `DiskLabel` contains `"X-DOS"` (from the stored disk label)
 
-4. **GetFiles (XDOS_SYS.D88)**
-   - Returns at least 5 entries
+4. **GetFiles (XDOS_SYS.D88)** — tests correct directory parsing at C=0,H=1,R=2–10
+   - Returns at least 30 entries (the XDOS_SYS.D88 disk has ~50+ files)
    - All returned entries have non-empty `FileName`
-   - At least one entry has `LoadAddress` > 0
+   - At least one entry has `FileName` containing "X-DOS"
+   - At least one entry has `LoadAddress == 0xC800` (the kernel load address)
+   - All `FirstCluster` values are >= 2 (clusters 0,1 are reserved system tracks)
+   - All `FirstSectorR` values are in range 1–10
 
 5. **GetFiles (XDOSUTIL.D88)**
-   - Returns at least 10 entries
+   - Returns at least 15 entries
 
-6. **FileExists (XDOS_SYS.D88)**
-   - `FileExists("X-DOS System")` (or the actual filename observed) returns `true`
+6. **FAT data sanity (XDOS_SYS.D88)** — tests correct FAT reading at C=0,H=1,R=1
+   - `XDosFatReader` constructed directly from container
+   - `_fat[0] == 0x00` (IPL track reserved)
+   - `_fat[1] == 0x01` (system marker)
+   - `_fat[2] == 0x4A` (first data cluster used)
+   - `CountUsedClusters()` returns at least 70 (disk is mostly full)
+
+7. **FAM data sanity (XDOS_SYS.D88)** — tests correct FAM reading at C=1,H=0,R=1
+   - `XDosFamReader` constructed directly from container
+   - FAM chain starting from cluster 2 is non-empty (`GetChain(2).Count >= 1`)
+   - FAM[2] == 9 (confirmed from binary analysis: "X-DOS System" chain 2→9→end)
+
+8. **FileExists (XDOS_SYS.D88)**
+   - At least one of these returns `true`: `FileExists("X-DOS System")`,
+     `FileExists("XEDIT")`, `FileExists("MKPCM")`
    - `FileExists("DOESNOTEXIST")` returns `false`
 
-7. **FileSystemRegistry auto-detection (XDOS_SYS.D88)**
+9. **FileSystemRegistry auto-detection (XDOS_SYS.D88)**
    - Registry with all providers registered detects X-DOS correctly
 
-8. **ExplicitFileSystemResolver ("xdos")**
-   - Creates an `XDosFileSystem` without throwing
+10. **ExplicitFileSystemResolver ("xdos")**
+    - Creates an `XDosFileSystem` without throwing
 
-### Optional / deferred test cases (after cluster formula is confirmed)
+### Optional / deferred test cases
 
-9. **ReadFile binary (XDOS_SYS.D88)**
-   - Read a known binary file; verify returned byte count matches `EndAddress - LoadAddress`
+11. **ReadFile binary (XDOS_SYS.D88)**
+    - Read a known binary file (e.g. "XEDIT"); verify returned byte count > 0
+    - First bytes should not be all 0x00 (confirm actual kernel code is read)
 
-10. **ReadFile data/help (XDOSUTIL.D88)**
+12. **ReadFile data/help (XDOSUTIL.D88)**
     - Read a known type-0x04 file; verify non-empty byte array is returned
 
 ---
@@ -557,9 +592,37 @@ These paths should be resolved relative to the repository root.
 
 | # | Location | Issue |
 | --- | --- | --- |
-| 1 | `XDosClusterReader` | `physical_track = cluster_index` formula is provisional. Verify against X-DOS docs or additional disk analysis before enabling read tests for `ReadFile`. |
-| 2 | `XDosFamReader.GetChain` | FAM chain direction (forward vs. backward) is assumed forward. If file reads produce wrong content, reverse the traversal direction. |
+| 1 | `XDosClusterReader` | Physical mapping `cylinder=cluster/2, head=cluster%2` is **CONFIRMED** by Z80 binary analysis. Do NOT revert to `head=0` or flat track numbering. |
+| 2 | `XDosFamReader.GetChain` | FAM chain is forward-linked: FAM[N] = next cluster. FAM[N]==0x00 means end of chain. Confirmed by: FAM[2]=9, FAM[9]=0 → chain for "X-DOS System" = [2, 9]. |
 | 3 | `XDosDirectoryEntry.FileSize` | For type 0x02 (BASIC text), `EndAddress` is a record descriptor, not a byte count. Size calculation will be inaccurate. Return raw cluster data for non-binary types until confirmed. |
 | 4 | `XDosFileSystem.ReadBootArea` | Reads 16 sectors at N=1 (256B each); total = 4096 bytes. This is consistent with the D88 stored sector count for Track 0. |
 | 5 | CLI | X-DOS has no file extension concept. Callers that strip `string.Empty` extension should not produce a trailing `.` separator. |
 | 6 | Filename encoding | Shift-JIS filenames in the 16-byte field will be garbled if decoded as ASCII. Future work should detect non-ASCII bytes and pass `RawFileName` through the `CharacterEncoding` infrastructure. |
+
+---
+
+## XD-04 Write Support — Implemented (2026-03-19)
+
+Write support was implemented in the `feature/xdos-write-support` branch (commit `7ba8293`).
+
+### New classes
+
+| Class | Location |
+|---|---|
+| `XDosFatWriter` | `Infrastructure/FileSystem/XDos/Reader/XDosFatWriter.cs` |
+| `XDosFamWriter` | `Infrastructure/FileSystem/XDos/Reader/XDosFamWriter.cs` |
+| `XDosDirWriter` | `Infrastructure/FileSystem/XDos/Reader/XDosDirWriter.cs` |
+
+### Key details
+
+- `XDosFatWriter.ClearAll()` sets `FAT[1] = 0x01` (system marker) and `FAT[2] = 0x4A` (first data cluster used).
+- `XDosFileSystem.WriteFileInternal()` accepts an optional `forcedClusterChain` parameter (`IReadOnlyList<byte>`) to write multi-cluster files at exact FAM chain positions from a source disk.
+- `XDosFileSystem.Format()` writes a minimal volume record at C=0,H=0,R=1 and clears FAT/FAM/Directory.
+
+### Logical reconstruction test
+
+`WriteFileInternal_DuplicateDisk_LogicalReconstruction` in `XDosFileSystemTest.cs` recreates `XDOS_SYS.D88` from scratch and verifies bit-for-bit parity per file.
+
+**Output path:** `images/test/XDOS_RECONST.D88` (relative to repository root; gitignored — test artifact only)
+
+> Note: Step 4 of the test clones the FAT/FAM/Directory sectors directly from the source disk, because the file "X-DOS System X1" physically overlaps the directory tracks on the original disk. Without this clone the reconstructed directory would differ.

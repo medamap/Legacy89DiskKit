@@ -51,6 +51,16 @@ public class D88DiskContainer : IDiskContainer, IDisposable
         return container;
     }
 
+    public static D88DiskContainer CreateNew(string filePath, DiskType diskType, string diskName, Func<int, int, (int sectors, ushort size, byte density)?> perTrackGeometry)
+    {
+        var container = new D88DiskContainer();
+        container._filePath = filePath;
+        container._isReadOnly = false;
+        container.CreateEmptyImage(diskType, diskName, perTrackGeometry: perTrackGeometry);
+        container.SaveToFile();
+        return container;
+    }
+
     /// <summary>
     /// Creates a new in-memory D88 container.
     /// </summary>
@@ -249,35 +259,41 @@ public class D88DiskContainer : IDiskContainer, IDisposable
         _imageData = stream.ToArray();
     }
 
-    private void CreateEmptyImage(DiskType diskType, string diskName, int? sectorsPerTrackParam = null, ushort? sectorSizeParam = null)
+    private void CreateEmptyImage(DiskType diskType, string diskName, int? sectorsPerTrackParam = null, ushort? sectorSizeParam = null, Func<int, int, (int sectors, ushort size, byte density)?>? perTrackGeometry = null)
     {
         _header = new D88Header { ImageName = diskName, MediaType = diskType };
         _sectors.Clear();
 
-        int maxCylinders = diskType == DiskType.TwoHD ? 77 : 40;
+        int maxCylinders = diskType switch { DiskType.TwoHD => 77, DiskType.TwoDD => 80, _ => 40 };
         int maxHeads = 2;
-        int sectorsPerTrack = sectorsPerTrackParam ?? GetMaxSectorsPerTrack(diskType);
-        ushort sectorSize = sectorSizeParam ?? (ushort)(diskType == DiskType.TwoHD ? 1024 : 256);
-        byte sectorSizeN = (byte)(sectorSize == 1024 ? 3 : 1);
+        int defaultSpt = sectorsPerTrackParam ?? GetMaxSectorsPerTrack(diskType);
+        ushort defaultSize = sectorSizeParam ?? (ushort)(diskType == DiskType.TwoHD ? 1024 : 256);
+        byte defaultDensity = (byte)(diskType == DiskType.TwoHD ? 0x01 : 0x00);
 
         for (int c = 0; c < maxCylinders; c++)
         {
             for (int h = 0; h < maxHeads; h++)
             {
-                for (int s = 1; s <= sectorsPerTrack; s++)
+                var over = perTrackGeometry?.Invoke(c, h);
+                int   spt     = over?.sectors ?? defaultSpt;
+                ushort sz     = over?.size    ?? defaultSize;
+                byte density  = over?.density ?? defaultDensity;
+                byte sizeN    = sz switch { 256 => 1, 512 => 2, 1024 => 3, _ => 2 };
+
+                for (int s = 1; s <= spt; s++)
                 {
                     var d88Sector = new D88SectorData
                     {
-                        Cylinder = (byte)c,
-                        Head = (byte)h,
-                        Sector = (byte)s,
-                        SectorSizeN = sectorSizeN,
-                        SectorCount = (ushort)sectorsPerTrack,
-                        Density = (byte)(diskType == DiskType.TwoHD ? 0x01 : 0x00), // 0: Double, 1: High
-                        Deleted = false,
-                        Status = 0,
-                        ActualSize = sectorSize,
-                        Data = new byte[sectorSize]
+                        Cylinder    = (byte)c,
+                        Head        = (byte)h,
+                        Sector      = (byte)s,
+                        SectorSizeN = sizeN,
+                        SectorCount = (ushort)spt,
+                        Density     = density,
+                        Deleted     = false,
+                        Status      = 0,
+                        ActualSize  = sz,
+                        Data        = new byte[sz]
                     };
                     _sectors[(c, h, s)] = d88Sector;
                 }
