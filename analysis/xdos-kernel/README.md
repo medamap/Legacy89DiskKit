@@ -22,6 +22,10 @@ Every label and reconstruction must state its evidence class:
 -   **Strict Prohibition**: Do not synthesize or invent filler bytes (e.g., `db 0x00` or `ret`) for unknown code regions. If a region is known only by entry address, represent it as a label plus a comment, leaving the body empty or clearly marked as not yet reconstructed.
 -   Mixed code/data regions must be clearly commented.
 
+### Jump Table Convention
+- Unknown jump entries in a confirmed jump table are represented as `ds 3`.
+- This maintains structural alignment without synthesizing `jp` opcodes or unknown addresses.
+
 ### Scope
 The current scope is limited to:
 -   System call entrypoints (syscall table).
