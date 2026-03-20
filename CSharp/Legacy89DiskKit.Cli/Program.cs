@@ -38,13 +38,13 @@ var rootCommand = new RootCommand(localizer.RootDescription);
 
 var languageOption = new Option<string?>(new[] { "--language", "-l" }, localizer.LanguageOptionDescription);
 var encodingOption = new Option<string?>(new[] { "--encoding", "-e" }, localizer.EncodingOptionDescription);
-var nativeOption = new Option<bool>(new[] { "--native", "-n" }, "Use C++ native implementation via NativeBridge");
+var nativeOption = new Option<bool>(new[] { "--native" }, "Use C++ native implementation via NativeBridge");
 rootCommand.AddGlobalOption(languageOption);
 rootCommand.AddGlobalOption(encodingOption);
 rootCommand.AddGlobalOption(nativeOption);
 
 // Initialize backend based on command line args
-if (effectiveArgs.Contains("--native") || effectiveArgs.Contains("-n"))
+if (effectiveArgs.Contains("--native"))
 {
     try 
     {
@@ -375,6 +375,58 @@ diskSectorCopyCommand.SetHandler((string srcPath, string destPath, bool force) =
     }
 }, sourceImageArgument, destImageArgument, forceOption);
 diskCommand.AddCommand(diskSectorCopyCommand);
+
+var diskBootCopyCommand = new Command("boot-copy", "Copy boot area (IPL) from source disk to destination disk");
+diskBootCopyCommand.AddArgument(sourceImageArgument);
+diskBootCopyCommand.AddArgument(destImageArgument);
+diskBootCopyCommand.AddOption(forceOption);
+diskBootCopyCommand.SetHandler((string srcPath, string destPath, bool force) =>
+{
+    try
+    {
+        if (!force && File.Exists(destPath))
+        {
+            if (!ConfirmOverwrite(localizer, destPath)) return;
+        }
+
+        using var srcDiskService = CreateDiskService();
+        using var srcDisk = srcDiskService.OpenDisk(srcPath, true);
+        var srcFs = RequireFileSystem(srcDiskService.FileSystem, localizer);
+        if (srcFs == null) return;
+
+        using var destDiskService = CreateDiskService();
+        IDiskContainer destDisk;
+        IFileSystem? destFs;
+
+        if (File.Exists(destPath))
+        {
+            destDisk = destDiskService.OpenDisk(destPath, false);
+            destFs = RequireFileSystem(destDiskService.FileSystem, localizer);
+            if (destFs == null) return;
+        }
+        else
+        {
+            destDisk = destDiskService.CreateDisk(destPath, srcDisk.DiskType, "");
+            var srcFsName = srcFs.GetFileSystemInfo().FileSystemName;
+            destFs = explicitFileSystemResolver.Create(srcFsName, destDisk);
+            destFs.Format();
+        }
+
+        using (destDisk)
+        {
+            var cloneService = new DiskCloneService(null!, null!);
+            cloneService.TransferBootArea(srcFs, destFs);
+            
+            destDisk.Save();
+            PrintSuccess(localizer, "Boot area copied successfully.");
+        }
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+}, sourceImageArgument, destImageArgument, forceOption);
+diskCommand.AddCommand(diskBootCopyCommand);
 
 var hostCommand = new Command("host", localizer.HostCommandDescription);
 var hostStdioCommand = new Command("stdio", localizer.HostStdioCommandDescription);

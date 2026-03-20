@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gemini Command Author"
+  short_description: "Write and queue Gemini task instructions for this repo."
+  default_prompt: "Use this skill to draft a Markdown instruction and place it in the CodexToGemini waiting folder."
