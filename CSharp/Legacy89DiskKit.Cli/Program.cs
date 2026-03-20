@@ -8,6 +8,7 @@ using Legacy89DiskKit.Application.Services;
 using Legacy89DiskKit.Application.Fdc.Hosts.Scripting;
 using Legacy89DiskKit.Cli.Presentation.FileSystem;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
+using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Domain.FileSystem.Model;
@@ -331,6 +332,49 @@ diskFormatCommand.SetHandler((string imagePath, string? explicitFileSystemName) 
 }, imageArgument, explicitFormatFsOption);
 diskCommand.AddCommand(diskCreateCommand);
 diskCommand.AddCommand(diskFormatCommand);
+
+var diskSectorCopyCommand = new Command("sector-copy", localizer.DiskSectorCopyCommandDescription);
+diskSectorCopyCommand.AddArgument(sourceImageArgument);
+diskSectorCopyCommand.AddArgument(destImageArgument);
+var forceOption = new Option<bool>(new[] { "--force", "-f" }, localizer.DiskSectorCopyForceOptionDescription);
+diskSectorCopyCommand.AddOption(forceOption);
+diskSectorCopyCommand.SetHandler((string srcPath, string destPath, bool force) =>
+{
+    try
+    {
+        if (!force && File.Exists(destPath))
+        {
+            if (!ConfirmOverwrite(localizer, destPath)) return;
+        }
+
+        using var diskService = CreateDiskService();
+        using var srcDisk = diskService.OpenDisk(srcPath, true);
+        
+        IDiskContainer destDisk;
+        if (File.Exists(destPath))
+        {
+            destDisk = diskService.OpenDisk(destPath, false);
+        }
+        else
+        {
+            destDisk = diskService.CreateDisk(destPath, srcDisk.DiskType, "");
+        }
+
+        using (destDisk)
+        {
+            var cloneService = new DiskCloneService(null!, null!);
+            var result = cloneService.CopySectors(srcDisk, destDisk);
+            
+            destDisk.Save();
+            PrintSuccess(localizer, string.Format(localizer.DiskSectorCopiedMessage, result.tracksCopied, result.sectorsSkipped));
+        }
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+}, sourceImageArgument, destImageArgument, forceOption);
+diskCommand.AddCommand(diskSectorCopyCommand);
 
 var hostCommand = new Command("host", localizer.HostCommandDescription);
 var hostStdioCommand = new Command("stdio", localizer.HostStdioCommandDescription);
@@ -1227,4 +1271,11 @@ static void PrintSuccess(IConsoleLocalizer localizer, string message)
 static void PrintError(IConsoleLocalizer localizer, string message)
 {
     Console.Error.WriteLine($"{localizer.ErrorPrefix}: {message}");
+}
+
+static bool ConfirmOverwrite(IConsoleLocalizer localizer, string path)
+{
+    Console.Write(string.Format(localizer.OverwriteConfirmationMessage, path));
+    var input = Console.ReadLine()?.Trim().ToLowerInvariant();
+    return input == "y" || input == "yes";
 }
