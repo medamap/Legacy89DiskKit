@@ -81,4 +81,15 @@ public class DiskCloneServiceTest
         Assert.False(destination.Data.ContainsKey((0, 0, 1)));
         Assert.True(destination.Data.ContainsKey((0, 0, 2)));
     }
+
+    [Fact]
+    public void CopySectors_SourceReadFailure_Throws_WhenPartialReadNotAllowed()
+    {
+        var source = new FakeDiskContainer { DiskType = DiskType.TwoD, ReadThrowAtSector1 = true };
+        var destination = new FakeDiskContainer { DiskType = DiskType.TwoD };
+        source.Sectors.Add(new SectorInfo(0, 0, 1, 256));
+
+        var service = new DiskCloneService(null!, null!);
+        Assert.Throws<Exception>(() => service.CopySectors(source, destination, allowPartialRead: false));
+    }
 }
