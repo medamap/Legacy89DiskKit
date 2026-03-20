@@ -12,7 +12,7 @@ public class N88BasicFileSystemProvider : IFileSystemProvider
     {
         // First check: Media flag in D88 header
         // PC-8801 usually uses 0x00 (2D), 0x10 (2DD), or 0x20 (2HD)
-        if (container.DiskType == DiskType.HardDisk) return false;
+        if (container.DiskType == DiskType.HardDisk || container.DiskType == DiskType.TwoHD) return false;
 
         try
         {
@@ -38,7 +38,7 @@ public class N88BasicFileSystemProvider : IFileSystemProvider
             // Try 2DD position (Cylinder 20, Head 0 for Track 40 linear?)
             // Actually, D88 linear track 40 is Cylinder 20, Head 0.
             var idData2DD = container.ReadSector(20, 0, 13);
-            if (idData2DD.Length > 0) return true;
+            if (idData2DD.Length > 0 && idData2DD.Any(b => b != 0)) return true;
         }
         catch
         {

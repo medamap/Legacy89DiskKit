@@ -28,7 +28,7 @@ public class XDosFileSystemTest
     private string HuBasicPath => GetRepoPath("images/disk_org/x1/X1turboIIIDemo.d88");
 
     [Fact]
-    public void Provider_CanHandle_XDosDisk_ReturnsTrue()
+    public void Provider_CanHandle_XDosDisk_ReturnsTrue_DEBUG()
     {
         using var diskService = Legacy89DiskKitApplication.CreateDiskService();
         diskService.OpenDisk(XDosSysPath, true);
@@ -319,5 +319,62 @@ public class XDosFileSystemTest
         sb.AppendLine($"New[0..7]: {string.Join(" ", boot_new[..8].Select(b => $"{b:X2}"))}");
 
         File.WriteAllText("/tmp/xdos_diag.txt", sb.ToString());
+    }
+
+    [Fact]
+    public void Format_SetsReservedFatEntries()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_FMT.D88");
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        var fat = container.ReadSector(0, 1, 1);
+        Assert.Equal(0x00, fat[0]);
+        Assert.Equal(0x01, fat[1]);
+        Assert.Equal(0x4A, fat[2]);
+    }
+
+    [Fact]
+    public void WriteFile_DoesNotAllocateCluster0Or2()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_ALLOC.D88");
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        fs.WriteFile("TEST.BIN", new byte[100], fs.CreateDefaultAttributes(false));
+        
+        var files = fs.GetFilesWithMetadata();
+        var entry = files.First(e => e.FileName == "TEST.BIN");
+        Assert.True(entry.FirstCluster >= 3, $"Expected Cluster >= 3, but got {entry.FirstCluster}");
+    }
+
+    [Fact]
+    public void WriteFile_TwoHd_Uses16SectorsPerCluster()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_2HD.D88");
+        var container = svc.CreateDisk(path, DiskType.TwoHD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        // One cluster in 2HD should be 16 sectors * 512 bytes = 8192 bytes.
+        // If we write 6000 bytes, it should fit in 1 cluster.
+        fs.WriteFile("2HD_TEST.BIN", new byte[6000], fs.CreateDefaultAttributes(false));
+
+        var files = fs.GetFilesWithMetadata();
+        var entry = files.First(e => e.FileName == "2HD_TEST.BIN");
+        
+        // Count sectors in FAM chain
+        var fam = new XDosFamReader(container);
+        var chain = fam.GetChain(entry.FirstCluster);
+        Assert.Single(chain); // Should be exactly 1 cluster
+        
+        // Verify capacity reported
+        var info = fs.GetFileSystemInfo();
+        Assert.Equal(8192, info.ClusterSize);
     }
 }

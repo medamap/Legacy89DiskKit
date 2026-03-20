@@ -98,6 +98,9 @@ var fileCommand = new Command("file", localizer.FileCommandDescription);
 var diskFileArgument = new Argument<string>("disk-file", localizer.DiskFileArgumentDescription);
 var hostFileArgument = new Argument<string>("host-file", localizer.HostFileArgumentDescription);
 var hostPathArgument = new Argument<string>("host-path", localizer.HostPathArgumentDescription);
+var sourceImageArgument = new Argument<string>("src-image", localizer.SourceImageArgumentDescription);
+var destImageArgument = new Argument<string>("dest-image", localizer.DestinationImageArgumentDescription);
+var filesArgument = new Argument<string[]>("files", () => new[] { "all" }, localizer.FileCrossCopyFilesArgumentDescription);
 var sourceNameArgument = new Argument<string>("source", localizer.SourceNameArgumentDescription);
 var targetNameArgument = new Argument<string>("target", localizer.TargetNameArgumentDescription);
 var newNameArgument = new Argument<string>("new-name", localizer.NewNameArgumentDescription);
@@ -219,11 +222,52 @@ fileCopyCommand.SetHandler((string imagePath, string sourceName, string targetNa
     }
 }, imageArgument, sourceNameArgument, targetNameArgument);
 
+var fileCrossCopyCommand = new Command("cross-copy", localizer.FileCrossCopyCommandDescription);
+fileCrossCopyCommand.AddArgument(sourceImageArgument);
+fileCrossCopyCommand.AddArgument(destImageArgument);
+fileCrossCopyCommand.AddArgument(filesArgument);
+fileCrossCopyCommand.AddOption(encodingOption);
+fileCrossCopyCommand.SetHandler((string srcPath, string destPath, string[] files, string? encodingOverride) =>
+{
+    try
+    {
+        using var srcDisk = CreateDiskService();
+        srcDisk.OpenDisk(srcPath, true);
+        var srcFs = RequireFileSystem(srcDisk.FileSystem, localizer);
+        if (srcFs == null) return;
+
+        using var destDisk = CreateDiskService();
+        destDisk.OpenDisk(destPath, false);
+        var destFs = RequireFileSystem(destDisk.FileSystem, localizer);
+        if (destFs == null) return;
+
+        IEnumerable<string> targetFiles = files;
+        if (files.Length == 1 && files[0].Equals("all", StringComparison.OrdinalIgnoreCase))
+        {
+            targetFiles = srcFs.GetFiles().Select(f => f.FullName);
+        }
+        else if (files.Length == 1 && files[0].Contains(','))
+        {
+            targetFiles = files[0].Split(',');
+        }
+
+        var cloneService = Legacy89DiskKitApplication.CreateDiskCloneService(destFs.GetFileSystemInfo(), encodingOverride);
+
+        cloneService.TransferFiles(srcFs, destFs, targetFiles);
+        PrintSuccess(localizer, localizer.FileCopiedMessage);
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+}, sourceImageArgument, destImageArgument, filesArgument, encodingOption);
+
 fileCommand.AddCommand(fileExtractCommand);
 fileCommand.AddCommand(fileInjectCommand);
 fileCommand.AddCommand(fileDeleteCommand);
 fileCommand.AddCommand(fileRenameCommand);
 fileCommand.AddCommand(fileCopyCommand);
+fileCommand.AddCommand(fileCrossCopyCommand);
 
 var diskCommand = new Command("disk", localizer.DiskCommandDescription);
 var diskCreateCommand = new Command("create", localizer.DiskCreateCommandDescription);

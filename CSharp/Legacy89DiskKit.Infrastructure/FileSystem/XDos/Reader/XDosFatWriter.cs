@@ -5,22 +5,23 @@ namespace Legacy89DiskKit.Infrastructure.FileSystem.XDos.Reader;
 public class XDosFatWriter
 {
     private readonly IDiskContainer _container;
+    private readonly XDosMediaGeometry _geometry;
     private readonly byte[] _fat;
-    public XDosFatWriter(IDiskContainer container)
+    public XDosFatWriter(IDiskContainer container, XDosMediaGeometry geometry)
     {
         _container = container;
+        _geometry = geometry;
         _fat = container.ReadSector(0, 1, 1);
     }
     public byte[] Fat => _fat;
-    public List<byte> AllocateClusters(int requiredSectors)
+    public List<byte> AllocateClusters(int count)
     {
-        int requiredClusters = Math.Max(1, (requiredSectors + 9) / 10);
         var allocated = new List<byte>();
-        for (int i = 3; i < _fat.Length && allocated.Count < requiredClusters; i++)
+        for (int i = 3; i < _fat.Length && allocated.Count < count; i++)
         {
             if (_fat[i] == 0x00) { _fat[i] = 0x4A; allocated.Add((byte)i); }
         }
-        if (allocated.Count < requiredClusters) throw new Exception("Disk full.");
+        if (allocated.Count < count) throw new IOException("Disk full.");
         return allocated;
     }
     public void Commit() => _container.WriteSector(0, 1, 1, _fat);

@@ -58,6 +58,7 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string FileDeleteCommandDescription { get; }
     string FileRenameCommandDescription { get; }
     string FileCopyCommandDescription { get; }
+    string FileCrossCopyCommandDescription { get; }
     string DiskCommandDescription { get; }
     string DiskCreateCommandDescription { get; }
     string DiskFormatCommandDescription { get; }
@@ -99,6 +100,7 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string TargetNameArgumentDescription { get; }
     string NewNameArgumentDescription { get; }
     string LabelTextArgumentDescription { get; }
+    string FileCrossCopyFilesArgumentDescription { get; }
     string LayoutInputOptionDescription { get; }
     string LayoutOutputOptionDescription { get; }
     string LayoutStdinOptionDescription { get; }
@@ -212,6 +214,7 @@ public static class FileListLocalizer
         public abstract string FileDeleteCommandDescription { get; }
         public abstract string FileRenameCommandDescription { get; }
         public abstract string FileCopyCommandDescription { get; }
+        public abstract string FileCrossCopyCommandDescription { get; }
         public abstract string DiskCommandDescription { get; }
         public abstract string DiskCreateCommandDescription { get; }
         public abstract string DiskFormatCommandDescription { get; }
@@ -253,6 +256,7 @@ public static class FileListLocalizer
         public abstract string TargetNameArgumentDescription { get; }
         public abstract string NewNameArgumentDescription { get; }
         public abstract string LabelTextArgumentDescription { get; }
+        public abstract string FileCrossCopyFilesArgumentDescription { get; }
         public abstract string LayoutInputOptionDescription { get; }
         public abstract string LayoutOutputOptionDescription { get; }
         public abstract string LayoutStdinOptionDescription { get; }
@@ -346,6 +350,7 @@ public static class FileListLocalizer
         public override string FileDeleteCommandDescription => "Delete one disk file";
         public override string FileRenameCommandDescription => "Rename one disk file";
         public override string FileCopyCommandDescription => "Duplicate a file inside the same disk image";
+        public override string FileCrossCopyCommandDescription => "Copy files between different disk images with filename auto-shortening";
         public override string DiskCommandDescription => "Disk-level operations";
         public override string DiskCreateCommandDescription => "Create a new disk image and initialize it with an explicit file system";
         public override string DiskFormatCommandDescription => "Reinitialize an existing disk image, preferably with an explicit file system";
@@ -387,6 +392,7 @@ public static class FileListLocalizer
         public override string TargetNameArgumentDescription => "New or target disk file name";
         public override string NewNameArgumentDescription => "New disk file name";
         public override string LabelTextArgumentDescription => "Label text";
+        public override string FileCrossCopyFilesArgumentDescription => "Files to copy (comma separated, or 'all')";
         public override string LayoutInputOptionDescription => "Read the layout plan from a file";
         public override string LayoutOutputOptionDescription => "Write the exported layout plan to a file";
         public override string LayoutStdinOptionDescription => "Read the layout plan from standard input";
@@ -480,6 +486,7 @@ public static class FileListLocalizer
         public override string FileDeleteCommandDescription => "ディスク上のファイルを削除します";
         public override string FileRenameCommandDescription => "ディスク上のファイル名を変更します";
         public override string FileCopyCommandDescription => "同一ディスク内でファイルを複製します";
+        public override string FileCrossCopyCommandDescription => "異なるディスクイメージ間でファイルをコピーします（ファイル名自動短縮機能付き）";
         public override string DiskCommandDescription => "ディスク単位の操作";
         public override string DiskCreateCommandDescription => "新しいディスクイメージを作成し、指定したファイルシステムで初期化します";
         public override string DiskFormatCommandDescription => "既存ディスクイメージを再初期化します。明示的なファイルシステム指定を推奨します";
@@ -521,6 +528,7 @@ public static class FileListLocalizer
         public override string TargetNameArgumentDescription => "新しい名前または複製先のファイル名";
         public override string NewNameArgumentDescription => "新しいディスクファイル名";
         public override string LabelTextArgumentDescription => "ラベル文字列";
+        public override string FileCrossCopyFilesArgumentDescription => "コピーするファイル一覧（カンマ区切り、または 'all'）";
         public override string LayoutInputOptionDescription => "レイアウト計画をファイルから読み込みます";
         public override string LayoutOutputOptionDescription => "書き出したレイアウト計画の保存先ファイル";
         public override string LayoutStdinOptionDescription => "レイアウト計画を標準入力から読み込みます";

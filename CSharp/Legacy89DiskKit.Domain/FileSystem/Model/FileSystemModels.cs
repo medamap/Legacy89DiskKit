@@ -7,7 +7,9 @@ public record DiskFileSystemInfo(
     int ClusterSize,
     int ReservedSectors,
     string PlatformId = "",
-    string DefaultEncodingId = ""
+    string DefaultEncodingId = "",
+    int MaxBaseNameLength = 8,
+    int MaxExtensionLength = 3
 );
 
 public record BootSector(

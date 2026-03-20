@@ -86,7 +86,8 @@ public class ArchiveService
         }
 
         var transferService = new FileTransferService(new X1CharacterEncoder());
-        var cloneService = new DiskCloneService(transferService);
+        var normalizationService = new FileNameNormalizationService(_encoderRegistry);
+        var cloneService = new DiskCloneService(transferService, normalizationService);
         cloneService.TransferFiles(srcFs, destFs, targetFiles);
 
         destFs.WriteBootArea(bootData);
@@ -110,27 +111,7 @@ public class ArchiveService
         
         var normalizationService = new FileNameNormalizationService(_encoderRegistry);
         
-        // Determine normalization constraints
-        int maxBase = 13;
-        int maxExt = 0;
-
-        if (platformId == "MSX")
-        {
-            maxBase = 8;
-            maxExt = 3;
-        }
-        else if (platformId == "PC88")
-        {
-            maxBase = 6;
-            maxExt = 3;
-        }
-        else if (platformId == "X1" || fsInfo.FileSystemName == "Hu-BASIC")
-        {
-            maxBase = 13;
-            maxExt = 0;
-        }
-
-        string normalizedName = normalizationService.Normalize(sourceName, encodingId, maxBase, maxExt, existingNames);
+        string normalizedName = normalizationService.Normalize(sourceName, encodingId, fsInfo.MaxBaseNameLength, fsInfo.MaxExtensionLength, existingNames);
         
         byte[] data = File.ReadAllBytes(hostFilePath);
         
