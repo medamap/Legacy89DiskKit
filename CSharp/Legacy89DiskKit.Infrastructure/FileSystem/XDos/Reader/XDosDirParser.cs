@@ -35,7 +35,7 @@ public class XDosDirParser
         byte rawType = sector[offset + 0];
         byte attr    = sector[offset + 1];
         var rawName  = sector[(offset + 2)..(offset + 18)];
-        string name  = Encoding.ASCII.GetString(rawName).TrimEnd(' ');
+        string name  = Encoding.Latin1.GetString(rawName).TrimEnd(' ');
         ushort load  = BinaryPrimitives.ReadUInt16LittleEndian(sector.AsSpan(offset + 18)); // 修正: +20 → +18
         ushort size  = BinaryPrimitives.ReadUInt16LittleEndian(sector.AsSpan(offset + 20)); // 修正: +22 → +20
         ushort exec  = BinaryPrimitives.ReadUInt16LittleEndian(sector.AsSpan(offset + 22)); // 修正: +24 → +22

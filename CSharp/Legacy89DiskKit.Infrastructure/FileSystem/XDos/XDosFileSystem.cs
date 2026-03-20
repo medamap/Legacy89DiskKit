@@ -47,10 +47,10 @@ public class XDosFileSystem : IFileSystem
 
     public IEnumerable<FileEntry> GetFiles() => GetDirectory().Select(ToFileEntry);
     public IReadOnlyList<XDosDirectoryEntry> GetFilesWithMetadata() => GetDirectory();
-    public bool FileExists(string fileName) => FileExistsRaw(NormalizeRawName(Encoding.ASCII.GetBytes(fileName)));
+    public bool FileExists(string fileName) => FileExistsRaw(NormalizeRawName(Encoding.Latin1.GetBytes(fileName)));
     public bool FileExistsRaw(byte[] rawName) => GetDirectory().Any(e => e.RawFileName.SequenceEqual(NormalizeRawName(rawName)));
     public bool FileExistsExact(byte[] rawName, byte rawType) => GetDirectory().Any(e => e.RawFileName.SequenceEqual(NormalizeRawName(rawName)) && e.RawFileType == rawType);
-    public byte[] ReadFile(string fileName) => ReadFileRaw(Encoding.ASCII.GetBytes(fileName));
+    public byte[] ReadFile(string fileName) => ReadFileRaw(Encoding.Latin1.GetBytes(fileName));
     public byte[] ReadFileRaw(byte[] rawName)
     {
         var normalized = NormalizeRawName(rawName);
@@ -72,7 +72,7 @@ public class XDosFileSystem : IFileSystem
     {
         if (_container.IsReadOnly) throw new InvalidOperationException("Read-only.");
         _cachedDirectory = null;
-        byte[] rawName = NormalizeRawName(forcedRawName ?? Encoding.ASCII.GetBytes(fileName));
+        byte[] rawName = NormalizeRawName(forcedRawName ?? Encoding.Latin1.GetBytes(fileName));
         byte rawType = forcedRawType ?? (attributes.RawAttributes != 0 ? attributes.RawAttributes : (byte)XDosFileType.Binary);
         if (!forcedStartTrack.HasValue && FileExistsExact(rawName, rawType)) throw new IOException("Exists.");
 

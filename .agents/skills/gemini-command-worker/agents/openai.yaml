@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gemini Command Worker"
+  short_description: "Process queued Gemini instructions and report."
+  default_prompt: "Use this skill to pick up a queued Gemini instruction, execute it, and submit a report."
