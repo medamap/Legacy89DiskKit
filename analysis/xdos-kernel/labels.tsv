@@ -24,3 +24,4 @@ address	label	class	source	note
 0x1D00	ipl_rom_on	placeholder	x1_io_ports_reference.md	Map IPL ROM to 0000-7FFF (Any offset in 1DxxH)
 0x1E00	ipl_rom_off	placeholder	x1_io_ports_reference.md	Disable IPL ROM (Any offset in 1ExxH)
 0x1F80	dma_ctrl	placeholder	x1_io_ports_reference.md	Z80 DMA control/status
+0xE691	side_latch_shadow	probable	XDOSUTIL.D88	Probable shadow RAM for side-select bit
