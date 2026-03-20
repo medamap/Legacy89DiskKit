@@ -73,7 +73,7 @@ fdc_wait_loop:
     db 0x01, 0xF8, 0x0F ; ld bc, 0x0FF8 (fdc_status_cmd)
     db 0xED, 0x78       ; in a, (c)
     db 0x0F             ; rrca
-    db 0x38, 0xFB       ; jr c, fdc_wait_loop (Wait for Busy bit 0 to clear)
+    db 0x38, 0xFB       ; jr c, -5 (Wait for Busy bit 0 to clear, targets: in a, (c))
 
 ; --- File I/O Variables (Confirmed from x-dos.h) ---
 

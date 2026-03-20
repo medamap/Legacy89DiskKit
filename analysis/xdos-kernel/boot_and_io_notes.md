@@ -56,11 +56,11 @@ The following ports are documented as being directly involved in disk I/O, boot 
 
 | Port Address | Label | Usage in X-DOS | Description |
 | :--- | :--- | :--- | :--- |
-| `0FF8H` | `fdc_status_cmd` | Confirmed | MB8877A Status (R) / Command (W) |
+| `0FF8H` | `fdc_status_cmd` | Confirmed | MB8877A Status (R) / Command (W) (Seen in 01 F8 0F) |
 | `0FF9H` | `fdc_track` | Probable | FDC Track Register |
 | `0FFAH` | `fdc_sector` | Probable | FDC Sector Register |
 | `0FFBH` | `fdc_data` | Probable | FDC Data Register |
-| `0FFCH` | `fdc_control` | Confirmed | Drive Select, Side Select (bit 4), Motor control |
+| `0FFCH` | `fdc_control` | Probable | Drive Select, Side Select (bit 4), Motor latch (Seen as 0E FC) |
 | `1D**H` | `ipl_rom_on` | Probable (boot) | Enable IPL ROM mapping (0000-7FFF) |
 | `1E**H` | `ipl_rom_off` | Probable (boot) | Restore RAM at 0000-7FFF |
 | `1F80H` | `dma_ctrl` | Probable (turbo+) | Z80 DMA for fast data transfer |
