@@ -189,7 +189,9 @@ public static class Legacy89DiskKitApplication
     public static FileSystem.DiskCloneService CreateDiskCloneService(DiskFileSystemInfo fsInfo, string? encodingOverride = null)
     {
         var transferService = CreateFileTransferService(fsInfo, encodingOverride);
-        return new FileSystem.DiskCloneService(transferService);
+        var encoderRegistry = CreateEncoderRegistry();
+        var normalizationService = new Services.FileNameNormalizationService(encoderRegistry);
+        return new FileSystem.DiskCloneService(transferService, normalizationService);
     }
 
     /// <summary>

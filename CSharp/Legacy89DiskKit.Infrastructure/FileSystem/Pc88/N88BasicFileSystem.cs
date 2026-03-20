@@ -39,7 +39,9 @@ public class N88BasicFileSystem : IFileSystem
             _config.ClusterSize,
             _config.ReservedClusters * (_config.ClusterSize / _config.SectorSize),
             "PC88",
-            "PC88"
+            "PC88",
+            6,
+            3
         );
     }
 

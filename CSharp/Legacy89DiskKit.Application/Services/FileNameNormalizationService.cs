@@ -46,32 +46,31 @@ public class FileNameNormalizationService
             basePart = Sanitize(input);
         }
 
-        // Initial shortening
+        string originalBase = basePart;
         string currentBase = ShortenByBytes(basePart, encoder, maxBase);
         string candidate = BuildCandidate(currentBase, extPart);
 
-        if (existingNames == null || !existingNames.Contains(candidate.ToUpperInvariant()))
+        if (originalBase == currentBase && (existingNames == null || !existingNames.Contains(candidate.ToUpperInvariant())))
         {
             return candidate;
         }
 
-        // Collision Handling (Tilde approach)
-        for (int i = 1; i < 100; i++)
+        int prefixLength = Math.Max(1, maxBase - 3);
+        string prefix = ShortenByBytes(basePart, encoder, prefixLength);
+
+        for (int i = 1; i <= 999; i++)
         {
-            string suffix = $"~{i}";
-            int limit = maxBase - suffix.Length;
-            if (limit < 1) limit = 1;
+            string suffix = i.ToString("D3");
+            string shortenedBase = prefix + suffix;
+            candidate = BuildCandidate(shortenedBase, extPart);
 
-            string shortenedBase = ShortenByBytes(basePart, encoder, limit);
-            candidate = BuildCandidate(shortenedBase + suffix, extPart);
-
-            if (!existingNames.Contains(candidate.ToUpperInvariant()))
+            if (existingNames == null || !existingNames.Contains(candidate.ToUpperInvariant()))
             {
                 return candidate;
             }
         }
 
-        return candidate;
+        throw new Exception($"Failed to generate unique file name for '{input}' after 999 attempts.");
     }
 
     private string Sanitize(string input)

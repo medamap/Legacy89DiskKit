@@ -1,5 +1,6 @@
 using System.Text;
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
+using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
@@ -18,16 +19,18 @@ public class XDosFileSystem : IFileSystem
     private readonly XDosFatWriter     _fatWriter;
     private readonly XDosFamWriter     _famWriter;
     private readonly XDosDirWriter     _dirWriter;
+    private readonly XDosMediaGeometry _geometry;
     private IReadOnlyList<XDosDirectoryEntry>? _cachedDirectory;
 
     public XDosFileSystem(IDiskContainer container)
     {
         _container = container;
+        _geometry = XDosMediaGeometry.FromDiskType(container.DiskType);
         _fat = new XDosFatReader(container);
         _fam = new XDosFamReader(container);
         _dirParser = new XDosDirParser();
-        _clusterReader = new XDosClusterReader(container, _fam);
-        _fatWriter = new XDosFatWriter(container);
+        _clusterReader = new XDosClusterReader(container, _fam, _geometry);
+        _fatWriter = new XDosFatWriter(container, _geometry);
         _famWriter = new XDosFamWriter(container);
         _dirWriter = new XDosDirWriter(container);
     }
@@ -38,7 +41,8 @@ public class XDosFileSystem : IFileSystem
     {
         int free = _fat.CountFreeClusters();
         int used = _fat.CountUsedClusters();
-        return new DiskFileSystemInfo("X-DOS", (long)(free + used) * 5120, (long)free * 5120, 5120, 0, "X1", "X1");
+        int clusterSize = _geometry.DataSectorsPerTrack * _geometry.DataSectorSize;
+        return new DiskFileSystemInfo("X-DOS", (long)(free + used) * clusterSize, (long)free * clusterSize, clusterSize, 0, "X1", "X1", 16, 0);
     }
 
     public IEnumerable<FileEntry> GetFiles() => GetDirectory().Select(ToFileEntry);
@@ -73,11 +77,18 @@ public class XDosFileSystem : IFileSystem
         if (!forcedStartTrack.HasValue && FileExistsExact(rawName, rawType)) throw new IOException("Exists.");
 
         int startTrack;
+        int sectorsPerCluster = _geometry.DataSectorsPerTrack;
+        int clusterSize = sectorsPerCluster * _geometry.DataSectorSize;
+        IList<byte>? trackList = forcedClusterChain?.ToList() ?? (forcedStartTrack.HasValue ? new List<byte> { (byte)forcedStartTrack.Value } : null);
+
         if (forcedStartTrack.HasValue) startTrack = forcedStartTrack.Value;
         else
         {
-            var tracks = _fatWriter.AllocateClusters((data.Length + 511) / 512);
+            int count = (int)Math.Ceiling((double)data.Length / clusterSize);
+            if (count == 0 && data.Length > 0) count = 1;
+            var tracks = _fatWriter.AllocateClusters(count);
             startTrack = tracks[0];
+            trackList = tracks;
             _famWriter.UpdateChain(tracks);
             _fatWriter.Commit(); _famWriter.Commit();
             Array.Copy(_fatWriter.Fat, _fat.Fat, _fat.Fat.Length);
@@ -85,19 +96,23 @@ public class XDosFileSystem : IFileSystem
         }
 
         int written = 0;
+        int trackIdx = 0;
         int currentTrack = startTrack;
         int startSectorR = forcedStartSectorR ?? ((currentTrack == 1 || currentTrack == 2) ? 2 : 1);
 
         while (written < data.Length)
         {
+            if (trackIdx >= (trackList?.Count ?? 0) && !forcedStartTrack.HasValue)
+                throw new IOException($"Chain exhausted at trackIdx={trackIdx}, written={written}/{data.Length}");
+
             int c = currentTrack / 2, h = currentTrack % 2;
             int trackStartR = (currentTrack == 1 || currentTrack == 2) ? 2 : 1;
-            int rStart = (currentTrack == startTrack) ? Math.Max(trackStartR, startSectorR) : trackStartR;
-            int maxR = (c == 0 && h == 0) ? 16 : 10;
+            int rStart = (currentTrack == startTrack && written == 0) ? Math.Max(trackStartR, startSectorR) : trackStartR;
+            var (maxR, sectorSize, _) = _geometry.GetTrackGeometry(c, h);
             
             for (int r = rStart; r <= maxR && written < data.Length; r++)
             {
-                int sz = (c == 0 && h == 0) ? 256 : 512;
+                int sz = sectorSize;
                 byte[] buf = new byte[sz];
                 int take = Math.Min(sz, data.Length - written);
                 Array.Copy(data, written, buf, 0, take);
@@ -107,23 +122,13 @@ public class XDosFileSystem : IFileSystem
             
             if (written < data.Length)
             {
-                if (forcedClusterChain != null)
-                {
-                    int idx = forcedClusterChain.ToList().IndexOf((byte)currentTrack);
-                    if (idx >= 0 && idx + 1 < forcedClusterChain.Count)
-                        currentTrack = forcedClusterChain[idx + 1];
-                    else
-                        throw new IOException($"Forced cluster chain exhausted at cluster {currentTrack}.");
-                }
-                else if (forcedStartTrack.HasValue)
+                trackIdx++;
+                if (trackList != null && trackIdx < trackList.Count)
+                    currentTrack = trackList[trackIdx];
+                else if (forcedStartTrack.HasValue && (forcedClusterChain == null || !forcedClusterChain.Any()))
                     currentTrack++;
                 else
-                {
-                    var ch = _fam.GetChain((byte)startTrack);
-                    int idx = ch.ToList().IndexOf((byte)currentTrack);
-                    if (idx >= 0 && idx + 1 < ch.Count) currentTrack = ch[idx+1];
-                    else throw new IOException("Chain error.");
-                }
+                    throw new IOException($"Chain exhausted at trackIdx={trackIdx}, currentTrack={currentTrack}, written={written}/{data.Length}");
             }
         }
         
@@ -131,9 +136,9 @@ public class XDosFileSystem : IFileSystem
             RawFileType: rawType, Attribute: attributes.RawAttributes,
             FileName: fileName, RawFileName: rawName,
             LoadAddress: loadAddress ?? 0,
-            ByteSize: (ushort)data.Length,      // 修正: 実バイト数をそのまま格納
+            ByteSize: (ushort)data.Length,
             ExecutionAddress: executionAddress ?? 0,
-            DatePacked: 0,                       // 書き込み時はタイムスタンプ未実装 → 0
+            DatePacked: 0,
             TimePacked: 0,
             Flags: 0x80,
             FirstCluster: (byte)startTrack, FirstSectorR: (byte)startSectorR, AlwaysOne: 0x01);
@@ -174,13 +179,10 @@ public class XDosFileSystem : IFileSystem
         Attributes: new ExtendedFileAttributes(FileAttributes.None, e.Attribute, false, "X-DOS"),
         StartCluster: e.FirstCluster,
         LoadAddress: e.LoadAddress,
-        EndAddress: (ushort)(e.LoadAddress + e.ByteSize),  // 修正: ByteSize から再計算
+        EndAddress: (ushort)(e.LoadAddress + e.ByteSize),
         ExecutionAddress: e.ExecutionAddress,
         RawFileName: e.RawFileName);
-    private const int SectorsPerTrack = 10;
 
     public static (int sectors, ushort size, byte density)? XDosTrackGeometry(int c, int h)
-        => (c == 0 && h == 0)
-            ? (16, (ushort)256, (byte)0x00)
-            : (10, (ushort)512, (byte)0x00);
+        => XDosMediaGeometry.FromDiskType(DiskType.TwoD).GetTrackGeometry(c, h);
 }

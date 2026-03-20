@@ -42,7 +42,9 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
             _config.ClusterSize,
             _config.ReservedClusters * (_config.ClusterSize / _config.SectorSize),
             "X1",
-            "X1"
+            "X1",
+            8,
+            3
         );
     }
 

@@ -5,14 +5,15 @@ namespace Legacy89DiskKit.Infrastructure.FileSystem.XDos.Reader;
 
 public class XDosClusterReader
 {
-    private const int SectorsPerTrack = 10;
     private readonly IDiskContainer _container;
     private readonly XDosFamReader  _fam;
+    private readonly XDosMediaGeometry _geometry;
 
-    public XDosClusterReader(IDiskContainer container, XDosFamReader fam)
+    public XDosClusterReader(IDiskContainer container, XDosFamReader fam, XDosMediaGeometry geometry)
     {
         _container = container;
         _fam       = fam;
+        _geometry  = geometry;
     }
 
     public byte[] ReadFile(XDosDirectoryEntry entry)
@@ -27,12 +28,10 @@ public class XDosClusterReader
             int c = track / 2;
             int h = track % 2;
             
-            // Track 1 (FAT) and Track 2 (FAM) always reserve Sector 1.
-            // All other tracks (0, 3+) can use Sector 1 for data.
             int trackStartR = (track == 1 || track == 2) ? 2 : 1;
             int startR = (track == entry.FirstCluster) ? Math.Max(trackStartR, (int)entry.FirstSectorR) : trackStartR;
             
-            int maxR = (c == 0 && h == 0) ? 16 : SectorsPerTrack;
+            var (maxR, _, _) = _geometry.GetTrackGeometry(c, h);
 
             for (int r = startR; r <= maxR && result.Count < entry.FileSize; r++)
             {

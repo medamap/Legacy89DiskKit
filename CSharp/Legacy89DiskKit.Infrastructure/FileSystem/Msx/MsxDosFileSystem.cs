@@ -90,7 +90,9 @@ public class MsxDosFileSystem : IFileSystem
             _secPerClus * _bytsPerSec,
             _rsvdSecCnt,
             "MSX",
-            "MSX"
+            "SJIS",
+            8,
+            3
         );
     }
 
