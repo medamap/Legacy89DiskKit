@@ -13,8 +13,8 @@ This workspace is dedicated to the reverse engineering and assembly reconstructi
 ### Evidence Classes
 Every label and reconstruction must state its evidence class:
 -   **confirmed**: Directly verified by binary analysis or salvaged source code.
--   **probable**: Highly likely based on surrounding code or secondary documentation, but not yet 100% verified.
--   **placeholder**: Temporary label used to maintain structural integrity during reconstruction.
+-   **probable**: Highly likely based on surrounding code or secondary documentation, but not yet 100% verified (e.g., FDC ports on a known X1 system).
+-   **placeholder**: Temporary label used to maintain structural integrity or hardware-known ports that are not yet confirmed to be used by the X-DOS kernel.
 
 ### Code vs Data Representation
 -   Confirmed instructions are represented as Z80 assembly mnemonics.
