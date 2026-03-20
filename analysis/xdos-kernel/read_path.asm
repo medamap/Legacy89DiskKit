@@ -21,32 +21,26 @@ volume_record:
     db 0x05, 0x00, 0x08, 0x00 ; Reserved
 
 ; --- Syscall Jump Table (Confirmed from x-dos.h) ---
-; Note: Entrypoints are confirmed, bodies are not yet reconstructed.
+; Pattern: 3-byte jump table entries (likely 'jp addr').
+; Observed range: 0xED78 to 0xEDFF (boundary with fat_area at 0xEE00).
 
-org 0xED81
-sys_rdd:
-    ; Read data into memory using sys_dtadr
-    ; [Entrypoint confirmed, body not yet reconstructed]
-
-org 0xED84
-sys_file:
-    ; Set active filename (DE = pointer)
-    ; [Entrypoint confirmed, body not yet reconstructed]
-
-org 0xED8D
-sys_devi:
-    ; Device Input (HL=buf, DE=rec, A=cnt)
-    ; [Entrypoint confirmed, body not yet reconstructed]
-
-org 0xED90
-sys_devo:
-    ; Device Output (HL=buf, DE=rec, A=cnt)
-    ; [Entrypoint confirmed, body not yet reconstructed]
-
-org 0xED96
-sys_ropen:
-    ; Open file for read
-    ; [Entrypoint confirmed, body not yet reconstructed]
+org 0xED78
+sys_wopen:  ds 3    ; Entry 0: Open file for write
+sys_wrd:    ds 3    ; Entry 1: Write data from memory
+            ds 3    ; Entry 2: [Unknown]
+sys_rdd:    ds 3    ; Entry 3: Read data into memory
+sys_file:   ds 3    ; Entry 4: Set active filename (DE=ptr)
+            ds 3    ; Entry 5: [Unknown]
+            ds 3    ; Entry 6: [Unknown]
+sys_devi:   ds 3    ; Entry 7: Device Input (HL=buf, DE=rec, A=cnt)
+sys_devo:   ds 3    ; Entry 8: Device Output (HL=buf, DE=rec, A=cnt)
+            ds 3    ; Entry 9: [Unknown]
+sys_ropen:  ds 3    ; Entry 10: Open file for read
+            ds 3 * (24 - 11) ; Entries 11-23: [Unknown]
+sys_load:   ds 3    ; Entry 24: Load/Save (A=0:load, A=1:save)
+            ds 3 * (40 - 25) ; Entries 25-39: [Unknown]
+sys_call:   ds 3    ; Entry 40: Generic OS call dispatcher (DE=entry)
+            ds 0xEE00 - $    ; Remainder of table area before fat_area
 
 ; --- Interleaved Side-Select Logic (Confirmed from XDOSUTIL.D88) ---
 ; Found at XDOSUTIL.D88 physical Track 2, R=8 (D88 offset 0x4bd9)
@@ -89,6 +83,11 @@ dir_area:   ds 512     ; Directory sector buffer
 org 0x7200
 bdir_area:  ds 512     ; bdir system code buffer
 org 0x7400
-fam_area:   ds 512     ; FAM cluster chain buffer
+fam_area:
+    ; Sample bytes from XDOS_SYS.D88 FAM (Track 2, R=1)
+    db 0x02, 0x02, 0x09, 0x03, 0x01, 0x0A, 0x04, 0x01
+    db 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    ds 512-16
+
 org 0xEE00
 fat_area:   ds 512     ; FAT bitmap area
