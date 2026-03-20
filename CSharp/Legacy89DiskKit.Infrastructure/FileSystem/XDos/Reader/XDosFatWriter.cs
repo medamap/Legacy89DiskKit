@@ -17,7 +17,8 @@ public class XDosFatWriter
     public List<byte> AllocateClusters(int count)
     {
         var allocated = new List<byte>();
-        for (int i = 2; i < _fat.Length && allocated.Count < count; i++)
+        int limit = Math.Min(_fat.Length, _geometry.TotalTracks);
+        for (int i = 2; i < limit && allocated.Count < count; i++)
         {
             if (_fat[i] == 0x00) { _fat[i] = 0x4A; allocated.Add((byte)i); }
         }
