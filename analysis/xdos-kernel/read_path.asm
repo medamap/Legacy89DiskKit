@@ -10,6 +10,16 @@ fdc_control:    equ 0xFFC   ; Drive/Side/Motor control latch
 ipl_rom_on:     equ 0x1D00  ; Any output to 1DxxH enables IPL ROM
 ipl_rom_off:    equ 0x1E00  ; Any output to 1ExxH disables IPL ROM
 
+; --- Volume Record (Confirmed from Track 0, R=1 on XDOSUTIL.D88) ---
+; Physical location: Track 0, Sector 1 (offset 0x10 from D88 track start)
+volume_record:
+    db 0x01         ; Record type: Volume
+    db "X-DOS        Sys" ; Disk Label (16 bytes)
+    db 0x00, 0x08, 0x00, 0xC0, 0x00, 0xC0 ; Reserved/Addresses
+    db 0x88         ; Format type (X1 2D)
+    db 0x24, 0x04, 0x17 ; BCD Date (84/04/17)
+    db 0x05, 0x00, 0x08, 0x00 ; Reserved
+
 ; --- Syscall Jump Table (Confirmed from x-dos.h) ---
 ; Note: Entrypoints are confirmed, bodies are not yet reconstructed.
 
@@ -38,14 +48,32 @@ sys_ropen:
     ; Open file for read
     ; [Entrypoint confirmed, body not yet reconstructed]
 
-; --- Interleaved Side-Select Logic (Confirmed from Salvaged Z80 Kernel) ---
-; Found at physical C1, H1, R8 on XDOSUTIL.D88
+; --- Interleaved Side-Select Logic (Confirmed from XDOSUTIL.D88) ---
+; Found at XDOSUTIL.D88 physical Track 2, R=8 (D88 offset 0x4bd9)
 ; Logic: toggles side-select bit (bit 4) for FDC access (MB8877A style)
 
-interleaved_side_select:
-    db 0xEE, 0x10   ; xor 0x10 (toggle head bit 4 for side selection)
-    ; Note: Observed bytes EE 10 at this logic point.
-    ; This likely precedes an 'out (fdc_control), a' to switch physical side.
+side_select_logic:
+    db 0x21, 0x91, 0xE6 ; ld hl, 0xE691 (Probable side-select latch shadow)
+    db 0x7E             ; ld a, (hl)
+    db 0xEE, 0x10       ; xor 0x10 (toggle head bit 4)
+    db 0x77             ; ld (hl), a
+    db 0xE6, 0x10       ; and 0x10
+    db 0x20, 0x02       ; jr nz, $+4
+    db 0x14             ; inc d (dummy/branch filler?)
+    db 0x37             ; scf
+    db 0x0E, 0xFC       ; ld c, 0xFC
+    db 0x7E             ; ld a, (hl)
+    db 0xED, 0x79       ; out (c), a (Physical side select)
+
+; --- FDC Port Access Pattern (Confirmed from XDOSUTIL.D88) ---
+; Found at XDOSUTIL.D88 physical Track 2, R=8 (D88 offset 0x4b3c)
+; Pattern: typical MB8877A status wait loop
+
+fdc_wait_loop:
+    db 0x01, 0xF8, 0x0F ; ld bc, 0x0FF8 (fdc_status_cmd)
+    db 0xED, 0x78       ; in a, (c)
+    db 0x0F             ; rrca
+    db 0x38, 0xFB       ; jr c, -5 (Wait for Busy bit 0 to clear, targets: in a, (c))
 
 ; --- File I/O Variables (Confirmed from x-dos.h) ---
 
