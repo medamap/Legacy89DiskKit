@@ -3,6 +3,8 @@ using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.Domain.FileSystem.Exception;
 using Legacy89DiskKit.Application.Services;
+using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
+using Legacy89DiskKit.Domain.DiskImage.Model;
 
 namespace Legacy89DiskKit.Application.FileSystem;
 
@@ -60,5 +62,41 @@ public class DiskCloneService
                 throw new FileSystemException($"Failed to transfer file '{fileName}': {ex.Message}", ex);
             }
         }
+    }
+
+    /// <summary>
+    /// Performs a sector-by-sector physical copy from source to destination.
+    /// </summary>
+    public (int tracksCopied, int sectorsSkipped) CopySectors(IDiskContainer source, IDiskContainer destination, bool allowPartialRead = true)
+    {
+        if (source.DiskType != destination.DiskType)
+        {
+            throw new ArgumentException("Disk types do not match.");
+        }
+
+        int tracksCopied = 0;
+        int sectorsSkipped = 0;
+        var copiedTracks = new HashSet<(int, int)>();
+
+        foreach (var sectorInfo in source.GetAllSectors())
+        {
+            try
+            {
+                var data = source.ReadSector(sectorInfo.Cylinder, sectorInfo.Head, sectorInfo.Sector);
+                destination.WriteSector(sectorInfo.Cylinder, sectorInfo.Head, sectorInfo.Sector, data);
+
+                if (copiedTracks.Add((sectorInfo.Cylinder, sectorInfo.Head)))
+                {
+                    tracksCopied++;
+                }
+            }
+            catch
+            {
+                if (!allowPartialRead) throw;
+                sectorsSkipped++;
+            }
+        }
+
+        return (tracksCopied, sectorsSkipped);
     }
 }

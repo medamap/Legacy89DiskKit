@@ -113,6 +113,8 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string DiskCreateFileSystemOptionDescription { get; }
     string DiskCreateNameOptionDescription { get; }
     string DiskFormatFsOptionDescription { get; }
+    string DiskSectorCopyCommandDescription { get; }
+    string DiskSectorCopyForceOptionDescription { get; }
     string ListingFilesForMessage { get; }
     string UsingEncodingMessage { get; }
     string SuccessPrefix { get; }
@@ -124,6 +126,7 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string FileCopiedMessage { get; }
     string DiskCreatedMessage { get; }
     string DiskFormattedMessage { get; }
+    string DiskSectorCopiedMessage { get; }
     string LayoutUpdatedMessage { get; }
     string LabelInsertedMessage { get; }
     string DirectoryEntriesSortedMessage { get; }
@@ -140,6 +143,7 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string ValidationErrorLabel { get; }
     string ValidationWarningLabel { get; }
     string BootShowTitle { get; }
+    string OverwriteConfirmationMessage { get; }
 }
 
 public static class FileListLocalizer
@@ -269,6 +273,8 @@ public static class FileListLocalizer
         public abstract string DiskCreateFileSystemOptionDescription { get; }
         public abstract string DiskCreateNameOptionDescription { get; }
         public abstract string DiskFormatFsOptionDescription { get; }
+        public abstract string DiskSectorCopyCommandDescription { get; }
+        public abstract string DiskSectorCopyForceOptionDescription { get; }
         public abstract string ListingFilesForMessage { get; }
         public abstract string UsingEncodingMessage { get; }
         public abstract string SuccessPrefix { get; }
@@ -280,6 +286,7 @@ public static class FileListLocalizer
         public abstract string FileCopiedMessage { get; }
         public abstract string DiskCreatedMessage { get; }
         public abstract string DiskFormattedMessage { get; }
+        public abstract string DiskSectorCopiedMessage { get; }
         public abstract string LayoutUpdatedMessage { get; }
         public abstract string LabelInsertedMessage { get; }
         public abstract string DirectoryEntriesSortedMessage { get; }
@@ -299,6 +306,7 @@ public static class FileListLocalizer
         public abstract string BootModeSectorResident { get; }
         public abstract string BootModeNone { get; }
         public abstract string BootShowTitle { get; }
+        public abstract string OverwriteConfirmationMessage { get; }
     }
 
     private sealed class EnglishConsoleLocalizer : ConsoleLocalizerBase
@@ -405,6 +413,8 @@ public static class FileListLocalizer
         public override string DiskCreateFileSystemOptionDescription => "File system to initialize: hu-basic, n88-basic, msx-dos, or xdos";
         public override string DiskCreateNameOptionDescription => "Optional disk name for image containers that support it";
         public override string DiskFormatFsOptionDescription => "Explicit file system to format: hu-basic, n88-basic, msx-dos, or xdos";
+        public override string DiskSectorCopyCommandDescription => "Perform a sector-by-sector physical copy between disk images";
+        public override string DiskSectorCopyForceOptionDescription => "Skip overwrite confirmation";
         public override string ListingFilesForMessage => "Listing files for";
         public override string UsingEncodingMessage => "Using Encoding";
         public override string SuccessPrefix => "Success";
@@ -416,6 +426,7 @@ public static class FileListLocalizer
         public override string FileCopiedMessage => "File copied.";
         public override string DiskCreatedMessage => "Disk created and formatted.";
         public override string DiskFormattedMessage => "Disk formatted.";
+        public override string DiskSectorCopiedMessage => "Disk sector copy completed. {0} tracks copied, {1} sectors skipped.";
         public override string LayoutUpdatedMessage => "Directory layout updated.";
         public override string LabelInsertedMessage => "Label entry inserted.";
         public override string DirectoryEntriesSortedMessage => "Directory entries sorted.";
@@ -435,6 +446,7 @@ public static class FileListLocalizer
         public override string BootModeSectorResident => "sector-resident";
         public override string BootModeNone => "none";
         public override string BootShowTitle => "Boot Information";
+        public override string OverwriteConfirmationMessage => "File '{0}' already exists. Overwrite? (y/N): ";
     }
 
     private sealed class JapaneseConsoleLocalizer : ConsoleLocalizerBase
@@ -541,6 +553,8 @@ public static class FileListLocalizer
         public override string DiskCreateFileSystemOptionDescription => "初期化するファイルシステム: hu-basic, n88-basic, msx-dos, xdos";
         public override string DiskCreateNameOptionDescription => "対応コンテナに設定する任意のディスク名";
         public override string DiskFormatFsOptionDescription => "明示的にフォーマットするファイルシステム: hu-basic, n88-basic, msx-dos, xdos";
+        public override string DiskSectorCopyCommandDescription => "ディスクイメージ間でセクタ単位の物理コピーを実行します";
+        public override string DiskSectorCopyForceOptionDescription => "上書き確認をスキップします";
         public override string ListingFilesForMessage => "Listing files for";
         public override string UsingEncodingMessage => "Using Encoding";
         public override string SuccessPrefix => "Success";
@@ -552,6 +566,7 @@ public static class FileListLocalizer
         public override string FileCopiedMessage => "ファイルを複製しました。";
         public override string DiskCreatedMessage => "ディスクを作成してフォーマットしました。";
         public override string DiskFormattedMessage => "ディスクをフォーマットしました。";
+        public override string DiskSectorCopiedMessage => "セクタコピーが完了しました（{0} トラックをコピー、{1} セクタをスキップ）。";
         public override string LayoutUpdatedMessage => "ディレクトリエントリ順を更新しました。";
         public override string LabelInsertedMessage => "ラベルエントリを挿入しました。";
         public override string DirectoryEntriesSortedMessage => "ディレクトリエントリをソートしました。";
@@ -571,5 +586,6 @@ public static class FileListLocalizer
         public override string BootModeSectorResident => "セクタ常駐型";
         public override string BootModeNone => "なし";
         public override string BootShowTitle => "ブート情報";
+        public override string OverwriteConfirmationMessage => "ファイル '{0}' は既に存在します。上書きしますか？ (y/N): ";
     }
 }
