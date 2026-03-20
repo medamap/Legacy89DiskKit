@@ -33,3 +33,23 @@ Device-level I/O is performed via `sys_devi` (input) and `sys_devo` (output).
 - **Track 0 Mapping**: Exact correspondence of logical records 0-9 to physical sectors (R=1 or R=2 start).
 - **Cluster 2 Role**: Both FAM (Track 2, R=1) and bdir (Track 2, R=2) are logically associated with Cluster 2 in some contexts, but FAM is also accessed via logical record 20.
 - **2HD Extensions**: Whether these logical record numbers and mapping formulas scale linearly for 2HD media (16 sectors/track).
+
+## Filesystem-Relevant X1 Ports
+The following ports are documented as being directly involved in disk I/O, boot ROM mapping, or DMA-based transfer.
+
+| Port Address | Label | Usage in X-DOS | Description |
+| :--- | :--- | :--- | :--- |
+| `0FF8H` | `fdc_status_cmd` | Probable | MB8877A Status (R) / Command (W) |
+| `0FF9H` | `fdc_track` | Probable | FDC Track Register |
+| `0FFAH` | `fdc_sector` | Probable | FDC Sector Register |
+| `0FFBH` | `fdc_data` | Probable | FDC Data Register |
+| `0FFCH` | `fdc_control` | Probable | Drive Select, Side Select (bit 4), Motor control |
+| `1D**H` | `ipl_rom_on` | Probable (boot) | Enable IPL ROM mapping (0000-7FFF) |
+| `1E**H` | `ipl_rom_off` | Probable (boot) | Restore RAM at 0000-7FFF |
+| `1F80H` | `dma_ctrl` | Probable (turbo+) | Z80 DMA for fast data transfer |
+| `0B00H` | `bank_switch` | Probable (turbo+) | Extended memory/buffer switching |
+
+**Classification Note**:
+- **X-DOS-usage-confirmed**: Directly seen in salvaged assembly or primary artifacts.
+- **X-DOS-usage-probable**: Logically necessary for the target hardware platform or hinted at by patterns (e.g., bit 4 toggle at `interleaved_side_select`).
+- **Hardware-known**: Documented for the machine but not yet linked to X-DOS kernel code.

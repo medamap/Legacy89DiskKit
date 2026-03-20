@@ -16,3 +16,11 @@ address	label	class	source	note
 0x7400	fam_area	confirmed	make_BGM	FAM cluster chain buffer
 0x7200	bdir_area	confirmed	make_BGM	bdir system code buffer
 0xC800	kernel_base	probable	X-DOS_Filesystem_Analysis.md	Hypothesized X-DOS kernel load address
+0x0FF8	fdc_status_cmd	probable	x1_io_ports_reference.md	FDC Status (R) / Command (W)
+0x0FF9	fdc_track	probable	x1_io_ports_reference.md	FDC Track Register
+0x0FFA	fdc_sector	probable	x1_io_ports_reference.md	FDC Sector Register
+0x0FFB	fdc_data	probable	x1_io_ports_reference.md	FDC Data Register
+0x0FFC	fdc_control	probable	x1_io_ports_reference.md	Drive/Side/Motor control latch
+0x1D00	ipl_rom_on	placeholder	x1_io_ports_reference.md	Map IPL ROM to 0000-7FFF (Any offset in 1DxxH)
+0x1E00	ipl_rom_off	placeholder	x1_io_ports_reference.md	Disable IPL ROM (Any offset in 1ExxH)
+0x1F80	dma_ctrl	placeholder	x1_io_ports_reference.md	Z80 DMA control/status

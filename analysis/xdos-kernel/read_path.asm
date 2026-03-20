@@ -1,6 +1,15 @@
 ; X-DOS Kernel Read Path Reconstruction
 ; Target: Minimum confirmed code/data for read analysis
 
+; --- I/O Port Equates (Probable/Hardware-known) ---
+fdc_status_cmd: equ 0xFF8
+fdc_track:      equ 0xFF9
+fdc_sector:     equ 0xFFA
+fdc_data:       equ 0xFFB
+fdc_control:    equ 0xFFC   ; Drive/Side/Motor control latch
+ipl_rom_on:     equ 0x1D00  ; Any output to 1DxxH enables IPL ROM
+ipl_rom_off:    equ 0x1E00  ; Any output to 1ExxH disables IPL ROM
+
 ; --- Syscall Jump Table (Confirmed from x-dos.h) ---
 ; Note: Entrypoints are confirmed, bodies are not yet reconstructed.
 
@@ -31,12 +40,12 @@ sys_ropen:
 
 ; --- Interleaved Side-Select Logic (Confirmed from Salvaged Z80 Kernel) ---
 ; Found at physical C1, H1, R8 on XDOSUTIL.D88
-; Logic: toggles side-select bit for FDC access (MB8877A style)
+; Logic: toggles side-select bit (bit 4) for FDC access (MB8877A style)
 
 interleaved_side_select:
-    db 0xEE, 0x10   ; xor 0x10 (toggle head bit for side selection)
+    db 0xEE, 0x10   ; xor 0x10 (toggle head bit 4 for side selection)
     ; Note: Observed bytes EE 10 at this logic point.
-    ; ... more logic likely follows to write to FDC control register
+    ; This likely precedes an 'out (fdc_control), a' to switch physical side.
 
 ; --- File I/O Variables (Confirmed from x-dos.h) ---
 
