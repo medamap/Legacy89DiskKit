@@ -6,13 +6,17 @@ public record XDosMediaGeometry(
     int DataSectorsPerTrack,
     int DataSectorSize,
     int BootSectorsPerTrack,
-    int BootSectorSize
+    int BootSectorSize,
+    int TotalTracks
 )
 {
     public static XDosMediaGeometry FromDiskType(DiskType diskType) =>
-        diskType == DiskType.TwoHD
-            ? new(16, 512, 16, 256)
-            : new(10, 512, 16, 256);
+        diskType switch
+        {
+            DiskType.TwoHD => new(16, 512, 16, 256, 160),
+            DiskType.TwoDD => new(10, 512, 16, 256, 160),
+            _ => new(10, 512, 16, 256, 80)
+        };
 
     public (int sectors, ushort size, byte density) GetTrackGeometry(int c, int h) =>
         (c == 0 && h == 0)

@@ -353,6 +353,23 @@ public class XDosFileSystemTest
     }
 
     [Fact]
+    public void WriteFile_ExceedPhysicalCapacity_ThrowsDiskFull()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_FULL.D88");
+        var container = svc.CreateDisk(path, DiskType.TwoD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        // 2D disk has 80 tracks (clusters). 
+        // With some reserved, writing data that requires more than 80 clusters should fail.
+        // 1 cluster = 10 sectors * 512 bytes = 5120 bytes.
+        byte[] largeData = new byte[81 * 5120]; 
+        var ex = Assert.Throws<IOException>(() => fs.WriteFile("TOO_BIG.BIN", largeData, fs.CreateDefaultAttributes(false)));
+        Assert.Equal("Disk full.", ex.Message);
+    }
+
+    [Fact]
     public void WriteFile_TwoHd_Uses16SectorsPerCluster()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
