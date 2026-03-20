@@ -2,38 +2,40 @@
 ; Target: Minimum confirmed code/data for read analysis
 
 ; --- Syscall Jump Table (Confirmed from x-dos.h) ---
+; Note: Entrypoints are confirmed, bodies are not yet reconstructed.
 
 org 0xED81
 sys_rdd:
     ; Read data into memory using sys_dtadr
-    db 0x00, 0x00, 0x00 ; placeholder (jump or logic)
+    ; [Entrypoint confirmed, body not yet reconstructed]
 
 org 0xED84
 sys_file:
     ; Set active filename (DE = pointer)
-    db 0x00, 0x00, 0x00 ; placeholder
+    ; [Entrypoint confirmed, body not yet reconstructed]
 
 org 0xED8D
 sys_devi:
     ; Device Input (HL=buf, DE=rec, A=cnt)
-    db 0x00, 0x00, 0x00 ; placeholder
+    ; [Entrypoint confirmed, body not yet reconstructed]
 
 org 0xED90
 sys_devo:
     ; Device Output (HL=buf, DE=rec, A=cnt)
-    db 0x00, 0x00, 0x00 ; placeholder
+    ; [Entrypoint confirmed, body not yet reconstructed]
 
 org 0xED96
 sys_ropen:
     ; Open file for read
-    db 0x00, 0x00, 0x00 ; placeholder
+    ; [Entrypoint confirmed, body not yet reconstructed]
 
 ; --- Interleaved Side-Select Logic (Confirmed from Salvaged Z80 Kernel) ---
 ; Found at physical C1, H1, R8 on XDOSUTIL.D88
 ; Logic: toggles side-select bit for FDC access (MB8877A style)
 
 interleaved_side_select:
-    ee 10       ; xor 0x10 (toggle head bit for side selection)
+    db 0xEE, 0x10   ; xor 0x10 (toggle head bit for side selection)
+    ; Note: Observed bytes EE 10 at this logic point.
     ; ... more logic likely follows to write to FDC control register
 
 ; --- File I/O Variables (Confirmed from x-dos.h) ---
