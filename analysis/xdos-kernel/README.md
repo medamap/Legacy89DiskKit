@@ -43,6 +43,6 @@ Analysis is ongoing to resolve the remaining implementation blockers for 2D X-DO
 
 ### Critical Unknowns
 - **Directory Field Semantics**: While the 32-byte directory entry boundary and indexing are confirmed, the exact roles of indices `0x1A`, the `0x1B/0x1C` pair, and the `0x1D/0x1E` pair remain open questions. It is proven that `0x1D/0x1E` are consumed as a pair by `helper_d6af`, but their meaning remains unknown. The `0x1B/0x1C` pair shows cross-disk stability for identical files, but its meaning remains unknown.
-- **(Cluster, FirstSectorR) Mapping**: Exact bit-level logic for resolving shared clusters.
-- **Physical/Logical Geometry Translation**: Proving the relationship between 10-sector logical records and the physical D88 sector layout.
+- **Observed Placement Pair Mapping**: Exact bit-level logic for resolving shared space occupancy.
+- **Physical/Geometry Translation**: Proving the relationship between 10-sector records and the physical D88 sector layout.
 - **FDC Command Dispatch**: Reconstruction of the low-level `sys_devi`/`sys_devo` driver is incomplete.
