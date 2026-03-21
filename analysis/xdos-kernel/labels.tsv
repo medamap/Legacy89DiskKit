@@ -16,7 +16,7 @@ address	label	class	source	note
 0xC866	sys_entry2_impl	confirmed	XDOS_SYS.D88	Implementation of Entry 2
 0xC86C	sys_rdd_impl	confirmed	XDOS_SYS.D88	Implementation of sys_rdd
 0xC876	sys_wopen_impl	confirmed	XDOS_SYS.D88	Implementation of sys_wopen
-0xC898	sys_file_impl	confirmed	XDOS_SYS.D88	Implementation of sys_file
+0xC898	sys_file_impl	confirmed	XDOS_SYS.D88	Implementation of sys_file (Returns via HL)
 0xC8A6	sys_entry5_impl	confirmed	XDOS_SYS.D88	Implementation of Entry 5
 0xC8B6	sys_entry6_impl	confirmed	XDOS_SYS.D88	Implementation of Entry 6
 0xC8C4	sys_devi_impl	confirmed	XDOS_SYS.D88	Implementation of sys_devi

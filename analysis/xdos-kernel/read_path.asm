@@ -43,6 +43,63 @@ sys_load:   db 0xC3, 0xAA, 0xDE ; Entry 24: Load/Save (jp 0xDEAA)
 sys_call:   db 0xC3, 0x1E, 0xCA ; Entry 40: Generic OS call dispatcher (jp 0xCA1E)
             ds 0xEE00 - $       ; Remainder of table area before fat_area
 
+; --- Syscall Implementation Entrypoints (Confirmed from XDOS_SYS.D88) ---
+; Source: XDOS_SYS.D88. Mapping: FileOffset = MemoryAddr - 0xED78 + 0x7c13.
+; These are the targets of the syscall jump table.
+
+org 0xC860
+sys_wrd_impl:
+    ; Offset: 0x56FB
+    db 0xCD, 0x34, 0xC9 ; call 0xC934
+    db 0xB7             ; or a
+    db 0xCA, 0x38, 0xC9 ; jp z, 0xC938
+    db 0xC9             ; ret
+
+org 0xC86C
+sys_rdd_impl:
+    ; Offset: 0x5707
+    db 0xFD, 0xB7, 0xC0 ; iy prefix (or dummy), or a, ret nz
+    db 0xC3, 0xAF, 0xD6 ; jp 0xD6AF (Real implementation?)
+
+org 0xC876
+sys_wopen_impl:
+    ; Offset: 0x5711
+    db 0x17             ; rla
+    db 0xCD, 0x34, 0xC9 ; call 0xC934
+    db 0xFE, 0x13       ; cp 0x13
+    db 0x20, 0x17       ; jr nz, +0x17
+    db 0xCD, 0x34, 0xC9 ; call 0xC934
+    db 0xB7             ; or a
+    db 0x20, 0xFA       ; jr nz, -6
+    db 0xCD, 0x7E, 0xC9 ; call 0xC97E
+
+org 0xC898
+sys_file_impl:
+    ; Offset: 0x5733
+    db 0xE3             ; ex (sp), hl
+    db 0xC9             ; ret (returns to hl - likely skipping arguments)
+    ; Note: Entry 4 is "Set active filename". This pattern suggests skipping inline data.
+
+org 0xC8C4
+sys_devi_impl:
+    ; Offset: 0x575F
+    db 0xCD, 0xBC, 0xC9 ; call 0xC9BC
+    db 0xF6, 0x30       ; or 0x30
+    db 0x1B             ; dec de
+    db 0x12             ; ld (de), a
+    db 0x10, 0xF7       ; djnz -9
+
+org 0xC914
+sys_ropen_impl:
+    ; Offset: 0x57AF
+    db 0x38, 0x07       ; jr c, +7
+    db 0xFE, 0x11       ; cp 0x11
+    db 0xD8             ; ret c
+    db 0xD6, 0x07       ; sub 0x07
+    db 0xFE, 0x10       ; cp 0x10
+    db 0x3F             ; ccf
+    db 0xC9             ; ret
+
 ; --- Interleaved Side-Select Logic (Confirmed from XDOSUTIL.D88) ---
 ; Found at XDOSUTIL.D88 physical Track 2, R=8 (D88 offset 0x4bd9)
 ; Logic: toggles side-select bit (bit 4) for FDC access (MB8877A style)

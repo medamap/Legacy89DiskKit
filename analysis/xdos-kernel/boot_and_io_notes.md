@@ -56,6 +56,17 @@ Device-level I/O is performed via `sys_devi` (input) and `sys_devo` (output).
     - **Extraction Limit**: This table was NOT found at the same physical offset in `XDOSUTIL.D88`, which contains BASIC-like strings in that region. This suggests the kernel is not identically mapped across all disks or `XDOSUTIL.D88` is not a bootable system disk.
     - **Mapping Gap**: The logical record mapping for the syscall table (`0xED78`) does not align with the `Record 10 = Track 1, R=1` rule if `0xEE00` is the `fat_area`. This suggests either `fat_area` is mapped differently or the kernel code is loaded from a much higher record number.
 
+### Syscall Implementation Region (Confirmed from XDOS_SYS.D88)
+- **Source Disk**: `XDOS_SYS.D88`
+- **Memory Base**: Implementation code starts around `0xC860`.
+- **Mapping**: FileOffset = MemoryAddr - `0xED78` + `0x7c13`.
+- **Entrypoints**:
+    - `sys_wopen_impl` (`0xC876`): Offset `0x5711`. Starts with `17 CD 34 C9`.
+    - `sys_rdd_impl` (`0xC86C`): Offset `0x5707`. Jump to `0xD6AF`.
+    - `sys_file_impl` (`0xC898`): Offset `0x5733`. Returns to `HL` via `E3 C9`.
+    - `sys_devi_impl` (`0xC8C4`): Offset `0x575F`. Starts with `CD BC C9`.
+    - `sys_ropen_impl` (`0xC914`): Offset `0x57AF`. Starts with `38 07 FE 11`.
+
 ## Unresolved Areas
 - **Track 0 Mapping**: Exact correspondence of logical records 0-9 to physical sectors (R=1 or R=2 start).
 - **Cluster 2 Role**: Both FAM (Track 2, R=1) and bdir (Track 2, R=2) are logically associated with Cluster 2 in some contexts, but FAM is also accessed via logical record 20.
