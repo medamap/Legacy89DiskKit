@@ -46,6 +46,16 @@ Device-level I/O is performed via `sys_devi` (input) and `sys_devo` (output).
 - **Physical Location**: Track 2, Sector 8 (offset 0x4b3c in D88 file)
 - **Importance**: Confirms standard MB8877A I/O port usage (`0x0FF8`) and typical status-polling loop pattern in the kernel.
 
+### Syscall Jump Table (Confirmed)
+- **Source Disk**: `XDOS_SYS.D88`
+- **Physical Location**: Track 6, Sector 1 (offset 0x7c13 in D88 file)
+- **Memory Address**: `0xED78`
+- **Observations**:
+    - Confirmed `C3 xx yy` (jp) pattern for 40+ entries.
+    - Matches syscall addresses from `x-dos.h` (e.g., `sys_wopen` at Entry 0, `sys_rdd` at Entry 3).
+    - **Extraction Limit**: This table was NOT found at the same physical offset in `XDOSUTIL.D88`, which contains BASIC-like strings in that region. This suggests the kernel is not identically mapped across all disks or `XDOSUTIL.D88` is not a bootable system disk.
+    - **Mapping Gap**: The logical record mapping for the syscall table (`0xED78`) does not align with the `Record 10 = Track 1, R=1` rule if `0xEE00` is the `fat_area`. This suggests either `fat_area` is mapped differently or the kernel code is loaded from a much higher record number.
+
 ## Unresolved Areas
 - **Track 0 Mapping**: Exact correspondence of logical records 0-9 to physical sectors (R=1 or R=2 start).
 - **Cluster 2 Role**: Both FAM (Track 2, R=1) and bdir (Track 2, R=2) are logically associated with Cluster 2 in some contexts, but FAM is also accessed via logical record 20.

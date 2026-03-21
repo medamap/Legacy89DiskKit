@@ -12,18 +12,31 @@ address	label	class	source	note
 0x7220	bdir_pt	confirmed	make_BGM	Pointer within the system binary area
 0x7400	fam_area	confirmed	make_BGM	FAM cluster chain buffer
 0xC800	kernel_base	probable	X-DOS_Filesystem_Analysis.md	Hypothesized X-DOS kernel load address
+0xC860	sys_wrd_impl	confirmed	XDOS_SYS.D88	Implementation of sys_wrd
+0xC866	sys_entry2_impl	confirmed	XDOS_SYS.D88	Implementation of Entry 2
+0xC86C	sys_rdd_impl	confirmed	XDOS_SYS.D88	Implementation of sys_rdd
+0xC876	sys_wopen_impl	confirmed	XDOS_SYS.D88	Implementation of sys_wopen
+0xC898	sys_file_impl	confirmed	XDOS_SYS.D88	Implementation of sys_file
+0xC8A6	sys_entry5_impl	confirmed	XDOS_SYS.D88	Implementation of Entry 5
+0xC8B6	sys_entry6_impl	confirmed	XDOS_SYS.D88	Implementation of Entry 6
+0xC8C4	sys_devi_impl	confirmed	XDOS_SYS.D88	Implementation of sys_devi
+0xC8D2	sys_devo_impl	confirmed	XDOS_SYS.D88	Implementation of sys_devo
+0xC914	sys_ropen_impl	confirmed	XDOS_SYS.D88	Implementation of sys_ropen
+0xC91B	sys_entry9_impl	confirmed	XDOS_SYS.D88	Implementation of Entry 9
+0xCA1E	sys_call_impl	confirmed	XDOS_SYS.D88	Implementation of sys_call
+0xDEAA	sys_load_impl	confirmed	XDOS_SYS.D88	Implementation of sys_load
 0xE691	side_latch_shadow	probable	XDOSUTIL.D88	Probable shadow RAM for side-select bit
 0xECE2	sys_dtadr	confirmed	x-dos.h	Data load address variable (word)
 0xECE4	sys_size	confirmed	x-dos.h	Data size variable (word)
 0xECE6	sys_exadr	confirmed	x-dos.h	Execution address variable (word)
 0xED1E	defdev	confirmed	make_BGM	Default drive register
-0xED78	sys_wopen	confirmed	x-dos.h	Open file for write (BC=type)
-0xED7B	sys_wrd	confirmed	x-dos.h	Write data from memory (uses sys_dtadr, sys_size)
-0xED81	sys_rdd	confirmed	x-dos.h	Read data into memory (uses sys_dtadr)
-0xED84	sys_file	confirmed	x-dos.h	Set active filename (DE=ptr)
-0xED8D	sys_devi	confirmed	x-dos.h	Device input (HL=buf, DE=rec, A=cnt)
-0xED90	sys_devo	confirmed	x-dos.h	Device output (HL=buf, DE=rec, A=cnt)
-0xED96	sys_ropen	confirmed	x-dos.h	Open file for read (CY=1 on error)
-0xEDC0	sys_load	confirmed	x-dos.h	Load/Save (A=0:load, A=1:save)
-0xEDF0	sys_call	confirmed	x-dos.h	Generic OS call dispatcher (DE=entry)
+0xED78	sys_wopen	confirmed	XDOS_SYS.D88	Open file for write (BC=type)
+0xED7B	sys_wrd	confirmed	XDOS_SYS.D88	Write data from memory (uses sys_dtadr, sys_size)
+0xED81	sys_rdd	confirmed	XDOS_SYS.D88	Read data into memory (uses sys_dtadr)
+0xED84	sys_file	confirmed	XDOS_SYS.D88	Set active filename (DE=ptr)
+0xED8D	sys_devi	confirmed	XDOS_SYS.D88	Device input (HL=buf, DE=rec, A=cnt)
+0xED90	sys_devo	confirmed	XDOS_SYS.D88	Device output (HL=buf, DE=rec, A=cnt)
+0xED96	sys_ropen	confirmed	XDOS_SYS.D88	Open file for read (CY=1 on error)
+0xEDC0	sys_load	confirmed	XDOS_SYS.D88	Load/Save (A=0:load, A=1:save)
+0xEDF0	sys_call	confirmed	XDOS_SYS.D88	Generic OS call dispatcher (DE=entry)
 0xEE00	fat_area	confirmed	make_BGM	FAT bitmap loaded here
