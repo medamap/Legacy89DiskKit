@@ -24,6 +24,7 @@ address	label	class	source	note
 0xC914	sys_ropen_impl	confirmed	XDOS_SYS.D88	Implementation of sys_ropen
 0xC91B	sys_entry9_impl	confirmed	XDOS_SYS.D88	Implementation of Entry 9
 0xC934	helper_c934	confirmed	XDOS_SYS.D88	Helper routine (nibble swap and call 0xC9EA)
+0xC938	helper_c934_mid	confirmed	XDOS_SYS.D88	Mid-entry point for helper_c934 (bypasses ld (bc),a)
 0xC97E	helper_c97e	confirmed	XDOS_SYS.D88	Helper routine (pop bc, pop hl, ret)
 0xC9BC	helper_c9bc	confirmed	XDOS_SYS.D88	Helper routine (ld a, 0x50; call 0xEB32)
 0xCA1E	sys_call_impl	confirmed	XDOS_SYS.D88	Implementation of sys_call

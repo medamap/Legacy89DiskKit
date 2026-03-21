@@ -155,6 +155,77 @@ This section consolidates the directly observed X-DOS read-path evidence into a 
 - **Inference**: Parameter-skipping via `E3 C9`, stack-cleanup patterns in helpers, and structure-offsetting (`0x1D`).
 - **Hypothesis**: Specific functional roles (e.g., "Set active filename") based on traditional Z80 OS conventions (CP/M-like) and existing `x-dos.h` documentation.
 
+## Write Path Spec (Conservative Reconstruction)
+
+This section consolidates the directly observed X-DOS write-path evidence into a role-split specification.
+
+### 1. `sys_wopen` (Entry: 0xED78, Impl: 0xC876)
+- **Direct Observation**:
+    - Instruction sequence: `17 CD 34 C9 FE 13 20 17 CD 34 C9 B7 20 FA CD 7E C9`.
+    - Disassembly highlights:
+        - Entry with `17` (`rla`).
+        - Multiple calls to `helper_c934`.
+        - A conditional jump `jr nz, -6` that creates a loop calling `helper_c934` at `0xC87E`.
+        - A final call to `helper_c97e`.
+- **Instruction-Level Inference**:
+    - `rla` at entry suggests the Carry flag might be used as a boolean input (e.g., "force create" or "append mode").
+    - `cp 0x13` is a magic number check; in X-DOS, `0x13` could relate to a specific file type or system status.
+    - The loop pattern `call helper_c934 / or a / jr nz, -6` indicates it's processing or waiting for a zero-terminator/success state from the helper.
+- **Behavioral Hypothesis**:
+    - Opens a file for writing.
+    - Likely involves searching for an existing directory entry or allocating a new one, then initializing the FAM chain.
+
+### 2. `sys_wrd` (Entry: 0xED7B, Impl: 0xC860)
+- **Direct Observation**:
+    - Instruction sequence: `CD 34 C9 B7 CA 38 C9 C9`.
+    - Disassembly:
+        ```asm
+        call 0xC934   ; call helper_c934
+        or a          ; test A
+        jp z, 0xC938  ; mid-entry jump to helper_c934
+        ret
+        ```
+- **Instruction-Level Inference**:
+    - `sys_wrd` is highly optimized and shares logic with `helper_c934`.
+    - The jump to `0xC938` bypasses the initial `ld (bc), a` and `jr c` instructions in `helper_c934`.
+- **Behavioral Hypothesis**:
+    - Writes data from memory (likely `sys_dtadr`) to the open file.
+    - The delegation to `helper_c934` suggests the helper is the primary engine for updating the FAM/sector-chain.
+
+### 3. Shared Write-Path Helper: `helper_c934` (Impl: 0xC934)
+- **Direct Observation**:
+    - Instruction sequence: `02 38 0D 0F 0F 0F 0F 4F 1A 13 CD EA C9 38 01 B1 C1 C9`.
+    - Disassembly highlights:
+        - `02`: `ld (bc), a` - Stores accumulator to memory at `BC`.
+        - `38 0D`: `jr c, +0x0D` - Jump to `0xC944` (pop/ret) if Carry set.
+        - `0F 0F 0F 0F`: Swaps nibbles of `A`.
+        - `4F`: `ld c, a`
+        - `1A`: `ld a, (de)` - Reads from `DE`.
+        - `CD EA C9`: Call to sub-helper `0xC9EA`.
+        - `C1`: `pop bc` - Stack cleanup.
+- **Instruction-Level Inference**:
+    - `BC` and `DE` are treated as pointers to kernel buffers (e.g., `fam_area` or `dir_area`).
+    - The nibble swap (`rrca` x4) strongly suggests 4-bit or 12-bit data packing, common in legacy FAT or FAM structures.
+- **Behavioral Hypothesis**:
+    - This is a low-level "Update FAM Entry" or "Write Byte to Buffer" primitive.
+    - It manages the in-memory representation of the file's allocation.
+
+### 4. Stack Helper: `helper_c97e` (Impl: 0xC97E)
+- **Direct Observation**:
+    - Instruction sequence: `78 C1 B7 E1 C9`.
+    - Disassembly: `ld a, b / pop bc / or a / pop hl / ret`.
+- **Instruction-Level Inference**:
+    - Standard utility for cleaning up the stack after a syscall.
+    - Restores `BC` and `HL` from the stack.
+    - Returns a status in `A` derived from `B`.
+- **Behavioral Hypothesis**:
+    - Final exit path for `sys_wopen` and potentially other complex syscalls.
+
+---
+**Write-Path Hypothesis vs. Observation**:
+- **Observation**: `sys_wopen` and `sys_wrd` are tightly coupled via `helper_c934`. Both use `BC` and `DE` pointers.
+- **Hypothesis**: X-DOS write operations are buffered in the `fam_area` (`0x7400`). `sys_wrd` updates this area, and physical write to disk (`sys_devo`) is likely deferred until the file is closed or the buffer is full.
+
 ---
 **Note**: Unrelated local changes were not reset or cleaned during this analysis.
 
