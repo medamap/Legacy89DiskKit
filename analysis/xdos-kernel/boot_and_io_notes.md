@@ -38,6 +38,20 @@ The X-DOS directory entry is a fixed 32-byte block. Entries are arranged contigu
 
 *Note: No field semantics are assigned to these indices in this analysis. This section only proves their physical location and the fixed entry boundary.*
 
+### Directory Byte Pair 0x1B/0x1C Analysis (Evidence-Graded)
+
+- **Observation**: A cross-disk comparison of identical files demonstrates cross-disk stability for the byte pair at `0x1B` (27) and `0x1C` (28).
+
+| Filename | Disk | 0x1B/0x1C |
+| :--- | :--- | :--- |
+| `SX-BASIC` | `XDOS_SYS.D88` | `67 80` |
+| `SX-BASIC` | `XDOSUTIL.D88` | `67 80` |
+| `Overlay module` | `XDOS_SYS.D88` | `A6 80` |
+| `Overlay module` | `XDOSUTIL.D88` | `A6 80` |
+
+- **Conclusion**: The same pair observed for identical files across different disks proves cross-disk stability.
+- **Status**: The semantic meaning of the `0x1B/0x1C` pair remains unknown.
+
 ### Directory Byte Pair 0x1D/0x1E Analysis (Evidence-Graded)
 
 - **Observation**: Directory bytes at indices `0x1D` (29) and `0x1E` (30) are consumed as a contiguous 16-bit pair by the `helper_d6af` kernel routine (Memory Address: `0xD6AF`).
