@@ -38,8 +38,19 @@ The X-DOS directory entry is a fixed 32-byte block. Entries are arranged contigu
 
 *Note: No field semantics are assigned to these indices in this analysis. This section only proves their physical location and the fixed entry boundary.*
 
+## Geometry Translation (Evidence-Graded)
+
+- **Methodology**: To translate the raw D88 header tuple `(C, H, R)` into a flat observed placement pair, the exact transform `(C * 2 + H, R)` is applied.
+- **D88 Header Decoding**: As shown in tracked helper `find_file_start.py`, the D88 sector header comprises a tuple of 4 bytes `(C, H, R, N)` read directly from every physical sector start block within the image track bodies. 
+  - `C` (Cylinder): Represents the physical actuator position.
+  - `H` (Head): Represents the side of the disk.
+  - `R` (Record/Sector): Represents the sector ID within the track.
+- **Exact Transform Justification**: The calculation `C * 2 + H` flattens the physical actuator and head position into a continuous, linear metric. Because the sampled images (`XDOS_SYS.D88` and `XDOSUTIL.D88`) are standard 2D formats defined by double-sided media (using 2 heads, `H=0` or `1`), each contiguous physical cylinder houses exactly 2 sides. Multiplying the physical cylinder coordinate by 2 and adding the active head securely flattens the C/H axes into a single monolithic value spanning `0..79`.
+- **Side Layout Assumptions**: This exact transform inherently depends on a double-sided layout defined for 2D media. If the geometry assumed single-sided (1D) properties, the multiplier would drop to 1.
+
 ### Directory Byte Pair 0x1B/0x1C Analysis (Evidence-Graded)
 
+- **Constraints Note**: No directory field comparison was performed in this detection method.
 - **Observation**: A cross-disk comparison of identical files demonstrates cross-disk stability for the byte pair at `0x1B` (27) and `0x1C` (28).
 
 | Filename | Disk | 0x1B/0x1C |
