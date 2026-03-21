@@ -37,3 +37,11 @@ The current scope is limited to:
 -   `labels.tsv`: Central repository for addresses, labels, and evidence classes.
 -   `read_path.asm`: Assembly reconstruction of confirmed read-related kernel areas.
 -   `boot_and_io_notes.md`: Technical notes on I/O constants and boot-time relationships.
+
+## Status: Research-Active
+Analysis is ongoing to resolve the remaining implementation blockers for 2D X-DOS cloning.
+
+### Critical Unknowns
+- **(Cluster, FirstSectorR) Mapping**: Exact bit-level logic for resolving shared clusters.
+- **Physical/Logical Geometry Translation**: Proving the relationship between 10-sector logical records and the physical D88 sector layout.
+- **FDC Command Dispatch**: Reconstruction of the low-level `sys_devi`/`sys_devo` driver is incomplete.

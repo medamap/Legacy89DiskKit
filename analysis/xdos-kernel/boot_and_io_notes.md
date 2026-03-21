@@ -248,3 +248,35 @@ The following ports are documented as being directly involved in disk I/O, boot 
 - **X-DOS-usage-confirmed**: Directly seen in salvaged assembly or primary artifacts.
 - **X-DOS-usage-probable**: Logically necessary for the target hardware platform or hinted at by patterns (e.g., bit 4 toggle at `side_select_logic`).
 - **Hardware-known**: Documented for the machine but not yet linked to X-DOS kernel code.
+
+## 2D X-DOS Boot and Clone Conditions (Evidence-Graded Spec)
+
+This section defines the requirements for a reliable 2D X-DOS bootable clone, based on the current state of analysis.
+
+### 1. Kernel-Proven Facts (Architectural Constraints)
+- **Logical Record Addressing**: X-DOS uses 1-based logical record numbers for system I/O (e.g., Record 10 = Track 1, R=1).
+- **Track Layout**: Records 0-9 are reserved for Track 0 (IPL). Track 1 starts at Record 10. Track 2 starts at Record 20.
+- **Record Mapping Formula**: `physical_track = (rec - 10) / 10 + 1` and `physical_R = (rec - 10) % 10 + 1`. This proves a **10-sector-per-track** logical geometry for 2D media.
+- **Volume Record Location**: Always Track 0, Sector 1 (offset 0x10 from sector start). Contains format ID (`0x88`) and BCD date.
+- **I/O Dispatch**: Kernel performs physical I/O via `sys_devi`/`sys_devo` using MB8877A ports (`0x0FF8-0x0FFB`).
+
+### 2. Image-Level Observations (Static Artifacts)
+- **Shared Cluster Occupancy**: In dense system disks like `XDOS_SYS.D88`, multiple files appear to occupy sectors within the same logical track/cluster (e.g., Track 51 contains portions of multiple small utility files).
+- **Directory Metadata**: Files on `XDOS_SYS.D88` often have non-zero values at Directory Offset 29 (`0x1D`).
+- **Physical Sector Headers (D88)**: Most 2D X-DOS images show physical sector IDs (R) from 1 to 40 in the D88 header, but the kernel's logical addressing (`10 sectors/track`) implies a higher-level record-to-sector translation or a specific interleaving strategy.
+
+### 3. Tool-Observed Behavior (Empirical Evidence)
+- **Capacity Failure**: A naive "one cluster per file" clone (where each file starts on a new logical track) exceeds the 80-track (80-cluster) limit of 2D media when cloning `XDOS_SYS.D88`.
+- **Boot Success**: Track 0 (IPL) and Track 1 (FAT/Dir) must be exactly reproduced at their physical record positions for the disk to be recognized as bootable by the X1 IPL ROM and X-DOS kernel.
+
+### 4. Strong Hypotheses (Working Assumptions)
+- **Shared-Cluster Requirement**: A bootable clone of a dense system disk **requires** a writer capable of packing multiple files into a single logical track (cluster).
+- **FirstSectorR Encoding**: The Directory byte at offset 29 (`0x1D`) is hypothesized to be the starting logical sector (R) within the cluster assigned to that file.
+- **12-bit/4-bit FAM Packing**: The patterns in `helper_c934` (nibble swaps) suggest a packed FAM structure where cluster allocation is not a simple 1-to-1 byte map.
+
+### 5. Critical Unknowns (Implementation Blockers)
+- **Traversal Engine Logic**: The exact bit-level logic at `0xD6AF` that resolves a `(Cluster, FirstSectorR)` pair into a physical read command is not yet fully reconstructed.
+- **Physical vs. Logical Geometry**: While logical records are 10/track, the relationship to physical D88 sector IDs (often 1-40 or 1-16) remains unproven. It is unknown if the kernel or a lower-level driver handles the `Record -> (Track, Side, Sector)` mapping for different density modes.
+
+---
+**Note**: Unrelated local changes were not reset or cleaned during this analysis. Prior read/write sections were preserved.
