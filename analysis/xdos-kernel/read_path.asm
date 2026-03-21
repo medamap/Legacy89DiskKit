@@ -100,6 +100,66 @@ sys_ropen_impl:
     db 0x3F             ; ccf
     db 0xC9             ; ret
 
+; --- Helper Routines (Confirmed from XDOS_SYS.D88) ---
+; Source: XDOS_SYS.D88. Mapping: FileOffset = MemoryAddr - 0x7165.
+
+org 0xC934
+helper_c934:
+    ; Offset: 0x57CF
+    db 0x02             ; ld (bc), a
+    db 0x38, 0x0D       ; jr c, +0x0D
+    db 0x0F, 0x0F, 0x0F, 0x0F ; rrca x4 (nibble swap)
+    db 0x4F             ; ld c, a
+    db 0x1A             ; ld a, (de)
+    db 0x13             ; inc de
+    db 0xCD, 0xEA, 0xC9 ; call 0xC9EA
+    db 0x38, 0x01       ; jr c, +1
+    db 0xB1             ; or c
+    db 0xC1             ; pop bc
+    db 0xC9             ; ret
+
+org 0xC97E
+helper_c97e:
+    ; Offset: 0x5819
+    db 0x78             ; ld a, b
+    db 0xC1             ; pop bc
+    db 0xB7             ; or a
+    db 0xE1             ; pop hl
+    db 0xC9             ; ret
+
+org 0xC9BC
+helper_c9bc:
+    ; Offset: 0x5857
+    db 0x3E, 0x50       ; ld a, 0x50
+    db 0xCD, 0x32, 0xEB ; call 0xEB32
+    db 0xE1             ; pop hl
+    db 0xD1             ; pop de
+    db 0xC1             ; pop bc
+    db 0xC9             ; ret
+
+org 0xD6AF
+helper_d6af:
+    ; Offset: 0x654A
+    db 0x1B, 0x1B       ; dec de, dec de
+    db 0xCD, 0x55, 0xD1 ; call 0xD155
+    db 0xCD, 0x0E, 0xE0 ; call 0xE00E
+    db 0xD8             ; ret c
+    db 0x3E, 0x08       ; ld a, 0x08
+    db 0x37             ; scf
+    db 0xC0             ; ret nz
+    db 0x7E             ; ld a, (hl)
+    db 0xFE, 0x80       ; cp 0x80
+    db 0x3E, 0x08       ; ld a, 0x08
+    db 0x37             ; scf
+    db 0xC0             ; ret nz
+    db 0x11, 0x1D, 0x00 ; ld de, 0x001D
+    db 0x19             ; add hl, de
+    db 0x56             ; ld d, (hl)
+    db 0x23             ; inc hl
+    db 0x5E             ; ld e, (hl)
+    db 0xCD, 0xE8, 0xDE ; call 0xDEE8
+    db 0xC3, 0x53, 0xD7 ; jp 0xD753 (Corrected jump target)
+
 ; --- Interleaved Side-Select Logic (Confirmed from XDOSUTIL.D88) ---
 ; Found at XDOSUTIL.D88 physical Track 2, R=8 (D88 offset 0x4bd9)
 ; Logic: toggles side-select bit (bit 4) for FDC access (MB8877A style)
