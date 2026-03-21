@@ -66,6 +66,19 @@ The X-DOS directory entry is a fixed 32-byte block. Entries are arranged contigu
 - **Execution Flow**: The `DE` pair is subsequently passed into the next helper/traversal stage via `call 0xDEE8`.
 - **Status**: The internal bit-level semantics and external meaning (e.g., whether these represent a cluster, sector, or other metadata) of this pair remain **unknown**.
 
+### Directory Byte Pair 0x1D/0x1E vs Observed Placement Pair Comparison (Evidence-Graded)
+
+- **Observation**: An independent raw hex scan of the disk images (via tracked helper `find_file_start.py`) identifies the observed placement pair for the beginning of a file's payload. This observed placement pair exactly matches the `0x1D/0x1E` pair found in the directory for all sampled files.
+
+| Disk | Filename | `0x1D/0x1E` Pair | Observed Placement Pair | Match Status |
+| :--- | :--- | :--- | :--- | :--- |
+| `XDOS_SYS.D88` | `X-DOS System X1` | `(04, 02)` | `(04, 02)` | exact match |
+| `XDOS_SYS.D88` | `SX-BASIC` | `(06, 08)` | `(06, 08)` | exact match |
+| `XDOSUTIL.D88` | `Overlay module` | `(06, 06)` | `(06, 06)` | exact match |
+
+- **Conclusion**: The `0x1D/0x1E` pair equals the observed placement pair for all sampled files. There are no contradictions across system files and utility files.
+- **Status**: The explicit downstream translation of these values within the deeper read logic remains **unknown**.
+
 ## Device I/O Calls
 Device-level I/O is performed via `sys_devi` (input) and `sys_devo` (output).
 
