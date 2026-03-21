@@ -38,6 +38,20 @@ The X-DOS directory entry is a fixed 32-byte block. Entries are arranged contigu
 
 *Note: No field semantics are assigned to these indices in this analysis. This section only proves their physical location and the fixed entry boundary.*
 
+### Directory Byte Pair 0x1D/0x1E Analysis (Evidence-Graded)
+
+- **Observation**: Directory bytes at indices `0x1D` (29) and `0x1E` (30) are consumed as a contiguous 16-bit pair by the `helper_d6af` kernel routine (Memory Address: `0xD6AF`).
+- **Instruction Evidence**:
+  ```asm
+  ld de, 0x001D
+  add hl, de    ; Point HL to offset 29 of the entry
+  ld d, (hl)    ; Load 0x1D into D
+  inc hl
+  ld e, (hl)    ; Load 0x1E into E
+  ```
+- **Execution Flow**: The `DE` pair is subsequently passed into the next helper/traversal stage via `call 0xDEE8`.
+- **Status**: The internal bit-level semantics and external meaning (e.g., whether these represent a cluster, sector, or other metadata) of this pair remain **unknown**.
+
 ## Device I/O Calls
 Device-level I/O is performed via `sys_devi` (input) and `sys_devo` (output).
 
