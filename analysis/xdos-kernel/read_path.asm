@@ -20,27 +20,28 @@ volume_record:
     db 0x24, 0x04, 0x17 ; BCD Date (84/04/17)
     db 0x05, 0x00, 0x08, 0x00 ; Reserved
 
-; --- Syscall Jump Table (Confirmed from x-dos.h) ---
-; Pattern: 3-byte jump table entries (likely 'jp addr').
-; Observed range: 0xED78 to 0xEDFF (boundary with fat_area at 0xEE00).
+; --- Syscall Jump Table (Confirmed from XDOS_SYS.D88) ---
+; Source: XDOS_SYS.D88 physical Track 6, R=1 (D88 offset 0x7c13)
+; Pattern: 3-byte jump table entries ('jp addr').
+; Memory range: 0xED78 to 0xEE00.
 
 org 0xED78
-sys_wopen:  ds 3    ; Entry 0: Open file for write
-sys_wrd:    ds 3    ; Entry 1: Write data from memory
-            ds 3    ; Entry 2: [Unknown]
-sys_rdd:    ds 3    ; Entry 3: Read data into memory
-sys_file:   ds 3    ; Entry 4: Set active filename (DE=ptr)
-            ds 3    ; Entry 5: [Unknown]
-            ds 3    ; Entry 6: [Unknown]
-sys_devi:   ds 3    ; Entry 7: Device Input (HL=buf, DE=rec, A=cnt)
-sys_devo:   ds 3    ; Entry 8: Device Output (HL=buf, DE=rec, A=cnt)
-            ds 3    ; Entry 9: [Unknown]
-sys_ropen:  ds 3    ; Entry 10: Open file for read
-            ds 3 * (24 - 11) ; Entries 11-23: [Unknown]
-sys_load:   ds 3    ; Entry 24: Load/Save (A=0:load, A=1:save)
-            ds 3 * (40 - 25) ; Entries 25-39: [Unknown]
-sys_call:   ds 3    ; Entry 40: Generic OS call dispatcher (DE=entry)
-            ds 0xEE00 - $    ; Remainder of table area before fat_area
+sys_wopen:  db 0xC3, 0x76, 0xC8 ; Entry 0: Open file for write (jp 0xC876)
+sys_wrd:    db 0xC3, 0x60, 0xC8 ; Entry 1: Write data from memory (jp 0xC860)
+            db 0xC3, 0x66, 0xC8 ; Entry 2: [Unknown] (jp 0xC866)
+sys_rdd:    db 0xC3, 0x6C, 0xC8 ; Entry 3: Read data into memory (jp 0xC86C)
+sys_file:   db 0xC3, 0x98, 0xC8 ; Entry 4: Set active filename (jp 0xC898)
+            db 0xC3, 0xA6, 0xC8 ; Entry 5: [Unknown] (jp 0xC8A6)
+            db 0xC3, 0xB6, 0xC8 ; Entry 6: [Unknown] (jp 0xC8B6)
+sys_devi:   db 0xC3, 0xC4, 0xC8 ; Entry 7: Device Input (jp 0xC8C4)
+sys_devo:   db 0xC3, 0xD2, 0xC8 ; Entry 8: Device Output (jp 0xC8D2)
+            db 0xC3, 0x1B, 0xC9 ; Entry 9: [Unknown] (jp 0xC91B)
+sys_ropen:  db 0xC3, 0x14, 0xC9 ; Entry 10: Open file for read (jp 0xC914)
+            ds 3 * (24 - 11)    ; Entries 11-23: [Unknown]
+sys_load:   db 0xC3, 0xAA, 0xDE ; Entry 24: Load/Save (jp 0xDEAA)
+            ds 3 * (40 - 25)    ; Entries 25-39: [Unknown]
+sys_call:   db 0xC3, 0x1E, 0xCA ; Entry 40: Generic OS call dispatcher (jp 0xCA1E)
+            ds 0xEE00 - $       ; Remainder of table area before fat_area
 
 ; --- Interleaved Side-Select Logic (Confirmed from XDOSUTIL.D88) ---
 ; Found at XDOSUTIL.D88 physical Track 2, R=8 (D88 offset 0x4bd9)
