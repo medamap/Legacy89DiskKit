@@ -15,6 +15,29 @@ For logical record numbers `rec >= 10`:
 - `physical_track = (rec - 10) / 10 + 1`
 - `physical_R = (rec - 10) % 10 + 1`
 
+## Directory Entry Boundary (Confirmed)
+
+The X-DOS directory entry is a fixed 32-byte block. Entries are arranged contiguously starting from the directory area (Track 1, Sector 2).
+
+### Raw Evidence Table (XDOS_SYS.D88)
+
+| Entry | Start (Offset) | Filename (Offset +2) | Filename Bytes | Length | 0x1A | 0x1B | 0x1D | 0x1E |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | `0x1650` | `0x1652` | `58 2D 44 4F 53 20 53 79 73 74 65 6D 20 20 20 20` | `0x20` | `BA` | `D5` | `02` | `01` |
+| 2 | `0x1670` | `0x1672` | `58 2D 44 4F 53 20 53 79 73 74 65 6D 20 58 31 20` | `0x20` | `12` | `A8` | `04` | `02` |
+| 3 | `0x1690` | `0x1692` | `58 31 2D 42 49 4F 53 20 20 20 20 20 20 20 20 20` | `0x20` | `12` | `B4` | `06` | `03` |
+
+### Boundary and Indexing Summary
+- **Entry Base**: Start of any 32-byte block in the directory area.
+- **Entry Length**: 32 bytes (0x20).
+- **Filename Span**: Bytes 2 through 17 (16 bytes).
+- **Index 0x1A (26)**: Byte at `Base + 26`.
+- **Index 0x1B (27)**: Byte at `Base + 27`.
+- **Index 0x1D (29)**: Byte at `Base + 29`.
+- **Index 0x1E (30)**: Byte at `Base + 30`.
+
+*Note: No field semantics are assigned to these indices in this analysis. This section only proves their physical location and the fixed entry boundary.*
+
 ## Device I/O Calls
 Device-level I/O is performed via `sys_devi` (input) and `sys_devo` (output).
 

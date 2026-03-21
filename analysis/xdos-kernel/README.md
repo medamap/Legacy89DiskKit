@@ -42,6 +42,7 @@ The current scope is limited to:
 Analysis is ongoing to resolve the remaining implementation blockers for 2D X-DOS cloning.
 
 ### Critical Unknowns
+- **Directory Field Semantics**: While the 32-byte directory entry boundary and indexing are confirmed, the exact role of indices `0x1A/0x1B` and `0x1D/0x1E` remains an open question for FAM/Sector traversal logic.
 - **(Cluster, FirstSectorR) Mapping**: Exact bit-level logic for resolving shared clusters.
 - **Physical/Logical Geometry Translation**: Proving the relationship between 10-sector logical records and the physical D88 sector layout.
 - **FDC Command Dispatch**: Reconstruction of the low-level `sys_devi`/`sys_devo` driver is incomplete.
