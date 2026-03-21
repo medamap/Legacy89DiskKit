@@ -108,6 +108,7 @@ helper_c934:
     ; Offset: 0x57CF
     db 0x02             ; ld (bc), a
     db 0x38, 0x0D       ; jr c, +0x0D
+helper_c934_mid:
     db 0x0F, 0x0F, 0x0F, 0x0F ; rrca x4 (nibble swap)
     db 0x4F             ; ld c, a
     db 0x1A             ; ld a, (de)
