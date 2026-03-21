@@ -67,6 +67,22 @@ Device-level I/O is performed via `sys_devi` (input) and `sys_devo` (output).
     - `sys_devi_impl` (`0xC8C4`): Offset `0x575F`. Starts with `CD BC C9`.
     - `sys_ropen_impl` (`0xC914`): Offset `0x57AF`. Starts with `38 07 FE 11`.
 
+## Read-Path Helper Routines (Confirmed from XDOS_SYS.D88)
+Extracted helper routines reached by confirmed syscall implementations.
+
+- **`helper_c934`** (`0xC934`): Offset `0x57CF`.
+  - Bytes: `02 38 0D 0F 0F 0F 0F 4F 1A 13 CD EA C9 38 01 B1 C1 C9`
+  - Observation: Performs nibble swapping (`rrca` x4), reads from `DE`, and calls `0xC9EA`.
+- **`helper_c97e`** (`0xC97E`): Offset `0x5819`.
+  - Bytes: `78 C1 B7 E1 C9`
+  - Observation: Performs stack cleanup (`pop bc`, `pop hl`) before returning.
+- **`helper_c9bc`** (`0xC9BC`): Offset `0x5857`.
+  - Bytes: `3E 50 CD 32 EB E1 D1 C1 C9`
+  - Observation: Loads `0x50` into `A` and calls `0xEB32`, followed by stack cleanup.
+- **`helper_d6af`** (`0xD6AF`): Offset `0x654A`.
+  - Bytes: `1B 1B CD 55 D1 CD 0E E0 D8 3E 08 37 C0 7E FE 80 3E 08 37 C0 11 1D 00 19 56 23 5E CD E8 DE C3 53 D7`
+  - Observation: Acts as an implementation delegate for `sys_rdd`, calling `0xD155`, `0xE00E`, and `0xDEE8` before a final jump to `0xD753`.
+
 ## Unresolved Areas
 - **Track 0 Mapping**: Exact correspondence of logical records 0-9 to physical sectors (R=1 or R=2 start).
 - **Cluster 2 Role**: Both FAM (Track 2, R=1) and bdir (Track 2, R=2) are logically associated with Cluster 2 in some contexts, but FAM is also accessed via logical record 20.
