@@ -42,7 +42,7 @@ The current scope is limited to:
 Analysis is ongoing to resolve the remaining implementation blockers for 2D X-DOS cloning.
 
 ### Critical Unknowns
-- **Directory Field Semantics**: While the 32-byte directory entry boundary and indexing are confirmed, the exact roles of indices `0x1A`, the `0x1B/0x1C` pair, and the `0x1D/0x1E` pair remain open questions. It is proven that `0x1D/0x1E` are consumed as a pair by `helper_d6af`, but their meaning remains unknown. The `0x1B/0x1C` pair shows cross-disk stability for identical files, but its meaning remains unknown.
+- **Directory Field Semantics**: While the 32-byte directory entry boundary and indexing are confirmed, the exact roles of indices `0x1A` and the `0x1B/0x1C` pair remain open questions. It is proven that the `0x1D/0x1E` pair perfectly matches the file's observed placement pair and is consumed by `helper_d6af`, but its explicit downstream translation within the deeper read logic remains unknown. The `0x1B/0x1C` pair shows cross-disk stability for identical files, but its meaning remains unknown.
 - **Observed Placement Pair Mapping**: Exact bit-level logic for resolving shared space occupancy.
 - **Physical/Geometry Translation**: Proving the relationship between 10-sector records and the physical D88 sector layout.
 - **FDC Command Dispatch**: Reconstruction of the low-level `sys_devi`/`sys_devo` driver is incomplete.
