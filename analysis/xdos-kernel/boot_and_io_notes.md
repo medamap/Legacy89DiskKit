@@ -487,3 +487,13 @@ This section classifies observed stability patterns within the raw FAM area (Tra
 
 *Note: No semantic role is assigned to these positions. Classification tracks value stability only.*
 
+## FAM 4-Bit Range Check (Analysis-Only)
+
+- **Inspected Span**: Full 512-byte FAM sector (Track 2, Sector 1) on both disks.
+- **Range Check Result**: `in-range` (`0x00..0x0F`).
+- **Maximum Value Observed**: `0x0A`.
+- **Exceeded 0x0F**: No.
+- **Cross-Disk Status**: Identical. The entire 512-byte raw FAM sector is bit-for-bit identical between `XDOS_SYS.D88` and `XDOSUTIL.D88`.
+
+*Note: This observation confirms that all sampled FAM bytes and the wider inspected window stay within the low 4-bit range, while semantic meaning remains unknown.*
+
