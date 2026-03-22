@@ -429,3 +429,34 @@ This section provides raw binary observations of representative files across `XD
 
 ---
 **Note**: Unrelated local changes were not reset or cleaned during this operation.
+
+## Raw FAM Window Patterns (Analysis-Only)
+
+This section documents raw byte relationships in the FAM area (Track 2, Sector 1) at the offsets indicated by the directory entry's `0x1D` byte.
+
+### Cross-Disk Comparison (Same Filename)
+
+| Filename | Disk | 1D Offset | Raw FAM Window (8 bytes) | Relationship |
+| :--- | :--- | :--- | :--- | :--- |
+| `X-DOS System` | `XDOS_SYS.D88` | `0x02` | `09 03 01 0A 04 01 01 00` | `same` |
+| `X-DOS System` | `XDOSUTIL.D88` | `0x02` | `09 03 01 0A 04 01 01 00` | `same` |
+| `SX-BASIC` | `XDOS_SYS.D88` | `0x06` | `04 01 01 00 00 00 00 00` | `different` |
+| `SX-BASIC` | `XDOSUTIL.D88` | `0x04` | `01 0A 04 01 01 00 00 00` | `different` |
+| `Overlay module` | `XDOS_SYS.D88` | `0x09` | `00 00 00 00 00 00 00 00` | `different` |
+| `Overlay module` | `XDOSUTIL.D88` | `0x06` | `04 01 01 00 00 00 00 00` | `different` |
+| `AUTO RUN.BAS` | `XDOS_SYS.D88` | `0x42` | `00 00 00 00 00 00 00 00` | `different` |
+| `AUTO RUN.BAS` | `XDOSUTIL.D88` | `0x06` | `04 01 01 00 00 00 00 00` | `different` |
+
+### Intra-Disk Comparison (XDOS_SYS.D88)
+
+| Filename 1 | Filename 2 | 1D (1) | 1D (2) | Relationship |
+| :--- | :--- | :--- | :--- | :--- |
+| `X1-BIOS` | `SX-BASIC` | `0x06` | `0x06` | `same` |
+| `Overlay module` | `Overlay moduleX1` | `0x09` | `0x0B` | `repeated` |
+| `SYSUP` | `XASM` | `0x0B` | `0x0E` | `repeated` |
+
+### Summary of Observed Raw Motifs
+- **Cross-disk identity**: `X-DOS System` shows the same 8-byte raw window across the two sampled disks.
+- **Window repetition**: identical 8-byte windows are observed for more than one sampled file or more than one sampled offset.
+- **Offset-local observation**: the compared raw windows are collected from the FAM area using the sampled file rows above; no further semantics are claimed here.
+- **Status**: the meaning of these windows is **unknown**.
