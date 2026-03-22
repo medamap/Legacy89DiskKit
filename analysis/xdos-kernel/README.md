@@ -42,7 +42,8 @@ The current scope is limited to:
 Analysis is ongoing to resolve the remaining implementation blockers for 2D X-DOS cloning.
 
 ### Critical Unknowns
-- **Directory Field Semantics**: While the 32-byte directory entry boundary and indexing are confirmed, the exact roles of indices `0x1A` and the `0x1B/0x1C` pair remain open questions. It is proven that the `0x1D/0x1E` pair perfectly matches the file's observed placement pair and is consumed by `helper_d6af`, but its explicit downstream translation within the deeper read logic remains unknown. The `0x1B/0x1C` pair shows cross-disk stability for identical files, but its meaning remains unknown.
-- **Observed Placement Pair Mapping**: Exact bit-level logic for resolving shared space occupancy.
-- **Geometry Translation**: Analyzing whether the exact transform linking the physical D88 header tuple `(C, H, R)` to the observed placement pair spans other physical density metrics and translation engines down layer.
+- **Directory Field Semantics**: The 32-byte directory entry boundary is confirmed. It is proven that the `0x1D/0x1E` pair perfectly matches the file's first observed placement pair and is consumed by `helper_d6af`. However, the roles of indices `0x1A` and `0x1B/0x1C` remain unknown (despite `0x1B/0x1C` showing cross-disk stability for identical files). Furthermore, it is unknown if the first observed placement alone is enough to infer full runtime traversal.
+- **Shared Placement and Runtime Traversal**: While shared-cluster occupancy is empirically observed, the exact bit-level logic for resolving shared space occupancy during read/write remains unknown. The explicit downstream translation of the `0x1D/0x1E` pair within deeper read logic (`helper_d6af`) to locate subsequent sectors is unproven.
+- **Write-Side Requirements**: It is unknown what specific FAM/FAT updates are required for writing files, nor whether any write-side shared-cluster allocation logic can be safely stated. It remains unknown if `boot-copy + file copy` alone is sufficient for a fully bootable clone.
+- **Geometry Translation Constraints**: Whether the exact transform `(C * 2 + H, R)` used for 2D media spans other physical density metrics and translation engines down the layer.
 - **FDC Command Dispatch**: Reconstruction of the low-level `sys_devi`/`sys_devo` driver is incomplete.
