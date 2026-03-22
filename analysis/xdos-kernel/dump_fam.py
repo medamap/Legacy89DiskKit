@@ -30,9 +30,10 @@ def get_sector_data(d88_path, target_c, target_h, target_r):
 
 def dump_fam(d88_path, disk_name):
     print(f"=== FAM Dump: {disk_name} ===")
+    # Track 2, R=1 maps to C=1, H=0, R=1
     fam_data = get_sector_data(d88_path, 1, 0, 1)
     if fam_data:
-        for i in range(0, 64, 16):
+        for i in range(0, len(fam_data), 16):
             print(f"{hex(i):>4}: {fam_data[i:i+16].hex(' ').upper()}")
     print("")
 
