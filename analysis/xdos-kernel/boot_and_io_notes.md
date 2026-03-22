@@ -460,3 +460,30 @@ This section documents raw byte relationships in the FAM area (Track 2, Sector 1
 - **Window repetition**: identical 8-byte windows are observed for more than one sampled file or more than one sampled offset.
 - **Offset-local observation**: the compared raw windows are collected from the FAM area using the sampled file rows above; no further semantics are claimed here.
 - **Status**: the meaning of these windows is **unknown**.
+
+## FAM Byte And Nibble Stability (Analysis-Only)
+
+This section classifies observed stability patterns within the raw FAM area (Track 2, Sector 1) using sampled 8-byte windows starting at the directory index 0x1D. This is position-stability classification only and no semantics are assigned to any byte or nibble.
+
+### FAM Window Sample Table (First 8 Bytes)
+
+| Sample | Disk | Source File | 1D Offset | B0 | B1 | B2 | B3 | B4 | B5 | B6 | B7 |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| S1 | SYS | X-DOS System | 0x02 | 09 | 03 | 01 | 0A | 04 | 01 | 01 | 00 |
+| S2 | UTIL | X-DOS System | 0x02 | 09 | 03 | 01 | 0A | 04 | 01 | 01 | 00 |
+| S3 | SYS | SX-BASIC | 0x06 | 04 | 01 | 01 | 00 | 00 | 00 | 00 | 00 |
+| S4 | UTIL | SX-BASIC | 0x04 | 01 | 0A | 04 | 01 | 01 | 00 | 00 | 00 |
+| S5 | UTIL | Overlay module | 0x06 | 04 | 01 | 01 | 00 | 00 | 00 | 00 | 00 |
+| S6 | UTIL | AUTO RUN.BAS | 0x06 | 04 | 01 | 01 | 00 | 00 | 00 | 00 | 00 |
+
+### Observed Stability Classification
+
+| Comparison Scope | Stability Label | Evidence |
+| :--- | :--- | :--- |
+| X-DOS System cross-disk same-file comparison | stable-byte | S1 vs S2 (at 1D offset 0x02) |
+| same 1D offset 0x06 repeated-window comparison | stable-byte | S3 vs S5 vs S6 (all at 1D offset 0x06) |
+| window positions B0..B7 high nibble | stable-high-nibble | Observed as 0x0 across all sampled windows in FAM sector |
+| window positions B0..B7 low nibble | variable | Low nibbles vary based on the 1D offset value |
+
+*Note: No semantic role is assigned to these positions. Classification tracks value stability only.*
+
