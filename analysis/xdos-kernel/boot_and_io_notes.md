@@ -531,3 +531,10 @@ This section catalogs observed cases where multiple files share the same track-l
 - write-side reconstruction ordering remains unknown
 - failure/rollback behavior remains unknown
 
+## Boot And Early-Area Boundary (Analysis-Only)
+
+- boot and early-area observations are cataloged
+- volume record, FAT area, directory start, FAM area, and boot copy region are observed at raw locations
+- the exact boot rule and exact required clone reconstruction conditions remain unknown
+- the exact full extent of the directory area remains unknown beyond the directly observed start
+
