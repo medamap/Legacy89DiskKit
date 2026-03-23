@@ -54,3 +54,4 @@ Analysis is ongoing to resolve the remaining implementation blockers for 2D X-DO
 - **FAM Semantic Boundary**: FAM semantic boundary notes now exist in `boot_and_io_notes.md`. All roles are marked explicitly as unknown based on strictly applied evidence boundaries.
 - **Shared Placement Semantic Proof Attempt**: A shared-placement semantic proof attempt note now exists in `boot_and_io_notes.md`.
 - **Write Mutation Semantic Proof Attempt**: A write mutation semantic proof attempt note now exists in `boot_and_io_notes.md`.
+- **Boot Rule Semantic Proof Attempt**: A boot-rule semantic proof attempt note now exists in `boot_and_io_notes.md`.

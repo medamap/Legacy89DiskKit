@@ -977,3 +977,10 @@ This section catalogs observed cases where multiple files share the same track-l
 | :--- | :--- | :--- |
 | write-side downstream mutation role of helper_c934 and helper_c938 in sampled windows | unknown | an upgrade is not justified; helpers perform calls but specific logical mutation remains unproven |
 | write-side downstream mutation role of 0xC9EA in sampled windows | unknown | an upgrade is not justified; the window contains control transfers and literals but explicit mutation semantics are unconfirmed |
+
+## Boot Rule Semantic Proof Attempt (Analysis-Only)
+
+| semantic concern | current evidence grade | current boundary |
+| :--- | :--- | :--- |
+| boot-rule interpretation for sampled Track 0 / Track 1 early-area equality patterns | unknown | an upgrade is not justified; raw span equalities are cataloged but explicit reliance by the boot path is unconfirmed |
+| boot-rule interpretation for geometry translation in sampled 2D cases | unknown | an upgrade is not justified; translation mathematically aligns with directory values but bootloader dependency remains unproven |
