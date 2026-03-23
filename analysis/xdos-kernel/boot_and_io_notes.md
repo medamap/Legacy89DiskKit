@@ -527,3 +527,18 @@ This section defines the current evidence boundary for the relationship between 
 - **Observed**: Read-path byte consumption of the directory `0x1D/0x1E` pair is confirmed in the `helper_d6af` kernel routine.
 - **Observed**: Read-path addressing arithmetic using the `0x1D` offset to index the entry is confirmed in `helper_d6af`.
 - **Boundary**: A direct one-to-one correlation from the directory `0x1D/0x1E` pair to specific raw FAM byte positions within the sector remains unproven.
+
+## Observed Shared Placement Cases (Analysis-Only)
+
+This section catalogs observed cases where multiple files share the same track-level placement region or exact first placement pair within the sampled 2D X-DOS disks.
+
+| disk | file A | file B (or more) | shared observed placement pair or shared placement region | evidence note |
+| :--- | :--- | :--- | :--- | :--- |
+| `XDOS_SYS.D88` | `X1-BIOS` | `SX-BASIC` | Track 0x06 | Shared track-level placement region |
+| `XDOS_SYS.D88` | `Overlay moduleX1` | `SYSUP` | Track 0x0B | Shared track-level placement region |
+| `XDOSUTIL.D88` | `AUTO RUN.BAS` | `Overlay module` | Track 0x06 | Shared track-level placement region |
+| `XDOSUTIL.D88` | `XUTIL` | `GAME LOAD.DOC` | Track 0x09 | Shared track-level placement region |
+| `XDOSUTIL.D88` | `MML.DOC` | `X.DOC` | Track 0x0A | Shared track-level placement region |
+| `XDOSUTIL.D88` | `X.sub` | `Make X`, `X.sub2` | Track 0x0B | Shared track-level placement region (3 files) |
+| `XDOS_SYS / XDOSUTIL` | `X-DOS System` | `X-DOS System` | `(02, 01)` | Shared first placement pair across different disks |
+| `XDOS_SYS / XDOSUTIL` | `X-DOS System X1` | `SX-BASIC` | `(04, 02)` | Shared first placement pair across different disks |
