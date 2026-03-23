@@ -758,3 +758,16 @@ This section catalogs observed cases where multiple files share the same track-l
 | target | observed transfer | evidence class | neutral note |
 | :--- | :--- | :--- | :--- |
 | `0xD1B5` | `none` | confirmed | no transfer in 32-byte window |
+
+## D1B5 Extended Literal Catalog (Analysis-Only)
+
+| target | observed literal/immediate | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xD1B5` | `0x0328` | confirmed | immediate value |
+| `0xD1B5` | `0x0522` | confirmed | immediate value |
+| `0xD1B5` | `0xECD0` | confirmed | immediate value |
+| `0xD1B5` | `0xECB0` | confirmed | immediate value |
+| `0xD1B5` | `0x0020` | confirmed | immediate value |
+| `0xD1B5` | `0xED11` | confirmed | immediate addressing observed |
+| `0xD1B5` | `0xED1F` | confirmed | immediate addressing observed |
+| `0xD1B5` | `0xE75E` | confirmed | immediate addressing observed |
