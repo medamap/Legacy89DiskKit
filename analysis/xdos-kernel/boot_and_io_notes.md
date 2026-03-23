@@ -879,3 +879,13 @@ This section catalogs observed cases where multiple files share the same track-l
 | `0xDAB2` | `0xDF45` | confirmed | immediate addressing observed |
 | `0xDAB2` | `0xECED` | confirmed | immediate addressing observed |
 | `0xDAB2` | `0xECEE` | confirmed | immediate addressing observed |
+
+## Second-Hop Target Control Transfers (Analysis-Only)
+
+| target | observed transfer | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xD8DA` | `call 0xDAC5` | confirmed | control transfer in local window |
+| `0xD8DA` | `ret c` | confirmed | control transfer in local window |
+| `0xD8DA` | `call 0xD155` | confirmed | control transfer in local window |
+| `0xDAB2` | `ret c` | confirmed | control transfer in local window |
+| `0xDAB2` | `call 0xDF45` | confirmed | control transfer in local window |
