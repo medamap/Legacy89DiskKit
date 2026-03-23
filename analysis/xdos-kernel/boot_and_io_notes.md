@@ -794,3 +794,10 @@ This section catalogs observed cases where multiple files share the same track-l
 | `0xD1B5` | `call 0xD470` | confirmed | control transfer in local window |
 | `0xD1B5` | `jr c, +16H` | confirmed | control transfer in local window |
 | `0xD1B5` | `ret` | confirmed | termination in local window |
+
+## D1B5 Second Extended Slice Boundary (Analysis-Only)
+
+- the second-extended `0xD1B5` byte window is cataloged
+- the second-extended `0xD1B5` literals are cataloged
+- the second-extended `0xD1B5` control-transfer observations are cataloged
+- semantic interpretation of the second-extended `0xD1B5` slice remains unknown
