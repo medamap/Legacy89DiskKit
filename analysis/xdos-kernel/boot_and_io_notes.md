@@ -970,3 +970,10 @@ This section catalogs observed cases where multiple files share the same track-l
 - `0xC9EA` literals cataloged
 - `0xC9EA` control transfers cataloged
 - semantic interpretation remains unknown
+
+## Write Mutation Semantic Proof Attempt (Analysis-Only)
+
+| semantic concern | current evidence grade | current boundary |
+| :--- | :--- | :--- |
+| write-side downstream mutation role of helper_c934 and helper_c938 in sampled windows | unknown | an upgrade is not justified; helpers perform calls but specific logical mutation remains unproven |
+| write-side downstream mutation role of 0xC9EA in sampled windows | unknown | an upgrade is not justified; the window contains control transfers and literals but explicit mutation semantics are unconfirmed |
