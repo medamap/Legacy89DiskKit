@@ -497,3 +497,7 @@ This section classifies observed stability patterns within the raw FAM area (Tra
 
 *Note: This observation confirms that all sampled FAM bytes and the wider inspected window stay within the low 4-bit range, while semantic meaning remains unknown.*
 
+## FAM Kernel-Side Value Handling (Analysis-Only)
+
+- **Read-Path Byte Consumption**: Directly observed in `helper_d6af` for the directory-linked pair `0x1D/0x1E`.
+- **Status**: Everything else remains unknown.
