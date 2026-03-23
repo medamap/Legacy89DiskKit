@@ -928,3 +928,12 @@ This section catalogs observed cases where multiple files share the same track-l
 | boot-rule role of Track 0 Head 1 split observations | unknown | an upgrade is not justified; split into differing and identical sectors observed, but structural cause is unconfirmed |
 | boot-rule role of Track 1 Head 0 cross-disk equality | unknown | an upgrade is not justified; raw span equality observed, but strict boot loader reliance is unconfirmed |
 | boot-rule role of geometry translation `(C * 2 + H, R)` | unknown | an upgrade is not justified; translation matches 2D placement, but translation engine scope is unconfirmed |
+
+## FAM Semantic Boundary (Analysis-Only)
+
+| semantic concern | current evidence grade | current boundary |
+| :--- | :--- | :--- |
+| bit-level meaning of sampled FAM values | unknown | an upgrade is not justified; value ranges are observed, but meaning remains unconfirmed |
+| meaning of stable high-nibble / low-range observations | unknown | an upgrade is not justified; nibble constraints exist, but structural reasons are unconfirmed |
+| correlation between directory-linked pair and raw FAM byte position | unknown | an upgrade is not justified; direct one-to-one mapping remains entirely unproven |
+| role of raw FAM windows in shared placement cases | unknown | an upgrade is not justified; files share identical tracks, but specific FAM arbitration is unconfirmed |
