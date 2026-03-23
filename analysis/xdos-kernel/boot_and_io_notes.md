@@ -726,3 +726,10 @@ This section catalogs observed cases where multiple files share the same track-l
 
 - the 0xD1B5 target byte window is cataloged
 - semantic interpretation of the 0xD1B5 window remains unknown
+
+## D1B5 Target Literal Catalog (Analysis-Only)
+
+| target | observed literal/immediate | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xD1B5` | `0x0328` | confirmed | immediate value observed in local window |
+| `0xD1B5` | `0x0522` | confirmed | immediate value observed in local window |
