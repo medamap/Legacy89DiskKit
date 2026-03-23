@@ -919,3 +919,12 @@ This section catalogs observed cases where multiple files share the same track-l
 | write-side role of `helper_c934` | unknown | window calls `0xC9EA`, but semantic role cannot be confirmed |
 | write-side role of `helper_c938` | unknown | window calls `0xC9EA`, but semantic role cannot be confirmed |
 | write-side role of `helper_c97e` | unknown | return window observed, but semantic role cannot be confirmed |
+
+## Boot Rule Semantic Boundary (Analysis-Only)
+
+| semantic concern | current evidence grade | current boundary |
+| :--- | :--- | :--- |
+| boot-rule role of Track 0 Head 0 early-area span | unknown | an upgrade is not justified; span equality observed, but execution phases are unconfirmed |
+| boot-rule role of Track 0 Head 1 split observations | unknown | an upgrade is not justified; split into differing and identical sectors observed, but structural cause is unconfirmed |
+| boot-rule role of Track 1 Head 0 cross-disk equality | unknown | an upgrade is not justified; raw span equality observed, but strict boot loader reliance is unconfirmed |
+| boot-rule role of geometry translation `(C * 2 + H, R)` | unknown | an upgrade is not justified; translation matches 2D placement, but translation engine scope is unconfirmed |
