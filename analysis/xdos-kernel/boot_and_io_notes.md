@@ -909,3 +909,13 @@ This section catalogs observed cases where multiple files share the same track-l
 | read-side downstream traversal role of `0xD470` | unknown | window contains early `RET` and two further transfers; traversal role blocked pending extended context |
 | read-side downstream traversal role of `0xD8DA` | unknown | window references already-cataloged `0xD155`; chain cross-reference observed but semantic role not established |
 | read-side downstream traversal role of `0xDAB2` | unknown | window writes to `0xECED`/`0xECEE`; no confirmed link to read-path traversal observed |
+
+## Write-Side Chain Semantic Boundary (Analysis-Only)
+
+| semantic concern | current evidence grade | current boundary |
+| :--- | :--- | :--- |
+| write-side role of `sys_wopen_impl` | unknown | window calls `helper_c934` and `helper_c97e`, but semantic role cannot be confirmed |
+| write-side role of `sys_wrd_impl` | unknown | window calls `helper_c934` and jumps to `helper_c938`, but semantic role cannot be confirmed |
+| write-side role of `helper_c934` | unknown | window calls `0xC9EA`, but semantic role cannot be confirmed |
+| write-side role of `helper_c938` | unknown | window calls `0xC9EA`, but semantic role cannot be confirmed |
+| write-side role of `helper_c97e` | unknown | return window observed, but semantic role cannot be confirmed |
