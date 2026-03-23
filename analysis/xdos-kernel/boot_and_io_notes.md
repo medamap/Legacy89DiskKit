@@ -596,6 +596,8 @@ This section catalogs observed cases where multiple files share the same track-l
 | `0xE00E` | call target observed | confirmed |
 | `0xDEE8` | call target observed | confirmed |
 | `0xD753` | jp target observed | confirmed |
+| `0xC9EA` | call target observed | confirmed |
+| `0xEB32` | call target observed | confirmed |
 | `0xD6AF` | adjacent control transfer observed | confirmed |
 
 ## Analysis Closeout Boundary (Analysis-Only)
