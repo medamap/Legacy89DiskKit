@@ -55,3 +55,4 @@ Analysis is ongoing to resolve the remaining implementation blockers for 2D X-DO
 - **Shared Placement Semantic Proof Attempt**: A shared-placement semantic proof attempt note now exists in `boot_and_io_notes.md`.
 - **Write Mutation Semantic Proof Attempt**: A write mutation semantic proof attempt note now exists in `boot_and_io_notes.md`.
 - **Boot Rule Semantic Proof Attempt**: A boot-rule semantic proof attempt note now exists in `boot_and_io_notes.md`.
+- **Write Mutation Semantic Proof Attempt Retry 2**: A write mutation semantic proof attempt retry note now exists in `boot_and_io_notes.md`.
