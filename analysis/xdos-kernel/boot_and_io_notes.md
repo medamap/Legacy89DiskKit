@@ -778,3 +778,9 @@ This section catalogs observed cases where multiple files share the same track-l
 - the extended `0xD1B5` literals are cataloged
 - the extended `0xD1B5` control-transfer observation is cataloged
 - semantic interpretation of the extended `0xD1B5` slice remains unknown
+
+## D1B5 Second Extended Byte Window (Analysis-Only)
+
+| target | observed bytes | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xD1B5` | `01 28 03 01 22 05 C5 21 D0 EC 11 B0 EC 01 20 00 ED B0 C1 3A 11 ED F5 3A 1F ED 32 11 ED 32 5E E7 CD F7 D3 38 1B CD 70 D4 38 16 F1 32 11 ED AF 32 5E E7 D5 21 B0 EC 11 D0 EC 01 20 00 ED B0 D1 C9` | confirmed | local window extension |
