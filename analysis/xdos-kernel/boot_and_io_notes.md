@@ -576,6 +576,17 @@ This section catalogs observed cases where multiple files share the same track-l
 | shared placement resolution | unknown | bit-level logic for resolving shared track occupancy in FAM/FAT |
 | write-side update logic | unknown | bit-level FAM/FAT modification sequence and field ordering |
 
+## Downstream Read Traversal Windows (Analysis-Only)
+
+| observed window | directly observed relation | evidence class |
+| :--- | :--- | :--- |
+| `0xD155` | `call target observed` | confirmed from `helper_d6af` |
+| `0xE00E` | `call target observed` | confirmed from `helper_d6af` |
+| `0xDEE8` | `call target observed` | confirmed from `helper_d6af` |
+| `0xD753` | `jp target observed` | confirmed from `helper_d6af` |
+| `0xD6AF` window | `downstream window cataloged` | confirmed from `sys_rdd_impl` |
+| `0xDEE8` context | `control transfer observed` | confirmed from `helper_d6af` after 1D/1E load |
+
 ## Analysis Closeout Boundary (Analysis-Only)
 
 - **Directory Entry Structure**: analysis-complete; boundary established.
