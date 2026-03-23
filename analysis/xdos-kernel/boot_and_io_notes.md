@@ -807,3 +807,9 @@ This section catalogs observed cases where multiple files share the same track-l
 | target | observed bytes | evidence class | neutral note |
 | :--- | :--- | :--- | :--- |
 | `0xD3F7` | `ED CD CD DA D8 3A 2C E7 B7 C2 2C D2 32 04 ED 3A` | confirmed | target window cataloged |
+
+## D470 Target Byte Window (Analysis-Only)
+
+| target | observed bytes | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xD470` | `22 E7 CD A9 DD BF C9 CD B2 DA C3 BE DA 2A 27 E7` | confirmed | target window cataloged |
