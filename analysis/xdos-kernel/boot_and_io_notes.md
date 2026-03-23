@@ -990,3 +990,22 @@ This section catalogs observed cases where multiple files share the same track-l
 | target | observed bytes | evidence class | neutral note |
 | :--- | :--- | :--- | :--- |
 | `0xCABA` | `93 CB AF CB 13 CB 12 CB 17 10 F8 77 23 C9` | confirmed | target byte window observed |
+
+## CABA Target Literal Catalog (Analysis-Only)
+
+| target | observed literal/immediate | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+
+## CABA Target Control Transfers (Analysis-Only)
+
+| target | observed transfer | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xCABA` | `djnz -0x08` | confirmed | control transfer in local window |
+| `0xCABA` | `ret` | confirmed | control transfer in local window |
+
+## CABA Slice Boundary (Analysis-Only)
+
+- `0xCABA` target byte window cataloged
+- `0xCABA` literals cataloged
+- `0xCABA` control transfers cataloged
+- semantic interpretation remains unknown
