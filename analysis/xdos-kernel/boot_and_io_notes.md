@@ -1036,3 +1036,10 @@ This section catalogs observed cases where multiple files share the same track-l
 | `0xC9EA` | `ld bc, 0x011a` | confirmed | register C set to 0x1A immediately before loop entry |
 | `0xC9EA` | `ld a, 0x0b`, `out (c), a` | confirmed | output to port in C with value 0x0B observed |
 | `0xC9EA` | `dec a`, `out (c), a` | confirmed | output to port in C with value 0x0A observed |
+
+## Write Mutation Semantic Proof Attempt After C Provenance (Analysis-Only)
+
+| semantic concern | current evidence grade | current boundary |
+| :--- | :--- | :--- |
+| write-side downstream mutation role of helper_c934 and helper_c938 | unknown | an upgrade is not justified; although C-register provenance and OUT/IN patterns are confirmed, the downstream logical role for filesystem mutation remains unproven |
+| write-side downstream mutation role of 0xC9EA and 0xCABA | unknown | an upgrade is not justified; the observed C-register provenance and I/O patterns provide raw evidence of port access, but the logical role is not repository-documented |
