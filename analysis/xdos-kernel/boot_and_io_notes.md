@@ -937,3 +937,10 @@ This section catalogs observed cases where multiple files share the same track-l
 | meaning of stable high-nibble / low-range observations | unknown | an upgrade is not justified; nibble constraints exist, but structural reasons are unconfirmed |
 | correlation between directory-linked pair and raw FAM byte position | unknown | an upgrade is not justified; direct one-to-one mapping remains entirely unproven |
 | role of raw FAM windows in shared placement cases | unknown | an upgrade is not justified; files share identical tracks, but specific FAM arbitration is unconfirmed |
+
+## Shared Placement Semantic Proof Attempt (Analysis-Only)
+
+| semantic concern | current evidence grade | current boundary |
+| :--- | :--- | :--- |
+| shared track-level region interpretation for sampled 2D cases | unknown | an upgrade is not justified; physical overlap rules cannot be inferred purely from directory values |
+| meaning of same-1D-different-1E pattern in sampled 2D cases | unknown | an upgrade is not justified; differences in 1E are observed during sharing, but index semantics remain unproven |

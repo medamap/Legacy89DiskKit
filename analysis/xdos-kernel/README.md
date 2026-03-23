@@ -52,3 +52,4 @@ Analysis is ongoing to resolve the remaining implementation blockers for 2D X-DO
 - **Write-Side Chain Semantic Boundary**: Write-side chain semantic boundary notes for sys_wopen_impl, sys_wrd_impl, helper_c934, helper_c938, and helper_c97e now exist in `boot_and_io_notes.md`. All roles are marked explicitly as unknown based on strictly applied evidence boundaries.
 - **Boot Rule Semantic Boundary**: Boot rule semantic boundary notes now exist in `boot_and_io_notes.md`.
 - **FAM Semantic Boundary**: FAM semantic boundary notes now exist in `boot_and_io_notes.md`. All roles are marked explicitly as unknown based on strictly applied evidence boundaries.
+- **Shared Placement Semantic Proof Attempt**: A shared-placement semantic proof attempt note now exists in `boot_and_io_notes.md`.
