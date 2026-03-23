@@ -752,3 +752,9 @@ This section catalogs observed cases where multiple files share the same track-l
 | target | observed bytes | evidence class | neutral note |
 | :--- | :--- | :--- | :--- |
 | `0xD1B5` | `01 28 03 01 22 05 C5 21 D0 EC 11 B0 EC 01 20 00 ED B0 C1 3A 11 ED F5 3A 1F ED 32 11 ED 32 5E E7` | confirmed | local window extension |
+
+## D1B5 Extended Control Transfers (Analysis-Only)
+
+| target | observed transfer | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xD1B5` | `none` | confirmed | no transfer in 32-byte window |
