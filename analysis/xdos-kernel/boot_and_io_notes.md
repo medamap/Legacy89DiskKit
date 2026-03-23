@@ -771,3 +771,10 @@ This section catalogs observed cases where multiple files share the same track-l
 | `0xD1B5` | `0xED11` | confirmed | immediate addressing observed |
 | `0xD1B5` | `0xED1F` | confirmed | immediate addressing observed |
 | `0xD1B5` | `0xE75E` | confirmed | immediate addressing observed |
+
+## D1B5 Extended Slice Boundary (Analysis-Only)
+
+- the extended `0xD1B5` byte window is cataloged
+- the extended `0xD1B5` literals are cataloged
+- the extended `0xD1B5` control-transfer observation is cataloged
+- semantic interpretation of the extended `0xD1B5` slice remains unknown

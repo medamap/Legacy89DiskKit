@@ -35,7 +35,7 @@ The current scope is limited to:
 
 ## File Structure
 -   `labels.tsv`: Central repository for addresses, labels, and evidence classes.
--   `read_path.asm`: Assembly reconstruction of confirmed read-related kernel areas. The 0xD1B5 target window is now cataloged. 0xD1B5 slice boundary notes now exist.
+-   `read_path.asm`: Assembly reconstruction of confirmed read-related kernel areas. The 0xD1B5 target window is now cataloged. 0xD1B5 slice boundary notes now exist. Extended 0xD1B5 slice boundary notes now exist.
 -   `boot_and_io_notes.md`: Technical notes on I/O constants and boot-time relationships. An analysis closeout boundary now exists. Downstream target boundary notes now exist.
 
 ## Status: Research-Active
