@@ -721,3 +721,8 @@ This section catalogs observed cases where multiple files share the same track-l
 | target | observed bytes | evidence class | neutral note |
 | :--- | :--- | :--- | :--- |
 | 0xD1B5 | 01 28 03 01 22 05 C5 21 | confirmed | target window cataloged |
+
+## D1B5 Target Boundary (Analysis-Only)
+
+- the 0xD1B5 target byte window is cataloged
+- semantic interpretation of the 0xD1B5 window remains unknown
