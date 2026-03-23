@@ -240,6 +240,16 @@ This section consolidates the directly observed X-DOS read-path evidence into a 
 | helper_c938 | 0F 0F 0F 4F 1A 13 CD EA C9 38 01 B1 C1 C9 | confirmed | documented helper window |
 | helper_c97e | 78 C1 B7 E1 C9 | confirmed | documented helper window |
 
+## Boot And Early-Area Observations (Analysis-Only)
+
+| observed area | sampled disks | directly observed fact | evidence note |
+| :--- | :--- | :--- | :--- |
+| Volume Record | `XDOS_SYS`, `XDOSUTIL` | Located at Track 0, Head 0, Sector 1 (256 bytes) | Offset 0x01: `58 2d 44 4f 53` ("X-DOS") |
+| FAT Area | `XDOS_SYS`, `XDOSUTIL` | Located at Track 0, Head 1, Sector 1 (512 bytes) | Physical R=1 on Head 1 (Logical Rec 10) |
+| Directory Area | `XDOS_SYS`, `XDOSUTIL` | Starts at Track 0, Head 1, Sector 2 (512 bytes) | Physical R=2 on Head 1 (Logical Rec 11) |
+| FAM Area | `XDOS_SYS`, `XDOSUTIL` | Located at Track 1, Head 0, Sector 1 (512 bytes) | Physical R=1 on Track 1 (Logical Rec 20) |
+| Boot Copy Region | `XDOS_SYS`, `XDOSUTIL` | Track 0, Head 0, Sectors 1-10 (Logical Rec 0-9) | Standard 256-byte IPL sector span |
+
 ## Filesystem-Relevant X1 Ports
 The following ports are documented as being directly involved in disk I/O, boot ROM mapping, or DMA-based transfer.
 
