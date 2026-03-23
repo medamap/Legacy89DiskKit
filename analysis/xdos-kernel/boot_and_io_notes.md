@@ -733,3 +733,9 @@ This section catalogs observed cases where multiple files share the same track-l
 | :--- | :--- | :--- | :--- |
 | `0xD1B5` | `0x0328` | confirmed | immediate value observed in local window |
 | `0xD1B5` | `0x0522` | confirmed | immediate value observed in local window |
+
+## D1B5 Target Control Transfers (Analysis-Only)
+
+| target | observed transfer | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xD1B5` | `none` | confirmed | no transfer in 8-byte window |
