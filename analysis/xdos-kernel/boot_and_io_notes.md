@@ -944,3 +944,9 @@ This section catalogs observed cases where multiple files share the same track-l
 | :--- | :--- | :--- |
 | shared track-level region interpretation for sampled 2D cases | unknown | an upgrade is not justified; physical overlap rules cannot be inferred purely from directory values |
 | meaning of same-1D-different-1E pattern in sampled 2D cases | unknown | an upgrade is not justified; differences in 1E are observed during sharing, but index semantics remain unproven |
+
+## C9EA Target Byte Window (Analysis-Only)
+
+| target | observed bytes | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xC9EA` | `11 00 40 44 4C ED 61 03 1B 7B B2 C2 BA CA ED 78 FB E1 D1 C1 F1 C9` | confirmed | target byte window observed |
