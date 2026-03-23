@@ -542,3 +542,13 @@ This section catalogs observed cases where multiple files share the same track-l
 | `XDOSUTIL.D88` | `X.sub` | `Make X`, `X.sub2` | Track 0x0B | Shared track-level placement region (3 files) |
 | `XDOS_SYS / XDOSUTIL` | `X-DOS System` | `X-DOS System` | `(02, 01)` | Shared first placement pair across different disks |
 | `XDOS_SYS / XDOSUTIL` | `X-DOS System X1` | `SX-BASIC` | `(04, 02)` | Shared first placement pair across different disks |
+
+## Shared Placement Boundary (Analysis-Only)
+
+- representative raw shared-placement cases are cataloged
+- shared track-level regions are observed
+- cross-disk same-pair reuse is observed
+- ownership rules remain unknown
+- runtime resolution rules remain unknown
+- write-side reconstruction rules remain unknown
+
