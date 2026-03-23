@@ -691,3 +691,12 @@ This section catalogs observed cases where multiple files share the same track-l
 | `0xDEE8` | `0x00A8` | confirmed | immediate value observed in local window |
 | `0xDEE8` | `0xEE00` | confirmed | absolute address literal observed in local window |
 | `0xE00E` | `0x72` | confirmed | immediate value observed in local window |
+
+## Downstream Target Control Transfers (Analysis-Only)
+
+| target | observed transfer | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xD155` | `ret` | confirmed | window ends with C9 |
+| `0xD753` | `none` | confirmed | no transfer in 9-byte window |
+| `0xDEE8` | `none` | confirmed | no transfer in 10-byte window |
+| `0xE00E` | `jr c` | confirmed | 38 72 at window offset 2 |
