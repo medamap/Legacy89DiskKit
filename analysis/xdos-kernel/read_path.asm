@@ -158,7 +158,7 @@ helper_c9ea:
     db 0xF1
     db 0xC9
     
-org 0xCABA
+org 0xCABA ; literal: none; transfer: djnz -0x08, ret
 helper_caba:
     ; Offset: 0x5955
     db 0x93
