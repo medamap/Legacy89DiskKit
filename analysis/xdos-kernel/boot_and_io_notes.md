@@ -587,6 +587,19 @@ This section catalogs observed cases where multiple files share the same track-l
 | `0xD6AF` window | `downstream window cataloged` | confirmed from `sys_rdd_impl` |
 | `0xDEE8` context | `control transfer observed` | confirmed from `helper_d6af` after 1D/1E load |
 
+## Shared Placement Resolution Windows (Analysis-Only)
+
+| observed window | directly observed relation | evidence class |
+| :--- | :--- | :--- |
+| `0xD6AF` | window cataloged | confirmed |
+| `0xD155` | call target observed | confirmed |
+| `0xE00E` | call target observed | confirmed |
+| `0xDEE8` | call target observed | confirmed |
+| `0xD753` | jp target observed | confirmed |
+| `0xC9EA` | call target observed | confirmed |
+| `0xEB32` | call target observed | confirmed |
+| `0xD6AF` | adjacent control transfer observed | confirmed |
+
 ## Analysis Closeout Boundary (Analysis-Only)
 
 - **Directory Entry Structure**: analysis-complete; boundary established.
