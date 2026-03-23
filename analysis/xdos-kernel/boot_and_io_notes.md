@@ -822,3 +822,17 @@ This section catalogs observed cases where multiple files share the same track-l
 | `0xD3F7` | `0xE72C` | confirmed | immediate addressing observed |
 | `0xD3F7` | `0xD22C` | confirmed | immediate addressing observed |
 | `0xD3F7` | `0xED04` | confirmed | immediate addressing observed |
+
+## D3F7 Target Control Transfers (Analysis-Only)
+
+| target | observed transfer | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xD3F7` | `call 0xD8DA` | confirmed | control transfer in local window |
+| `0xD3F7` | `jp nz, 0xD22C` | confirmed | control transfer in local window |
+
+## D3F7 Slice Boundary (Analysis-Only)
+
+- `0xD3F7` target byte window cataloged
+- `0xD3F7` literals cataloged
+- `0xD3F7` control transfers cataloged
+- semantic interpretation remains unknown
