@@ -570,3 +570,10 @@ This section catalogs observed cases where multiple files share the same track-l
 | `XDOS_SYS.D88` | `not observed` | Full directory scan (Track 1, R=2..10) shows unique `0x1D/0x1E` pairs for all valid files. |
 | `XDOSUTIL.D88` | `not observed` | Full directory scan (Track 1, R=2..10) shows unique `0x1D/0x1E` pairs for all valid files. |
 
+## Shared Placement Summary Boundary (Analysis-Only)
+
+- representative same-disk shared track-level cases are cataloged
+- same-disk exact pair duplication is not observed for valid files
+- cataloged shared-track cases currently fit `same-1D-different-1E`
+- ownership/runtime/write reconstruction rules remain unknown
+
