@@ -739,3 +739,10 @@ This section catalogs observed cases where multiple files share the same track-l
 | target | observed transfer | evidence class | neutral note |
 | :--- | :--- | :--- | :--- |
 | `0xD1B5` | `none` | confirmed | no transfer in 8-byte window |
+
+## D1B5 Slice Boundary (Analysis-Only)
+
+- the `0xD1B5` target byte window is cataloged
+- the `0xD1B5` local literals are cataloged
+- the `0xD1B5` local control-transfer observation is cataloged
+- semantic interpretation of the `0xD1B5` slice remains unknown
