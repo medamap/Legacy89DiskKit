@@ -1028,3 +1028,11 @@ This section catalogs observed cases where multiple files share the same track-l
 | `helper_c97e` | none observed | confirmed | no direct FDC-related I/O in sampled 32-byte window |
 | `0xC9EA` | `OUT (C), H`, `IN A, (C)` | confirmed | observed I/O via C register; port match unknown |
 | `0xCABA` | none observed | confirmed | no direct FDC-related I/O in sampled target window |
+
+## C9EA C-Register Provenance Catalog (Analysis-Only)
+
+| target | observed provenance fact | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xC9EA` | `ld bc, 0x011a` | confirmed | register C set to 0x1A immediately before loop entry |
+| `0xC9EA` | `ld a, 0x0b`, `out (c), a` | confirmed | output to port in C with value 0x0B observed |
+| `0xC9EA` | `dec a`, `out (c), a` | confirmed | output to port in C with value 0x0A observed |
