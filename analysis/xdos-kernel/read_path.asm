@@ -138,6 +138,10 @@ helper_c9bc:
     db 0xC1             ; pop bc
     db 0xC9             ; ret
 
+org 0xD155
+; Target window cataloged from helper_d6af sub-call
+    db 0x04, 0x42, 0x0E, 0x00, 0xC9 ; inc b, ld b, d, ld c, 0x00, ret
+
 org 0xD6AF
 helper_d6af:
     ; Offset: 0x654A
@@ -160,6 +164,18 @@ helper_d6af:
     db 0x5E             ; ld e, (hl)
     db 0xCD, 0xE8, 0xDE ; call 0xDEE8
     db 0xC3, 0x53, 0xD7 ; jp 0xD753 (Corrected jump target)
+
+org 0xD753
+; Target window cataloged from helper_d6af final jump
+    db 0x40, 0x20, 0x0D, 0x13, 0xCD, 0xB5, 0xD1, 0x3E, 0x01
+
+org 0xDEE8
+; Target window cataloged from helper_d6af sub-call after 1D/1E load
+    db 0x01, 0x40, 0x01, 0x11, 0xA8, 0x00, 0x21, 0x00, 0xEE, 0x19
+
+org 0xE00E
+; Target window cataloged from helper_d6af sub-call
+    db 0xEB, 0xDF, 0x38, 0x72, 0x06
 
 ; --- Interleaved Side-Select Logic (Confirmed from XDOSUTIL.D88) ---
 ; Found at XDOSUTIL.D88 physical Track 2, R=8 (D88 offset 0x4bd9)

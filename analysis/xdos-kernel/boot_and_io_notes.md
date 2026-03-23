@@ -610,6 +610,15 @@ This section catalogs observed cases where multiple files share the same track-l
 | `0xD6AF` window | `downstream window cataloged` | confirmed from `sys_rdd_impl` |
 | `0xDEE8` context | `control transfer observed` | confirmed from `helper_d6af` after 1D/1E load |
 
+## Downstream Target Byte Windows (Analysis-Only)
+
+| target | observed bytes | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xD155` | `04 42 0E 00 C9` | confirmed | target window cataloged |
+| `0xD753` | `40 20 0D 13 CD B5 D1 3E 01` | confirmed | target window cataloged |
+| `0xDEE8` | `01 40 01 11 A8 00 21 00 EE 19` | confirmed | target window cataloged |
+| `0xE00E` | `EB DF 38 72 06` | confirmed | target window cataloged |
+
 ## Shared Placement Resolution Windows (Analysis-Only)
 
 | observed window | directly observed relation | evidence class |
