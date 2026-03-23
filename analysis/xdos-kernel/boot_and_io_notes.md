@@ -552,6 +552,17 @@ This section catalogs observed cases where multiple files share the same track-l
 - runtime resolution rules remain unknown
 - write-side reconstruction rules remain unknown
 
+## Shared Track Byte Pattern Check (Analysis-Only)
+
+| disk | representative files | result | evidence note |
+| :--- | :--- | :--- | :--- |
+| `XDOS_SYS.D88` | `X1-BIOS` / `SX-BASIC` | `same-1D-different-1E` | Track 0x06: 1D/1E is `(06, 03)` and `(06, 08)`. |
+| `XDOS_SYS.D88` | `Overlay moduleX1` / `SYSUP` | `same-1D-different-1E` | Track 0x0B: 1D/1E is `(0B, 07)` and `(0B, 06)`. |
+| `XDOSUTIL.D88` | `AUTO RUN.BAS` / `Overlay module` | `same-1D-different-1E` | Track 0x06: 1D/1E is `(06, 04)` and `(06, 06)`. |
+| `XDOSUTIL.D88` | `XUTIL` / `GAME LOAD.DOC` | `same-1D-different-1E` | Track 0x09: 1D/1E is `(09, 03)` and `(09, 09)`. |
+| `XDOSUTIL.D88` | `MML.DOC` / `X.DOC` | `same-1D-different-1E` | Track 0x0A: 1D/1E is `(0A, 02)` and `(0A, 09)`. |
+| `XDOSUTIL.D88` | `X.sub` / `Make X` / `X.sub2` | `same-1D-different-1E` | Track 0x0B: 1D/1E is `(0B, 01)`, `(0B, 03)`, and `(0B, 05)`. |
+
 ## Exact Pair Duplication Check (Analysis-Only)
 
 | disk | result | evidence note |
