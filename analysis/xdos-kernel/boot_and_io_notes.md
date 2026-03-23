@@ -1016,3 +1016,15 @@ This section catalogs observed cases where multiple files share the same track-l
 | :--- | :--- | :--- |
 | write-side downstream mutation role of helper_c934 and helper_c938 in sampled windows | unknown | an upgrade is not justified; existing cataloged windows show nested calls but no explicit filesystem mutation proof |
 | write-side downstream mutation role of 0xC9EA and 0xCABA in sampled windows | unknown | an upgrade is not justified; cataloged windows show control transfers and literal 0x4000 but role remains unconfirmed |
+
+## Write-Side FDC I/O Catalog (Analysis-Only)
+
+| target | observed I/O pattern | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `sys_wopen_impl` | none observed | confirmed | no direct FDC-related I/O in sampled 32-byte window |
+| `sys_wrd_impl` | none observed | confirmed | no direct FDC-related I/O in sampled 32-byte window |
+| `helper_c934` | none observed | confirmed | no direct FDC-related I/O in sampled 32-byte window |
+| `helper_c938` | none observed | confirmed | no direct FDC-related I/O in sampled 32-byte window |
+| `helper_c97e` | none observed | confirmed | no direct FDC-related I/O in sampled 32-byte window |
+| `0xC9EA` | `OUT (C), H`, `IN A, (C)` | confirmed | observed I/O via C register; port match unknown |
+| `0xCABA` | none observed | confirmed | no direct FDC-related I/O in sampled target window |
