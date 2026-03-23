@@ -565,3 +565,15 @@ This section catalogs observed cases where multiple files share the same track-l
 - the exact required clone reconstruction rule remains unknown
 - the full exact extent of directory and adjacent management regions remains unresolved beyond the observed spans
 
+## Implementation Reconciliation Matrix (Analysis-Only)
+
+| implementation concern | current evidence grade | current boundary |
+| :--- | :--- | :--- |
+| directory entry structure | confirmed | 32-byte fixed block with filename at offset 2 (length 16) |
+| initial placement metadata | confirmed | 16-bit pair at offset 0x1D/0x1E matching first observed placement pair |
+| FAM sector byte range | confirmed | 512-byte span at Track 2 Sector 1 within 0x00-0x0F |
+| sequential read traversal | unknown | downstream translation of 0x1D/0x1E for subsequent record offsets |
+| shared placement resolution | unknown | bit-level logic for resolving shared track occupancy in FAM/FAT |
+| write-side update logic | unknown | bit-level FAM/FAT modification sequence and field ordering |
+
+
