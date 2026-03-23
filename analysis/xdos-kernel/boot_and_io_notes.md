@@ -700,3 +700,9 @@ This section catalogs observed cases where multiple files share the same track-l
 | `0xD753` | `none` | confirmed | no transfer in 9-byte window |
 | `0xDEE8` | `none` | confirmed | no transfer in 10-byte window |
 | `0xE00E` | `jr c` | confirmed | 38 72 at window offset 2 |
+
+## Downstream Address-Load Observation (Analysis-Only)
+
+| target | observed instruction pattern | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xDEE8` | `ld bc, 0x0140`, `ld de, 0x00A8`, `ld hl, 0xEE00`, `add hl, de` | confirmed | local window observation |
