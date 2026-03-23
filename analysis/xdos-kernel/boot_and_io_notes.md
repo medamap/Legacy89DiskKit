@@ -621,5 +621,28 @@ This section catalogs observed cases where multiple files share the same track-l
 - **Write-Side Update Logic**: blocked unknown.
 - **Boot Rule Invariants**: blocked unknown.
 
+## Write-Side Update Order Windows (Analysis-Only)
+
+| observed window | directly observed relation | evidence class |
+| :--- | :--- | :--- |
+| `sys_wopen_impl` | entry window cataloged | confirmed |
+| `sys_wopen_impl` | call `helper_c934` observed before return | confirmed |
+| `sys_wopen_impl` | call `helper_c97e` observed before return | confirmed |
+| `sys_wrd_impl` | entry window cataloged | confirmed |
+| `sys_wrd_impl` | call `helper_c934` observed before return | confirmed |
+| `sys_wrd_impl` | jump `helper_c938` observed before return | confirmed |
+| `helper_c934` | entry window cataloged | confirmed |
+| `helper_c934` | call `0xC9EA` observed before return | confirmed |
+| `helper_c938` | entry window cataloged | confirmed |
+| `helper_c938` | call `0xC9EA` observed before return | confirmed |
+| `helper_c97e` | return window observed | confirmed |
+| `helper_c9bc` | entry window cataloged | confirmed |
+| `helper_c9bc` | call `0xEB32` observed before return | confirmed |
+| `helper_c9bc` | adjacent helper window observed | confirmed |
+| `0xC9EA` | call target observed | confirmed |
+| `0xEB32` | call target observed | confirmed |
+| `0xC934` context | adjacent helper window observed | confirmed |
+| `0xC938` context | adjacent helper window observed | confirmed |
+
 
 
