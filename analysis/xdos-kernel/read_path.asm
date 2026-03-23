@@ -138,7 +138,7 @@ helper_c9bc:
     db 0xC1             ; pop bc
     db 0xC9             ; ret
 
-org 0xC9EA
+org 0xC9EA ; literal: 0x4000; transfer: jp nz 0xCABA, ret
 helper_c9ea:
     ; Offset: 0x5885
     db 0x11, 0x00, 0x40

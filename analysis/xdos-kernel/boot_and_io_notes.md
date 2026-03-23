@@ -950,3 +950,23 @@ This section catalogs observed cases where multiple files share the same track-l
 | target | observed bytes | evidence class | neutral note |
 | :--- | :--- | :--- | :--- |
 | `0xC9EA` | `11 00 40 44 4C ED 61 03 1B 7B B2 C2 BA CA ED 78 FB E1 D1 C1 F1 C9` | confirmed | target byte window observed |
+
+## C9EA Target Literal Catalog (Analysis-Only)
+
+| target | observed literal/immediate | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xC9EA` | `0x4000` | confirmed | literal value in local window |
+
+## C9EA Target Control Transfers (Analysis-Only)
+
+| target | observed transfer | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xC9EA` | `jp nz, 0xCABA` | confirmed | control transfer in local window |
+| `0xC9EA` | `ret` | confirmed | control transfer in local window |
+
+## C9EA Slice Boundary (Analysis-Only)
+
+- `0xC9EA` target byte window cataloged
+- `0xC9EA` literals cataloged
+- `0xC9EA` control transfers cataloged
+- semantic interpretation remains unknown
