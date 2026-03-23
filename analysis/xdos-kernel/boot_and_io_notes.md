@@ -517,3 +517,13 @@ This section documents the addressing arithmetic directly observed within the `h
 | `0xD6C9` | `ld e, (hl)` | Sequential load | Loading the second byte of the 16-bit pair. |
 
 - **Observation**: The `helper_d6af` routine uses standard Z80 pointer arithmetic and structure-relative indexing to access the directory-linked metadata. Read-path addressing arithmetic is directly observed in the reconstructed helper window.
+
+## FAM Correlation Boundary (Analysis-Only)
+
+This section defines the current evidence boundary for the relationship between directory metadata and raw FAM bytes.
+
+- **Observed**: Raw 512-byte FAM windows are observed and consistent across disks.
+- **Observed**: All FAM bytes in the full-sector 512-byte range stay within the 4-bit range (`0x00..0x0F`).
+- **Observed**: Read-path byte consumption of the directory `0x1D/0x1E` pair is confirmed in the `helper_d6af` kernel routine.
+- **Observed**: Read-path addressing arithmetic using the `0x1D` offset to index the entry is confirmed in `helper_d6af`.
+- **Boundary**: A direct one-to-one correlation from the directory `0x1D/0x1E` pair to specific raw FAM byte positions within the sector remains unproven.
