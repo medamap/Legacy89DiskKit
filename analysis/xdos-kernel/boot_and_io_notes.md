@@ -706,3 +706,12 @@ This section catalogs observed cases where multiple files share the same track-l
 | target | observed instruction pattern | evidence class | neutral note |
 | :--- | :--- | :--- | :--- |
 | `0xDEE8` | `ld bc, 0x0140`, `ld de, 0x00A8`, `ld hl, 0xEE00`, `add hl, de` | confirmed | local window observation |
+
+## Downstream Target Boundary (Analysis-Only)
+
+- downstream target byte windows are cataloged
+- local literals are cataloged
+- local control transfers are cataloged
+- local `0xDEE8` address-load style observation is cataloged
+- downstream semantic interpretation remains unknown
+
