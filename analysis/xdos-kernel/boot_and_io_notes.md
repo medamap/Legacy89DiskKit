@@ -552,3 +552,10 @@ This section catalogs observed cases where multiple files share the same track-l
 - runtime resolution rules remain unknown
 - write-side reconstruction rules remain unknown
 
+## Exact Pair Duplication Check (Analysis-Only)
+
+| disk | result | evidence note |
+| :--- | :--- | :--- |
+| `XDOS_SYS.D88` | `not observed` | Full directory scan (Track 1, R=2..10) shows unique `0x1D/0x1E` pairs for all valid files. |
+| `XDOSUTIL.D88` | `not observed` | Full directory scan (Track 1, R=2..10) shows unique `0x1D/0x1E` pairs for all valid files. |
+
