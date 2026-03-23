@@ -138,7 +138,16 @@ helper_c9bc:
     db 0xC1             ; pop bc
     db 0xC9             ; ret
 
-org 0xC9EA ; literal: 0x4000; transfer: jp nz 0xCABA, ret
+org 0xC9E1 ; setup for C9EA loop
+    ; Offset: 0x587C
+    db 0x01, 0x1A, 0x01 ; ld bc, 0x011A
+    db 0x3E, 0x0B       ; ld a, 0x0B
+    db 0xED, 0x79       ; out (c), a
+    db 0x3D             ; dec a
+    db 0xED, 0x79       ; out (c), a
+    db 0x26, 0x00       ; ld h, 0x00
+
+org 0xC9EA ; address-range hint: 0x4000; transfer: jp nz 0xCABA, ret; observation: OUT (C), H loop
 helper_c9ea:
     ; Offset: 0x5885
     db 0x11, 0x00, 0x40
