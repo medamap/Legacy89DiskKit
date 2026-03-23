@@ -258,6 +258,15 @@ This section consolidates the directly observed X-DOS read-path evidence into a 
 | Track 0 Head 1 | `XDOS_SYS`, `XDOSUTIL` | R=1-10 (512B) | Observed continuous 10-sector span |
 | Track 1 Head 0 | `XDOS_SYS`, `XDOSUTIL` | R=1-10 (512B) | Observed continuous 10-sector span |
 
+## Early-Area Cross-Disk Equality (Analysis-Only)
+
+| observed region | comparison result | evidence note |
+| :--- | :--- | :--- |
+| Track 0 Head 0 R=1-16 | `same` | Bit-for-bit identical across sampled disks |
+| Track 0 Head 1 R=1-6 | `different` | Binary mismatch (includes FAT and Dir start) |
+| Track 0 Head 1 R=7-10 | `same` | Bit-for-bit identical (end of Dir area) |
+| Track 1 Head 0 R=1-10 | `same` | Bit-for-bit identical (includes FAM and bdir) |
+
 ## Filesystem-Relevant X1 Ports
 The following ports are documented as being directly involved in disk I/O, boot ROM mapping, or DMA-based transfer.
 
