@@ -899,3 +899,13 @@ This section catalogs observed cases where multiple files share the same track-l
 - `0xDAB2` literals cataloged
 - `0xDAB2` control transfers cataloged
 - semantic interpretation remains unknown
+
+## Read-Side Chain Semantic Boundary (Analysis-Only)
+
+| semantic concern | current evidence grade | current boundary |
+| :--- | :--- | :--- |
+| read-side downstream traversal role of `0xD1B5` | provisional | contains block-move (`LDIR`) and two conditional sub-calls; traversal role cannot be confirmed from raw bytes alone |
+| read-side downstream traversal role of `0xD3F7` | unknown | window contains conditional jump and sub-call; no direct connection to read-path entry observed |
+| read-side downstream traversal role of `0xD470` | unknown | window contains early `RET` and two further transfers; traversal role blocked pending extended context |
+| read-side downstream traversal role of `0xD8DA` | unknown | window references already-cataloged `0xD155`; chain cross-reference observed but semantic role not established |
+| read-side downstream traversal role of `0xDAB2` | unknown | window writes to `0xECED`/`0xECEE`; no confirmed link to read-path traversal observed |
