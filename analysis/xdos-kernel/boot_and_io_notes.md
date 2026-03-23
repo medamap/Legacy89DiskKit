@@ -715,3 +715,9 @@ This section catalogs observed cases where multiple files share the same track-l
 - local `0xDEE8` address-load style observation is cataloged
 - downstream semantic interpretation remains unknown
 
+
+## D1B5 Target Byte Window (Analysis-Only)
+
+| target | observed bytes | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| 0xD1B5 | 01 28 03 01 22 05 C5 21 | confirmed | target window cataloged |
