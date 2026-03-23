@@ -813,3 +813,12 @@ This section catalogs observed cases where multiple files share the same track-l
 | target | observed bytes | evidence class | neutral note |
 | :--- | :--- | :--- | :--- |
 | `0xD470` | `22 E7 CD A9 DD BF C9 CD B2 DA C3 BE DA 2A 27 E7` | confirmed | target window cataloged |
+
+## D3F7 Target Literal Catalog (Analysis-Only)
+
+| target | observed literal/immediate | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xD3F7` | `0xD8DA` | confirmed | immediate addressing observed |
+| `0xD3F7` | `0xE72C` | confirmed | immediate addressing observed |
+| `0xD3F7` | `0xD22C` | confirmed | immediate addressing observed |
+| `0xD3F7` | `0xED04` | confirmed | immediate addressing observed |
