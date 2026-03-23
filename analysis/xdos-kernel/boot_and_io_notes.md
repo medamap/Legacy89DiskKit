@@ -250,6 +250,14 @@ This section consolidates the directly observed X-DOS read-path evidence into a 
 | FAM Area | `XDOS_SYS`, `XDOSUTIL` | Located at Track 1, Head 0, Sector 1 (512 bytes) | Physical R=1 on Track 1 (Logical Rec 20) |
 | Boot Copy Region | `XDOS_SYS`, `XDOSUTIL` | Track 0, Head 0, Sectors 1-10 (Logical Rec 0-9) | Standard 256-byte IPL sector span |
 
+## Early-Area Span Catalog (Analysis-Only)
+
+| observed region | sampled disks | directly observed span | evidence note |
+| :--- | :--- | :--- | :--- |
+| Track 0 Head 0 | `XDOS_SYS`, `XDOSUTIL` | R=1-16 (256B) | Observed continuous 16-sector span |
+| Track 0 Head 1 | `XDOS_SYS`, `XDOSUTIL` | R=1-10 (512B) | Observed continuous 10-sector span |
+| Track 1 Head 0 | `XDOS_SYS`, `XDOSUTIL` | R=1-10 (512B) | Observed continuous 10-sector span |
+
 ## Filesystem-Relevant X1 Ports
 The following ports are documented as being directly involved in disk I/O, boot ROM mapping, or DMA-based transfer.
 
