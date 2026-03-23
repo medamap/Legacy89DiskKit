@@ -860,3 +860,10 @@ This section catalogs observed cases where multiple files share the same track-l
 - `0xD470` literals cataloged
 - `0xD470` control transfers cataloged
 - semantic interpretation remains unknown
+
+## Second-Hop Target Byte Windows (Analysis-Only)
+
+| target | observed bytes | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xD8DA` | `19 7E E1 D1 CD C5 DA D8 3A 11 ED F5 CD 55 D1 F1` | confirmed | target window cataloged |
+| `0xDAB2` | `42 C1 3E 09 D8 CD 45 DF 7A 32 ED EC 7B 32 EE EC` | confirmed | target window cataloged |
