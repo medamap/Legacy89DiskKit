@@ -36,7 +36,7 @@ The current scope is limited to:
 ## File Structure
 -   `labels.tsv`: Central repository for addresses, labels, and evidence classes.
 -   `read_path.asm`: Assembly reconstruction of confirmed read-related kernel areas.
--   `boot_and_io_notes.md`: Technical notes on I/O constants and boot-time relationships.
+-   `boot_and_io_notes.md`: Technical notes on I/O constants and boot-time relationships. An analysis closeout boundary now exists.
 
 ## Status: Research-Active
 Analysis is ongoing to resolve the remaining implementation blockers for 2D X-DOS cloning.

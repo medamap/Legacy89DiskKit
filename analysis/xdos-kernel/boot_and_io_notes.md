@@ -576,4 +576,19 @@ This section catalogs observed cases where multiple files share the same track-l
 | shared placement resolution | unknown | bit-level logic for resolving shared track occupancy in FAM/FAT |
 | write-side update logic | unknown | bit-level FAM/FAT modification sequence and field ordering |
 
+## Analysis Closeout Boundary (Analysis-Only)
+
+- **Directory Entry Structure**: analysis-complete; boundary established.
+- **Initial Placement Metadata**: analysis-complete; raw catalog exists; boundary established.
+- **FAM Sector Range**: analysis-complete; raw catalog exists; boundary established.
+- **Boot and Early-Area Spans**: analysis-complete; raw catalog exists; boundary established.
+- **Shared Placement Pattern**: analysis-complete; raw catalog exists; boundary established.
+- **Write Path Entry Windows**: analysis-complete; raw catalog exists; boundary established.
+- **Sequential Read Traversal**: blocked unknown.
+- **Shared Placement Resolution**: blocked unknown.
+- **FAM Pattern Semantics**: blocked unknown.
+- **Write-Side Update Logic**: blocked unknown.
+- **Boot Rule Invariants**: blocked unknown.
+
+
 
