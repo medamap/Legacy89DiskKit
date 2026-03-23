@@ -678,3 +678,16 @@ This section catalogs observed cases where multiple files share the same track-l
 
 
 
+
+## Downstream Target Literal Catalog (Analysis-Only)
+
+| target | observed literal/immediate | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xD155` | `0x00` | confirmed | immediate value observed in local window |
+| `0xD753` | `0x0D` | confirmed | immediate value observed in local window |
+| `0xD753` | `0xD1B5` | confirmed | absolute address literal observed in local window |
+| `0xD753` | `0x01` | confirmed | immediate value observed in local window |
+| `0xDEE8` | `0x0140` | confirmed | immediate value observed in local window |
+| `0xDEE8` | `0x00A8` | confirmed | immediate value observed in local window |
+| `0xDEE8` | `0xEE00` | confirmed | absolute address literal observed in local window |
+| `0xE00E` | `0x72` | confirmed | immediate value observed in local window |
