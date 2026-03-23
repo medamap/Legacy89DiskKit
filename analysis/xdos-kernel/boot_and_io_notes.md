@@ -600,6 +600,13 @@ This section catalogs observed cases where multiple files share the same track-l
 | `0xEB32` | call target observed | confirmed |
 | `0xD6AF` | adjacent control transfer observed | confirmed |
 
+## FAM Pattern Closeout Boundary (Analysis-Only)
+
+- raw windows are cataloged
+- sampled byte/nibble stability is cataloged
+- full-sector range stays within `0x00..0x0F`
+- semantic interpretation remains unknown
+
 ## Analysis Closeout Boundary (Analysis-Only)
 
 - **Directory Entry Structure**: analysis-complete; boundary established.
