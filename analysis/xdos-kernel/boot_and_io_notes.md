@@ -267,6 +267,29 @@ This section consolidates the directly observed X-DOS read-path evidence into a 
 | Track 0 Head 1 R=7-10 | `same` | Bit-for-bit identical (end of Dir area) |
 | Track 1 Head 0 R=1-10 | `same` | Bit-for-bit identical (includes FAM and bdir) |
 
+## Boot Rule Anchor Catalog (Analysis-Only)
+
+This section catalogs only the currently observed raw anchors relevant to boot-related reasoning, without asserting any invariant rule.
+
+### Track 0 Head 0 Observed Span
+- **Observed Span**: R=1-16 (256-byte sectors).
+- **Cross-Disk Equality**: `same`. Bit-for-bit identical across sampled disks (`XDOS_SYS.D88` and `XDOSUTIL.D88`).
+- **Observed Region**: Contains the Volume Record (R=1) and the initial IPL entry point span.
+
+### Track 0 Head 1 Observed Spans
+- **Observed Span**: R=1-10 (512-byte sectors).
+- **Cross-Disk Split**:
+    - **R=1-6**: `different`. Binary mismatch observed (includes FAT area and Directory start).
+    - **R=7-10**: `same`. Bit-for-bit identical across sampled disks (observed end of Directory area).
+
+### Track 1 Head 0 Observed Span
+- **Observed Span**: R=1-10 (512-byte sectors).
+- **Cross-Disk Equality**: `same`. Bit-for-bit identical across sampled disks (includes FAM area and `bdir` system code).
+
+### Boot Rule Boundary
+- **Status**: The exact boot rule boundary remains **unknown**.
+- **Observation**: While specific spans and cross-disk equality patterns are cataloged, the structural limit of the required boot-rule anchor remains unresolved.
+
 ## Filesystem-Relevant X1 Ports
 The following ports are documented as being directly involved in disk I/O, boot ROM mapping, or DMA-based transfer.
 
