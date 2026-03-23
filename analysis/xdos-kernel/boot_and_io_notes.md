@@ -513,3 +513,11 @@ This section catalogs observed cases where multiple files share the same track-l
 - cataloged shared-track cases currently fit `same-1D-different-1E`
 - ownership/runtime/write reconstruction rules remain unknown
 
+## Write Path Boundary (Analysis-Only)
+
+- confirmed write-path entry windows are cataloged
+- write-path helper windows are cataloged
+- detailed FAM/FAT update semantics remain unknown
+- write-side reconstruction ordering remains unknown
+- failure/rollback behavior remains unknown
+
