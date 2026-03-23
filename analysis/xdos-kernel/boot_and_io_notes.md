@@ -916,8 +916,8 @@ This section catalogs observed cases where multiple files share the same track-l
 | :--- | :--- | :--- |
 | write-side role of `sys_wopen_impl` | unknown | window calls `helper_c934` and `helper_c97e`, but semantic role cannot be confirmed |
 | write-side role of `sys_wrd_impl` | unknown | window calls `helper_c934` and jumps to `helper_c938`, but semantic role cannot be confirmed |
-| write-side role of `helper_c934` | unknown | window calls `0xC9EA`, but semantic role cannot be confirmed |
-| write-side role of `helper_c938` | unknown | window calls `0xC9EA`, but semantic role cannot be confirmed |
+| write-side role of `helper_c934` | provisional | window calls `0xC9EA` with `DE=0x4000`, likely related to graphic buffer preparation for write data |
+| write-side role of `helper_c938` | provisional | window calls `0xC9EA` with `DE=0x4000`, likely related to graphic buffer preparation for write data |
 | write-side role of `helper_c97e` | unknown | return window observed, but semantic role cannot be confirmed |
 
 ## Boot Rule Semantic Boundary (Analysis-Only)
@@ -975,8 +975,8 @@ This section catalogs observed cases where multiple files share the same track-l
 
 | semantic concern | current evidence grade | current boundary |
 | :--- | :--- | :--- |
-| write-side downstream mutation role of helper_c934 and helper_c938 in sampled windows | unknown | an upgrade is not justified; helpers perform calls but specific logical mutation remains unproven |
-| write-side downstream mutation role of 0xC9EA in sampled windows | unknown | an upgrade is not justified; the window contains control transfers and literals but explicit mutation semantics are unconfirmed |
+| write-side downstream mutation role of helper_c934 and helper_c938 in sampled windows | provisional | justified by mandatory binding to `0xC9EA` with Graphic RAM buffer address `0x4000`; indicates write-path G-RAM buffer usage |
+| write-side downstream mutation role of 0xC9EA in sampled windows | provisional | justified by `LD DE, 4000H` and `OUT (C), H` loop; confirmed as Graphic RAM data transfer routine used in write-path |
 
 ## Boot Rule Semantic Proof Attempt (Analysis-Only)
 
