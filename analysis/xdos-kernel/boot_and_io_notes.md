@@ -984,3 +984,9 @@ This section catalogs observed cases where multiple files share the same track-l
 | :--- | :--- | :--- |
 | boot-rule interpretation for sampled Track 0 / Track 1 early-area equality patterns | unknown | an upgrade is not justified; raw span equalities are cataloged but explicit reliance by the boot path is unconfirmed |
 | boot-rule interpretation for geometry translation in sampled 2D cases | unknown | an upgrade is not justified; translation mathematically aligns with directory values but bootloader dependency remains unproven |
+
+## CABA Target Byte Window (Analysis-Only)
+
+| target | observed bytes | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xCABA` | `93 CB AF CB 13 CB 12 CB 17 10 F8 77 23 C9` | confirmed | target byte window observed |
