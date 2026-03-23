@@ -555,3 +555,13 @@ This section catalogs observed cases where multiple files share the same track-l
 - the exact boot rule and exact required clone reconstruction conditions remain unknown
 - the exact full extent of the directory area remains unknown beyond the directly observed start
 
+## Boot And Early-Area Summary Boundary (Analysis-Only)
+
+- boot and early-area observations are cataloged
+- early-area spans are cataloged
+- cross-disk equality for sampled early-area regions is cataloged
+- some sampled early-area regions are same and some are different
+- the exact boot rule remains unknown
+- the exact required clone reconstruction rule remains unknown
+- the full exact extent of directory and adjacent management regions remains unresolved beyond the observed spans
+
