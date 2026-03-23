@@ -501,3 +501,19 @@ This section classifies observed stability patterns within the raw FAM area (Tra
 
 - **Read-Path Byte Consumption**: Directly observed in `helper_d6af` for the directory-linked pair `0x1D/0x1E`.
 - **Status**: Everything else remains unknown.
+
+## FAM-Adjacent Addressing Arithmetic (Analysis-Only)
+
+This section documents the addressing arithmetic directly observed within the `helper_d6af` kernel routine window.
+
+| Address | Instruction | Context | Description |
+| :--- | :--- | :--- | :--- |
+| `0xD6AF` | `dec de` | `helper_d6af` entry | Neutrally observed register decrement. |
+| `0xD6B0` | `dec de` | `helper_d6af` entry | Neutrally observed register decrement. |
+| `0xD6C3` | `ld de, 0x001D` | Before structure access | Loading the directory entry offset for index 0x1D. |
+| `0xD6C6` | `add hl, de` | Structure indexing | Offsetting the pointer in `HL` to access the target field. |
+| `0xD6C7` | `ld d, (hl)` | Sequential load | Loading the first byte of the 16-bit pair. |
+| `0xD6C8` | `inc hl` | Pointer stepping | Incrementing `HL` to the next adjacent address. |
+| `0xD6C9` | `ld e, (hl)` | Sequential load | Loading the second byte of the 16-bit pair. |
+
+- **Observation**: The `helper_d6af` routine uses standard Z80 pointer arithmetic and structure-relative indexing to access the directory-linked metadata. Read-path addressing arithmetic is directly observed in the reconstructed helper window.
