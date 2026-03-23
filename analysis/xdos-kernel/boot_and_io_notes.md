@@ -889,3 +889,13 @@ This section catalogs observed cases where multiple files share the same track-l
 | `0xD8DA` | `call 0xD155` | confirmed | control transfer in local window |
 | `0xDAB2` | `ret c` | confirmed | control transfer in local window |
 | `0xDAB2` | `call 0xDF45` | confirmed | control transfer in local window |
+
+## Second-Hop Slice Boundary (Analysis-Only)
+
+- `0xD8DA` target byte window cataloged
+- `0xD8DA` literals cataloged
+- `0xD8DA` control transfers cataloged
+- `0xDAB2` target byte window cataloged
+- `0xDAB2` literals cataloged
+- `0xDAB2` control transfers cataloged
+- semantic interpretation remains unknown
