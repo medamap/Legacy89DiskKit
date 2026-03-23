@@ -867,3 +867,15 @@ This section catalogs observed cases where multiple files share the same track-l
 | :--- | :--- | :--- | :--- |
 | `0xD8DA` | `19 7E E1 D1 CD C5 DA D8 3A 11 ED F5 CD 55 D1 F1` | confirmed | target window cataloged |
 | `0xDAB2` | `42 C1 3E 09 D8 CD 45 DF 7A 32 ED EC 7B 32 EE EC` | confirmed | target window cataloged |
+
+## Second-Hop Target Literal Catalog (Analysis-Only)
+
+| target | observed literal/immediate | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xD8DA` | `0xDAC5` | confirmed | immediate addressing observed |
+| `0xD8DA` | `0xED11` | confirmed | immediate addressing observed |
+| `0xD8DA` | `0xD155` | confirmed | immediate addressing observed |
+| `0xDAB2` | `0x09` | confirmed | immediate addressing observed |
+| `0xDAB2` | `0xDF45` | confirmed | immediate addressing observed |
+| `0xDAB2` | `0xECED` | confirmed | immediate addressing observed |
+| `0xDAB2` | `0xECEE` | confirmed | immediate addressing observed |
