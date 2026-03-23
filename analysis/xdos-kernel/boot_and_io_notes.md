@@ -784,3 +784,13 @@ This section catalogs observed cases where multiple files share the same track-l
 | target | observed bytes | evidence class | neutral note |
 | :--- | :--- | :--- | :--- |
 | `0xD1B5` | `01 28 03 01 22 05 C5 21 D0 EC 11 B0 EC 01 20 00 ED B0 C1 3A 11 ED F5 3A 1F ED 32 11 ED 32 5E E7 CD F7 D3 38 1B CD 70 D4 38 16 F1 32 11 ED AF 32 5E E7 D5 21 B0 EC 11 D0 EC 01 20 00 ED B0 D1 C9` | confirmed | local window extension |
+
+## D1B5 Second Extended Control Transfers (Analysis-Only)
+
+| target | observed transfer | evidence class | neutral note |
+| :--- | :--- | :--- | :--- |
+| `0xD1B5` | `call 0xD3F7` | confirmed | control transfer in local window |
+| `0xD1B5` | `jr c, +1BH` | confirmed | control transfer in local window |
+| `0xD1B5` | `call 0xD470` | confirmed | control transfer in local window |
+| `0xD1B5` | `jr c, +16H` | confirmed | control transfer in local window |
+| `0xD1B5` | `ret` | confirmed | termination in local window |
