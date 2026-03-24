@@ -618,6 +618,8 @@ This section catalogs observed cases where multiple files share the same track-l
 | `0xD753` | `40 20 0D 13 CD B5 D1 3E 01` | confirmed | target window cataloged |
 | `0xDEE8` | `01 40 01 11 A8 00 21 00 EE 19` | confirmed | target window cataloged |
 | `0xE00E` | `EB DF 38 72 06` | confirmed | target window cataloged |
+| `0xEB32` | `FA 93 F8 3C 47 36 00 23 10 FB 3A E4 FA 67 3A E6 FA 6F E5 2A DF FA ED 5B D0 F8 CB F3 CD 38 EA C1` | confirmed | target window cataloged |
+| `0xEA38` | `25 ED 5B D0 F8 CB F3 C3 38 EA` | confirmed | target window cataloged |
 
 ## Shared Placement Resolution Windows (Analysis-Only)
 
@@ -647,6 +649,7 @@ This section catalogs observed cases where multiple files share the same track-l
 - **Boot and Early-Area Spans**: analysis-complete; raw catalog exists; boundary established.
 - **Shared Placement Pattern**: analysis-complete; raw catalog exists; boundary established.
 - **Write Path Entry Windows**: analysis-complete; raw catalog exists; boundary established.
+- **EB32 Target Byte Window**: analysis-complete; raw catalog exists; boundary established.
 - **Sequential Read Traversal**: blocked unknown.
 - **Shared Placement Resolution**: blocked unknown.
 - **FAM Pattern Semantics**: blocked unknown.
@@ -691,6 +694,14 @@ This section catalogs observed cases where multiple files share the same track-l
 | `0xDEE8` | `0x00A8` | confirmed | immediate value observed in local window |
 | `0xDEE8` | `0xEE00` | confirmed | absolute address literal observed in local window |
 | `0xE00E` | `0x72` | confirmed | immediate value observed in local window |
+| `0xEB32` | `0xF893` | confirmed | absolute address literal observed in local window |
+| `0xEB32` | `0xFAE4` | confirmed | absolute address literal observed in local window |
+| `0xEB32` | `0xFAE6` | confirmed | absolute address literal observed in local window |
+| `0xEB32` | `0xFADF` | confirmed | absolute address literal observed in local window |
+| `0xEB32` | `0xF8D0` | confirmed | absolute address literal observed in local window |
+| `0xEB32` | `0xEA38` | confirmed | absolute address literal observed in local window |
+| `0xEA38` | `0xF8D0` | confirmed | absolute address literal observed in local window |
+| `0xEA38` | `0xEA38` | confirmed | absolute address literal observed in local window |
 
 ## Downstream Target Control Transfers (Analysis-Only)
 
@@ -700,6 +711,10 @@ This section catalogs observed cases where multiple files share the same track-l
 | `0xD753` | `none` | confirmed | no transfer in 9-byte window |
 | `0xDEE8` | `none` | confirmed | no transfer in 10-byte window |
 | `0xE00E` | `jr c` | confirmed | 38 72 at window offset 2 |
+| `0xEB32` | `jp m, 0xF893` | confirmed | 0xFA 93 F8 |
+| `0xEB32` | `djnz -5` | confirmed | 0x10 FB |
+| `0xEB32` | `call 0xEA38` | confirmed | 0xCD 38 EA |
+| `0xEA38` | `jp 0xEA38` | confirmed | 0xC3 38 EA |
 
 ## Downstream Address-Load Observation (Analysis-Only)
 
@@ -1029,6 +1044,7 @@ This section catalogs observed cases where multiple files share the same track-l
 | `0xC9EA` | `OUT (C), H`, `IN A, (C)` | confirmed | observed I/O via C register; port match unknown |
 | `0xCABA` | none observed | confirmed | no direct FDC-related I/O in sampled target window |
 
+
 ## C9EA C-Register Provenance Catalog (Analysis-Only)
 
 | target | observed provenance fact | evidence class | neutral note |
@@ -1043,3 +1059,12 @@ This section catalogs observed cases where multiple files share the same track-l
 | :--- | :--- | :--- |
 | write-side downstream mutation role of helper_c934 and helper_c938 | unknown | an upgrade is not justified; although C-register provenance and OUT/IN patterns are confirmed, the downstream logical role for filesystem mutation remains unproven |
 | write-side downstream mutation role of 0xC9EA and 0xCABA | unknown | an upgrade is not justified; the observed C-register provenance and I/O patterns provide raw evidence of port access, but the logical role is not repository-documented |
+
+## EB32 Target Byte Window (Analysis-Only)
+
+- **EB32 Window**: Raw 32-byte window starting at memory address `0xEB32` (`XDOS_SYS.D88` offset `0x79CD`).
+- **Observed Literals**: `0xF893`, `0xFAE4`, `0xFAE6`, `0xFADF`, `0xF8D0`, `0xEA38`.
+- **Observed Transfers**: `jp m, 0xF893`, `djnz -5`, `call 0xEA38`.
+- **FDC Wait Loop Check**: No direct target for the `fdc_wait_loop` at `0xBCA1` (`0x4B3C`) was found within the immediate `0xEB32` window or the initial `0xEA38` loop.
+- **Status**: The semantic meaning of this window and its sub-calls remains **unknown**.
+
