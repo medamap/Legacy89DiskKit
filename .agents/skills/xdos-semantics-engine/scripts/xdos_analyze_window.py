@@ -6,8 +6,8 @@ def hex_string(val, bits=8):
     return hex(val).upper().replace("0X", "")
 
 def analyze_window(hex_bytes, start_addr, metadata):
-    # Simulated Z80 Disassembly and Hardware Mapping
-    # NOTE: This is a simplified draft. A production version would use a full disassembler library.
+    # Simplified byte-window annotation helper.
+    # NOTE: This is intentionally conservative and does not prove behavior.
     
     io_ports = metadata.get("io_ports", {})
     results = []
@@ -24,7 +24,7 @@ def analyze_window(hex_bytes, start_addr, metadata):
                 port_full = f"00{hex_string(port)}".zfill(4)
                 line["bytes"].append(port)
                 line["instr"] = f"OUT ({hex_string(port)}H), A"
-                line["note"] = io_ports.get(port_full, "Unknown Port")
+                    line["note"] = io_ports.get(port_full, "Unknown Port")
                 i += 1
         elif byte == 0xDB: # IN A, (n)
             if i + 1 < len(hex_bytes):
@@ -32,7 +32,7 @@ def analyze_window(hex_bytes, start_addr, metadata):
                 port_full = f"00{hex_string(port)}".zfill(4)
                 line["bytes"].append(port)
                 line["instr"] = f"IN A, ({hex_string(port)}H)"
-                line["note"] = io_ports.get(port_full, "Unknown Port")
+                    line["note"] = io_ports.get(port_full, "Unknown Port")
                 i += 1
         elif byte == 0xED: # Multi-byte opcodes
             if i + 1 < len(hex_bytes):
@@ -40,10 +40,10 @@ def analyze_window(hex_bytes, start_addr, metadata):
                 line["bytes"].append(next_byte)
                 if next_byte == 0x79: # OUT (C), A
                     line["instr"] = "OUT (C), A"
-                    line["note"] = "Hardware Access via C register"
+                        line["note"] = "I/O via C register"
                 elif next_byte == 0x78: # IN A, (C)
                     line["instr"] = "IN A, (C)"
-                    line["note"] = "Hardware Access via C register"
+                        line["note"] = "I/O via C register"
                 i += 1
         elif byte == 0x11: # LD DE, nn
             if i + 2 < len(hex_bytes):
@@ -51,9 +51,9 @@ def analyze_window(hex_bytes, start_addr, metadata):
                 high = hex_bytes[i+2]
                 val = (high << 8) | low
                 line["bytes"].extend([low, high])
-                line["instr"] = f"LD DE, {hex_string(val, 16)}H"
-                if hex_string(val, 16) in metadata.get("memory_regions", {}):
-                    line["note"] = metadata["memory_regions"][hex_string(val, 16)]
+                    line["instr"] = f"LD DE, {hex_string(val, 16)}H"
+                    if hex_string(val, 16) in metadata.get("memory_regions", {}):
+                        line["note"] = f"Address-range hint: {metadata['memory_regions'][hex_string(val, 16)]}"
                 i += 2
         
         results.append(line)

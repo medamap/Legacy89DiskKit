@@ -26,6 +26,8 @@
 - Follow `AGENTS.md`
 - Use evidence for every implemented claim
 - Mark uncertainty as `unknown`
+- Use only repository-local evidence for semantic upgrades
+- If `xdos-semantics-engine` is used, treat it as a raw annotation helper only unless the instruction explicitly cites an accepted repo-local proof
 
 ## Steps
 1. [step]

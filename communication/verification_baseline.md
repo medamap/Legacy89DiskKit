@@ -36,3 +36,8 @@ Reference:
 - copy required files
 - reopen and verify result
 - prefer evidence from the published standalone binary
+
+## Semantic Review Rule
+
+- A semantic upgrade from `unknown` requires repository-local accepted evidence
+- Hardware-port matches, address-range matches, or helper-skill annotations alone are not sufficient
