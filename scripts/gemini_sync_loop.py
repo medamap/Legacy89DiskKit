@@ -98,7 +98,8 @@ def build_prompt(action: str, cutoff_ts: str) -> str:
             common
             + "Review exactly one pending managed report in "
             "communication/GeminiToCodex/report_waiting.\n"
-            "Use the existing repo workflow used by gemini-report-triage.\n"
+            "If repo-local skills are available, use gemini-report-triage and legacy89-gemini-context-pack.\n"
+            "Otherwise follow the same workflow manually.\n"
             "If accepted, move the report to report_completed.\n"
             "If rejected, move the report to report_failed and create exactly one retry instruction in "
             "communication/CodexToGemini/command_waiting.\n"
@@ -109,7 +110,8 @@ def build_prompt(action: str, cutoff_ts: str) -> str:
         return (
             common
             + "Process exactly one managed instruction in communication/CodexToGemini/command_waiting.\n"
-            "Use the existing repo workflow used by gemini-command-worker.\n"
+            "If repo-local skills are available, use gemini-command-worker and legacy89-gemini-context-pack.\n"
+            "Otherwise follow the same workflow manually.\n"
             "Move the instruction to command_processing before work, then to command_processed after writing the report.\n"
             "Write the report to communication/GeminiToCodex/report_waiting.\n"
             "Do not process any instruction older than the managed cutoff.\n"
@@ -118,7 +120,8 @@ def build_prompt(action: str, cutoff_ts: str) -> str:
     return (
         common
         + "Author exactly one next conservative X-DOS analysis instruction.\n"
-        "Use the repo workflow used by gemini-command-author.\n"
+        "If repo-local skills are available, use gemini-command-author and legacy89-gemini-context-pack.\n"
+        "Otherwise follow the same workflow manually.\n"
         "Prioritize the smallest next step that can improve evidence on unresolved themes.\n"
         "Do not upgrade semantic claims without explicit repository-local proof.\n"
         "Write exactly one new instruction file to communication/CodexToGemini/command_waiting.\n"
