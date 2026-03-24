@@ -36,6 +36,7 @@ Write one Markdown instruction per task and queue it in `communication/CodexToGe
   - 2D first
   - Codex does not implement the task
   - Evidence-based claims only
+  - Repo-local evidence only for semantic upgrades
 
 ## Writing Rules
 
@@ -43,6 +44,8 @@ Write one Markdown instruction per task and queue it in `communication/CodexToGe
 - Link directly to important repo files when they matter
 - State unknowns explicitly instead of guessing
 - Do not combine unrelated work in one instruction
+- If a task uses hardware or byte-window helper skills, state whether they are allowed only for raw annotation or also for semantic evaluation
+- For `xdos-semantics-engine`, explicitly state that it is an annotation helper and cannot by itself justify `provisional` or `confirmed`
 - When generating a user-facing handoff code block for Gemini, never include nested code blocks inside it
 - If commands must be shown inside that user-facing code block, render them as plain text bullet items
 

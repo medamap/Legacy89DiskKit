@@ -31,3 +31,5 @@ Make the C# path reliable enough to duplicate a bootable 2D X-DOS disk onto a ne
 - Do not rewrite unrelated docs
 - Do not expand scope into subdirectory support unless explicitly instructed
 - Do not claim parity from roadmap status alone
+- Do not use hardware hints or external machine knowledge by themselves to upgrade a semantic grade
+- If a helper skill annotates byte windows or ports, treat that output as repository-local hints, not proof

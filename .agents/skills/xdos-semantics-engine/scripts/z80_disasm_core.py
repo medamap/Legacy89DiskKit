@@ -80,7 +80,7 @@ class Z80Disassembler:
                         note = "I/O via C"
                     elif b2 == 0x61: # OUT (C), H (Observed in 0xC9EA)
                         instr = "OUT (C), H"
-                        note = "I/O via C (Data transfer?)"
+                        note = "I/O via C"
                     consumed = 2
             elif b == 0xC9:
                 instr = "RET"
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     import sys
     # Example usage for 0xC9EA window
     c9ea_bytes = [0x11, 0x00, 0x40, 0x44, 0x4C, 0xED, 0x61, 0x03, 0x1B, 0x7B, 0xB2, 0xC2, 0xBA, 0xCA, 0xED, 0x78, 0xFB, 0xE1, 0xD1, 0xC1, 0xF1, 0xC9]
-    meta_path = "/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/.agents/skills/xdos-semantics-engine/scripts/x1_metadata.json"
+    meta_path = os.path.join(os.path.dirname(__file__), "x1_metadata.json")
     dis = Z80Disassembler(meta_path)
     lines = dis.disassemble(c9ea_bytes, 0xC9EA)
     print("| Addr | Instruction | Bytes | Hardware Note |")
