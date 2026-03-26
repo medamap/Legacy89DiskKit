@@ -1,6 +1,7 @@
 using Legacy89DiskKit.Application;
 using Legacy89DiskKit.Application.FileSystem;
 using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
 using Legacy89DiskKit.Infrastructure.FileSystem.XDos;
@@ -142,6 +143,63 @@ public class FileSystemTransferOrchestratorTest
     }
 
     [Fact]
+    public void TypeLevel_Resolve_WorksWhenFileSystemIdDiffersFromDisplayName()
+    {
+        var srcFs = CreateFormattedXDos("ORCH_MISMATCH_SRC");
+        var dstFs = CreateFormattedXDos("ORCH_MISMATCH_DST");
+
+        byte[] data = new byte[64]; data[0] = 0xBB;
+        srcFs.WriteFile("MISMATCH.BIN", data, srcFs.CreateDefaultAttributes(false));
+
+        var orchestrator = new FileSystemTransferOrchestrator();
+        orchestrator.Register(srcFs, new XDosTransferAdapter(srcFs));
+        orchestrator.Register(new MismatchedIdAdapter(dstFs));
+
+        orchestrator.Transfer(srcFs, dstFs, "MISMATCH.BIN", "MISMATCH.BIN");
+
+        Assert.True(dstFs.FileExists("MISMATCH.BIN"));
+        Assert.True(data.SequenceEqual(dstFs.ReadFile("MISMATCH.BIN")));
+    }
+
+    [Fact]
+    public void TypeLevel_InstanceRegistration_TakesPrecedenceOverTypeLevel()
+    {
+        var srcFs = CreateFormattedXDos("ORCH_PREC_SRC");
+        var dstFs = CreateFormattedXDos("ORCH_PREC_DST");
+
+        byte[] data = new byte[64]; data[0] = 0xCC;
+        srcFs.WriteFile("PREC.BIN", data, srcFs.CreateDefaultAttributes(false));
+
+        var orchestrator = new FileSystemTransferOrchestrator();
+        orchestrator.Register(new ThrowingAdapter());
+        orchestrator.Register(srcFs, new XDosTransferAdapter(srcFs));
+        orchestrator.Register(dstFs, new XDosTransferAdapter(dstFs));
+
+        orchestrator.Transfer(srcFs, dstFs, "PREC.BIN", "PREC.BIN");
+
+        Assert.True(dstFs.FileExists("PREC.BIN"));
+        Assert.True(data.SequenceEqual(dstFs.ReadFile("PREC.BIN")));
+    }
+
+    [Fact]
+    public void TypeLevel_Resolve_DoesNotCallGetFileSystemInfo()
+    {
+        var srcFs = CreateFormattedXDos("ORCH_NOFS_SRC");
+        var dstFs = CreateFormattedXDos("ORCH_NOFS_DST");
+
+        byte[] data = new byte[32]; data[0] = 0xEE;
+        srcFs.WriteFile("NOFS.BIN", data, srcFs.CreateDefaultAttributes(false));
+
+        var orchestrator = new FileSystemTransferOrchestrator();
+        orchestrator.Register(srcFs, new XDosTransferAdapter(srcFs));
+        orchestrator.Register(new MismatchedIdAdapter(dstFs));
+
+        var ex = Record.Exception(() => orchestrator.Transfer(srcFs, dstFs, "NOFS.BIN", "NOFS.BIN"));
+        Assert.Null(ex);
+        Assert.True(dstFs.FileExists("NOFS.BIN"));
+    }
+
+    [Fact]
     public void Register_TypeLevel_ResolvesWhenNoInstanceRegistered()
     {
         var srcFs = CreateFormattedXDos("ORCH_TYPELV_SRC");
@@ -158,5 +216,23 @@ public class FileSystemTransferOrchestratorTest
 
         Assert.True(dstFs.FileExists("TYPE_RES.BIN"));
         Assert.True(data.SequenceEqual(dstFs.ReadFile("TYPE_RES.BIN")));
+    }
+
+    private sealed class MismatchedIdAdapter : IFileSystemTransferAdapter
+    {
+        private readonly XDosTransferAdapter _inner;
+        public MismatchedIdAdapter(XDosFileSystem fs) => _inner = new XDosTransferAdapter(fs);
+        public string FileSystemId => "NOT-X-DOS";
+        public bool Supports(IFileSystem fs) => fs is XDosFileSystem;
+        public TransferFileEnvelope Export(FileEntry entry) => _inner.Export(entry);
+        public void Import(TransferFileEnvelope envelope, string destFileName) => _inner.Import(envelope, destFileName);
+    }
+
+    private sealed class ThrowingAdapter : IFileSystemTransferAdapter
+    {
+        public string FileSystemId => "THROWING";
+        public bool Supports(IFileSystem fs) => fs is XDosFileSystem;
+        public TransferFileEnvelope Export(FileEntry entry) => throw new InvalidOperationException("Type-level adapter used instead of instance.");
+        public void Import(TransferFileEnvelope envelope, string destFileName) => throw new InvalidOperationException("Type-level adapter used instead of instance.");
     }
 }

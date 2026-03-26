@@ -25,6 +25,8 @@ public class XDosTransferAdapter : IFileSystemTransferAdapter
 
     public string FileSystemId => XDosId;
 
+    public bool Supports(IFileSystem fs) => fs is XDosFileSystem;
+
     public TransferFileEnvelope Export(FileEntry entry)
     {
         byte[] rawName = entry.RawFileName ?? PadToSixteen(Encoding.Latin1.GetBytes(entry.FileName));

@@ -6,20 +6,20 @@ namespace Legacy89DiskKit.Application.FileSystem;
 public class FileSystemTransferOrchestrator
 {
     private readonly Dictionary<IFileSystem, IFileSystemTransferAdapter> _instanceRegistry = new(ReferenceEqualityComparer.Instance);
-    private readonly Dictionary<string, IFileSystemTransferAdapter>      _typeRegistry     = new();
+    private readonly List<IFileSystemTransferAdapter>                    _typeAdapters     = new();
 
     public void Register(IFileSystem fs, IFileSystemTransferAdapter adapter)
         => _instanceRegistry[fs] = adapter;
 
     public void Register(IFileSystemTransferAdapter adapter)
-        => _typeRegistry[adapter.FileSystemId] = adapter;
+        => _typeAdapters.Add(adapter);
 
     private IFileSystemTransferAdapter Resolve(IFileSystem fs)
     {
         if (_instanceRegistry.TryGetValue(fs, out var instanceAdapter)) return instanceAdapter;
-        var id = fs.GetFileSystemInfo().FileSystemName;
-        if (_typeRegistry.TryGetValue(id, out var typeAdapter)) return typeAdapter;
-        throw new InvalidOperationException($"No adapter registered for filesystem: {id}");
+        var typeAdapter = _typeAdapters.LastOrDefault(a => a.Supports(fs));
+        if (typeAdapter != null) return typeAdapter;
+        throw new InvalidOperationException($"No adapter registered for filesystem type '{fs.GetType().Name}'.");
     }
 
     public void Transfer(
