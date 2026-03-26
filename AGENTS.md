@@ -16,18 +16,18 @@ The current product direction is:
 When documents disagree, use this order:
 
 1. current code and CLI help
-2. `Documents/Agent_Handoff_Roadmap_V2.md` for the active C# to C++ migration track
-3. `Documents/Roadmap_V2.md`
-4. `Documents/ROADMAP.md`
+2. `Documents/governance/Agent_Handoff_Roadmap_V2.md` for the active C# to C++ migration track
+3. `Documents/governance/Roadmap_V2.md`
+4. `Documents/governance/ROADMAP.md`
 5. the relevant format specification under `Documents/`
 
 Useful documents:
 
-- Release process: `Documents/Release_Process.md`
-- Roadmap V2 handoff: `Documents/Agent_Handoff_Roadmap_V2.md`
-- Roadmap V2: `Documents/Roadmap_V2.md`
-- C++ DDD folder rulebook: `Documents/Cpp_Ddd_Folder_Migration_Rulebook.md`
-- Roadmap: `Documents/ROADMAP.md`
+- Release process: `Documents/governance/Release_Process.md`
+- Roadmap V2 handoff: `Documents/governance/Agent_Handoff_Roadmap_V2.md`
+- Roadmap V2: `Documents/governance/Roadmap_V2.md`
+- C++ DDD folder rulebook: `Documents/governance/Cpp_Ddd_Folder_Migration_Rulebook.md`
+- Roadmap: `Documents/governance/ROADMAP.md`
 - Document index: `Documents/Folder.md`
 
 ## Current Build and Test Commands
@@ -53,8 +53,8 @@ Standalone CLI release automation:
 - CLI presentation logic should stay under the CLI project
 - Filesystem-specific raw parsing belongs in infrastructure
 - UI formatting must not be mixed into filesystem parsing code
-- The active C# to C++ migration track is managed through `Documents/Roadmap_V2.md`
-- When adding new C++ files, prefer the DDD-oriented folder layout defined in `Documents/Cpp_Ddd_Folder_Migration_Rulebook.md`
+- The active C# to C++ migration track is managed through `Documents/governance/Roadmap_V2.md`
+- When adding new C++ files, prefer the DDD-oriented folder layout defined in `Documents/governance/Cpp_Ddd_Folder_Migration_Rulebook.md`
 
 ## Coding Rules
 
@@ -84,7 +84,7 @@ Standalone CLI release automation:
 - Do not create or rewrite markdown documents unless the user asks for it.
 - When documentation changes are requested, keep document bodies in English unless the user says otherwise.
 - Keep `README.md` compact and release-facing.
-- Keep the current C# to C++ migration backlog in `Documents/Roadmap_V2.md`.
+- Keep the current C# to C++ migration backlog in `Documents/governance/Roadmap_V2.md`.
 
 ## Release Notes
 
