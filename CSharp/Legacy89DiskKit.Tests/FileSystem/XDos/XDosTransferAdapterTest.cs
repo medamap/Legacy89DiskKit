@@ -1,0 +1,262 @@
+using Legacy89DiskKit.Application;
+using Legacy89DiskKit.Application.DiskImage;
+using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
+using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.Domain.FileSystem.Model;
+using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
+using Legacy89DiskKit.Infrastructure.DiskImage.Container;
+using Legacy89DiskKit.Infrastructure.FileSystem.XDos;
+using FileAttributes = Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes;
+using Xunit;
+
+namespace Legacy89DiskKit.Tests.FileSystem.XDos;
+
+public class XDosTransferAdapterTest
+{
+    private static string GetRepoPath(string relativePath)
+    {
+        var baseDirectory = AppContext.BaseDirectory;
+        var repoRoot = Path.GetFullPath(Path.Combine(baseDirectory, "../../../../.."));
+        return Path.Combine(repoRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
+    }
+
+    private (IDiskContainer container, XDosFileSystem fs) CreateFormattedDisk(string name)
+    {
+        var path = GetRepoPath($"images/test/{name}.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        if (File.Exists(path)) File.Delete(path);
+
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+        return (container, fs);
+    }
+
+    [Fact]
+    public void Export_BinaryFile_HasBinaryContentKindAndMetadata()
+    {
+        var (container, fs) = CreateFormattedDisk("TA_EXPORT_BIN");
+
+        byte[] data = Enumerable.Repeat((byte)0xAB, 256).ToArray();
+        fs.WriteFile("BIN_F.BIN", data, fs.CreateDefaultAttributes(false), 0x8000, 0x8000);
+
+        var adapter = new XDosTransferAdapter(fs);
+        var env = adapter.Export("BIN_F.BIN");
+
+        Assert.Equal(ContentKind.Binary, env.ContentKind);
+        Assert.Equal("X-DOS", env.SourceFileSystemId);
+        Assert.True(env.Metadata!.ContainsKey("xdos.fileType"));
+        Assert.Equal("0100", env.Metadata["xdos.fileType"]);
+        Assert.Equal("false", env.Metadata["xdos.isAscii"]);
+        Assert.Equal((ushort)0x8000, env.LoadAddress);
+        Assert.Equal((ushort)0x8000, env.ExecutionAddress);
+        Assert.True(data.SequenceEqual(env.Payload));
+    }
+
+    [Fact]
+    public void Export_AscFile_HasTextContentKindAndMetadata()
+    {
+        var (container, fs) = CreateFormattedDisk("TA_EXPORT_ASC");
+
+        byte[] data = System.Text.Encoding.ASCII.GetBytes("HELLO WORLD\r\n");
+        fs.WriteFile("TEXT_F.TXT", data, fs.CreateDefaultAttributes(true));
+
+        var adapter = new XDosTransferAdapter(fs);
+        var env = adapter.Export("TEXT_F.TXT");
+
+        Assert.Equal(ContentKind.Text, env.ContentKind);
+        Assert.Equal("0400", env.Metadata!["xdos.fileType"]);
+        Assert.Equal("true", env.Metadata["xdos.isAscii"]);
+        Assert.Equal("shift_jis", env.EncodingId);
+    }
+
+    [Fact]
+    public void Export_NonAscType_HasBinaryContentKind()
+    {
+        var (container, fs) = CreateFormattedDisk("TA_EXPORT_SYS");
+
+        byte[] data = new byte[512];
+        fs.WriteFileInternal("SYS_F.SYS", data, fs.CreateDefaultAttributes(false),
+            forcedRawType: (ushort)XDosFileType.Sys);
+
+        var adapter = new XDosTransferAdapter(fs);
+        var env = adapter.Export("SYS_F.SYS");
+
+        Assert.Equal(ContentKind.Binary, env.ContentKind);
+        Assert.Equal("0700", env.Metadata!["xdos.fileType"]);
+        Assert.Null(env.EncodingId);
+    }
+
+    [Fact]
+    public void Import_FromXDosSource_PreservesRawFileType()
+    {
+        var (container, fs) = CreateFormattedDisk("TA_IMPORT_XDOS");
+
+        var envelope = new TransferFileEnvelope(
+            FileName:          "CMD_F.CMD",
+            Payload:           new byte[128],
+            ContentKind:       ContentKind.Binary,
+            SourceFileSystemId: "X-DOS",
+            LoadAddress:       0xC000,
+            ExecutionAddress:  0xC000,
+            Timestamp:         null,
+            EncodingId:        null,
+            Metadata:          new Dictionary<string, string>
+            {
+                ["xdos.fileType"]      = "0300",
+                ["xdos.rawAttributes"] = "00",
+                ["xdos.isAscii"]       = "false",
+            });
+
+        var adapter = new XDosTransferAdapter(fs);
+        adapter.Import(envelope, "CMD_F.CMD");
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "CMD_F.CMD");
+        Assert.Equal((ushort)XDosFileType.Cmd, entry.RawFileType);
+        Assert.Equal((ushort)0xC000, entry.StartAddress);
+    }
+
+    [Fact]
+    public void Import_FromXDosSource_PreservesRawAttributes()
+    {
+        var (container, fs) = CreateFormattedDisk("TA_IMPORT_ATTR");
+
+        var envelope = new TransferFileEnvelope(
+            FileName:          "ATTR_F.BIN",
+            Payload:           new byte[64],
+            ContentKind:       ContentKind.Binary,
+            SourceFileSystemId: "X-DOS",
+            LoadAddress:       null,
+            ExecutionAddress:  null,
+            Timestamp:         null,
+            EncodingId:        null,
+            Metadata:          new Dictionary<string, string>
+            {
+                ["xdos.fileType"]      = "0100",
+                ["xdos.rawAttributes"] = "80",
+                ["xdos.isAscii"]       = "false",
+            });
+
+        var adapter = new XDosTransferAdapter(fs);
+        adapter.Import(envelope, "ATTR_F.BIN");
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "ATTR_F.BIN");
+        Assert.Equal((ushort)XDosFileType.Bin, entry.RawFileType);
+        Assert.Equal(0x80, entry.Attribute);
+    }
+
+    [Fact]
+    public void Import_FromNonXDosSource_BinaryUsesDefaultBinType()
+    {
+        var (container, fs) = CreateFormattedDisk("TA_IMPORT_NONDEF");
+
+        var envelope = new TransferFileEnvelope(
+            FileName:          "HOST_F.BIN",
+            Payload:           new byte[256],
+            ContentKind:       ContentKind.Binary,
+            SourceFileSystemId: "HU-BASIC",
+            LoadAddress:       null,
+            ExecutionAddress:  null,
+            Timestamp:         null,
+            EncodingId:        null,
+            Metadata:          null);
+
+        var adapter = new XDosTransferAdapter(fs);
+        adapter.Import(envelope, "HOST_F.BIN");
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "HOST_F.BIN");
+        Assert.Equal((ushort)XDosFileType.Bin, entry.RawFileType);
+    }
+
+    [Fact]
+    public void Import_FromNonXDosSource_TextUsesDefaultAscType()
+    {
+        var (container, fs) = CreateFormattedDisk("TA_IMPORT_NONTEXT");
+
+        var envelope = new TransferFileEnvelope(
+            FileName:          "HOST_T.TXT",
+            Payload:           System.Text.Encoding.ASCII.GetBytes("HELLO\r\n"),
+            ContentKind:       ContentKind.Text,
+            SourceFileSystemId: "HU-BASIC",
+            LoadAddress:       null,
+            ExecutionAddress:  null,
+            Timestamp:         null,
+            EncodingId:        "shift_jis",
+            Metadata:          null);
+
+        var adapter = new XDosTransferAdapter(fs);
+        adapter.Import(envelope, "HOST_T.TXT");
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "HOST_T.TXT");
+        Assert.Equal((ushort)XDosFileType.Asc, entry.RawFileType);
+    }
+
+    [Fact]
+    public void XDosToXDos_RoundTrip_PreservesAllMetadata()
+    {
+        var (srcContainer, srcFs) = CreateFormattedDisk("TA_RT_SRC");
+        var (dstContainer, dstFs) = CreateFormattedDisk("TA_RT_DST");
+
+        byte[] data = new byte[512];
+        new Random(99).NextBytes(data);
+
+        srcFs.WriteFileInternal("RT_F.CMD", data,
+            new ExtendedFileAttributes(FileAttributes.None, 0x40, false, "X-DOS"),
+            loadAddress: 0xA000, executionAddress: 0xA100,
+            forcedRawType: (ushort)XDosFileType.Cmd);
+
+        var srcAdapter = new XDosTransferAdapter(srcFs);
+        var dstAdapter = new XDosTransferAdapter(dstFs);
+
+        var envelope = srcAdapter.Export("RT_F.CMD");
+        dstAdapter.Import(envelope, "RT_F.CMD");
+
+        var entry = dstFs.GetFilesWithMetadata().First(e => e.FileName == "RT_F.CMD");
+        Assert.Equal((ushort)XDosFileType.Cmd, entry.RawFileType);
+        Assert.Equal(0x40, entry.Attribute);
+        Assert.Equal((ushort)0xA000, entry.StartAddress);
+        Assert.Equal((ushort)0xA100, entry.ExecAddressOrSizeHigh);
+
+        var readBack = dstFs.ReadFileRaw(entry.RawFileName);
+        Assert.True(data.SequenceEqual(readBack));
+    }
+
+    [Fact]
+    public void Import_Utf8Payload_ConvertsToShiftJis()
+    {
+        var (container, fs) = CreateFormattedDisk("TA_IMPORT_UTF8");
+
+        byte[] utf8Bytes = System.Text.Encoding.UTF8.GetBytes("Hello World\r\n");
+
+        var envelope = new TransferFileEnvelope(
+            FileName:          "UTF8_F.TXT",
+            Payload:           utf8Bytes,
+            ContentKind:       ContentKind.Text,
+            SourceFileSystemId: null,
+            LoadAddress:       null,
+            ExecutionAddress:  null,
+            Timestamp:         null,
+            EncodingId:        "utf-8",
+            Metadata:          null);
+
+        var adapter = new XDosTransferAdapter(fs);
+        adapter.Import(envelope, "UTF8_F.TXT");
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "UTF8_F.TXT");
+        Assert.Equal((ushort)XDosFileType.Asc, entry.RawFileType);
+
+        var readBack = fs.ReadFile("UTF8_F.TXT");
+        string decoded = System.Text.Encoding.GetEncoding(932).GetString(readBack);
+        Assert.Contains("Hello World", decoded);
+    }
+
+    [Fact]
+    public void Export_FileNotFound_ThrowsFileNotFoundException()
+    {
+        var (container, fs) = CreateFormattedDisk("TA_NOTFOUND");
+        var adapter = new XDosTransferAdapter(fs);
+
+        Assert.Throws<FileNotFoundException>(() => adapter.Export("MISSING.BIN"));
+    }
+}
