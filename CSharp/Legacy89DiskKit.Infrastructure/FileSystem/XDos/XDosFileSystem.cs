@@ -92,8 +92,8 @@ public class XDosFileSystem : IFileSystem
         _cachedDirectory = null;
 
         byte[] rawName = NormalizeRawName(forcedRawName ?? Encoding.Latin1.GetBytes(fileName));
-        ushort rawType = forcedRawType ?? (attributes.RawAttributes != 0
-            ? (ushort)attributes.RawAttributes
+        ushort rawType = forcedRawType ?? (attributes.IsAscii
+            ? (ushort)XDosFileType.Asc
             : (ushort)XDosFileType.Bin);
 
         if (!forcedFamTrack.HasValue && FileExistsExact(rawName, rawType))

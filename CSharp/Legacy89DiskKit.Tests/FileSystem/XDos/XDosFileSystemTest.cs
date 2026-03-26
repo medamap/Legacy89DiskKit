@@ -362,4 +362,71 @@ public class XDosFileSystemTest
         Assert.Equal(data.Length, readBack.Length);
         Assert.True(data.SequenceEqual(readBack));
     }
+
+    [Fact]
+    public void WriteFile_BinaryIntent_DefaultsToFileType0x0100()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_TYPE_BIN.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        fs.WriteFile("BIN_DEF.BIN", new byte[100], fs.CreateDefaultAttributes(false));
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "BIN_DEF.BIN");
+        Assert.Equal((ushort)XDosFileType.Bin, entry.RawFileType);
+    }
+
+    [Fact]
+    public void WriteFile_TextIntent_DefaultsToFileType0x0400()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_TYPE_ASC.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        fs.WriteFile("TXT_DEF.TXT", new byte[100], fs.CreateDefaultAttributes(true));
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "TXT_DEF.TXT");
+        Assert.Equal((ushort)XDosFileType.Asc, entry.RawFileType);
+    }
+
+    [Fact]
+    public void WriteFile_NonzeroRawAttributes_DoNotAlterFileType()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_TYPE_ATTR.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        var attrWithNonZeroRaw = new ExtendedFileAttributes(FileAttributes.None, 0x80, false, "X-DOS");
+        fs.WriteFile("ATTR.BIN", new byte[100], attrWithNonZeroRaw);
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "ATTR.BIN");
+        Assert.Equal((ushort)XDosFileType.Bin, entry.RawFileType);
+        Assert.Equal(0x80, entry.Attribute);
+    }
+
+    [Fact]
+    public void WriteFileInternal_ExplicitRawType_PreservedUnchanged()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_TYPE_EXPL.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        fs.WriteFileInternal("CMD_F.CMD", new byte[100], fs.CreateDefaultAttributes(false),
+            forcedRawType: (ushort)XDosFileType.Cmd);
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "CMD_F.CMD");
+        Assert.Equal((ushort)XDosFileType.Cmd, entry.RawFileType);
+    }
 }
