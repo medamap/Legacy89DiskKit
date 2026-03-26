@@ -117,9 +117,6 @@ public class XDosFileSystem : IFileSystem
             allocated = _fatWriter.AllocateRecords(totalNeeded);
         }
 
-        _fatWriter.Commit();
-        Array.Copy(_fatWriter.FatSector, _fat.FatSector, _fat.FatSector.Length);
-
         var (famTrack, famSector) = allocated[0];
         var dataRecords = allocated.Skip(1).ToList();
 
@@ -127,6 +124,9 @@ public class XDosFileSystem : IFileSystem
 
         var famEntries = BuildFamEntries(dataRecords);
         _famWriter.WriteFam(famTrack, famSector, famEntries);
+
+        _fatWriter.Commit();
+        Array.Copy(_fatWriter.FatSector, _fat.FatSector, _fat.FatSector.Length);
 
         var entry = new XDosDirectoryEntry(
             RawFileType:           rawType,

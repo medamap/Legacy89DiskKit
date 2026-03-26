@@ -429,4 +429,112 @@ public class XDosFileSystemTest
         var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "CMD_F.CMD");
         Assert.Equal((ushort)XDosFileType.Cmd, entry.RawFileType);
     }
+
+    [Fact]
+    public void WriteFile_CommitOrder_FatAndFamBothPresentAfterWrite()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_ORDER_FAT.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        fs.WriteFile("ORDER.BIN", new byte[512], fs.CreateDefaultAttributes(false));
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "ORDER.BIN");
+
+        var famC = entry.FamPointer.Track / 2;
+        var famH = entry.FamPointer.Track % 2;
+        var famSectorData = container.ReadSector(famC, famH, entry.FamPointer.Sector);
+        Assert.NotEqual(0x00, famSectorData[0]);
+
+        var fatSector = container.ReadSector(0, 1, 1);
+        int famOffset = 0xA8 + entry.FamPointer.Track * 2;
+        ushort famTrackWord = (ushort)((fatSector[famOffset] << 8) | fatSector[famOffset + 1]);
+        bool famSectorBitUsed = ((famTrackWord >> (16 - entry.FamPointer.Sector)) & 1) == 0;
+        Assert.True(famSectorBitUsed, "FAT must mark the FAM sector as used after write completes");
+    }
+
+    [Fact]
+    public void WriteFile_DirectoryEntry_FamPointerBytesMatch()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_ORDER_DIR.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        fs.WriteFile("DIRCHK.BIN", new byte[256], fs.CreateDefaultAttributes(false));
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "DIRCHK.BIN");
+
+        var dirSector = container.ReadSector(0, 1, 2);
+        int offset = 0;
+        while (offset + 32 <= dirSector.Length)
+        {
+            ushort rawType = (ushort)((dirSector[offset] << 8) | dirSector[offset + 1]);
+            if (rawType != 0x0000 && rawType != 0xFFFF) break;
+            offset += 32;
+        }
+
+        Assert.Equal(entry.FamPointer.Track,  dirSector[offset + 0x1D]);
+        Assert.Equal(entry.FamPointer.Sector, dirSector[offset + 0x1E]);
+        Assert.Equal(entry.FamPointer.Record, dirSector[offset + 0x1F]);
+    }
+
+    [Fact]
+    public void WriteFile_TwoConsecutiveFiles_NoDataOverwrite()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_ORDER_NOOVR.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        byte[] data1 = Enumerable.Repeat((byte)0xAA, 512).ToArray();
+        byte[] data2 = Enumerable.Repeat((byte)0x55, 512).ToArray();
+
+        fs.WriteFile("FIRST.BIN",  data1, fs.CreateDefaultAttributes(false));
+        fs.WriteFile("SECOND.BIN", data2, fs.CreateDefaultAttributes(false));
+
+        var read1 = fs.ReadFile("FIRST.BIN");
+        var read2 = fs.ReadFile("SECOND.BIN");
+
+        Assert.True(data1.SequenceEqual(read1), "FIRST.BIN data was overwritten");
+        Assert.True(data2.SequenceEqual(read2), "SECOND.BIN data was overwritten");
+    }
+
+    [Fact]
+    public void WriteFile_CommitOrder_DataRoundTripAfterSave()
+    {
+        var path = GetRepoPath("images/test/XDOS_ORDER_RT.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+
+        {
+            using var svc = Legacy89DiskKitApplication.CreateDiskService();
+            var container = svc.CreateDisk(path, DiskType.TwoDD);
+            var fs = new XDosFileSystem(container);
+            fs.Format();
+
+            byte[] data = new byte[1536];
+            for (int i = 0; i < data.Length; i++) data[i] = (byte)(i % 251);
+            fs.WriteFile("RT_TEST.BIN", data, fs.CreateDefaultAttributes(false));
+            container.Save();
+        }
+
+        {
+            using var svc2 = Legacy89DiskKitApplication.CreateDiskService();
+            svc2.OpenDisk(path, true);
+            var fs2 = (svc2.FileSystem as XDosFileSystem)!;
+
+            Assert.True(fs2.FileExists("RT_TEST.BIN"));
+            var readBack = fs2.ReadFile("RT_TEST.BIN");
+            Assert.Equal(1536, readBack.Length);
+            for (int i = 0; i < readBack.Length; i++)
+                Assert.Equal((byte)(i % 251), readBack[i]);
+        }
+    }
 }
