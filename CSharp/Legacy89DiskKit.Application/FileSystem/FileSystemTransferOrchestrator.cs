@@ -6,21 +6,25 @@ namespace Legacy89DiskKit.Application.FileSystem;
 public class FileSystemTransferOrchestrator
 {
     public void Transfer(
-        IFileSystemTransferAdapter source,
-        IFileSystemTransferAdapter dest,
+        IFileSystem sourceFs,
+        IFileSystemTransferAdapter sourceAdapter,
+        IFileSystemTransferAdapter destAdapter,
         string sourceFileName,
         string destFileName)
     {
-        var envelope = source.Export(sourceFileName);
-        dest.Import(envelope, destFileName);
+        var entry = sourceFs.GetFiles()
+            .FirstOrDefault(e => e.FileName == sourceFileName)
+            ?? throw new FileNotFoundException($"File not found: {sourceFileName}");
+        var envelope = sourceAdapter.Export(entry);
+        destAdapter.Import(envelope, destFileName);
     }
 
     public void TransferAll(
-        IFileSystemTransferAdapter source,
-        IFileSystemTransferAdapter dest,
-        IEnumerable<string> fileNames)
+        IFileSystem sourceFs,
+        IFileSystemTransferAdapter sourceAdapter,
+        IFileSystemTransferAdapter destAdapter)
     {
-        foreach (var name in fileNames)
-            Transfer(source, dest, name, name);
+        foreach (var entry in sourceFs.GetFiles())
+            destAdapter.Import(sourceAdapter.Export(entry), entry.FileName);
     }
 }

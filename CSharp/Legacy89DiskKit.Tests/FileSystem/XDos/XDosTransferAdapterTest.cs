@@ -1,5 +1,6 @@
 using Legacy89DiskKit.Application;
 using Legacy89DiskKit.Application.DiskImage;
+using Legacy89DiskKit.Application.FileSystem;
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.FileSystem.Model;
@@ -33,6 +34,9 @@ public class XDosTransferAdapterTest
         return (container, fs);
     }
 
+    private static FileEntry GetFileEntry(XDosFileSystem fs, string fileName)
+        => fs.GetFiles().First(e => e.FileName == fileName);
+
     [Fact]
     public void Export_BinaryFile_HasBinaryContentKindAndMetadata()
     {
@@ -42,7 +46,7 @@ public class XDosTransferAdapterTest
         fs.WriteFile("BIN_F.BIN", data, fs.CreateDefaultAttributes(false), 0x8000, 0x8000);
 
         var adapter = new XDosTransferAdapter(fs);
-        var env = adapter.Export("BIN_F.BIN");
+        var env = adapter.Export(GetFileEntry(fs, "BIN_F.BIN"));
 
         Assert.Equal(ContentKind.Binary, env.ContentKind);
         Assert.Equal("X-DOS", env.SourceFileSystemId);
@@ -63,12 +67,48 @@ public class XDosTransferAdapterTest
         fs.WriteFile("TEXT_F.TXT", data, fs.CreateDefaultAttributes(true));
 
         var adapter = new XDosTransferAdapter(fs);
-        var env = adapter.Export("TEXT_F.TXT");
+        var env = adapter.Export(GetFileEntry(fs, "TEXT_F.TXT"));
 
         Assert.Equal(ContentKind.Text, env.ContentKind);
         Assert.Equal("0400", env.Metadata!["xdos.fileType"]);
         Assert.Equal("true", env.Metadata["xdos.isAscii"]);
         Assert.Equal("shift_jis", env.EncodingId);
+    }
+
+    [Fact]
+    public void Export_AscFile_DoesNotSetExecutionAddress()
+    {
+        var (container, fs) = CreateFormattedDisk("TA_ASC_NOEXEC");
+
+        byte[] data = System.Text.Encoding.ASCII.GetBytes("LINE1\r\nLINE2\r\n");
+        fs.WriteFile("ASC_E.TXT", data, fs.CreateDefaultAttributes(true));
+
+        var adapter = new XDosTransferAdapter(fs);
+        var env = adapter.Export(GetFileEntry(fs, "ASC_E.TXT"));
+
+        Assert.Equal(ContentKind.Text, env.ContentKind);
+        Assert.Null(env.ExecutionAddress);
+    }
+
+    [Fact]
+    public void Export_LargeAscFile_SizeHighNotExportedAsExecutionAddress()
+    {
+        var (container, fs) = CreateFormattedDisk("TA_ASC_LARGE");
+
+        byte[] data = new byte[600];
+        System.Text.Encoding.ASCII.GetBytes("A").CopyTo(data, 0);
+        fs.WriteFileInternal("LARGE.ASC", data, fs.CreateDefaultAttributes(true),
+            executionAddress: 0x0001,
+            forcedRawType: (ushort)XDosFileType.Asc);
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "LARGE.ASC");
+        Assert.NotEqual(0, entry.ExecAddressOrSizeHigh);
+
+        var adapter = new XDosTransferAdapter(fs);
+        var env = adapter.Export(GetFileEntry(fs, "LARGE.ASC"));
+
+        Assert.Equal(ContentKind.Text, env.ContentKind);
+        Assert.Null(env.ExecutionAddress);
     }
 
     [Fact]
@@ -81,11 +121,29 @@ public class XDosTransferAdapterTest
             forcedRawType: (ushort)XDosFileType.Sys);
 
         var adapter = new XDosTransferAdapter(fs);
-        var env = adapter.Export("SYS_F.SYS");
+        var env = adapter.Export(GetFileEntry(fs, "SYS_F.SYS"));
 
         Assert.Equal(ContentKind.Binary, env.ContentKind);
         Assert.Equal("0700", env.Metadata!["xdos.fileType"]);
         Assert.Null(env.EncodingId);
+    }
+
+    [Fact]
+    public void Export_BinaryFile_PreservesExecutionAddress()
+    {
+        var (container, fs) = CreateFormattedDisk("TA_BIN_EXEC");
+
+        byte[] data = new byte[256];
+        fs.WriteFileInternal("EXEC.CMD", data, fs.CreateDefaultAttributes(false),
+            loadAddress: 0xB000, executionAddress: 0xB100,
+            forcedRawType: (ushort)XDosFileType.Cmd);
+
+        var adapter = new XDosTransferAdapter(fs);
+        var env = adapter.Export(GetFileEntry(fs, "EXEC.CMD"));
+
+        Assert.Equal(ContentKind.Binary, env.ContentKind);
+        Assert.Equal((ushort)0xB000, env.LoadAddress);
+        Assert.Equal((ushort)0xB100, env.ExecutionAddress);
     }
 
     [Fact]
@@ -209,7 +267,7 @@ public class XDosTransferAdapterTest
         var srcAdapter = new XDosTransferAdapter(srcFs);
         var dstAdapter = new XDosTransferAdapter(dstFs);
 
-        var envelope = srcAdapter.Export("RT_F.CMD");
+        var envelope = srcAdapter.Export(GetFileEntry(srcFs, "RT_F.CMD"));
         dstAdapter.Import(envelope, "RT_F.CMD");
 
         var entry = dstFs.GetFilesWithMetadata().First(e => e.FileName == "RT_F.CMD");
@@ -257,6 +315,58 @@ public class XDosTransferAdapterTest
         var (container, fs) = CreateFormattedDisk("TA_NOTFOUND");
         var adapter = new XDosTransferAdapter(fs);
 
-        Assert.Throws<FileNotFoundException>(() => adapter.Export("MISSING.BIN"));
+        var fakeEntry = new FileEntry("MISSING.BIN", "", 0, null, null,
+            fs.CreateDefaultAttributes(false));
+
+        Assert.Throws<FileNotFoundException>(() => adapter.Export(fakeEntry));
+    }
+
+    [Fact]
+    public void Orchestrator_TransferAll_CopiesAllFilesViaAdapter()
+    {
+        var (srcContainer, srcFs) = CreateFormattedDisk("TA_ORCH_SRC");
+        var (dstContainer, dstFs) = CreateFormattedDisk("TA_ORCH_DST");
+
+        byte[] data1 = new byte[256]; data1[0] = 0x11;
+        byte[] data2 = new byte[128]; data2[0] = 0x22;
+
+        srcFs.WriteFile("FILE1.BIN", data1, srcFs.CreateDefaultAttributes(false), 0x8000, 0x8000);
+        srcFs.WriteFile("FILE2.BIN", data2, srcFs.CreateDefaultAttributes(false), 0x9000, 0x9000);
+
+        var srcAdapter = new XDosTransferAdapter(srcFs);
+        var dstAdapter = new XDosTransferAdapter(dstFs);
+        var orchestrator = new FileSystemTransferOrchestrator();
+
+        orchestrator.TransferAll(srcFs, srcAdapter, dstAdapter);
+
+        Assert.True(dstFs.FileExists("FILE1.BIN"));
+        Assert.True(dstFs.FileExists("FILE2.BIN"));
+
+        Assert.True(data1.SequenceEqual(dstFs.ReadFile("FILE1.BIN")));
+        Assert.True(data2.SequenceEqual(dstFs.ReadFile("FILE2.BIN")));
+    }
+
+    [Fact]
+    public void Orchestrator_Transfer_CopiesSingleFileViaAdapter()
+    {
+        var (srcContainer, srcFs) = CreateFormattedDisk("TA_ORCH1_SRC");
+        var (dstContainer, dstFs) = CreateFormattedDisk("TA_ORCH1_DST");
+
+        byte[] data = Enumerable.Repeat((byte)0x42, 512).ToArray();
+        srcFs.WriteFileInternal("SRC.CMD", data, srcFs.CreateDefaultAttributes(false),
+            loadAddress: 0xD000, executionAddress: 0xD100,
+            forcedRawType: (ushort)XDosFileType.Cmd);
+
+        var srcAdapter = new XDosTransferAdapter(srcFs);
+        var dstAdapter = new XDosTransferAdapter(dstFs);
+        var orchestrator = new FileSystemTransferOrchestrator();
+
+        orchestrator.Transfer(srcFs, srcAdapter, dstAdapter, "SRC.CMD", "DST.CMD");
+
+        var dstEntry = dstFs.GetFilesWithMetadata().First(e => e.FileName == "DST.CMD");
+        Assert.Equal((ushort)XDosFileType.Cmd, dstEntry.RawFileType);
+        Assert.Equal((ushort)0xD000, dstEntry.StartAddress);
+        Assert.Equal((ushort)0xD100, dstEntry.ExecAddressOrSizeHigh);
+        Assert.True(data.SequenceEqual(dstFs.ReadFileRaw(dstEntry.RawFileName)));
     }
 }

@@ -4,6 +4,6 @@ namespace Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 
 public interface IFileSystemTransferAdapter
 {
-    TransferFileEnvelope Export(string fileName);
+    TransferFileEnvelope Export(FileEntry entry);
     void Import(TransferFileEnvelope envelope, string destFileName);
 }

@@ -13,7 +13,7 @@ public record TransferFileEnvelope(
     string? SourceFileSystemId,
     ushort? LoadAddress,
     ushort? ExecutionAddress,
-    uint? Timestamp,
+    DateTimeOffset? Timestamp,
     string? EncodingId,
     IReadOnlyDictionary<string, string>? Metadata
 );
