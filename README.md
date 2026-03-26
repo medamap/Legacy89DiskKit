@@ -75,7 +75,7 @@ The canonical local release path is:
 
 This script runs tests, publishes the standalone CLI for the official matrix, performs host smoke checks, and creates normalized archives under `release/v2.0.0/`.
 
-See [Documents/Release_Process.md](Documents/Release_Process.md) for the release checklist and archive conventions.
+See [Documents/governance/Release_Process.md](Documents/governance/Release_Process.md) for the release checklist and archive conventions.
 
 An optional PowerShell companion exists for Windows:
 
@@ -159,19 +159,19 @@ dotnet CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll \
 
 ## Living Documents
 
-- [Release process](Documents/Release_Process.md)
-- [Roadmap V2 handoff](Documents/Agent_Handoff_Roadmap_V2.md)
-- [Roadmap V2 migration plan](Documents/Roadmap_V2.md)
-- [C# integration guide](Documents/CSharp_Integration_Guide.md)
-- [Native integration guide](Documents/Native_Integration_Guide.md)
-- [WASM integration guide](Documents/Wasm_Integration_Guide.md)
-- [Roadmap](Documents/ROADMAP.md)
-- [Hu-BASIC disk format specification](Documents/HuBasic_Format_Specification.md)
-- [D88 format reference](Documents/D88_Format.md)
+- [Release process](Documents/governance/Release_Process.md)
+- [Roadmap V2 handoff](Documents/governance/Agent_Handoff_Roadmap_V2.md)
+- [Roadmap V2 migration plan](Documents/governance/Roadmap_V2.md)
+- [C# integration guide](Documents/guides/CSharp_Integration_Guide.md)
+- [Native integration guide](Documents/guides/Native_Integration_Guide.md)
+- [WASM integration guide](Documents/guides/Wasm_Integration_Guide.md)
+- [Roadmap](Documents/governance/ROADMAP.md)
+- [Hu-BASIC disk format specification](Documents/platform/x1/HuBasic_Format_Specification.md)
+- [D88 format reference](Documents/systems/common/D88_Format.md)
 - [Document index](Documents/Folder.md)
 
 ## Notes
 
 - Historical AI consultation notes and superseded planning documents were quarantined under `Documents/obsolete/2026-03-doc-audit/`.
-- Deferred migration work remains tracked in `Documents/Roadmap_V2.md`.
+- Deferred migration work remains tracked in `Documents/governance/Roadmap_V2.md`.
 - GitHub Actions remains deferred. Local release automation is the current source of truth for standalone CLI packaging.
