@@ -322,7 +322,15 @@ public class XDosTransferAdapterTest
     }
 
     [Fact]
-    public void Orchestrator_TransferAll_CopiesAllFilesViaAdapter()
+    public void Adapter_FileSystemId_ReturnsXDos()
+    {
+        var (container, fs) = CreateFormattedDisk("TA_FSID");
+        var adapter = new XDosTransferAdapter(fs);
+        Assert.Equal("X-DOS", adapter.FileSystemId);
+    }
+
+    [Fact]
+    public void Orchestrator_TransferAll_CopiesAllFilesViaRegisteredAdapter()
     {
         var (srcContainer, srcFs) = CreateFormattedDisk("TA_ORCH_SRC");
         var (dstContainer, dstFs) = CreateFormattedDisk("TA_ORCH_DST");
@@ -333,11 +341,11 @@ public class XDosTransferAdapterTest
         srcFs.WriteFile("FILE1.BIN", data1, srcFs.CreateDefaultAttributes(false), 0x8000, 0x8000);
         srcFs.WriteFile("FILE2.BIN", data2, srcFs.CreateDefaultAttributes(false), 0x9000, 0x9000);
 
-        var srcAdapter = new XDosTransferAdapter(srcFs);
-        var dstAdapter = new XDosTransferAdapter(dstFs);
         var orchestrator = new FileSystemTransferOrchestrator();
+        orchestrator.Register(srcFs, new XDosTransferAdapter(srcFs));
+        orchestrator.Register(dstFs, new XDosTransferAdapter(dstFs));
 
-        orchestrator.TransferAll(srcFs, srcAdapter, dstAdapter);
+        orchestrator.TransferAll(srcFs, dstFs);
 
         Assert.True(dstFs.FileExists("FILE1.BIN"));
         Assert.True(dstFs.FileExists("FILE2.BIN"));
@@ -347,7 +355,7 @@ public class XDosTransferAdapterTest
     }
 
     [Fact]
-    public void Orchestrator_Transfer_CopiesSingleFileViaAdapter()
+    public void Orchestrator_Transfer_CopiesSingleFileViaRegisteredAdapter()
     {
         var (srcContainer, srcFs) = CreateFormattedDisk("TA_ORCH1_SRC");
         var (dstContainer, dstFs) = CreateFormattedDisk("TA_ORCH1_DST");
@@ -357,11 +365,11 @@ public class XDosTransferAdapterTest
             loadAddress: 0xD000, executionAddress: 0xD100,
             forcedRawType: (ushort)XDosFileType.Cmd);
 
-        var srcAdapter = new XDosTransferAdapter(srcFs);
-        var dstAdapter = new XDosTransferAdapter(dstFs);
         var orchestrator = new FileSystemTransferOrchestrator();
+        orchestrator.Register(srcFs, new XDosTransferAdapter(srcFs));
+        orchestrator.Register(dstFs, new XDosTransferAdapter(dstFs));
 
-        orchestrator.Transfer(srcFs, srcAdapter, dstAdapter, "SRC.CMD", "DST.CMD");
+        orchestrator.Transfer(srcFs, dstFs, "SRC.CMD", "DST.CMD");
 
         var dstEntry = dstFs.GetFilesWithMetadata().First(e => e.FileName == "DST.CMD");
         Assert.Equal((ushort)XDosFileType.Cmd, dstEntry.RawFileType);

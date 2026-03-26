@@ -9,7 +9,7 @@ namespace Legacy89DiskKit.Infrastructure.FileSystem.XDos;
 
 public class XDosTransferAdapter : IFileSystemTransferAdapter
 {
-    private const string FileSystemId = "X-DOS";
+    private const string XDosId = "X-DOS";
 
     private static readonly IReadOnlySet<XDosFileType> TextTypes =
         new HashSet<XDosFileType> { XDosFileType.Asc };
@@ -22,6 +22,8 @@ public class XDosTransferAdapter : IFileSystemTransferAdapter
     private readonly XDosFileSystem _fs;
 
     public XDosTransferAdapter(XDosFileSystem fs) => _fs = fs;
+
+    public string FileSystemId => XDosId;
 
     public TransferFileEnvelope Export(FileEntry entry)
     {
@@ -49,7 +51,7 @@ public class XDosTransferAdapter : IFileSystemTransferAdapter
             FileName:          xdosEntry.FileName,
             Payload:           payload,
             ContentKind:       contentKind,
-            SourceFileSystemId: FileSystemId,
+            SourceFileSystemId: XDosId,
             LoadAddress:       xdosEntry.StartAddress,
             ExecutionAddress:  execAddress,
             Timestamp:         DecodeTimestamp(xdosEntry.TimestampRaw),
@@ -64,7 +66,7 @@ public class XDosTransferAdapter : IFileSystemTransferAdapter
         ushort? forcedRawType = null;
         byte    rawAttributes = 0x00;
 
-        if (envelope.SourceFileSystemId == FileSystemId && envelope.Metadata != null)
+        if (envelope.SourceFileSystemId == XDosId && envelope.Metadata != null)
         {
             if (envelope.Metadata.TryGetValue("xdos.fileType", out var ftStr)
                 && ushort.TryParse(ftStr, NumberStyles.HexNumber, null, out var ft))
@@ -80,7 +82,7 @@ public class XDosTransferAdapter : IFileSystemTransferAdapter
         }
 
         bool isAscii = envelope.ContentKind == ContentKind.Text;
-        var attrs = new ExtendedFileAttributes(FileAttributes.None, rawAttributes, isAscii, FileSystemId);
+        var attrs = new ExtendedFileAttributes(FileAttributes.None, rawAttributes, isAscii, XDosId);
 
         _fs.WriteFileInternal(
             destFileName,
