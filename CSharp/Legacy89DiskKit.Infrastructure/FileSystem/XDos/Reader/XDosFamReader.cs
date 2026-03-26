@@ -1,22 +1,34 @@
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
+using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
 
 namespace Legacy89DiskKit.Infrastructure.FileSystem.XDos.Reader;
 
+public record XDosFamEntry(byte Track, byte Sector, byte RecordCount);
+
 public class XDosFamReader
 {
-    private readonly byte[] _fam;
-    public XDosFamReader(IDiskContainer container) => _fam = container.ReadSector(1, 0, 1);
-    public byte[] Fam => _fam;
-    public IReadOnlyList<byte> GetChain(byte firstCluster)
+    private readonly IDiskContainer _container;
+
+    public XDosFamReader(IDiskContainer container) => _container = container;
+
+    public IReadOnlyList<XDosFamEntry> ReadFam(XDosFamPointer famPointer)
     {
-        var chain = new List<byte>();
-        byte current = firstCluster;
-        int guard = 0;
-        while (current != 0x00 && current != 0xFF && current != 0xD5 && guard++ < 256)
+        if (famPointer.Track == 0) return Array.Empty<XDosFamEntry>();
+        int c = famPointer.Track / 2;
+        int h = famPointer.Track % 2;
+        var sector = _container.ReadSector(c, h, famPointer.Sector);
+        return ParseFam(sector);
+    }
+
+    public static List<XDosFamEntry> ParseFam(byte[] sector)
+    {
+        var entries = new List<XDosFamEntry>();
+        int i = 0;
+        while (i + 2 < sector.Length && sector[i] != 0x00)
         {
-            chain.Add(current);
-            current = _fam[current];
+            entries.Add(new XDosFamEntry(sector[i], sector[i + 1], sector[i + 2]));
+            i += 3;
         }
-        return chain;
+        return entries;
     }
 }

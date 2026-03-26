@@ -5,18 +5,25 @@ namespace Legacy89DiskKit.Infrastructure.FileSystem.XDos.Reader;
 public class XDosFamWriter
 {
     private readonly IDiskContainer _container;
-    private readonly byte[] _fam;
-    public XDosFamWriter(IDiskContainer container)
+
+    public XDosFamWriter(IDiskContainer container) => _container = container;
+
+    public void WriteFam(int famTrack, int famSector, IReadOnlyList<XDosFamEntry> entries)
     {
-        _container = container;
-        _fam = container.ReadSector(1, 0, 1);
+        int c = famTrack / 2;
+        int h = famTrack % 2;
+        var sector = new byte[512];
+        int i = 0;
+        foreach (var e in entries)
+        {
+            if (i + 2 >= sector.Length) break;
+            sector[i++] = e.Track;
+            sector[i++] = e.Sector;
+            sector[i++] = e.RecordCount;
+        }
+        sector[i] = 0x00;
+        _container.WriteSector(c, h, famSector, sector);
     }
-    public byte[] Fam => _fam;
-    public void UpdateChain(List<byte> clusters)
-    {
-        for (int i = 0; i < clusters.Count - 1; i++) _fam[clusters[i]] = clusters[i + 1];
-        if (clusters.Count > 0) _fam[clusters[^1]] = 0x00;
-    }
-    public void Commit() => _container.WriteSector(1, 0, 1, _fam);
-    public void ClearAll() => Array.Fill(_fam, (byte)0x00);
+
+    public void ClearAll() { }
 }

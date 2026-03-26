@@ -1,19 +1,25 @@
 using System.Buffers.Binary;
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
+using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
 
 namespace Legacy89DiskKit.Infrastructure.FileSystem.XDos.Reader;
 
 public class XDosDirWriter
 {
-    private const int EntrySize = 32;
+    private const int EntrySize   = 32;
     private const int DirCylinder = 0;
-    private const int DirHead = 1;
-    private const int FirstDirR = 2;
-    private const int LastDirR = 10;
+    private const int DirHead     = 1;
+    private const int FirstDirR   = 2;
 
     private readonly IDiskContainer _container;
-    public XDosDirWriter(IDiskContainer container) => _container = container;
+    private readonly int            _lastDirR;
+
+    public XDosDirWriter(IDiskContainer container)
+    {
+        _container = container;
+        _lastDirR  = container.DiskType == DiskType.TwoHD ? 16 : 10;
+    }
 
     public void WriteEntry(XDosDirectoryEntry entry)
     {
@@ -25,38 +31,38 @@ public class XDosDirWriter
 
     private (int r, int offset) FindFreeSlot()
     {
-        for (int r = FirstDirR; r <= LastDirR; r++)
+        for (int r = FirstDirR; r <= _lastDirR; r++)
         {
             if (!_container.SectorExists(DirCylinder, DirHead, r)) continue;
             var sector = _container.ReadSector(DirCylinder, DirHead, r);
             for (int offset = 0; offset + EntrySize <= sector.Length; offset += EntrySize)
             {
-                if (sector[offset] == 0x00 || sector[offset] == 0xFF || sector[offset] == 0xD5) return (r, offset);
+                ushort rawType = BinaryPrimitives.ReadUInt16BigEndian(sector.AsSpan(offset));
+                if (rawType == 0x0000 || rawType == 0xFFFF) return (r, offset);
             }
         }
-        throw new Exception("Directory full.");
+        throw new IOException("Directory full.");
     }
 
     private static void SerializeEntry(XDosDirectoryEntry entry, byte[] buffer, int offset)
     {
-        buffer[offset + 0] = entry.RawFileType;
-        buffer[offset + 1] = entry.Attribute;
-        Array.Copy(entry.RawFileName, 0, buffer, offset + 2, Math.Min(entry.RawFileName.Length, 16));
-        for (int i = entry.RawFileName.Length; i < 16; i++) buffer[offset + 2 + i] = 0x20;
-        BinaryPrimitives.WriteUInt16LittleEndian(buffer.AsSpan(offset + 18), entry.LoadAddress);      // 修正: +20 → +18
-        BinaryPrimitives.WriteUInt16LittleEndian(buffer.AsSpan(offset + 20), entry.ByteSize);         // 修正: +22 → +20, EndAddress → ByteSize
-        BinaryPrimitives.WriteUInt16LittleEndian(buffer.AsSpan(offset + 22), entry.ExecutionAddress); // 修正: +24 → +22
-        BinaryPrimitives.WriteUInt16BigEndian   (buffer.AsSpan(offset + 24), entry.DatePacked);       // 追加: big-endian
-        BinaryPrimitives.WriteUInt16BigEndian   (buffer.AsSpan(offset + 26), entry.TimePacked);       // 追加: big-endian
-        buffer[offset + 28] = entry.Flags;
-        buffer[offset + 29] = entry.FirstCluster;
-        buffer[offset + 30] = entry.FirstSectorR;
-        buffer[offset + 31] = entry.AlwaysOne;
+        BinaryPrimitives.WriteUInt16BigEndian   (buffer.AsSpan(offset + 0x00), entry.RawFileType);
+        Array.Copy(entry.RawFileName, 0, buffer, offset + 0x02, Math.Min(entry.RawFileName.Length, 16));
+        for (int i = entry.RawFileName.Length; i < 16; i++) buffer[offset + 0x02 + i] = 0x20;
+        BinaryPrimitives.WriteUInt16LittleEndian(buffer.AsSpan(offset + 0x12), entry.StartAddress);
+        BinaryPrimitives.WriteUInt16LittleEndian(buffer.AsSpan(offset + 0x14), entry.SizeLow);
+        BinaryPrimitives.WriteUInt16LittleEndian(buffer.AsSpan(offset + 0x16), entry.ExecAddressOrSizeHigh);
+        BinaryPrimitives.WriteUInt32BigEndian   (buffer.AsSpan(offset + 0x18), entry.TimestampRaw);
+        buffer[offset + 0x1C] = entry.Attribute;
+        buffer[offset + 0x1D] = entry.FamPointer.Track;
+        buffer[offset + 0x1E] = entry.FamPointer.Sector;
+        buffer[offset + 0x1F] = entry.FamPointer.Record;
     }
 
     public void ClearAll()
     {
         var empty = new byte[512];
-        for (int r = FirstDirR; r <= LastDirR; r++) _container.WriteSector(DirCylinder, DirHead, r, empty);
+        for (int r = FirstDirR; r <= _lastDirR; r++)
+            _container.WriteSector(DirCylinder, DirHead, r, empty);
     }
 }
