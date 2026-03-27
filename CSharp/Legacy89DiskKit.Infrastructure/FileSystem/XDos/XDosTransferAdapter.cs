@@ -49,6 +49,13 @@ public class XDosTransferAdapter : IFileSystemTransferAdapter
             ["xdos.isAscii"]       = isText ? "true" : "false",
         };
 
+        var dirSlot = _fs.FindDirectorySlot(xdosEntry.RawFileName, xdosEntry.RawFileType);
+        if (dirSlot != null)
+        {
+            meta["xdos.dirSector"] = dirSlot.Value.Sector.ToString();
+            meta["xdos.dirOffset"] = dirSlot.Value.Offset.ToString();
+        }
+
         return new TransferFileEnvelope(
             FileName:          xdosEntry.FileName,
             Payload:           payload,
@@ -67,6 +74,8 @@ public class XDosTransferAdapter : IFileSystemTransferAdapter
 
         ushort? forcedRawType = null;
         byte    rawAttributes = 0x00;
+        int?    forcedDirSector = null;
+        int?    forcedDirOffset = null;
 
         if (envelope.SourceFileSystemId == XDosId && envelope.Metadata != null)
         {
@@ -81,6 +90,18 @@ public class XDosTransferAdapter : IFileSystemTransferAdapter
             {
                 rawAttributes = ra;
             }
+
+            if (envelope.Metadata.TryGetValue("xdos.dirSector", out var dsStr)
+                && int.TryParse(dsStr, out var ds))
+            {
+                forcedDirSector = ds;
+            }
+
+            if (envelope.Metadata.TryGetValue("xdos.dirOffset", out var doStr)
+                && int.TryParse(doStr, out var dOff))
+            {
+                forcedDirOffset = dOff;
+            }
         }
 
         bool isAscii = envelope.ContentKind == ContentKind.Text;
@@ -92,7 +113,9 @@ public class XDosTransferAdapter : IFileSystemTransferAdapter
             attrs,
             loadAddress:      envelope.LoadAddress,
             executionAddress: envelope.ExecutionAddress,
-            forcedRawType:    forcedRawType);
+            forcedRawType:    forcedRawType,
+            forcedDirSector:  forcedDirSector,
+            forcedDirOffset:  forcedDirOffset);
     }
 
     private static byte[] ResolvePayload(TransferFileEnvelope envelope)

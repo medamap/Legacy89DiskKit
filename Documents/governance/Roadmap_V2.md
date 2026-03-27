@@ -476,6 +476,16 @@ The following phases are required to support X-DOS in both the C# reference and 
 - C++ application: same integration into C++ application services
 - C++ CLI: add X-DOS as a recognized `--fs` value in `ldk`
 
+#### Current Follow-Up Items After Initial X-DOS Stabilization
+
+The managed X-DOS path is now bootable across 2D, 2DD, and 2HD D88 images, including system-disk clone scenarios. The following follow-up tasks remain and should be treated as the next X-DOS cleanup batch before broader post-V2 work resumes:
+
+- Normalize the managed CLI copy flows so all filesystem-to-filesystem transfers use the transfer-adapter/orchestrator path instead of leaving old service-specific fallback behavior in place.
+- Preserve additional X-DOS metadata consistently where practical, especially timestamps and other directory-entry bytes that are currently copied with partial fidelity.
+- Remove or reconcile leftover helper paths that still encode stale assumptions, such as the static `XDosTrackGeometry(...)` helper that still hard-codes 2D semantics.
+- Add a first-class CLI/API path for creating truly blank unformatted D88 media without requiring direct container API usage.
+- Validate the X-DOS clone/boot path on more emulator and real-hardware variants, because D88 container media flags and emulator boot behavior may not always align with logical X-DOS geometry.
+
 #### Known Implementation Pitfalls
 
 **Mixed-geometry sector size**

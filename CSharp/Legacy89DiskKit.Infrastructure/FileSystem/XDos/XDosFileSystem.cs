@@ -1,6 +1,8 @@
 using System.Text;
+using System.Buffers.Binary;
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.Infrastructure.DiskImage.Container;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
@@ -12,13 +14,13 @@ namespace Legacy89DiskKit.Infrastructure.FileSystem.XDos;
 public class XDosFileSystem : IFileSystem
 {
     private readonly IDiskContainer    _container;
-    private readonly XDosFatReader     _fat;
-    private readonly XDosFamReader     _fam;
+    private XDosFatReader              _fat = null!;
+    private XDosFamReader              _fam = null!;
     private readonly XDosDirParser     _dirParser;
-    private readonly XDosClusterReader _recordReader;
-    private readonly XDosFatWriter     _fatWriter;
-    private readonly XDosFamWriter     _famWriter;
-    private readonly XDosDirWriter     _dirWriter;
+    private XDosClusterReader          _recordReader = null!;
+    private XDosFatWriter              _fatWriter = null!;
+    private XDosFamWriter              _famWriter = null!;
+    private XDosDirWriter              _dirWriter = null!;
     private readonly XDosMediaGeometry _geometry;
     private IReadOnlyList<XDosDirectoryEntry>? _cachedDirectory;
 
@@ -26,13 +28,18 @@ public class XDosFileSystem : IFileSystem
     {
         _container    = container;
         _geometry     = XDosMediaGeometry.FromDiskType(container.DiskType);
-        _fat          = new XDosFatReader(container, _geometry);
-        _fam          = new XDosFamReader(container);
         _dirParser    = new XDosDirParser();
-        _recordReader = new XDosClusterReader(container, _fam);
-        _fatWriter    = new XDosFatWriter(container, _geometry);
-        _famWriter    = new XDosFamWriter(container);
-        _dirWriter    = new XDosDirWriter(container);
+        InitializeHelpers();
+    }
+
+    private void InitializeHelpers()
+    {
+        _fat          = new XDosFatReader(_container, _geometry);
+        _fam          = new XDosFamReader(_container);
+        _recordReader = new XDosClusterReader(_container, _fam);
+        _fatWriter    = new XDosFatWriter(_container, _geometry);
+        _famWriter    = new XDosFamWriter(_container);
+        _dirWriter    = new XDosDirWriter(_container);
     }
 
     public FileSystemCapabilities Capabilities =>
@@ -54,6 +61,31 @@ public class XDosFileSystem : IFileSystem
 
     public IEnumerable<FileEntry> GetFiles() => GetDirectory().Select(ToFileEntry);
     public IReadOnlyList<XDosDirectoryEntry> GetFilesWithMetadata() => GetDirectory();
+
+    public (int Sector, int Offset)? FindDirectorySlot(byte[] rawName, ushort rawType)
+    {
+        int maxSector = _container.DiskType == DiskType.TwoHD ? 16 : 10;
+        var normalized = NormalizeRawName(rawName);
+
+        for (int sectorNumber = 2; sectorNumber <= maxSector; sectorNumber++)
+        {
+            if (!_container.SectorExists(0, 1, sectorNumber))
+                continue;
+
+            var sector = _container.ReadSector(0, 1, sectorNumber);
+            for (int offset = 0; offset + 32 <= sector.Length; offset += 32)
+            {
+                ushort candidateType = BinaryPrimitives.ReadUInt16BigEndian(sector.AsSpan(offset));
+                if (candidateType != rawType)
+                    continue;
+
+                if (sector.AsSpan(offset + 2, 16).SequenceEqual(normalized))
+                    return (sectorNumber, offset);
+            }
+        }
+
+        return null;
+    }
 
     public bool FileExists(string fileName)   => FileExistsRaw(NormalizeRawName(Encoding.Latin1.GetBytes(fileName)));
     public bool FileExistsRaw(byte[] rawName) => GetDirectory().Any(e => e.RawFileName.SequenceEqual(NormalizeRawName(rawName)));
@@ -86,7 +118,8 @@ public class XDosFileSystem : IFileSystem
         string fileName, byte[] data, ExtendedFileAttributes attributes,
         ushort? loadAddress = null, ushort? executionAddress = null,
         int? forcedFamTrack = null, byte[]? forcedRawName = null, ushort? forcedRawType = null,
-        int? forcedFamSector = null, IReadOnlyList<(int Track, int Sector)>? forcedRecords = null)
+        int? forcedFamSector = null, IReadOnlyList<(int Track, int Sector)>? forcedRecords = null,
+        int? forcedDirSector = null, int? forcedDirOffset = null)
     {
         if (_container.IsReadOnly) throw new InvalidOperationException("Read-only.");
         _cachedDirectory = null;
@@ -139,7 +172,16 @@ public class XDosFileSystem : IFileSystem
             Attribute:             attributes.RawAttributes,
             FamPointer:            new XDosFamPointer((byte)famTrack, (byte)famSector, 0x01));
 
-        _dirWriter.WriteEntry(entry);
+        if (forcedDirSector.HasValue || forcedDirOffset.HasValue)
+        {
+            if (!forcedDirSector.HasValue || !forcedDirOffset.HasValue)
+                throw new IOException("Directory slot specification is incomplete.");
+            _dirWriter.WriteEntry(entry, forcedDirSector.Value, forcedDirOffset.Value);
+        }
+        else
+        {
+            _dirWriter.WriteEntry(entry);
+        }
         _cachedDirectory = null;
     }
 
@@ -209,6 +251,11 @@ public class XDosFileSystem : IFileSystem
     public void Format()
     {
         if (_container.IsReadOnly) throw new InvalidOperationException();
+        if (_container is IGeometryRebuildableDiskContainer rebuildable)
+        {
+            rebuildable.RebuildGeometry((c, h) => _geometry.GetTrackGeometry(c, h));
+            InitializeHelpers();
+        }
         var now = DateTime.Now;
         var vol = new byte[256];
         vol[0] = 0x01;
@@ -220,7 +267,7 @@ public class XDosFileSystem : IFileSystem
         _container.WriteSector(0, 0, 1, vol);
         _fatWriter.ClearAll();
         _fatWriter.Commit();
-        Array.Copy(_fatWriter.FatSector, _fat.FatSector, _fat.FatSector.Length);
+        _fat = new XDosFatReader(_container, _geometry);
         _famWriter.ClearAll();
         _dirWriter.ClearAll();
         _cachedDirectory = null;

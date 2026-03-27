@@ -29,6 +29,25 @@ public class XDosDirWriter
         _container.WriteSector(DirCylinder, DirHead, r, sector);
     }
 
+    public void WriteEntry(XDosDirectoryEntry entry, int sectorNumber, int offset)
+    {
+        if (sectorNumber < FirstDirR || sectorNumber > _lastDirR)
+            throw new IOException("Directory slot out of range.");
+        if (!_container.SectorExists(DirCylinder, DirHead, sectorNumber))
+            throw new IOException("Directory sector not found.");
+
+        var sector = _container.ReadSector(DirCylinder, DirHead, sectorNumber);
+        if (offset < 0 || offset + EntrySize > sector.Length || offset % EntrySize != 0)
+            throw new IOException("Directory offset out of range.");
+
+        ushort rawType = BinaryPrimitives.ReadUInt16BigEndian(sector.AsSpan(offset));
+        if (rawType != 0x0000 && rawType != 0xFFFF)
+            throw new IOException("Directory slot already in use.");
+
+        SerializeEntry(entry, sector, offset);
+        _container.WriteSector(DirCylinder, DirHead, sectorNumber, sector);
+    }
+
     private (int r, int offset) FindFreeSlot()
     {
         for (int r = FirstDirR; r <= _lastDirR; r++)

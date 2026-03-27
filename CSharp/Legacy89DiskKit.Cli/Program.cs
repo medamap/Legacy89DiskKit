@@ -16,6 +16,7 @@ using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;
+using Legacy89DiskKit.Infrastructure.FileSystem.XDos;
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
@@ -253,8 +254,24 @@ fileCrossCopyCommand.SetHandler((string srcPath, string destPath, string[] files
         }
 
         var cloneService = Legacy89DiskKitApplication.CreateDiskCloneService(destFs.GetFileSystemInfo(), encodingOverride);
+        var srcAdapter = CreateTransferAdapter(srcFs);
+        var destAdapter = CreateTransferAdapter(destFs);
 
-        cloneService.TransferFiles(srcFs, destFs, targetFiles);
+        if (srcAdapter != null && destAdapter != null)
+        {
+            var orchestrator = new FileSystemTransferOrchestrator();
+            orchestrator.Register(srcFs, srcAdapter);
+            orchestrator.Register(destFs, destAdapter);
+
+            foreach (var fileName in targetFiles)
+            {
+                orchestrator.Transfer(srcFs, destFs, fileName, fileName);
+            }
+        }
+        else
+        {
+            cloneService.TransferFiles(srcFs, destFs, targetFiles);
+        }
         PrintSuccess(localizer, localizer.FileCopiedMessage);
     }
     catch (Exception ex)
@@ -1323,6 +1340,15 @@ static void PrintSuccess(IConsoleLocalizer localizer, string message)
 static void PrintError(IConsoleLocalizer localizer, string message)
 {
     Console.Error.WriteLine($"{localizer.ErrorPrefix}: {message}");
+}
+
+static IFileSystemTransferAdapter? CreateTransferAdapter(IFileSystem fs)
+{
+    return fs switch
+    {
+        XDosFileSystem xdos => new XDosTransferAdapter(xdos),
+        _ => null
+    };
 }
 
 static bool ConfirmOverwrite(IConsoleLocalizer localizer, string path)

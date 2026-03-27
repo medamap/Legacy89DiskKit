@@ -5,7 +5,7 @@ using Legacy89DiskKit.Domain.Native;
 
 namespace Legacy89DiskKit.Application.Native;
 
-public sealed class ManagedNativeDiskSession : INativeDiskSession, IDiskContainer
+public sealed class ManagedNativeDiskSession : INativeDiskSession, IDiskContainer, IGeometryRebuildableDiskContainer
 {
     private readonly IDiskContainer _container;
     private readonly IFileSystem? _fileSystem;
@@ -39,6 +39,15 @@ public sealed class ManagedNativeDiskSession : INativeDiskSession, IDiskContaine
     public IEnumerable<SectorInfo> GetAllSectors() => _container.GetAllSectors();
     public void Save() => _container.Save();
     public void SaveAs(string filePath) => _container.SaveAs(filePath);
+    public void RebuildGeometry(Func<int, int, (int sectors, ushort size, byte density)?> perTrackGeometry)
+    {
+        if (_container is not IGeometryRebuildableDiskContainer rebuildable)
+        {
+            throw new NotSupportedException("Underlying disk container does not support geometry rebuild.");
+        }
+
+        rebuildable.RebuildGeometry(perTrackGeometry);
+    }
 
     public void Dispose()
     {

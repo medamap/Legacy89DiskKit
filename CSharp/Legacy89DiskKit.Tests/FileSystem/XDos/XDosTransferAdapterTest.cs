@@ -281,6 +281,40 @@ public class XDosTransferAdapterTest
     }
 
     [Fact]
+    public void XDosToXDos_TransferAll_PreservesRawNameWithSpaces()
+    {
+        var (srcContainer, srcFs) = CreateFormattedDisk("TA_RT_SPACE_SRC");
+        var (dstContainer, dstFs) = CreateFormattedDisk("TA_RT_SPACE_DST");
+
+        byte[] data = Enumerable.Repeat((byte)0x5A, 512).ToArray();
+        byte[] rawName = System.Text.Encoding.Latin1.GetBytes("X-DOS System    ");
+
+        srcFs.WriteFileInternal(
+            "X-DOS System",
+            data,
+            new ExtendedFileAttributes(FileAttributes.None, 0x80, false, "X-DOS"),
+            loadAddress: 0x4000,
+            executionAddress: 0x4000,
+            forcedRawName: rawName,
+            forcedRawType: (ushort)XDosFileType.Sys);
+
+        var orchestrator = new FileSystemTransferOrchestrator();
+        orchestrator.Register(srcFs, new XDosTransferAdapter(srcFs));
+        orchestrator.Register(dstFs, new XDosTransferAdapter(dstFs));
+
+        orchestrator.TransferAll(srcFs, dstFs);
+
+        var dstEntry = dstFs.GetFilesWithMetadata().Single();
+        var srcSlot = srcFs.FindDirectorySlot(rawName, (ushort)XDosFileType.Sys);
+        var dstSlot = dstFs.FindDirectorySlot(rawName, (ushort)XDosFileType.Sys);
+
+        Assert.Equal("X-DOS System", dstEntry.FileName);
+        Assert.True(rawName.SequenceEqual(dstEntry.RawFileName));
+        Assert.Equal((ushort)XDosFileType.Sys, dstEntry.RawFileType);
+        Assert.Equal(srcSlot, dstSlot);
+    }
+
+    [Fact]
     public void Import_Utf8Payload_ConvertsToShiftJis()
     {
         var (container, fs) = CreateFormattedDisk("TA_IMPORT_UTF8");

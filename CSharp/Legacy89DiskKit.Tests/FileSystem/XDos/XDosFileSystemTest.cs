@@ -239,6 +239,30 @@ public class XDosFileSystemTest
     }
 
     [Fact]
+    public void Format_DiskServiceCreate_TwoD_RebuildsToXDosGeometry()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_FMT_CLI_PATH.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        if (File.Exists(path)) File.Delete(path);
+
+        var container = svc.CreateDisk(path, DiskType.TwoD);
+        var fs = new XDosFileSystem(container);
+
+        Assert.Equal(256, container.ReadSector(0, 1, 1).Length);
+        Assert.True(container.SectorExists(0, 1, 16));
+        Assert.True(container.SectorExists(1, 0, 11));
+
+        fs.Format();
+
+        Assert.Equal(256, container.ReadSector(0, 0, 1).Length);
+        Assert.Equal(512, container.ReadSector(0, 1, 1).Length);
+        Assert.Equal(512, container.ReadSector(1, 0, 10).Length);
+        Assert.False(container.SectorExists(0, 1, 11));
+        Assert.False(container.SectorExists(1, 0, 11));
+    }
+
+    [Fact]
     public void WriteFile_FamPointerTrack_AtLeastTwo()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
@@ -536,5 +560,108 @@ public class XDosFileSystemTest
             for (int i = 0; i < readBack.Length; i++)
                 Assert.Equal((byte)(i % 251), readBack[i]);
         }
+    }
+
+    [Fact]
+    public void Format_D88_BeforeFormat_Generic2D_Is16x256()
+    {
+        var container = D88DiskContainer.CreateNewInMemory("GEOM_PRE", DiskType.TwoD);
+        Assert.Equal(256, container.ReadSector(0, 0, 1).Length);
+        Assert.Equal(256, container.ReadSector(1, 0, 1).Length);
+        Assert.True(container.SectorExists(0, 0, 16));
+        Assert.False(container.SectorExists(0, 0, 17));
+        Assert.True(container.SectorExists(1, 0, 16));
+        Assert.False(container.SectorExists(1, 0, 17));
+    }
+
+    [Fact]
+    public void Format_D88_AfterXDosFormat_Track0Is16x256_OtherTracksAre10x512()
+    {
+        var container = D88DiskContainer.CreateNewInMemory("GEOM_AFT", DiskType.TwoD);
+        new XDosFileSystem(container).Format();
+
+        Assert.Equal(256, container.ReadSector(0, 0, 1).Length);
+        Assert.True(container.SectorExists(0, 0, 16));
+        Assert.False(container.SectorExists(0, 0, 17));
+
+        Assert.Equal(512, container.ReadSector(1, 0, 1).Length);
+        Assert.True(container.SectorExists(1, 0, 10));
+        Assert.False(container.SectorExists(1, 0, 11));
+
+        Assert.Equal(512, container.ReadSector(39, 0, 1).Length);
+        Assert.True(container.SectorExists(39, 1, 10));
+        Assert.False(container.SectorExists(39, 1, 11));
+    }
+
+    [Fact]
+    public void Format_D88_ChangesImageBytes_AfterGeometryRebuild()
+    {
+        var container = D88DiskContainer.CreateNewInMemory("GEOM_CHG", DiskType.TwoD);
+        var before = container.ToImageData();
+
+        new XDosFileSystem(container).Format();
+
+        var after = container.ToImageData();
+        Assert.NotEqual(before.Length, after.Length);
+    }
+
+    [Fact]
+    public void Format_D88_RepeatedFormat_PreservesXDosGeometry()
+    {
+        var container = D88DiskContainer.CreateNewInMemory("GEOM_RPT", DiskType.TwoD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+        fs.Format();
+
+        Assert.Equal(256, container.ReadSector(0, 0, 1).Length);
+        Assert.Equal(512, container.ReadSector(1, 0, 1).Length);
+        Assert.True(container.SectorExists(1, 0, 10));
+        Assert.False(container.SectorExists(1, 0, 11));
+    }
+
+    [Fact]
+    public void Format_D88_GeometryParityWith_XDosSysD88()
+    {
+        using var real = new D88DiskContainer(XDosSysPath, true);
+        var container = D88DiskContainer.CreateNewInMemory("GEOM_PAR", DiskType.TwoD);
+        new XDosFileSystem(container).Format();
+
+        Assert.Equal(real.ReadSector(0, 0, 1).Length, container.ReadSector(0, 0, 1).Length);
+        Assert.Equal(real.ReadSector(1, 0, 1).Length, container.ReadSector(1, 0, 1).Length);
+
+        Assert.True(real.SectorExists(0, 0, 16));
+        Assert.True(container.SectorExists(0, 0, 16));
+        Assert.False(real.SectorExists(0, 0, 17));
+        Assert.False(container.SectorExists(0, 0, 17));
+
+        Assert.True(real.SectorExists(1, 0, 10));
+        Assert.True(container.SectorExists(1, 0, 10));
+        Assert.False(real.SectorExists(1, 0, 11));
+        Assert.False(container.SectorExists(1, 0, 11));
+    }
+
+    [Fact]
+    public void Format_RawContainer_DoesNotChangeContainerSize()
+    {
+        var rawContainer = RawDiskContainer.CreateNewInMemory(DiskType.TwoD);
+        int sizeBefore = rawContainer.ToImageData().Length;
+        var fs = new XDosFileSystem(rawContainer);
+        try { fs.Format(); } catch { }
+        Assert.Equal(sizeBefore, rawContainer.ToImageData().Length);
+    }
+
+    [Fact]
+    public void Format_D88_2HD_Track0Is16x256_DataTracksAre16x512_Sector17Missing()
+    {
+        var container = D88DiskContainer.CreateNewInMemory("GEOM_2HD", DiskType.TwoHD);
+        new XDosFileSystem(container).Format();
+
+        Assert.Equal(256, container.ReadSector(0, 0, 1).Length);
+        Assert.True(container.SectorExists(0, 0, 16));
+        Assert.False(container.SectorExists(0, 0, 17));
+
+        Assert.Equal(512, container.ReadSector(0, 1, 1).Length);
+        Assert.True(container.SectorExists(0, 1, 16));
+        Assert.False(container.SectorExists(0, 1, 17));
     }
 }

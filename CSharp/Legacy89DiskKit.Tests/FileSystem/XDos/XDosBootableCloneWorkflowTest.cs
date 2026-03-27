@@ -125,7 +125,7 @@ public class XDosBootableCloneWorkflowTest
     }
 
     [Fact]
-    public void RealImageClone_XdosSys_ExceedsCapacityUnderCurrentInfrastructure()
+    public void RealImageClone_XdosSys_CompletesWithinTwoDCapacity()
     {
         var xdosSysPath = GetRepoPath("images/disk_org/x1/XDOS_SYS.D88");
         if (!File.Exists(xdosSysPath)) return;
@@ -137,7 +137,15 @@ public class XDosBootableCloneWorkflowTest
         var srcFs = new XDosFileSystem(srcContainer);
 
         var cloneService = Legacy89DiskKitApplication.CreateDiskCloneService(srcFs.GetFileSystemInfo());
-        Assert.Throws<IOException>(() =>
-            cloneService.CloneXDosBootable(srcFs, new XDosTransferAdapter(srcFs), dstFs, new XDosTransferAdapter(dstFs)));
+        cloneService.CloneXDosBootable(srcFs, new XDosTransferAdapter(srcFs), dstFs, new XDosTransferAdapter(dstFs));
+
+        dstContainer.Save();
+
+        using var verifySvc = Legacy89DiskKitApplication.CreateDiskService();
+        var verifyContainer = verifySvc.OpenDisk(dstContainer.FilePath, readOnly: true);
+        var verifyFs = new XDosFileSystem(verifyContainer);
+
+        Assert.Equal(srcFs.ReadBootArea(), verifyFs.ReadBootArea());
+        Assert.Equal(srcFs.GetFiles().Count(), verifyFs.GetFiles().Count());
     }
 }
