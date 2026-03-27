@@ -1,12 +1,16 @@
 namespace Legacy89DiskKit.Domain.FileSystem.Model.XDos;
 
-public enum XDosFileType : byte
+public enum XDosFileType : ushort
 {
-    SubProgram  = 0x01,
-    BasicText   = 0x02,
-    Binary      = 0x03,
-    Data        = 0x04,
-    Overlay     = 0x05,
-    Script      = 0x06,
-    System      = 0x07,
+    Killed = 0x0000,
+    Bin    = 0x0100,
+    Bas    = 0x0200,
+    Cmd    = 0x0300,
+    Asc    = 0x0400,
+    Sub    = 0x0500,
+    Bat    = 0x0600,
+    Sys    = 0x0700,
+    Dic    = 0x0800,
+    Dir    = 0x8000,
+    End    = 0xFFFF,
 }

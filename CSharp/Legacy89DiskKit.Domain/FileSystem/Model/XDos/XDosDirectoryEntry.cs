@@ -1,22 +1,22 @@
 namespace Legacy89DiskKit.Domain.FileSystem.Model.XDos;
 
 public record XDosDirectoryEntry(
-    byte        RawFileType,
-    byte        Attribute,
-    string      FileName,
-    byte[]      RawFileName,
-    ushort      LoadAddress,
-    ushort      ByteSize,
-    ushort      ExecutionAddress,
-    ushort      DatePacked,
-    ushort      TimePacked,
-    byte        Flags,
-    byte        FirstCluster,
-    byte        FirstSectorR,
-    byte        AlwaysOne
-)
+    ushort         RawFileType,
+    string         FileName,
+    byte[]         RawFileName,
+    ushort         StartAddress,
+    ushort         SizeLow,
+    ushort         ExecAddressOrSizeHigh,
+    uint           TimestampRaw,
+    byte           Attribute,
+    XDosFamPointer FamPointer)
 {
-    public bool IsEmpty     => RawFileType == 0x00 || RawFileType == 0xFF || RawFileType == 0xD5;
-    public XDosFileType FileType  => (XDosFileType)(RawFileType & 0x7F);
-    public int  FileSize    => ByteSize;
+    public bool IsKilled => RawFileType == 0x0000;
+    public bool IsEnd    => RawFileType == 0xFFFF;
+    public bool IsEmpty  => IsKilled || IsEnd;
+    public XDosFileType FileType => (XDosFileType)RawFileType;
+    public int FileSize =>
+        FileType == XDosFileType.Asc
+            ? (int)(((uint)ExecAddressOrSizeHigh << 16) | SizeLow)
+            : SizeLow;
 }

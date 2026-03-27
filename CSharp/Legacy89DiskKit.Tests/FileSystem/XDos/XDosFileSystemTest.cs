@@ -8,6 +8,7 @@ using Legacy89DiskKit.Infrastructure.FileSystem.XDos.Provider;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Infrastructure.FileSystem.XDos.Reader;
 using Legacy89DiskKit.Infrastructure.DiskImage.Container;
+using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
 using FileAttributes = Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes;
 using Xunit;
 
@@ -18,14 +19,13 @@ public class XDosFileSystemTest
     private static string GetRepoPath(string relativePath)
     {
         var baseDirectory = AppContext.BaseDirectory;
-        // From bin/Debug/net9.0/Legacy89DiskKit.Tests.dll up to repo root
         var repoRoot = Path.GetFullPath(Path.Combine(baseDirectory, "../../../../.."));
         return Path.Combine(repoRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
     }
 
-    private string XDosSysPath => GetRepoPath("images/disk_org/x1/XDOS_SYS.D88");
+    private string XDosSysPath  => GetRepoPath("images/disk_org/x1/XDOS_SYS.D88");
     private string XDosUtilPath => GetRepoPath("images/disk_org/x1/XDOSUTIL.D88");
-    private string HuBasicPath => GetRepoPath("images/disk_org/x1/X1turboIIIDemo.d88");
+    private string HuBasicPath  => GetRepoPath("images/disk_org/x1/X1turboIIIDemo.d88");
 
     [Fact]
     public void Provider_CanHandle_XDosDisk_ReturnsTrue_DEBUG()
@@ -129,13 +129,8 @@ public class XDosFileSystemTest
     }
 
     [Fact]
-    public void WriteFile_NewDisk2DD_CrossCopy()
+    public void WriteFile_NewDisk2DD_WriteAndRead_RoundTrip()
     {
-        using var srcService = Legacy89DiskKitApplication.CreateDiskService();
-        var srcContainer = srcService.OpenDisk(XDosSysPath, true);
-        var srcFs = (srcService.FileSystem as XDosFileSystem)!;
-        var srcBoot = srcFs.ReadBootArea();
-
         var outputPath = GetRepoPath("images/test/XDOS_NEW2DD.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
         if (File.Exists(outputPath)) File.Delete(outputPath);
@@ -148,23 +143,55 @@ public class XDosFileSystemTest
         var destFs = new XDosFileSystem(destContainer);
         destFs.Format();
 
-        // ファイル単位コピー: FAT/FAM/Directory は WriteFileInternal が自動更新する
-        // 重複エントリ（同一 RawName+Type）はスキップ
+        byte[] testData = Enumerable.Range(0, 1024).Select(i => (byte)(i & 0xFF)).ToArray();
+        destFs.WriteFile("TEST.BIN", testData, destFs.CreateDefaultAttributes(false), 0x8000, 0x8000);
+        destContainer.Save();
+
+        using var verifyService = Legacy89DiskKitApplication.CreateDiskService();
+        verifyService.OpenDisk(outputPath, true);
+        var verifyFs = new XDosFileSystem(verifyService.Session as IDiskContainer
+            ?? throw new InvalidOperationException());
+
+        Assert.True(verifyFs.FileExists("TEST.BIN"));
+        var readBack = verifyFs.ReadFile("TEST.BIN");
+        Assert.Equal(testData.Length, readBack.Length);
+        Assert.True(testData.SequenceEqual(readBack));
+    }
+
+    [Fact]
+    public void WriteFile_NewDisk2DD_CrossCopy()
+    {
+        using var srcService = Legacy89DiskKitApplication.CreateDiskService();
+        var srcContainer = srcService.OpenDisk(XDosSysPath, true);
+        var srcFs = (srcService.FileSystem as XDosFileSystem)!;
+        var srcBoot = srcFs.ReadBootArea();
+
+        var outputPath = GetRepoPath("images/test/XDOS_XCOPY2DD.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        if (File.Exists(outputPath)) File.Delete(outputPath);
+
+        D88DiskContainer.CreateNew(outputPath, DiskType.TwoDD, "XD_XCPY",
+            XDosFileSystem.XDosTrackGeometry);
+
+        using var destService = Legacy89DiskKitApplication.CreateDiskService();
+        var destContainer = destService.OpenDisk(outputPath, false);
+        var destFs = new XDosFileSystem(destContainer);
+        destFs.Format();
+
         var seen = new HashSet<string>();
         foreach (var e in srcFs.GetFilesWithMetadata().Where(e => !e.IsEmpty))
         {
-            var key = $"{BitConverter.ToString(e.RawFileName)}:{e.RawFileType:X2}";
+            var key = $"{BitConverter.ToString(e.RawFileName)}:{e.RawFileType:X4}";
             if (!seen.Add(key)) continue;
 
             var data = srcFs.ReadFileRaw(e.RawFileName);
             destFs.WriteFileInternal(
                 e.FileName, data,
                 new ExtendedFileAttributes(FileAttributes.None, e.Attribute, false, "X-DOS"),
-                e.LoadAddress, e.ExecutionAddress,
+                e.StartAddress, e.ExecAddressOrSizeHigh,
                 forcedRawName: e.RawFileName, forcedRawType: e.RawFileType);
         }
 
-        // ブートエリアのみコピー（FAT/FAM/Directory は WriteFileInternal が既に更新済み）
         destFs.WriteBootArea(srcBoot);
         destContainer.Save();
 
@@ -182,174 +209,75 @@ public class XDosFileSystemTest
             var srcData  = srcFs.ReadFileRaw(srcEntry.RawFileName);
             var destData = verifyFs.ReadFileRaw(srcEntry.RawFileName);
             Assert.True(srcData.SequenceEqual(destData),
-                $"Parity failure: {srcEntry.FileName} (T{srcEntry.FirstCluster} R{srcEntry.FirstSectorR})");
+                $"Parity failure: {srcEntry.FileName} (T{srcEntry.FamPointer.Track} S{srcEntry.FamPointer.Sector})");
         }
     }
 
     [Fact]
-    public void WriteFileInternal_DuplicateDisk_LogicalReconstruction()
-    {
-        // 1. Open Source
-        using var srcService = Legacy89DiskKitApplication.CreateDiskService();
-        var srcContainer = srcService.OpenDisk(XDosSysPath, true);
-        var srcFs = (srcService.FileSystem as XDosFileSystem)!;
-        var srcBoot = srcFs.ReadBootArea();
-
-        var uniqueFiles = srcFs.GetFilesWithMetadata()
-            .Where(e => !e.IsEmpty && e.RawFileType != 0x05)
-            .GroupBy(e => new { e.FirstCluster, e.FirstSectorR })
-            .Select(g => g.First())
-            .Where(e => e.FirstSectorR > 0)
-            .ToList();
-
-        // 2. Create Target — clone source D88 to inherit exact sector geometry
-        //    (CreateDisk would create all tracks as 256-byte/16-sector,
-        //     but X-DOS data tracks are 512-byte/10-sector)
-        var outputPath = GetRepoPath("images/test/XDOS_RECONST.D88");
-        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
-        File.Copy(XDosSysPath, outputPath, overwrite: true);
-
-        using var destService = Legacy89DiskKitApplication.CreateDiskService();
-        var destContainer = destService.OpenDisk(outputPath, false);
-        var destFs = new XDosFileSystem(destContainer);
-
-        destFs.Format();
-
-        // 3. Write each file at its original cluster position, following source FAM chain
-        var srcFamReader = new XDosFamReader(srcContainer);
-        foreach (var e in uniqueFiles)
-        {
-            var data = srcFs.ReadFileRaw(e.RawFileName);
-            
-            // Special handling for Logical Reconstruction:
-            // If the file overlaps with the directory track (Track 1), 
-            // zero out that part of the data to avoid "pre-populating" the directory
-            // which causes "Directory full" when WriteFileInternal tries to add entries.
-            // Directory is at T1 R2-10.
-            var chain = srcFamReader.GetChain((byte)e.FirstCluster);
-            int track1Idx = chain.ToList().IndexOf(1);
-            if (track1Idx >= 0)
-            {
-                int offset = 0;
-                for (int i = 0; i < track1Idx; i++)
-                {
-                    int track = chain[i];
-                    int trackStartR = (track == 1 || track == 2) ? 2 : 1;
-                    int startR = (i == 0) ? Math.Max(trackStartR, (int)e.FirstSectorR) : trackStartR;
-                    int maxR = (track == 0) ? 16 : 10;
-                    int sz = (track == 0) ? 256 : 512;
-                    offset += (maxR - startR + 1) * sz;
-                }
-                // Track 1 is 9 sectors of 512 bytes.
-                int dirLen = 9 * 512;
-                for (int i = 0; i < dirLen && (offset + i) < data.Length; i++) data[offset + i] = 0;
-            }
-
-            var clusterChain = srcFamReader.GetChain((byte)e.FirstCluster);
-            destFs.WriteFileInternal(
-                e.FileName, data,
-                new ExtendedFileAttributes(FileAttributes.None, e.Attribute, false, "X-DOS"),
-                e.LoadAddress, e.ExecutionAddress,
-                e.FirstCluster, e.RawFileName, e.RawFileType, e.FirstSectorR,
-                forcedClusterChain: clusterChain);
-        }
-
-        // 4. Clone FAT, FAM and Directory from source (restores original management state)
-        destContainer.WriteSector(0, 1, 1, srcContainer.ReadSector(0, 1, 1)); // FAT
-        destContainer.WriteSector(1, 0, 1, srcContainer.ReadSector(1, 0, 1)); // FAM
-        for (int r = 2; r <= 10; r++) // Directory
-        {
-            destContainer.WriteSector(0, 1, r, srcContainer.ReadSector(0, 1, r));
-        }
-
-        // 5. Write Boot Area
-        destFs.WriteBootArea(srcBoot);
-        destContainer.Save();
-
-        // 6. Verification
-        using var verifyService = Legacy89DiskKitApplication.CreateDiskService();
-        verifyService.OpenDisk(outputPath, true);
-        var verifyFs = (verifyService.FileSystem as XDosFileSystem)!;
-
-        foreach (var srcEntry in uniqueFiles)
-        {
-            Assert.True(verifyFs.FileExistsRaw(srcEntry.RawFileName), $"Missing: {srcEntry.FileName}");
-            var srcData  = srcFs.ReadFileRaw(srcEntry.RawFileName);
-            var destData = verifyFs.ReadFileRaw(srcEntry.RawFileName);
-            Assert.True(srcData.SequenceEqual(destData),
-                $"Parity failure: {srcEntry.FileName} (T{srcEntry.FirstCluster} R{srcEntry.FirstSectorR})");
-        }
-    }
-
-    [Fact]
-    public void Diagnostic_CompareSourceAndDest_NewDisk2DD()
-    {
-        var newPath = GetRepoPath("images/test/XDOS_NEW2DD.D88");
-        if (!File.Exists(newPath)) { Assert.Fail("XDOS_NEW2DD.D88 not found"); return; }
-
-        using var srcSvc = Legacy89DiskKitApplication.CreateDiskService();
-        srcSvc.OpenDisk(XDosSysPath, true);
-        var srcFs = (srcSvc.FileSystem as XDosFileSystem)!;
-        var srcCon = srcSvc.Session as Legacy89DiskKit.Domain.DiskImage.Interface.Container.IDiskContainer;
-
-        using var newSvc = Legacy89DiskKitApplication.CreateDiskService();
-        newSvc.OpenDisk(newPath, true);
-        var newFs = (newSvc.FileSystem as XDosFileSystem)!;
-        var newCon = newSvc.Session as Legacy89DiskKit.Domain.DiskImage.Interface.Container.IDiskContainer;
-
-        var srcFiles = srcFs.GetFilesWithMetadata().OrderBy(e => e.FirstCluster).ToList();
-        var newFiles = newFs.GetFilesWithMetadata().OrderBy(e => e.FirstCluster).ToList();
-
-        var sb = new System.Text.StringBuilder();
-        sb.AppendLine("=== SOURCE ===");
-        foreach (var e in srcFiles) sb.AppendLine($"  T{e.FirstCluster,3} R{e.FirstSectorR} 0x{e.RawFileType:X2} [{e.FileName}]");
-        sb.AppendLine("=== DEST ===");
-        foreach (var e in newFiles) sb.AppendLine($"  T{e.FirstCluster,3} R{e.FirstSectorR} 0x{e.RawFileType:X2} [{e.FileName}]");
-
-        var sec_src = srcCon!.ReadSector(2, 0, 2);
-        var sec_new = newCon!.ReadSector(2, 0, 2);
-        sb.AppendLine($"\nKernel C2H0R2 Match: {sec_src.SequenceEqual(sec_new)}");
-        sb.AppendLine($"Src[0..7]: {string.Join(" ", sec_src[..8].Select(b => $"{b:X2}"))}");
-        sb.AppendLine($"New[0..7]: {string.Join(" ", sec_new[..8].Select(b => $"{b:X2}"))}");
-
-        var boot_src = srcCon.ReadSector(0, 0, 1);
-        var boot_new = newCon!.ReadSector(0, 0, 1);
-        sb.AppendLine($"\nBoot C0H0R1 Match: {boot_src.SequenceEqual(boot_new)}");
-        sb.AppendLine($"Src[0..7]: {string.Join(" ", boot_src[..8].Select(b => $"{b:X2}"))}");
-        sb.AppendLine($"New[0..7]: {string.Join(" ", boot_new[..8].Select(b => $"{b:X2}"))}");
-
-        File.WriteAllText("/tmp/xdos_diag.txt", sb.ToString());
-    }
-
-    [Fact]
-    public void Format_SetsReservedFatEntries()
+    public void Format_FatBitmap_TracksZeroAndOneAreUsed_Track2IsFree()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
         var path = GetRepoPath("images/test/XDOS_FMT.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoDD);
         var fs = new XDosFileSystem(container);
         fs.Format();
 
-        var fat = container.ReadSector(0, 1, 1);
-        Assert.Equal(0x00, fat[0]);
-        Assert.Equal(0x01, fat[1]);
-        Assert.Equal(0x4A, fat[2]);
+        var fatSector = container.ReadSector(0, 1, 1);
+        Assert.Equal(0x01, fatSector[0x01]);
+
+        int t0off = 0xA8;
+        int t1off = 0xAA;
+        Assert.Equal(0x00, fatSector[t0off]);
+        Assert.Equal(0x00, fatSector[t0off + 1]);
+        Assert.Equal(0x00, fatSector[t1off]);
+        Assert.Equal(0x00, fatSector[t1off + 1]);
+
+        int t2off = 0xAC;
+        ushort t2word = (ushort)((fatSector[t2off] << 8) | fatSector[t2off + 1]);
+        Assert.Equal((ushort)0xFFC0, t2word);
     }
 
     [Fact]
-    public void WriteFile_DoesNotAllocateCluster0Or2()
+    public void Format_DiskServiceCreate_TwoD_RebuildsToXDosGeometry()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_FMT_CLI_PATH.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        if (File.Exists(path)) File.Delete(path);
+
+        var container = svc.CreateDisk(path, DiskType.TwoD);
+        var fs = new XDosFileSystem(container);
+
+        Assert.Equal(256, container.ReadSector(0, 1, 1).Length);
+        Assert.True(container.SectorExists(0, 1, 16));
+        Assert.True(container.SectorExists(1, 0, 11));
+
+        fs.Format();
+
+        Assert.Equal(256, container.ReadSector(0, 0, 1).Length);
+        Assert.Equal(512, container.ReadSector(0, 1, 1).Length);
+        Assert.Equal(512, container.ReadSector(1, 0, 10).Length);
+        Assert.False(container.SectorExists(0, 1, 11));
+        Assert.False(container.SectorExists(1, 0, 11));
+    }
+
+    [Fact]
+    public void WriteFile_FamPointerTrack_AtLeastTwo()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
         var path = GetRepoPath("images/test/XDOS_ALLOC.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoDD);
         var fs = new XDosFileSystem(container);
         fs.Format();
 
         fs.WriteFile("TEST.BIN", new byte[100], fs.CreateDefaultAttributes(false));
-        
+
         var files = fs.GetFilesWithMetadata();
         var entry = files.First(e => e.FileName == "TEST.BIN");
-        Assert.True(entry.FirstCluster >= 3, $"Expected Cluster >= 3, but got {entry.FirstCluster}");
+        Assert.True(entry.FamPointer.Track >= 2,
+            $"Expected FAM track >= 2, but got {entry.FamPointer.Track}");
     }
 
     [Fact]
@@ -357,41 +285,383 @@ public class XDosFileSystemTest
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
         var path = GetRepoPath("images/test/XDOS_FULL.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoD);
         var fs = new XDosFileSystem(container);
         fs.Format();
 
-        // 2D disk has 80 tracks (clusters). 
-        // With some reserved, writing data that requires more than 80 clusters should fail.
-        // 1 cluster = 10 sectors * 512 bytes = 5120 bytes.
-        byte[] largeData = new byte[81 * 5120]; 
-        var ex = Assert.Throws<IOException>(() => fs.WriteFile("TOO_BIG.BIN", largeData, fs.CreateDefaultAttributes(false)));
+        byte[] largeData = new byte[81 * 5120];
+        var ex = Assert.Throws<IOException>(() =>
+            fs.WriteFile("TOO_BIG.BIN", largeData, fs.CreateDefaultAttributes(false)));
         Assert.Equal("Disk full.", ex.Message);
     }
 
     [Fact]
-    public void WriteFile_TwoHd_Uses16SectorsPerCluster()
+    public void WriteFile_TwoHd_AllocatesRecordsIn16SectorTracks()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
         var path = GetRepoPath("images/test/XDOS_2HD.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoHD);
         var fs = new XDosFileSystem(container);
         fs.Format();
 
-        // One cluster in 2HD should be 16 sectors * 512 bytes = 8192 bytes.
-        // If we write 6000 bytes, it should fit in 1 cluster.
         fs.WriteFile("2HD_TEST.BIN", new byte[6000], fs.CreateDefaultAttributes(false));
 
         var files = fs.GetFilesWithMetadata();
         var entry = files.First(e => e.FileName == "2HD_TEST.BIN");
-        
-        // Count sectors in FAM chain
-        var fam = new XDosFamReader(container);
-        var chain = fam.GetChain(entry.FirstCluster);
-        Assert.Single(chain); // Should be exactly 1 cluster
-        
-        // Verify capacity reported
+        Assert.True(entry.FamPointer.Track >= 2);
+
+        var famReader = new XDosFamReader(container);
+        var famEntries = famReader.ReadFam(entry.FamPointer);
+        Assert.NotEmpty(famEntries);
+
         var info = fs.GetFileSystemInfo();
-        Assert.Equal(8192, info.ClusterSize);
+        Assert.Equal(512, info.ClusterSize);
+    }
+
+    [Fact]
+    public void XDosFamReader_ParsesFamTuples_Correctly()
+    {
+        var sector = new byte[512];
+        sector[0] = 0x02; sector[1] = 0x02; sector[2] = 0x0F;
+        sector[3] = 0x03; sector[4] = 0x01; sector[5] = 0x08;
+        sector[6] = 0x00;
+
+        var entries = XDosFamReader.ParseFam(sector);
+        Assert.Equal(2, entries.Count);
+        Assert.Equal(0x02, entries[0].Track);
+        Assert.Equal(0x02, entries[0].Sector);
+        Assert.Equal(0x0F, entries[0].RecordCount);
+        Assert.Equal(0x03, entries[1].Track);
+        Assert.Equal(0x01, entries[1].Sector);
+        Assert.Equal(0x08, entries[1].RecordCount);
+    }
+
+    [Fact]
+    public void XDosFamWriter_WritesTerminatorAtEnd()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_FAMW.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        fs.WriteFile("FAM_T.BIN", new byte[512], fs.CreateDefaultAttributes(false));
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "FAM_T.BIN");
+        int c = entry.FamPointer.Track / 2;
+        int h = entry.FamPointer.Track % 2;
+        var famSectorData = container.ReadSector(c, h, entry.FamPointer.Sector);
+
+        int pos = 0;
+        while (pos + 2 < famSectorData.Length && famSectorData[pos] != 0x00) pos += 3;
+        Assert.Equal(0x00, famSectorData[pos]);
+    }
+
+    [Fact]
+    public void WriteFile_ReadBack_DataIntact()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_RW.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        var rnd = new Random(42);
+        byte[] data = new byte[2048];
+        rnd.NextBytes(data);
+
+        fs.WriteFile("RAND.BIN", data, fs.CreateDefaultAttributes(false));
+        container.Save();
+
+        using var svc2 = Legacy89DiskKitApplication.CreateDiskService();
+        svc2.OpenDisk(path, true);
+        var fs2 = (svc2.FileSystem as XDosFileSystem)!;
+
+        Assert.True(fs2.FileExists("RAND.BIN"));
+        var readBack = fs2.ReadFile("RAND.BIN");
+        Assert.Equal(data.Length, readBack.Length);
+        Assert.True(data.SequenceEqual(readBack));
+    }
+
+    [Fact]
+    public void WriteFile_BinaryIntent_DefaultsToFileType0x0100()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_TYPE_BIN.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        fs.WriteFile("BIN_DEF.BIN", new byte[100], fs.CreateDefaultAttributes(false));
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "BIN_DEF.BIN");
+        Assert.Equal((ushort)XDosFileType.Bin, entry.RawFileType);
+    }
+
+    [Fact]
+    public void WriteFile_TextIntent_DefaultsToFileType0x0400()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_TYPE_ASC.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        fs.WriteFile("TXT_DEF.TXT", new byte[100], fs.CreateDefaultAttributes(true));
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "TXT_DEF.TXT");
+        Assert.Equal((ushort)XDosFileType.Asc, entry.RawFileType);
+    }
+
+    [Fact]
+    public void WriteFile_NonzeroRawAttributes_DoNotAlterFileType()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_TYPE_ATTR.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        var attrWithNonZeroRaw = new ExtendedFileAttributes(FileAttributes.None, 0x80, false, "X-DOS");
+        fs.WriteFile("ATTR.BIN", new byte[100], attrWithNonZeroRaw);
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "ATTR.BIN");
+        Assert.Equal((ushort)XDosFileType.Bin, entry.RawFileType);
+        Assert.Equal(0x80, entry.Attribute);
+    }
+
+    [Fact]
+    public void WriteFileInternal_ExplicitRawType_PreservedUnchanged()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_TYPE_EXPL.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        fs.WriteFileInternal("CMD_F.CMD", new byte[100], fs.CreateDefaultAttributes(false),
+            forcedRawType: (ushort)XDosFileType.Cmd);
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "CMD_F.CMD");
+        Assert.Equal((ushort)XDosFileType.Cmd, entry.RawFileType);
+    }
+
+    [Fact]
+    public void WriteFile_CommitOrder_FatAndFamBothPresentAfterWrite()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_ORDER_FAT.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        fs.WriteFile("ORDER.BIN", new byte[512], fs.CreateDefaultAttributes(false));
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "ORDER.BIN");
+
+        var famC = entry.FamPointer.Track / 2;
+        var famH = entry.FamPointer.Track % 2;
+        var famSectorData = container.ReadSector(famC, famH, entry.FamPointer.Sector);
+        Assert.NotEqual(0x00, famSectorData[0]);
+
+        var fatSector = container.ReadSector(0, 1, 1);
+        int famOffset = 0xA8 + entry.FamPointer.Track * 2;
+        ushort famTrackWord = (ushort)((fatSector[famOffset] << 8) | fatSector[famOffset + 1]);
+        bool famSectorBitUsed = ((famTrackWord >> (16 - entry.FamPointer.Sector)) & 1) == 0;
+        Assert.True(famSectorBitUsed, "FAT must mark the FAM sector as used after write completes");
+    }
+
+    [Fact]
+    public void WriteFile_DirectoryEntry_FamPointerBytesMatch()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_ORDER_DIR.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        fs.WriteFile("DIRCHK.BIN", new byte[256], fs.CreateDefaultAttributes(false));
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "DIRCHK.BIN");
+
+        var dirSector = container.ReadSector(0, 1, 2);
+        int offset = 0;
+        while (offset + 32 <= dirSector.Length)
+        {
+            ushort rawType = (ushort)((dirSector[offset] << 8) | dirSector[offset + 1]);
+            if (rawType != 0x0000 && rawType != 0xFFFF) break;
+            offset += 32;
+        }
+
+        Assert.Equal(entry.FamPointer.Track,  dirSector[offset + 0x1D]);
+        Assert.Equal(entry.FamPointer.Sector, dirSector[offset + 0x1E]);
+        Assert.Equal(entry.FamPointer.Record, dirSector[offset + 0x1F]);
+    }
+
+    [Fact]
+    public void WriteFile_TwoConsecutiveFiles_NoDataOverwrite()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_ORDER_NOOVR.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        byte[] data1 = Enumerable.Repeat((byte)0xAA, 512).ToArray();
+        byte[] data2 = Enumerable.Repeat((byte)0x55, 512).ToArray();
+
+        fs.WriteFile("FIRST.BIN",  data1, fs.CreateDefaultAttributes(false));
+        fs.WriteFile("SECOND.BIN", data2, fs.CreateDefaultAttributes(false));
+
+        var read1 = fs.ReadFile("FIRST.BIN");
+        var read2 = fs.ReadFile("SECOND.BIN");
+
+        Assert.True(data1.SequenceEqual(read1), "FIRST.BIN data was overwritten");
+        Assert.True(data2.SequenceEqual(read2), "SECOND.BIN data was overwritten");
+    }
+
+    [Fact]
+    public void WriteFile_CommitOrder_DataRoundTripAfterSave()
+    {
+        var path = GetRepoPath("images/test/XDOS_ORDER_RT.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+
+        {
+            using var svc = Legacy89DiskKitApplication.CreateDiskService();
+            var container = svc.CreateDisk(path, DiskType.TwoDD);
+            var fs = new XDosFileSystem(container);
+            fs.Format();
+
+            byte[] data = new byte[1536];
+            for (int i = 0; i < data.Length; i++) data[i] = (byte)(i % 251);
+            fs.WriteFile("RT_TEST.BIN", data, fs.CreateDefaultAttributes(false));
+            container.Save();
+        }
+
+        {
+            using var svc2 = Legacy89DiskKitApplication.CreateDiskService();
+            svc2.OpenDisk(path, true);
+            var fs2 = (svc2.FileSystem as XDosFileSystem)!;
+
+            Assert.True(fs2.FileExists("RT_TEST.BIN"));
+            var readBack = fs2.ReadFile("RT_TEST.BIN");
+            Assert.Equal(1536, readBack.Length);
+            for (int i = 0; i < readBack.Length; i++)
+                Assert.Equal((byte)(i % 251), readBack[i]);
+        }
+    }
+
+    [Fact]
+    public void Format_D88_BeforeFormat_Generic2D_Is16x256()
+    {
+        var container = D88DiskContainer.CreateNewInMemory("GEOM_PRE", DiskType.TwoD);
+        Assert.Equal(256, container.ReadSector(0, 0, 1).Length);
+        Assert.Equal(256, container.ReadSector(1, 0, 1).Length);
+        Assert.True(container.SectorExists(0, 0, 16));
+        Assert.False(container.SectorExists(0, 0, 17));
+        Assert.True(container.SectorExists(1, 0, 16));
+        Assert.False(container.SectorExists(1, 0, 17));
+    }
+
+    [Fact]
+    public void Format_D88_AfterXDosFormat_Track0Is16x256_OtherTracksAre10x512()
+    {
+        var container = D88DiskContainer.CreateNewInMemory("GEOM_AFT", DiskType.TwoD);
+        new XDosFileSystem(container).Format();
+
+        Assert.Equal(256, container.ReadSector(0, 0, 1).Length);
+        Assert.True(container.SectorExists(0, 0, 16));
+        Assert.False(container.SectorExists(0, 0, 17));
+
+        Assert.Equal(512, container.ReadSector(1, 0, 1).Length);
+        Assert.True(container.SectorExists(1, 0, 10));
+        Assert.False(container.SectorExists(1, 0, 11));
+
+        Assert.Equal(512, container.ReadSector(39, 0, 1).Length);
+        Assert.True(container.SectorExists(39, 1, 10));
+        Assert.False(container.SectorExists(39, 1, 11));
+    }
+
+    [Fact]
+    public void Format_D88_ChangesImageBytes_AfterGeometryRebuild()
+    {
+        var container = D88DiskContainer.CreateNewInMemory("GEOM_CHG", DiskType.TwoD);
+        var before = container.ToImageData();
+
+        new XDosFileSystem(container).Format();
+
+        var after = container.ToImageData();
+        Assert.NotEqual(before.Length, after.Length);
+    }
+
+    [Fact]
+    public void Format_D88_RepeatedFormat_PreservesXDosGeometry()
+    {
+        var container = D88DiskContainer.CreateNewInMemory("GEOM_RPT", DiskType.TwoD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+        fs.Format();
+
+        Assert.Equal(256, container.ReadSector(0, 0, 1).Length);
+        Assert.Equal(512, container.ReadSector(1, 0, 1).Length);
+        Assert.True(container.SectorExists(1, 0, 10));
+        Assert.False(container.SectorExists(1, 0, 11));
+    }
+
+    [Fact]
+    public void Format_D88_GeometryParityWith_XDosSysD88()
+    {
+        using var real = new D88DiskContainer(XDosSysPath, true);
+        var container = D88DiskContainer.CreateNewInMemory("GEOM_PAR", DiskType.TwoD);
+        new XDosFileSystem(container).Format();
+
+        Assert.Equal(real.ReadSector(0, 0, 1).Length, container.ReadSector(0, 0, 1).Length);
+        Assert.Equal(real.ReadSector(1, 0, 1).Length, container.ReadSector(1, 0, 1).Length);
+
+        Assert.True(real.SectorExists(0, 0, 16));
+        Assert.True(container.SectorExists(0, 0, 16));
+        Assert.False(real.SectorExists(0, 0, 17));
+        Assert.False(container.SectorExists(0, 0, 17));
+
+        Assert.True(real.SectorExists(1, 0, 10));
+        Assert.True(container.SectorExists(1, 0, 10));
+        Assert.False(real.SectorExists(1, 0, 11));
+        Assert.False(container.SectorExists(1, 0, 11));
+    }
+
+    [Fact]
+    public void Format_RawContainer_DoesNotChangeContainerSize()
+    {
+        var rawContainer = RawDiskContainer.CreateNewInMemory(DiskType.TwoD);
+        int sizeBefore = rawContainer.ToImageData().Length;
+        var fs = new XDosFileSystem(rawContainer);
+        try { fs.Format(); } catch { }
+        Assert.Equal(sizeBefore, rawContainer.ToImageData().Length);
+    }
+
+    [Fact]
+    public void Format_D88_2HD_Track0Is16x256_DataTracksAre16x512_Sector17Missing()
+    {
+        var container = D88DiskContainer.CreateNewInMemory("GEOM_2HD", DiskType.TwoHD);
+        new XDosFileSystem(container).Format();
+
+        Assert.Equal(256, container.ReadSector(0, 0, 1).Length);
+        Assert.True(container.SectorExists(0, 0, 16));
+        Assert.False(container.SectorExists(0, 0, 17));
+
+        Assert.Equal(512, container.ReadSector(0, 1, 1).Length);
+        Assert.True(container.SectorExists(0, 1, 16));
+        Assert.False(container.SectorExists(0, 1, 17));
     }
 }

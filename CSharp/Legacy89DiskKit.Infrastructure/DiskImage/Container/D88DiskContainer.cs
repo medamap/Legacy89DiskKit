@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Legacy89DiskKit.Infrastructure.DiskImage.Container;
 
-public class D88DiskContainer : IDiskContainer, IDisposable
+public class D88DiskContainer : IDiskContainer, IGeometryRebuildableDiskContainer, IDisposable
 {
     private string _filePath;
     private bool _isReadOnly;
@@ -299,6 +299,42 @@ public class D88DiskContainer : IDiskContainer, IDisposable
                 }
             }
         }
+    }
+
+    public void RebuildGeometry(Func<int, int, (int sectors, ushort size, byte density)?> perTrackGeometry)
+    {
+        if (_isReadOnly) throw new DiskImageException("Disk image is read-only");
+        _sectors.Clear();
+        int maxCylinders = _header.MediaType switch { DiskType.TwoHD => 77, DiskType.TwoDD => 80, _ => 40 };
+        for (int c = 0; c < maxCylinders; c++)
+        {
+            for (int h = 0; h < 2; h++)
+            {
+                var over = perTrackGeometry(c, h);
+                if (!over.HasValue) continue;
+                int spt      = over.Value.sectors;
+                ushort sz    = over.Value.size;
+                byte density = over.Value.density;
+                byte sizeN   = sz switch { 256 => 1, 512 => 2, 1024 => 3, _ => 2 };
+                for (int s = 1; s <= spt; s++)
+                {
+                    _sectors[(c, h, s)] = new D88SectorData
+                    {
+                        Cylinder    = (byte)c,
+                        Head        = (byte)h,
+                        Sector      = (byte)s,
+                        SectorSizeN = sizeN,
+                        SectorCount = (ushort)spt,
+                        Density     = density,
+                        Deleted     = false,
+                        Status      = 0,
+                        ActualSize  = sz,
+                        Data        = new byte[sz]
+                    };
+                }
+            }
+        }
+        _hasChanges = true;
     }
 
     private void SaveToFile() => Save();
