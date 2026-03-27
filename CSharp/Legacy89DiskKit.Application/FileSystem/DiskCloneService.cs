@@ -65,6 +65,30 @@ public class DiskCloneService
     }
 
     /// <summary>
+    /// Clones an X-DOS disk to a new destination: formats the destination, copies the boot area,
+    /// then transfers all top-level non-directory files using the provided adapters.
+    /// </summary>
+    public void CloneXDosBootable(
+        IFileSystem srcFs, IFileSystemTransferAdapter srcAdapter,
+        IFileSystem dstFs, IFileSystemTransferAdapter dstAdapter)
+    {
+        var bootArea = srcFs.ReadBootArea();
+        dstFs.Format();
+        dstFs.WriteBootArea(bootArea);
+
+        var orchestrator = new FileSystemTransferOrchestrator();
+        orchestrator.Register(srcFs, srcAdapter);
+        orchestrator.Register(dstFs, dstAdapter);
+
+        foreach (var entry in srcFs.GetFiles())
+        {
+            if (entry.Attributes.StandardAttributes.HasFlag(Domain.FileSystem.Model.FileAttributes.Directory))
+                continue;
+            orchestrator.Transfer(srcFs, dstFs, entry.FileName, entry.FileName);
+        }
+    }
+
+    /// <summary>
     /// Performs a sector-by-sector physical copy from source to destination.
     /// </summary>
     public (int tracksCopied, int sectorsSkipped) CopySectors(IDiskContainer source, IDiskContainer destination, bool allowPartialRead = true)
