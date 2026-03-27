@@ -257,21 +257,7 @@ fileCrossCopyCommand.SetHandler((string srcPath, string destPath, string[] files
         var srcAdapter = CreateTransferAdapter(srcFs);
         var destAdapter = CreateTransferAdapter(destFs);
 
-        if (srcAdapter != null && destAdapter != null)
-        {
-            var orchestrator = new FileSystemTransferOrchestrator();
-            orchestrator.Register(srcFs, srcAdapter);
-            orchestrator.Register(destFs, destAdapter);
-
-            foreach (var fileName in targetFiles)
-            {
-                orchestrator.Transfer(srcFs, destFs, fileName, fileName);
-            }
-        }
-        else
-        {
-            cloneService.TransferFiles(srcFs, destFs, targetFiles);
-        }
+        cloneService.TransferFiles(srcFs, destFs, targetFiles, srcAdapter, destAdapter);
         PrintSuccess(localizer, localizer.FileCopiedMessage);
     }
     catch (Exception ex)

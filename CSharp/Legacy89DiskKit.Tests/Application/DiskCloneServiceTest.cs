@@ -1,12 +1,70 @@
 using Legacy89DiskKit.Application.FileSystem;
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
+using Legacy89DiskKit.Domain.FileSystem.Model;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests.Application;
 
 public class DiskCloneServiceTest
 {
+    private sealed class FakeFileSystem : IFileSystem
+    {
+        public List<FileEntry> Files { get; } = new();
+        public List<string> DirectWrites { get; } = new();
+        public DiskFileSystemInfo Info { get; set; } = new("FakeFs", 0, 0, 256, 0, "FAKE", "FAKE", 8, 3);
+
+        public DiskFileSystemInfo GetFileSystemInfo() => Info;
+        public FileSystemCapabilities Capabilities =>
+            FileSystemCapabilities.SupportsBootArea |
+            FileSystemCapabilities.SupportsAttributes |
+            FileSystemCapabilities.SupportsInternalCopy |
+            FileSystemCapabilities.SupportsRename;
+        public IEnumerable<FileEntry> GetFiles() => Files;
+        public bool FileExists(string fileName) => Files.Any(f => f.FullName.Equals(fileName, StringComparison.OrdinalIgnoreCase));
+        public byte[] ReadFile(string fileName) => Array.Empty<byte>();
+        public void WriteFile(string fileName, byte[] data, ExtendedFileAttributes attributes, ushort? loadAddress = null, ushort? executionAddress = null) => DirectWrites.Add(fileName);
+        public void DeleteFile(string fileName) { }
+        public void RenameFile(string oldName, string newName) { }
+        public void CopyFile(string sourceName, string targetName) { }
+        public void UpdateAttributes(string fileName, ExtendedFileAttributes attributes) { }
+        public ExtendedFileAttributes CreateDefaultAttributes(bool isAscii) => new(Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes.None, 0, isAscii, "FAKE");
+        public void Format() { }
+        public byte[] ReadBootArea() => Array.Empty<byte>();
+        public void WriteBootArea(byte[] data) { }
+        public void Dispose() { }
+    }
+
+    private sealed class FakeTransferAdapter : IFileSystemTransferAdapter
+    {
+        private readonly IFileSystem _owner;
+        public List<string> ImportedFileNames { get; } = new();
+        public string FileSystemId { get; }
+
+        public FakeTransferAdapter(IFileSystem owner, string fileSystemId)
+        {
+            _owner = owner;
+            FileSystemId = fileSystemId;
+        }
+
+        public bool Supports(IFileSystem fs) => ReferenceEquals(fs, _owner);
+
+        public TransferFileEnvelope Export(FileEntry entry) =>
+            new(
+                entry.FileName,
+                new byte[] { 1, 2, 3 },
+                entry.Attributes.IsAscii ? ContentKind.Text : ContentKind.Binary,
+                FileSystemId,
+                entry.LoadAddress,
+                entry.ExecutionAddress,
+                null,
+                null,
+                new Dictionary<string, string>());
+
+        public void Import(TransferFileEnvelope envelope, string destFileName) => ImportedFileNames.Add(destFileName);
+    }
+
     private class FakeDiskContainer : IDiskContainer
     {
         public string FilePath => "fake.d88";
@@ -91,5 +149,33 @@ public class DiskCloneServiceTest
 
         var service = new DiskCloneService(null!, null!);
         Assert.Throws<Exception>(() => service.CopySectors(source, destination, allowPartialRead: false));
+    }
+
+    [Fact]
+    public void TransferFiles_WithAdapters_UsesTransferPipelineInsteadOfDirectWrites()
+    {
+        var source = new FakeFileSystem();
+        var destination = new FakeFileSystem();
+        source.Files.Add(new FileEntry(
+            "X-DOS System",
+            "",
+            3,
+            null,
+            null,
+            new ExtendedFileAttributes(Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes.Hidden, 0x80, false, "X-DOS"),
+            0,
+            0xC800,
+            null,
+            0xC800));
+
+        var sourceAdapter = new FakeTransferAdapter(source, "X-DOS");
+        var destinationAdapter = new FakeTransferAdapter(destination, "X-DOS");
+        var service = new DiskCloneService(null!, null!);
+
+        service.TransferFiles(source, destination, new[] { "X-DOS System" }, sourceAdapter, destinationAdapter);
+
+        Assert.Empty(destination.DirectWrites);
+        Assert.Single(destinationAdapter.ImportedFileNames);
+        Assert.Equal("X-DOS System", destinationAdapter.ImportedFileNames[0]);
     }
 }
