@@ -31,8 +31,34 @@ public class DiskCloneService
     /// <summary>
     /// Transfers multiple files from source to target.
     /// </summary>
-    public void TransferFiles(IFileSystem source, IFileSystem target, IEnumerable<string> fileNames)
+    public void TransferFiles(
+        IFileSystem source,
+        IFileSystem target,
+        IEnumerable<string> fileNames,
+        IFileSystemTransferAdapter? sourceAdapter = null,
+        IFileSystemTransferAdapter? targetAdapter = null)
     {
+        if (sourceAdapter != null && targetAdapter != null)
+        {
+            var orchestrator = new FileSystemTransferOrchestrator();
+            orchestrator.Register(source, sourceAdapter);
+            orchestrator.Register(target, targetAdapter);
+
+            foreach (var fileName in fileNames)
+            {
+                try
+                {
+                    orchestrator.Transfer(source, target, fileName, fileName);
+                }
+                catch (Exception ex)
+                {
+                    throw new FileSystemException($"Failed to transfer file '{fileName}': {ex.Message}", ex);
+                }
+            }
+
+            return;
+        }
+
         var targetInfo = target.GetFileSystemInfo();
         var existingNames = new HashSet<string>(target.GetFiles().Select(f => f.FullName.ToUpperInvariant()));
 
@@ -76,16 +102,11 @@ public class DiskCloneService
         dstFs.Format();
         dstFs.WriteBootArea(bootArea);
 
-        var orchestrator = new FileSystemTransferOrchestrator();
-        orchestrator.Register(srcFs, srcAdapter);
-        orchestrator.Register(dstFs, dstAdapter);
+        var fileNames = srcFs.GetFiles()
+            .Where(entry => !entry.Attributes.StandardAttributes.HasFlag(Domain.FileSystem.Model.FileAttributes.Directory))
+            .Select(entry => entry.FileName);
 
-        foreach (var entry in srcFs.GetFiles())
-        {
-            if (entry.Attributes.StandardAttributes.HasFlag(Domain.FileSystem.Model.FileAttributes.Directory))
-                continue;
-            orchestrator.Transfer(srcFs, dstFs, entry.FileName, entry.FileName);
-        }
+        TransferFiles(srcFs, dstFs, fileNames, srcAdapter, dstAdapter);
     }
 
     /// <summary>

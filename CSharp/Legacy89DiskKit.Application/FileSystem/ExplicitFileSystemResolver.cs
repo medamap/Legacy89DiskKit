@@ -11,9 +11,32 @@ namespace Legacy89DiskKit.Application.FileSystem;
 
 public sealed class ExplicitFileSystemResolver
 {
+    private static readonly HashSet<string> ReservedFileSystems = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "cpm",
+        "cpm22",
+        "lsxdodgers",
+        "msdos",
+        "fat12",
+        "fat16",
+        "fat32",
+        "pc9801harddisk",
+        "pc9801hdd",
+        "x1harddisk",
+        "mzt",
+        "cmt",
+        "msxcartridge",
+    };
+
     public string GetCanonicalName(string fileSystemName)
     {
-        return Normalize(fileSystemName) switch
+        var normalized = Normalize(fileSystemName);
+        if (ReservedFileSystems.Contains(normalized))
+        {
+            throw CreateReservedFeatureException(fileSystemName);
+        }
+
+        return normalized switch
         {
             "hubasic" => "Hu-BASIC",
             "n88basic" => "N88-BASIC",
@@ -25,7 +48,13 @@ public sealed class ExplicitFileSystemResolver
 
     public IFileSystem Create(string fileSystemName, IDiskContainer container)
     {
-        return Normalize(fileSystemName) switch
+        var normalized = Normalize(fileSystemName);
+        if (ReservedFileSystems.Contains(normalized))
+        {
+            throw CreateReservedFeatureException(fileSystemName);
+        }
+
+        return normalized switch
         {
             "hubasic" => new HuBasicFileSystem(container),
             "n88basic" => CreateN88Basic(container),
@@ -81,4 +110,7 @@ public sealed class ExplicitFileSystemResolver
 
         return new string(fileSystemName.Trim().ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
     }
+
+    private static NotSupportedException CreateReservedFeatureException(string fileSystemName)
+        => new($"This feature is reserved, please request!! ({fileSystemName})");
 }
