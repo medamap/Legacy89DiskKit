@@ -98,15 +98,37 @@ public class DiskCloneService
         IFileSystem srcFs, IFileSystemTransferAdapter srcAdapter,
         IFileSystem dstFs, IFileSystemTransferAdapter dstAdapter)
     {
-        var bootArea = srcFs.ReadBootArea();
-        dstFs.Format();
-        dstFs.WriteBootArea(bootArea);
+        bool srcPrevMode = false;
+        bool dstPrevMode = false;
 
-        var fileNames = srcFs.GetFiles()
-            .Where(entry => !entry.Attributes.StandardAttributes.HasFlag(Domain.FileSystem.Model.FileAttributes.Directory))
-            .Select(entry => entry.FileName);
+        if (srcAdapter is Legacy89DiskKit.Infrastructure.FileSystem.XDos.XDosTransferAdapter srcX)
+        {
+            srcPrevMode = srcX.IsCloneMode;
+            srcX.IsCloneMode = true;
+        }
+        if (dstAdapter is Legacy89DiskKit.Infrastructure.FileSystem.XDos.XDosTransferAdapter dstX)
+        {
+            dstPrevMode = dstX.IsCloneMode;
+            dstX.IsCloneMode = true;
+        }
 
-        TransferFiles(srcFs, dstFs, fileNames, srcAdapter, dstAdapter);
+        try
+        {
+            var bootArea = srcFs.ReadBootArea();
+            dstFs.Format();
+            dstFs.WriteBootArea(bootArea);
+
+            var fileNames = srcFs.GetFiles()
+                .Where(entry => !entry.Attributes.StandardAttributes.HasFlag(Domain.FileSystem.Model.FileAttributes.Directory))
+                .Select(entry => entry.FileName);
+
+            TransferFiles(srcFs, dstFs, fileNames, srcAdapter, dstAdapter);
+        }
+        finally
+        {
+            if (srcAdapter is Legacy89DiskKit.Infrastructure.FileSystem.XDos.XDosTransferAdapter srcFinal) srcFinal.IsCloneMode = srcPrevMode;
+            if (dstAdapter is Legacy89DiskKit.Infrastructure.FileSystem.XDos.XDosTransferAdapter dstFinal) dstFinal.IsCloneMode = dstPrevMode;
+        }
     }
 
     /// <summary>

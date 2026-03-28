@@ -11,6 +11,7 @@ using Legacy89DiskKit.Infrastructure.DiskImage.Container;
 using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
 using FileAttributes = Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes;
 using Xunit;
+using System.Text;
 
 namespace Legacy89DiskKit.Tests.FileSystem.XDos;
 
@@ -136,7 +137,7 @@ public class XDosFileSystemTest
         if (File.Exists(outputPath)) File.Delete(outputPath);
 
         D88DiskContainer.CreateNew(outputPath, DiskType.TwoDD, "XD_NEW2DD",
-            XDosFileSystem.XDosTrackGeometry);
+            (c, h) => XDosMediaGeometry.FromDiskType(DiskType.TwoDD).GetTrackGeometry(c, h));
 
         using var destService = Legacy89DiskKitApplication.CreateDiskService();
         var destContainer = destService.OpenDisk(outputPath, false);
@@ -171,7 +172,7 @@ public class XDosFileSystemTest
         if (File.Exists(outputPath)) File.Delete(outputPath);
 
         D88DiskContainer.CreateNew(outputPath, DiskType.TwoDD, "XD_XCPY",
-            XDosFileSystem.XDosTrackGeometry);
+            (c, h) => XDosMediaGeometry.FromDiskType(DiskType.TwoDD).GetTrackGeometry(c, h));
 
         using var destService = Legacy89DiskKitApplication.CreateDiskService();
         var destContainer = destService.OpenDisk(outputPath, false);
@@ -663,5 +664,166 @@ public class XDosFileSystemTest
         Assert.Equal(512, container.ReadSector(0, 1, 1).Length);
         Assert.True(container.SectorExists(0, 1, 16));
         Assert.False(container.SectorExists(0, 1, 17));
+    }
+
+    [Fact]
+    public void ToFileEntry_XDosAsc_ShouldBeIsAsciiTrue()
+    {
+        var path = GetRepoPath("images/test/XDOS_ISASCII_PROJECTION.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        if (File.Exists(path)) File.Delete(path);
+
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        fs.WriteFile("TEXT.TXT", new byte[10], fs.CreateDefaultAttributes(true));
+        fs.WriteFile("BIN.BIN", new byte[10], fs.CreateDefaultAttributes(false));
+
+        var files = fs.GetFiles().ToList();
+        var textFile = files.First(f => f.FileName == "TEXT.TXT");
+        var binFile = files.First(f => f.FileName == "BIN.BIN");
+
+        Assert.True(textFile.Attributes.IsAscii);
+        Assert.False(binFile.Attributes.IsAscii);
+    }
+
+    [Fact]
+    public void ToFileEntry_ShouldPreserveRawAttributes()
+    {
+        var path = GetRepoPath("images/test/XDOS_ATTR_PROJECTION_PRESERVE.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        if (File.Exists(path)) File.Delete(path);
+
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        var attr = new ExtendedFileAttributes(FileAttributes.None, 0x5A, true, "X-DOS");
+        fs.WriteFile("ATTR.TXT", new byte[10], attr);
+
+        var file = fs.GetFiles().First(f => f.FileName == "ATTR.TXT");
+        Assert.Equal(0x5A, file.Attributes.RawAttributes);
+        Assert.True(file.Attributes.IsAscii);
+    }
+
+    [Fact]
+    public void ToFileEntry_EndAddress_IsProjectedCorrectlyByFileType()
+    {
+        var outputPath = GetRepoPath("images/test/XDOS_PROJECTION_TEST.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        if (File.Exists(outputPath)) File.Delete(outputPath);
+
+        using var destService = Legacy89DiskKitApplication.CreateDiskService();
+        var destContainer = destService.CreateDisk(outputPath, DiskType.TwoD);
+        var destFs = new XDosFileSystem(destContainer);
+        destFs.Format();
+
+        destFs.WriteFile("TEST.BIN", new byte[100], destFs.CreateDefaultAttributes(false), 0x8000, 0x8000);
+        destFs.WriteFile("TEST.TXT", new byte[100], destFs.CreateDefaultAttributes(true));
+
+        var testFiles = destFs.GetFiles().ToList();
+        var binEntry = testFiles.First(f => f.FileName == "TEST.BIN");
+        var ascEntry = testFiles.First(f => f.FileName == "TEST.TXT");
+
+        Assert.NotNull(binEntry.EndAddress);
+        Assert.Equal((ushort)0x8064, binEntry.EndAddress);
+        Assert.NotNull(binEntry.ExecutionAddress);
+        Assert.Equal((ushort)0x8000, binEntry.ExecutionAddress);
+        Assert.Null(ascEntry.EndAddress);
+        Assert.Null(ascEntry.ExecutionAddress);
+    }
+
+    [Fact]
+    public void GetFiles_ProjectsValidTimestamp()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_TIMESTAMP_VALID.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        fs.WriteFile("TIME.BIN", new byte[10], fs.CreateDefaultAttributes(false));
+
+        var dirSector = container.ReadSector(0, 1, 2);
+        int offset = -1;
+        for (int i = 0; i + 32 <= dirSector.Length; i += 32)
+        {
+            if (Encoding.Latin1.GetString(dirSector, i + 2, 16).Trim() == "TIME.BIN")
+            {
+                offset = i;
+                break;
+            }
+        }
+        Assert.True(offset >= 0, "Could not find TIME.BIN entry in directory");
+
+        dirSector[offset + 0x18] = 0x00;
+        dirSector[offset + 0x19] = 0x26;
+        dirSector[offset + 0x1A] = 0x03;
+        dirSector[offset + 0x1B] = 0x28;
+        container.WriteSector(0, 1, 2, dirSector);
+
+        var fs2 = new XDosFileSystem(container);
+        var file = fs2.GetFiles().First(f => f.FileName.Trim() == "TIME.BIN");
+
+        Assert.NotNull(file.LastModifiedAt);
+        Assert.Equal(2026, file.LastModifiedAt.Value.Year);
+        Assert.Equal(3, file.LastModifiedAt.Value.Month);
+        Assert.Equal(28, file.LastModifiedAt.Value.Day);
+    }
+
+    [Fact]
+    public void GetFiles_ZeroTimestamp_ProjectsNull()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_TIMESTAMP_ZERO.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        fs.WriteFile("ZERO.BIN", new byte[10], fs.CreateDefaultAttributes(false));
+
+        var file = fs.GetFiles().First(f => f.FileName.Trim() == "ZERO.BIN");
+        Assert.Null(file.LastModifiedAt);
+    }
+
+    [Fact]
+    public void GetFiles_InvalidTimestamp_ProjectsNull()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetRepoPath("images/test/XDOS_TIMESTAMP_INVALID.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        fs.WriteFile("INVALID.BIN", new byte[10], fs.CreateDefaultAttributes(false));
+
+        var dirSector = container.ReadSector(0, 1, 2);
+        int offset = -1;
+        for (int i = 0; i + 32 <= dirSector.Length; i += 32)
+        {
+            if (Encoding.Latin1.GetString(dirSector, i + 2, 16).Trim() == "INVALID.BIN")
+            {
+                offset = i;
+                break;
+            }
+        }
+        Assert.True(offset >= 0, "Could not find INVALID.BIN entry in directory");
+
+        dirSector[offset + 0x18] = 0x00;
+        dirSector[offset + 0x19] = 0x26;
+        dirSector[offset + 0x1A] = 0x13;
+        dirSector[offset + 0x1B] = 0x01;
+        container.WriteSector(0, 1, 2, dirSector);
+
+        var fs2 = new XDosFileSystem(container);
+        var file = fs2.GetFiles().First(f => f.FileName.Trim() == "INVALID.BIN");
+
+        Assert.Null(file.LastModifiedAt);
     }
 }
