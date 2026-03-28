@@ -7,6 +7,20 @@ namespace Legacy89DiskKit.Infrastructure.DiskImage.Factory;
 
 public class DiskContainerFactory : IDiskContainerFactory
 {
+    private static readonly HashSet<string> ReservedFormats = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".fdi",
+        ".xdf",
+        ".dim",
+        ".hdf",
+        ".hds",
+        ".hdi",
+        ".xhd",
+        ".mo",
+        ".iso",
+        ".img",
+    };
+
     public IDiskContainer Open(string filePath, bool readOnly = true)
     {
         return OpenByFormat(Path.GetExtension(filePath), readOnly, pathFactory: () => filePath, bufferFactory: null);
@@ -21,6 +35,10 @@ public class DiskContainerFactory : IDiskContainerFactory
     public IDiskContainer Create(string filePath, DiskType diskType, string diskName = "", int? sectorsPerTrack = null, ushort? sectorSize = null)
     {
         var extension = Path.GetExtension(filePath)?.ToLowerInvariant();
+        if (!string.IsNullOrWhiteSpace(extension) && ReservedFormats.Contains(extension))
+        {
+            throw CreateReservedFeatureException(extension);
+        }
         
         return extension switch
         {
@@ -33,6 +51,10 @@ public class DiskContainerFactory : IDiskContainerFactory
     private static IDiskContainer OpenByFormat(string? imageFormat, bool readOnly, Func<string>? pathFactory, Func<byte[]>? bufferFactory)
     {
         var normalized = NormalizeFormat(imageFormat);
+        if (ReservedFormats.Contains(normalized))
+        {
+            throw CreateReservedFeatureException(normalized);
+        }
 
         return normalized switch
         {
@@ -54,4 +76,7 @@ public class DiskContainerFactory : IDiskContainerFactory
         var normalized = imageFormat.Trim().ToLowerInvariant();
         return normalized.StartsWith('.') ? normalized : $".{normalized}";
     }
+
+    private static NotSupportedException CreateReservedFeatureException(string format)
+        => new($"This feature is reserved, please request!! ({format})");
 }
