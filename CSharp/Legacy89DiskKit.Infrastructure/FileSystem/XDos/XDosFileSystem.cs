@@ -62,9 +62,14 @@ public class XDosFileSystem : IFileSystem
     public IEnumerable<FileEntry> GetFiles() => GetDirectory().Select(ToFileEntry);
     public IReadOnlyList<XDosDirectoryEntry> GetFilesWithMetadata() => GetDirectory();
 
+    public IReadOnlyList<XDosFamEntry> GetFamEntries(XDosDirectoryEntry entry)
+    {
+        return _fam.ReadFam(entry.FamPointer);
+    }
+
     public (int Sector, int Offset)? FindDirectorySlot(byte[] rawName, ushort rawType)
     {
-        int maxSector = _container.DiskType == DiskType.TwoHD ? 16 : 10;
+        int maxSector = _geometry.DataSectorsPerTrack;
         var normalized = NormalizeRawName(rawName);
 
         for (int sectorNumber = 2; sectorNumber <= maxSector; sectorNumber++)
@@ -119,7 +124,8 @@ public class XDosFileSystem : IFileSystem
         ushort? loadAddress = null, ushort? executionAddress = null,
         int? forcedFamTrack = null, byte[]? forcedRawName = null, ushort? forcedRawType = null,
         int? forcedFamSector = null, IReadOnlyList<(int Track, int Sector)>? forcedRecords = null,
-        int? forcedDirSector = null, int? forcedDirOffset = null)
+        int? forcedDirSector = null, int? forcedDirOffset = null,
+        uint? forcedTimestampRaw = null)
     {
         if (_container.IsReadOnly) throw new InvalidOperationException("Read-only.");
         _cachedDirectory = null;
@@ -168,7 +174,7 @@ public class XDosFileSystem : IFileSystem
             StartAddress:          loadAddress ?? 0,
             SizeLow:               (ushort)(data.Length & 0xFFFF),
             ExecAddressOrSizeHigh: executionAddress ?? (ushort)((data.Length >> 16) & 0xFFFF),
-            TimestampRaw:          0,
+            TimestampRaw:          forcedTimestampRaw ?? 0,
             Attribute:             attributes.RawAttributes,
             FamPointer:            new XDosFamPointer((byte)famTrack, (byte)famSector, 0x01));
 
@@ -257,7 +263,7 @@ public class XDosFileSystem : IFileSystem
             InitializeHelpers();
         }
         var now = DateTime.Now;
-        var vol = new byte[256];
+        var vol = new byte[_geometry.BootSectorSize];
         vol[0] = 0x01;
         Array.Copy(Encoding.ASCII.GetBytes("X-DOS        SYS"), 0, vol, 1, 16);
         vol[24] = 0x88;
@@ -278,20 +284,20 @@ public class XDosFileSystem : IFileSystem
     public byte[] ReadBootArea()
     {
         var res = new List<byte>();
-        for (int r = 1; r <= 16; r++) res.AddRange(_container.ReadSector(0, 0, r));
+        for (int r = 1; r <= _geometry.BootSectorsPerTrack; r++) res.AddRange(_container.ReadSector(0, 0, r));
         return res.ToArray();
     }
 
     public void WriteBootArea(byte[] data)
     {
         int off = 0;
-        for (int r = 1; r <= 16 && off < data.Length; r++)
+        for (int r = 1; r <= _geometry.BootSectorsPerTrack && off < data.Length; r++)
         {
-            var b = new byte[256];
-            int t = Math.Min(256, data.Length - off);
+            var b = new byte[_geometry.BootSectorSize];
+            int t = Math.Min(b.Length, data.Length - off);
             Array.Copy(data, off, b, 0, t);
             _container.WriteSector(0, 0, r, b);
-            off += 256;
+            off += b.Length;
         }
     }
 
@@ -305,14 +311,11 @@ public class XDosFileSystem : IFileSystem
         Extension:        string.Empty,
         Size:             e.FileSize,
         CreatedAt:        null,
-        LastModifiedAt:   null,
-        Attributes:       new ExtendedFileAttributes(FileAttributes.None, e.Attribute, false, "X-DOS"),
+        LastModifiedAt:   XDosTimestampHelper.DecodeTimestamp(e.TimestampRaw),
+        Attributes:       new ExtendedFileAttributes(FileAttributes.None, e.Attribute, e.RawFileType == (ushort)XDosFileType.Asc, "X-DOS"),
         StartCluster:     e.FamPointer.Track,
         LoadAddress:      e.StartAddress,
-        EndAddress:       (ushort)(e.StartAddress + e.SizeLow),
-        ExecutionAddress: e.ExecAddressOrSizeHigh,
+        EndAddress:       e.FileType == XDosFileType.Asc ? null : (ushort)(e.StartAddress + e.SizeLow),
+        ExecutionAddress: e.FileType == XDosFileType.Asc ? null : e.ExecAddressOrSizeHigh,
         RawFileName:      e.RawFileName);
-
-    public static (int sectors, ushort size, byte density)? XDosTrackGeometry(int c, int h)
-        => XDosMediaGeometry.FromDiskType(DiskType.TwoD).GetTrackGeometry(c, h);
 }

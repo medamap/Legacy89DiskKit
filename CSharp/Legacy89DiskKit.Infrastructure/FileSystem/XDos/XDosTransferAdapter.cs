@@ -27,6 +27,8 @@ public class XDosTransferAdapter : IFileSystemTransferAdapter
 
     public bool Supports(IFileSystem fs) => fs is XDosFileSystem;
 
+    public bool IsCloneMode { get; set; }
+
     public TransferFileEnvelope Export(FileEntry entry)
     {
         byte[] rawName = entry.RawFileName ?? PadToSixteen(Encoding.Latin1.GetBytes(entry.FileName));
@@ -47,7 +49,18 @@ public class XDosTransferAdapter : IFileSystemTransferAdapter
             ["xdos.fileType"]      = xdosEntry.RawFileType.ToString("X4"),
             ["xdos.rawAttributes"] = xdosEntry.Attribute.ToString("X2"),
             ["xdos.isAscii"]       = isText ? "true" : "false",
+            ["xdos.timestampRaw"]  = xdosEntry.TimestampRaw.ToString("X6"),
         };
+
+        if (IsCloneMode)
+        {
+            meta["xdos.isClone"] = "true";
+            meta["xdos.famTrack"] = xdosEntry.FamPointer.Track.ToString();
+            meta["xdos.famSector"] = xdosEntry.FamPointer.Sector.ToString();
+            
+            var famEntries = _fs.GetFamEntries(xdosEntry);
+            meta["xdos.dataRecords"] = string.Join(";", famEntries.Select(e => $"{e.Track},{e.Sector},{e.RecordCount}"));
+        }
 
         var dirSlot = _fs.FindDirectorySlot(xdosEntry.RawFileName, xdosEntry.RawFileType);
         if (dirSlot != null)
@@ -63,9 +76,15 @@ public class XDosTransferAdapter : IFileSystemTransferAdapter
             SourceFileSystemId: XDosId,
             LoadAddress:       xdosEntry.StartAddress,
             ExecutionAddress:  execAddress,
-            Timestamp:         DecodeTimestamp(xdosEntry.TimestampRaw),
+            Timestamp:         ToDateTimeOffset(XDosTimestampHelper.DecodeTimestamp(xdosEntry.TimestampRaw)),
             EncodingId:        isText ? "shift_jis" : null,
             Metadata:          meta);
+    }
+
+    private static DateTimeOffset? ToDateTimeOffset(DateTime? dt)
+    {
+        if (dt == null) return null;
+        return new DateTimeOffset(dt.Value.Year, dt.Value.Month, dt.Value.Day, 0, 0, 0, TimeSpan.Zero);
     }
 
     public void Import(TransferFileEnvelope envelope, string destFileName)
@@ -76,6 +95,10 @@ public class XDosTransferAdapter : IFileSystemTransferAdapter
         byte    rawAttributes = 0x00;
         int?    forcedDirSector = null;
         int?    forcedDirOffset = null;
+        int?    forcedFamTrack = null;
+        int?    forcedFamSector = null;
+        List<(int Track, int Sector)>? forcedRecords = null;
+        uint?   forcedTimestampRaw = null;
 
         if (envelope.SourceFileSystemId == XDosId && envelope.Metadata != null)
         {
@@ -102,20 +125,73 @@ public class XDosTransferAdapter : IFileSystemTransferAdapter
             {
                 forcedDirOffset = dOff;
             }
+
+            if (envelope.Metadata.TryGetValue("xdos.timestampRaw", out var tsStr)
+                && uint.TryParse(tsStr, NumberStyles.HexNumber, null, out var ts))
+            {
+                forcedTimestampRaw = ts;
+            }
+
+            if (IsCloneMode && envelope.Metadata.TryGetValue("xdos.isClone", out var icStr) && icStr == "true")
+            {
+                if (envelope.Metadata.TryGetValue("xdos.famTrack", out var ftkStr) && int.TryParse(ftkStr, out var ftk))
+                {
+                    forcedFamTrack = ftk;
+                }
+                if (envelope.Metadata.TryGetValue("xdos.famSector", out var fscStr) && int.TryParse(fscStr, out var fsc))
+                {
+                    forcedFamSector = fsc;
+                }
+                if (envelope.Metadata.TryGetValue("xdos.dataRecords", out var drStr))
+                {
+                    forcedRecords = ParseDataRecords(drStr);
+                }
+            }
         }
 
         bool isAscii = envelope.ContentKind == ContentKind.Text;
         var attrs = new ExtendedFileAttributes(FileAttributes.None, rawAttributes, isAscii, XDosId);
 
+        // If we have forced placement, we must construct the full record list: [FAM, Data...]
+        List<(int Track, int Sector)>? fullForcedRecords = null;
+        if (forcedFamTrack.HasValue && forcedFamSector.HasValue && forcedRecords != null)
+        {
+            fullForcedRecords = new List<(int Track, int Sector)> { (forcedFamTrack.Value, forcedFamSector.Value) };
+            fullForcedRecords.AddRange(forcedRecords);
+        }
+
         _fs.WriteFileInternal(
             destFileName,
             payload,
             attrs,
-            loadAddress:      envelope.LoadAddress,
-            executionAddress: envelope.ExecutionAddress,
-            forcedRawType:    forcedRawType,
-            forcedDirSector:  forcedDirSector,
-            forcedDirOffset:  forcedDirOffset);
+            loadAddress:        envelope.LoadAddress,
+            executionAddress:   envelope.ExecutionAddress,
+            forcedRawType:      forcedRawType,
+            forcedRecords:      fullForcedRecords,
+            forcedDirSector:    forcedDirSector,
+            forcedDirOffset:    forcedDirOffset,
+            forcedTimestampRaw: forcedTimestampRaw);
+    }
+
+    private static List<(int Track, int Sector)> ParseDataRecords(string drStr)
+    {
+        var result = new List<(int Track, int Sector)>();
+        var parts = drStr.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var part in parts)
+        {
+            var coords = part.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            if (coords.Length == 3 &&
+                int.TryParse(coords[0], out var t) &&
+                int.TryParse(coords[1], out var s) &&
+                int.TryParse(coords[2], out var c))
+            {
+                for (int i = 0; i < c; i++)
+                {
+                    result.Add((t, s + i));
+                }
+            }
+        }
+        return result;
     }
 
     private static byte[] ResolvePayload(TransferFileEnvelope envelope)
@@ -158,19 +234,5 @@ public class XDosTransferAdapter : IFileSystemTransferAdapter
         Array.Fill(result, (byte)0x20);
         Array.Copy(raw, 0, result, 0, Math.Min(raw.Length, 16));
         return result;
-    }
-
-    private static DateTimeOffset? DecodeTimestamp(uint raw)
-    {
-        if (raw == 0) return null;
-        byte year  = (byte)(raw >> 16);
-        byte month = (byte)(raw >> 8);
-        byte day   = (byte)(raw);
-        int y = ((year  >> 4) & 0xF) * 10 + (year  & 0xF) + 2000;
-        int m = ((month >> 4) & 0xF) * 10 + (month & 0xF);
-        int d = ((day   >> 4) & 0xF) * 10 + (day   & 0xF);
-        if (m < 1 || m > 12 || d < 1 || d > 31) return null;
-        try { return new DateTimeOffset(y, m, d, 0, 0, 0, TimeSpan.Zero); }
-        catch { return null; }
     }
 }

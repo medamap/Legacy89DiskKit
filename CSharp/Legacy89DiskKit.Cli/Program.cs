@@ -276,22 +276,27 @@ fileCommand.AddCommand(fileCrossCopyCommand);
 var diskCommand = new Command("disk", localizer.DiskCommandDescription);
 var diskCreateCommand = new Command("create", localizer.DiskCreateCommandDescription);
 var diskTypeOption = new Option<string>(new[] { "--disk-type", "-d" }, localizer.DiskCreateDiskTypeOptionDescription) { IsRequired = true };
-var diskFileSystemOption = new Option<string>(new[] { "--file-system", "-f" }, localizer.DiskCreateFileSystemOptionDescription) { IsRequired = true };
+var diskFileSystemOption = new Option<string?>(new[] { "--file-system", "-f" }, localizer.DiskCreateFileSystemOptionDescription);
 var diskNameOption = new Option<string?>(new[] { "--name", "-n" }, localizer.DiskCreateNameOptionDescription);
 diskCreateCommand.AddArgument(imageArgument);
 diskCreateCommand.AddOption(diskTypeOption);
 diskCreateCommand.AddOption(diskFileSystemOption);
 diskCreateCommand.AddOption(diskNameOption);
-diskCreateCommand.SetHandler((string imagePath, string diskTypeName, string fileSystemName, string? diskName) =>
+diskCreateCommand.SetHandler((string imagePath, string diskTypeName, string? fileSystemName, string? diskName) =>
 {
     try
     {
         using var diskService = CreateDiskService();
         var diskType = ParseDiskType(diskTypeName);
         var container = diskService.CreateDisk(imagePath, diskType, diskName ?? string.Empty);
-        using var fs = explicitFileSystemResolver.Create(fileSystemName, container);
-        fs.Format();
-        explicitFileSystemResolver.InitializeForDetection(fs);
+        
+        if (!string.IsNullOrWhiteSpace(fileSystemName))
+        {
+            using var fs = explicitFileSystemResolver.Create(fileSystemName, container);
+            fs.Format();
+            explicitFileSystemResolver.InitializeForDetection(fs);
+        }
+        
         PrintSuccess(localizer, localizer.DiskCreatedMessage);
     }
     catch (Exception ex)

@@ -73,6 +73,24 @@ The canonical local release path is:
 ./scripts/release-cli.sh 2.0.0
 ```
 
+For a local self-contained single-file build on macOS arm64:
+
+```bash
+dotnet publish CSharp/Legacy89DiskKit.Cli/Legacy89DiskKit.Cli.csproj \
+  -c Release \
+  -r osx-arm64 \
+  --self-contained true \
+  /p:PublishSingleFile=true \
+  /p:EnableCompressionInSingleFile=true \
+  -o images/test/publish-cli
+```
+
+The published executable will be:
+
+```bash
+images/test/publish-cli/Legacy89DiskKit.Cli
+```
+
 This script runs tests, publishes the standalone CLI for the official matrix, performs host smoke checks, and creates normalized archives under `release/v2.0.0/`.
 
 See [Documents/governance/Release_Process.md](Documents/governance/Release_Process.md) for the release checklist and archive conventions.
@@ -140,6 +158,23 @@ dotnet CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll \
   disk create images/workdisk.d88 -d 2d -f hu-basic -n WORKDISK
 ```
 
+### Create blank media without formatting
+
+```bash
+images/test/publish-cli/Legacy89DiskKit.Cli \
+  disk create images/test/BLANK_2D.D88 --disk-type 2d
+```
+
+```bash
+images/test/publish-cli/Legacy89DiskKit.Cli \
+  disk create images/test/BLANK_2DD.D88 --disk-type 2dd
+```
+
+```bash
+images/test/publish-cli/Legacy89DiskKit.Cli \
+  disk create images/test/BLANK_2HD.D88 --disk-type 2hd
+```
+
 ### Reinitialize an existing image with an explicit filesystem
 
 ```bash
@@ -149,10 +184,68 @@ dotnet CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll \
 
 `disk create` is the standard blank-media flow. `disk format` reinitializes an existing image and still supports detection-based formatting when no explicit filesystem is provided.
 
+### Create an X-DOS destination disk
+
+```bash
+images/test/publish-cli/Legacy89DiskKit.Cli \
+  disk create images/test/XDOS_CLONE_2D.D88 --disk-type 2d --file-system xdos
+```
+
+```bash
+images/test/publish-cli/Legacy89DiskKit.Cli \
+  disk create images/test/XDOS_CLONE_2DD.D88 --disk-type 2dd --file-system xdos
+```
+
+```bash
+images/test/publish-cli/Legacy89DiskKit.Cli \
+  disk create images/test/XDOS_CLONE_2HD.D88 --disk-type 2hd --file-system xdos
+```
+
+### Copy only the boot area
+
+```bash
+images/test/publish-cli/Legacy89DiskKit.Cli \
+  disk boot-copy images/disk_org/x1/XDOS_SYS.D88 images/test/XDOS_CLONE_2D.D88 --force
+```
+
+### Copy all files one by one
+
+```bash
+images/test/publish-cli/Legacy89DiskKit.Cli \
+  file cross-copy images/disk_org/x1/XDOS_SYS.D88 images/test/XDOS_CLONE_2D.D88 all
+```
+
+The same pattern applies to `2dd` and `2hd`.
+
+### X-DOS full system-clone example
+
+```bash
+images/test/publish-cli/Legacy89DiskKit.Cli \
+  disk create images/test/XDOS_CLONE_2D.D88 --disk-type 2d --file-system xdos
+
+images/test/publish-cli/Legacy89DiskKit.Cli \
+  disk boot-copy images/disk_org/x1/XDOS_SYS.D88 images/test/XDOS_CLONE_2D.D88 --force
+
+images/test/publish-cli/Legacy89DiskKit.Cli \
+  file cross-copy images/disk_org/x1/XDOS_SYS.D88 images/test/XDOS_CLONE_2D.D88 all
+```
+
 ## CLI Notes
 
 - `--language` / `-l` changes UI language.
 - `--encoding` / `-e` overrides disk filename decoding and related text I/O encoding.
+- `disk create` options:
+  - `--disk-type` / `-d`: required, `2d | 2dd | 2hd`
+  - `--file-system` / `-f`: optional, `hu-basic | n88-basic | msx-dos | xdos`
+  - `--name` / `-n`: optional disk label for supported containers
+- `disk boot-copy` options:
+  - `<src-image>`: source image path
+  - `<dest-image>`: destination image path
+  - `--force` / `-f`: skip overwrite confirmation
+- `file cross-copy` arguments:
+  - `<src-image>`: source image path
+  - `<dest-image>`: destination image path
+  - `<files>`: comma-separated filenames or `all`
 - `layout export` writes to standard output unless `--output` is specified.
 - `layout validate` and `layout apply` can read from standard input with `--stdin`.
 - Hu-BASIC writes are currently limited to `65535` bytes per file. Files above that size are rejected before writing.

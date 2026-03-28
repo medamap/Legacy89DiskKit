@@ -281,6 +281,30 @@ public class XDosTransferAdapterTest
     }
 
     [Fact]
+    public void XDosToXDos_RoundTrip_PreservesTimestamp()
+    {
+        var (srcContainer, srcFs) = CreateFormattedDisk("TA_RT_TS_SRC");
+        var (dstContainer, dstFs) = CreateFormattedDisk("TA_RT_TS_DST");
+
+        byte[] data = new byte[128];
+        uint expectedTs = 0x260328; // 2026-03-28 in X-DOS BCD (assumed)
+
+        srcFs.WriteFileInternal("TS_F.BIN", data, srcFs.CreateDefaultAttributes(false),
+            forcedTimestampRaw: expectedTs);
+
+        var srcAdapter = new XDosTransferAdapter(srcFs);
+        var dstAdapter = new XDosTransferAdapter(dstFs);
+
+        var envelope = srcAdapter.Export(GetFileEntry(srcFs, "TS_F.BIN"));
+        Assert.Equal(expectedTs.ToString("X6"), envelope.Metadata!["xdos.timestampRaw"]);
+
+        dstAdapter.Import(envelope, "TS_F.BIN");
+
+        var entry = dstFs.GetFilesWithMetadata().First(e => e.FileName == "TS_F.BIN");
+        Assert.Equal(expectedTs, entry.TimestampRaw);
+    }
+
+    [Fact]
     public void XDosToXDos_TransferAll_PreservesRawNameWithSpaces()
     {
         var (srcContainer, srcFs) = CreateFormattedDisk("TA_RT_SPACE_SRC");
@@ -410,5 +434,27 @@ public class XDosTransferAdapterTest
         Assert.Equal((ushort)0xD000, dstEntry.StartAddress);
         Assert.Equal((ushort)0xD100, dstEntry.ExecAddressOrSizeHigh);
         Assert.True(data.SequenceEqual(dstFs.ReadFileRaw(dstEntry.RawFileName)));
+    }
+
+    [Fact]
+    public void XDosToXDos_RoundTrip_PreservesTimestampRaw()
+    {
+        var (srcContainer, srcFs) = CreateFormattedDisk("TA_RT_TS_SRC");
+        var (dstContainer, dstFs) = CreateFormattedDisk("TA_RT_TS_DST");
+
+        byte[] data = new byte[128];
+        uint originalTimestampRaw = 0x152CBAD5;
+
+        srcFs.WriteFileInternal("TS_F.BIN", data, srcFs.CreateDefaultAttributes(false),
+            forcedTimestampRaw: originalTimestampRaw);
+
+        var srcAdapter = new XDosTransferAdapter(srcFs);
+        var dstAdapter = new XDosTransferAdapter(dstFs);
+
+        var envelope = srcAdapter.Export(GetFileEntry(srcFs, "TS_F.BIN"));
+        dstAdapter.Import(envelope, "TS_F.BIN");
+
+        var entry = dstFs.GetFilesWithMetadata().First(e => e.FileName == "TS_F.BIN");
+        Assert.Equal(originalTimestampRaw, entry.TimestampRaw);
     }
 }
