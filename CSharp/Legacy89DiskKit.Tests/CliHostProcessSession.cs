@@ -10,7 +10,7 @@ internal sealed class CliHostProcessSession : IAsyncDisposable
 
     public CliHostProcessSession(bool observable = true)
     {
-        var cliDllPath = GetRepoPath("csharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll");
+        var cliDllPath = GetRepoPath("CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll");
         Assert.True(File.Exists(cliDllPath), $"CLI assembly was not found: {cliDllPath}");
 
         var arguments = observable

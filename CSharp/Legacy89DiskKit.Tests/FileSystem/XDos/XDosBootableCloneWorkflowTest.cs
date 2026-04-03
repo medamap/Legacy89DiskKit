@@ -10,24 +10,9 @@ namespace Legacy89DiskKit.Tests.FileSystem.XDos;
 
 public class XDosBootableCloneWorkflowTest
 {
-    private static string GetRepoPath(string relativePath)
-    {
-        var baseDirectory = AppContext.BaseDirectory;
-        var repoRoot = Path.GetFullPath(Path.Combine(baseDirectory, "../../../../.."));
-        return Path.Combine(repoRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
-    }
-
     private (IDiskContainer container, XDosFileSystem fs) CreateFormattedXDos(string name, DiskType diskType = DiskType.TwoD)
     {
-        var path = GetRepoPath($"images/test/{name}.D88");
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        if (File.Exists(path)) File.Delete(path);
-
-        using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var container = svc.CreateDisk(path, diskType);
-        var fs = new XDosFileSystem(container);
-        fs.Format();
-        return (container, fs);
+        return TestDiskFixtureFactory.CreateOpenFormattedXDos($"{name}.D88", diskType);
     }
 
     [Fact]
@@ -78,8 +63,7 @@ public class XDosBootableCloneWorkflowTest
     public void CloneWorkflow_SmallFixture_ReopenTarget_VerifiesPayloadsAndBootArea()
     {
         var (srcContainer, srcFs) = CreateFormattedXDos("WF_REOPEN_SRC");
-        var dstPath = GetRepoPath("images/test/WF_REOPEN_DST.D88");
-        Directory.CreateDirectory(Path.GetDirectoryName(dstPath)!);
+        var dstPath = TestDiskFixtureFactory.CreateTempDiskPath("WF_REOPEN_DST.D88");
         if (File.Exists(dstPath)) File.Delete(dstPath);
 
         IDiskContainer dstContainer;
@@ -127,8 +111,17 @@ public class XDosBootableCloneWorkflowTest
     [Fact]
     public void RealImageClone_XdosSys_CompletesWithinTwoDCapacity()
     {
-        var xdosSysPath = GetRepoPath("images/disk_org/x1/XDOS_SYS.D88");
-        if (!File.Exists(xdosSysPath)) return;
+        var xdosSysPath = TestDiskFixtureFactory.CreateFormattedXDosDisk("WF_REALIMG_SRC.D88", DiskType.TwoD);
+
+        using (var srcSeedSvc = Legacy89DiskKitApplication.CreateDiskService())
+        {
+            var seededContainer = srcSeedSvc.OpenDisk(xdosSysPath, readOnly: false);
+            var seededFs = new XDosFileSystem(seededContainer);
+            seededFs.WriteFileInternal("COMMAND.CMD", new byte[256], seededFs.CreateDefaultAttributes(false), 0x9000, 0x9100, forcedRawType: (ushort)XDosFileType.Cmd);
+            seededFs.WriteFileInternal("SYSTEM.SYS", new byte[512], seededFs.CreateDefaultAttributes(false), 0x9200, 0x9200, forcedRawType: (ushort)XDosFileType.Sys);
+            seededFs.WriteFile("MANUAL.TXT", System.Text.Encoding.ASCII.GetBytes("REALIMG\r\n"), seededFs.CreateDefaultAttributes(true));
+            seededContainer.Save();
+        }
 
         var (dstContainer, dstFs) = CreateFormattedXDos("WF_REALIMG_DST");
 

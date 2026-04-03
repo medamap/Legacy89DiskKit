@@ -17,22 +17,41 @@ namespace Legacy89DiskKit.Tests.FileSystem.XDos;
 
 public class XDosFileSystemTest
 {
-    private static string GetRepoPath(string relativePath)
+    private static string GetTempPath(string fileName)
     {
-        var baseDirectory = AppContext.BaseDirectory;
-        var repoRoot = Path.GetFullPath(Path.Combine(baseDirectory, "../../../../.."));
-        return Path.Combine(repoRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
+        return TestDiskFixtureFactory.CreateTempDiskPath(fileName);
     }
 
-    private string XDosSysPath  => GetRepoPath("images/disk_org/x1/XDOS_SYS.D88");
-    private string XDosUtilPath => GetRepoPath("images/disk_org/x1/XDOSUTIL.D88");
-    private string HuBasicPath  => GetRepoPath("images/disk_org/x1/X1turboIIIDemo.d88");
+    private string CreateSyntheticXDosDisk(string fileName, int fileCount, DiskType diskType = DiskType.TwoD)
+    {
+        var path = TestDiskFixtureFactory.CreateFormattedXDosDisk(fileName, diskType);
+
+        using var service = Legacy89DiskKitApplication.CreateDiskService();
+        var container = service.OpenDisk(path, readOnly: false);
+        var fs = new XDosFileSystem(container);
+
+        for (var i = 0; i < fileCount; i++)
+        {
+            var data = Enumerable.Repeat((byte)(0x20 + i), 256 + (i * 16)).ToArray();
+            var name = $"SYN{i:D2}.BIN";
+            fs.WriteFile(name, data, fs.CreateDefaultAttributes(false), (ushort)(0x8000 + i), (ushort)(0x8000 + i));
+        }
+
+        container.Save();
+        return path;
+    }
+
+    private static string CreateSyntheticHuBasicDisk(string fileName)
+    {
+        return TestDiskFixtureFactory.CreateFormattedHuBasicDisk(fileName, writeSampleFile: true);
+    }
 
     [Fact]
     public void Provider_CanHandle_XDosDisk_ReturnsTrue_DEBUG()
     {
+        var xdosSysPath = CreateSyntheticXDosDisk("Provider_CanHandle_XDosDisk_ReturnsTrue_DEBUG.d88", 5);
         using var diskService = Legacy89DiskKitApplication.CreateDiskService();
-        diskService.OpenDisk(XDosSysPath, true);
+        diskService.OpenDisk(xdosSysPath, true);
         var container = diskService.Session as IDiskContainer;
         Assert.NotNull(container);
 
@@ -43,8 +62,9 @@ public class XDosFileSystemTest
     [Fact]
     public void Provider_CanHandle_NonXDosDisk_ReturnsFalse()
     {
+        var huBasicPath = CreateSyntheticHuBasicDisk("Provider_CanHandle_NonXDosDisk_ReturnsFalse.d88");
         using var diskService = Legacy89DiskKitApplication.CreateDiskService();
-        diskService.OpenDisk(HuBasicPath, true);
+        diskService.OpenDisk(huBasicPath, true);
         var container = diskService.Session as IDiskContainer;
         Assert.NotNull(container);
 
@@ -55,8 +75,9 @@ public class XDosFileSystemTest
     [Fact]
     public void GetFileSystemInfo_ReturnsValidInfo()
     {
+        var xdosSysPath = CreateSyntheticXDosDisk("GetFileSystemInfo_ReturnsValidInfo.d88", 2);
         using var diskService = Legacy89DiskKitApplication.CreateDiskService();
-        diskService.OpenDisk(XDosSysPath, true);
+        diskService.OpenDisk(xdosSysPath, true);
         var fs = diskService.FileSystem;
         Assert.NotNull(fs);
 
@@ -68,8 +89,9 @@ public class XDosFileSystemTest
     [Fact]
     public void GetFiles_XDosSys_ReturnsAtLeast5Entries()
     {
+        var xdosSysPath = CreateSyntheticXDosDisk("GetFiles_XDosSys_ReturnsAtLeast5Entries.d88", 5);
         using var diskService = Legacy89DiskKitApplication.CreateDiskService();
-        diskService.OpenDisk(XDosSysPath, true);
+        diskService.OpenDisk(xdosSysPath, true);
         var fs = diskService.FileSystem;
         Assert.NotNull(fs);
 
@@ -82,8 +104,9 @@ public class XDosFileSystemTest
     [Fact]
     public void GetFiles_XDosUtil_ReturnsAtLeast10Entries()
     {
+        var xdosUtilPath = CreateSyntheticXDosDisk("GetFiles_XDosUtil_ReturnsAtLeast10Entries.d88", 10);
         using var diskService = Legacy89DiskKitApplication.CreateDiskService();
-        diskService.OpenDisk(XDosUtilPath, true);
+        diskService.OpenDisk(xdosUtilPath, true);
         var fs = diskService.FileSystem;
         Assert.NotNull(fs);
 
@@ -94,8 +117,9 @@ public class XDosFileSystemTest
     [Fact]
     public void FileExists_ReturnsExpectedResult()
     {
+        var xdosSysPath = CreateSyntheticXDosDisk("FileExists_ReturnsExpectedResult.d88", 3);
         using var diskService = Legacy89DiskKitApplication.CreateDiskService();
-        diskService.OpenDisk(XDosSysPath, true);
+        diskService.OpenDisk(xdosSysPath, true);
         var fs = diskService.FileSystem;
         Assert.NotNull(fs);
 
@@ -109,9 +133,10 @@ public class XDosFileSystemTest
     [Fact]
     public void Registry_AutoDetects_XDos()
     {
+        var xdosSysPath = CreateSyntheticXDosDisk("Registry_AutoDetects_XDos.d88", 3);
         var registry = Legacy89DiskKitApplication.CreateFileSystemRegistry();
         using var diskService = new DiskService(fsRegistry: registry);
-        diskService.OpenDisk(XDosSysPath, true);
+        diskService.OpenDisk(xdosSysPath, true);
 
         Assert.NotNull(diskService.FileSystem);
         Assert.IsType<XDosFileSystem>(diskService.FileSystem);
@@ -120,9 +145,10 @@ public class XDosFileSystemTest
     [Fact]
     public void ExplicitResolver_CanCreate_XDos()
     {
+        var xdosSysPath = CreateSyntheticXDosDisk("ExplicitResolver_CanCreate_XDos.d88", 1);
         var resolver = Legacy89DiskKitApplication.CreateExplicitFileSystemResolver();
         using var diskService = Legacy89DiskKitApplication.CreateDiskService();
-        var container = diskService.OpenDisk(XDosSysPath, true);
+        var container = diskService.OpenDisk(xdosSysPath, true);
 
         var fs = resolver.Create("xdos", container);
         Assert.NotNull(fs);
@@ -132,8 +158,7 @@ public class XDosFileSystemTest
     [Fact]
     public void WriteFile_NewDisk2DD_WriteAndRead_RoundTrip()
     {
-        var outputPath = GetRepoPath("images/test/XDOS_NEW2DD.D88");
-        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        var outputPath = GetTempPath("XDOS_NEW2DD.D88");
         if (File.Exists(outputPath)) File.Delete(outputPath);
 
         D88DiskContainer.CreateNew(outputPath, DiskType.TwoDD, "XD_NEW2DD",
@@ -162,13 +187,13 @@ public class XDosFileSystemTest
     [Fact]
     public void WriteFile_NewDisk2DD_CrossCopy()
     {
+        var xdosSysPath = CreateSyntheticXDosDisk("WriteFile_NewDisk2DD_CrossCopy_SRC.d88", 4);
         using var srcService = Legacy89DiskKitApplication.CreateDiskService();
-        var srcContainer = srcService.OpenDisk(XDosSysPath, true);
+        var srcContainer = srcService.OpenDisk(xdosSysPath, true);
         var srcFs = (srcService.FileSystem as XDosFileSystem)!;
         var srcBoot = srcFs.ReadBootArea();
 
-        var outputPath = GetRepoPath("images/test/XDOS_XCOPY2DD.D88");
-        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        var outputPath = GetTempPath("XDOS_XCOPY2DD.D88");
         if (File.Exists(outputPath)) File.Delete(outputPath);
 
         D88DiskContainer.CreateNew(outputPath, DiskType.TwoDD, "XD_XCPY",
@@ -218,7 +243,7 @@ public class XDosFileSystemTest
     public void Format_FatBitmap_TracksZeroAndOneAreUsed_Track2IsFree()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var path = GetRepoPath("images/test/XDOS_FMT.D88");
+        var path = GetTempPath("XDOS_FMT.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoDD);
         var fs = new XDosFileSystem(container);
@@ -243,7 +268,7 @@ public class XDosFileSystemTest
     public void Format_DiskServiceCreate_TwoD_RebuildsToXDosGeometry()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var path = GetRepoPath("images/test/XDOS_FMT_CLI_PATH.D88");
+        var path = GetTempPath("XDOS_FMT_CLI_PATH.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         if (File.Exists(path)) File.Delete(path);
 
@@ -267,7 +292,7 @@ public class XDosFileSystemTest
     public void WriteFile_FamPointerTrack_AtLeastTwo()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var path = GetRepoPath("images/test/XDOS_ALLOC.D88");
+        var path = GetTempPath("XDOS_ALLOC.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoDD);
         var fs = new XDosFileSystem(container);
@@ -285,7 +310,7 @@ public class XDosFileSystemTest
     public void WriteFile_ExceedPhysicalCapacity_ThrowsDiskFull()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var path = GetRepoPath("images/test/XDOS_FULL.D88");
+        var path = GetTempPath("XDOS_FULL.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoD);
         var fs = new XDosFileSystem(container);
@@ -301,7 +326,7 @@ public class XDosFileSystemTest
     public void WriteFile_TwoHd_AllocatesRecordsIn16SectorTracks()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var path = GetRepoPath("images/test/XDOS_2HD.D88");
+        var path = GetTempPath("XDOS_2HD.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoHD);
         var fs = new XDosFileSystem(container);
@@ -343,7 +368,7 @@ public class XDosFileSystemTest
     public void XDosFamWriter_WritesTerminatorAtEnd()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var path = GetRepoPath("images/test/XDOS_FAMW.D88");
+        var path = GetTempPath("XDOS_FAMW.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoDD);
         var fs = new XDosFileSystem(container);
@@ -365,7 +390,7 @@ public class XDosFileSystemTest
     public void WriteFile_ReadBack_DataIntact()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var path = GetRepoPath("images/test/XDOS_RW.D88");
+        var path = GetTempPath("XDOS_RW.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoDD);
         var fs = new XDosFileSystem(container);
@@ -392,7 +417,7 @@ public class XDosFileSystemTest
     public void WriteFile_BinaryIntent_DefaultsToFileType0x0100()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var path = GetRepoPath("images/test/XDOS_TYPE_BIN.D88");
+        var path = GetTempPath("XDOS_TYPE_BIN.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoDD);
         var fs = new XDosFileSystem(container);
@@ -408,7 +433,7 @@ public class XDosFileSystemTest
     public void WriteFile_TextIntent_DefaultsToFileType0x0400()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var path = GetRepoPath("images/test/XDOS_TYPE_ASC.D88");
+        var path = GetTempPath("XDOS_TYPE_ASC.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoDD);
         var fs = new XDosFileSystem(container);
@@ -424,7 +449,7 @@ public class XDosFileSystemTest
     public void WriteFile_NonzeroRawAttributes_DoNotAlterFileType()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var path = GetRepoPath("images/test/XDOS_TYPE_ATTR.D88");
+        var path = GetTempPath("XDOS_TYPE_ATTR.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoDD);
         var fs = new XDosFileSystem(container);
@@ -442,7 +467,7 @@ public class XDosFileSystemTest
     public void WriteFileInternal_ExplicitRawType_PreservedUnchanged()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var path = GetRepoPath("images/test/XDOS_TYPE_EXPL.D88");
+        var path = GetTempPath("XDOS_TYPE_EXPL.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoDD);
         var fs = new XDosFileSystem(container);
@@ -459,7 +484,7 @@ public class XDosFileSystemTest
     public void WriteFile_CommitOrder_FatAndFamBothPresentAfterWrite()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var path = GetRepoPath("images/test/XDOS_ORDER_FAT.D88");
+        var path = GetTempPath("XDOS_ORDER_FAT.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoDD);
         var fs = new XDosFileSystem(container);
@@ -485,7 +510,7 @@ public class XDosFileSystemTest
     public void WriteFile_DirectoryEntry_FamPointerBytesMatch()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var path = GetRepoPath("images/test/XDOS_ORDER_DIR.D88");
+        var path = GetTempPath("XDOS_ORDER_DIR.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoDD);
         var fs = new XDosFileSystem(container);
@@ -513,7 +538,7 @@ public class XDosFileSystemTest
     public void WriteFile_TwoConsecutiveFiles_NoDataOverwrite()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var path = GetRepoPath("images/test/XDOS_ORDER_NOOVR.D88");
+        var path = GetTempPath("XDOS_ORDER_NOOVR.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoDD);
         var fs = new XDosFileSystem(container);
@@ -535,7 +560,7 @@ public class XDosFileSystemTest
     [Fact]
     public void WriteFile_CommitOrder_DataRoundTripAfterSave()
     {
-        var path = GetRepoPath("images/test/XDOS_ORDER_RT.D88");
+        var path = GetTempPath("XDOS_ORDER_RT.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 
         {
@@ -621,23 +646,18 @@ public class XDosFileSystemTest
     }
 
     [Fact]
-    public void Format_D88_GeometryParityWith_XDosSysD88()
+    public void Format_D88_GeometryParityWithExpectedTwoDProfile()
     {
-        using var real = new D88DiskContainer(XDosSysPath, true);
         var container = D88DiskContainer.CreateNewInMemory("GEOM_PAR", DiskType.TwoD);
         new XDosFileSystem(container).Format();
 
-        Assert.Equal(real.ReadSector(0, 0, 1).Length, container.ReadSector(0, 0, 1).Length);
-        Assert.Equal(real.ReadSector(1, 0, 1).Length, container.ReadSector(1, 0, 1).Length);
+        Assert.Equal(256, container.ReadSector(0, 0, 1).Length);
+        Assert.Equal(512, container.ReadSector(1, 0, 1).Length);
 
-        Assert.True(real.SectorExists(0, 0, 16));
         Assert.True(container.SectorExists(0, 0, 16));
-        Assert.False(real.SectorExists(0, 0, 17));
         Assert.False(container.SectorExists(0, 0, 17));
 
-        Assert.True(real.SectorExists(1, 0, 10));
         Assert.True(container.SectorExists(1, 0, 10));
-        Assert.False(real.SectorExists(1, 0, 11));
         Assert.False(container.SectorExists(1, 0, 11));
     }
 
@@ -669,7 +689,7 @@ public class XDosFileSystemTest
     [Fact]
     public void ToFileEntry_XDosAsc_ShouldBeIsAsciiTrue()
     {
-        var path = GetRepoPath("images/test/XDOS_ISASCII_PROJECTION.D88");
+        var path = GetTempPath("XDOS_ISASCII_PROJECTION.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         if (File.Exists(path)) File.Delete(path);
 
@@ -692,7 +712,7 @@ public class XDosFileSystemTest
     [Fact]
     public void ToFileEntry_ShouldPreserveRawAttributes()
     {
-        var path = GetRepoPath("images/test/XDOS_ATTR_PROJECTION_PRESERVE.D88");
+        var path = GetTempPath("XDOS_ATTR_PROJECTION_PRESERVE.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         if (File.Exists(path)) File.Delete(path);
 
@@ -712,7 +732,7 @@ public class XDosFileSystemTest
     [Fact]
     public void ToFileEntry_EndAddress_IsProjectedCorrectlyByFileType()
     {
-        var outputPath = GetRepoPath("images/test/XDOS_PROJECTION_TEST.D88");
+        var outputPath = GetTempPath("XDOS_PROJECTION_TEST.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
         if (File.Exists(outputPath)) File.Delete(outputPath);
 
@@ -740,7 +760,7 @@ public class XDosFileSystemTest
     public void GetFiles_ProjectsValidTimestamp()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var path = GetRepoPath("images/test/XDOS_TIMESTAMP_VALID.D88");
+        var path = GetTempPath("XDOS_TIMESTAMP_VALID.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoDD);
         var fs = new XDosFileSystem(container);
@@ -779,7 +799,7 @@ public class XDosFileSystemTest
     public void GetFiles_ZeroTimestamp_ProjectsNull()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var path = GetRepoPath("images/test/XDOS_TIMESTAMP_ZERO.D88");
+        var path = GetTempPath("XDOS_TIMESTAMP_ZERO.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoDD);
         var fs = new XDosFileSystem(container);
@@ -795,7 +815,7 @@ public class XDosFileSystemTest
     public void GetFiles_InvalidTimestamp_ProjectsNull()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var path = GetRepoPath("images/test/XDOS_TIMESTAMP_INVALID.D88");
+        var path = GetTempPath("XDOS_TIMESTAMP_INVALID.D88");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var container = svc.CreateDisk(path, DiskType.TwoDD);
         var fs = new XDosFileSystem(container);

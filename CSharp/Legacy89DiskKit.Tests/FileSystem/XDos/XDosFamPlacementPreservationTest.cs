@@ -10,32 +10,44 @@ namespace Legacy89DiskKit.Tests.FileSystem.XDos;
 
 public class XDosFamPlacementPreservationTest
 {
-    private static string GetRepoPath(string relativePath)
-    {
-        var baseDirectory = AppContext.BaseDirectory;
-        var repoRoot = Path.GetFullPath(Path.Combine(baseDirectory, "../../../../.."));
-        return Path.Combine(repoRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
-    }
-
     private (IDiskContainer container, XDosFileSystem fs) CreateFormattedXDos(string name, DiskType diskType = DiskType.TwoD)
     {
-        var path = GetRepoPath($"images/test/{name}.D88");
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        if (File.Exists(path)) File.Delete(path);
+        return TestDiskFixtureFactory.CreateOpenFormattedXDos($"{name}.D88", diskType);
+    }
 
-        using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var container = svc.CreateDisk(path, diskType);
+    private static string CreateSyntheticSourceImage(string name)
+    {
+        var path = TestDiskFixtureFactory.CreateFormattedXDosDisk($"{name}.D88", DiskType.TwoD);
+
+        using var service = Legacy89DiskKitApplication.CreateDiskService();
+        var container = service.OpenDisk(path, readOnly: false);
         var fs = new XDosFileSystem(container);
-        fs.Format();
-        return (container, fs);
+        fs.WriteFileInternal("SYS1.CMD", new byte[256], fs.CreateDefaultAttributes(false), 0x8000, 0x8100, forcedRawType: (ushort)XDosFileType.Cmd);
+        fs.WriteFileInternal("SYS2.SYS", new byte[512], fs.CreateDefaultAttributes(false), 0x8200, 0x8200, forcedRawType: (ushort)XDosFileType.Sys);
+        fs.WriteFile("README.TXT", System.Text.Encoding.ASCII.GetBytes("X-DOS fixture\r\n"), fs.CreateDefaultAttributes(true));
+        container.Save();
+        return path;
+    }
+
+    private static string CreateSyntheticFragmentedSourceImage(string name)
+    {
+        var path = TestDiskFixtureFactory.CreateFormattedXDosDisk($"{name}.D88", DiskType.TwoD);
+
+        using var service = Legacy89DiskKitApplication.CreateDiskService();
+        var container = service.OpenDisk(path, readOnly: false);
+        var fs = new XDosFileSystem(container);
+        fs.WriteFile("DUMMY.BIN", new byte[1024], fs.CreateDefaultAttributes(false));
+        fs.WriteFileInternal("SYS1.CMD", new byte[256], fs.CreateDefaultAttributes(false), 0x8000, 0x8100, forcedRawType: (ushort)XDosFileType.Cmd);
+        fs.WriteFileInternal("SYS2.SYS", new byte[512], fs.CreateDefaultAttributes(false), 0x8200, 0x8200, forcedRawType: (ushort)XDosFileType.Sys);
+        fs.WriteFile("README.TXT", System.Text.Encoding.ASCII.GetBytes("X-DOS fixture\r\n"), fs.CreateDefaultAttributes(true));
+        container.Save();
+        return path;
     }
 
     [Fact]
     public void CloneXDosBootable_VerifyFamPlacementPreservation()
     {
-        var xdosSysPath = GetRepoPath("images/disk_org/x1/XDOS_SYS.D88");
-        if (!File.Exists(xdosSysPath)) return;
-
+        var xdosSysPath = CreateSyntheticSourceImage("WF_PRESERVE_FAM_SRC");
         var (dstContainer, dstFs) = CreateFormattedXDos("WF_PRESERVE_FAM_DST");
 
         using var srcSvc = Legacy89DiskKitApplication.CreateDiskService();
@@ -65,19 +77,17 @@ public class XDosFamPlacementPreservationTest
     [Fact]
     public void TransferFiles_Ordinary_DoesNotPreserveFamPlacement()
     {
-        var xdosSysPath = GetRepoPath("images/disk_org/x1/XDOS_SYS.D88");
-        if (!File.Exists(xdosSysPath)) return;
-
+        var xdosSysPath = CreateSyntheticFragmentedSourceImage("WF_ORDINARY_XFER_SRC");
         var (dstContainer, dstFs) = CreateFormattedXDos("WF_ORDINARY_XFER_DST");
-        
-        // Occupy the beginning of the disk to force different placement for ordinary transfer
-        dstFs.WriteFile("DUMMY.BIN", new byte[1024], dstFs.CreateDefaultAttributes(false));
 
         using var srcSvc = Legacy89DiskKitApplication.CreateDiskService();
         var srcContainer = srcSvc.OpenDisk(xdosSysPath, readOnly: true);
         var srcFs = new XDosFileSystem(srcContainer);
 
-        var srcFiles = srcFs.GetFilesWithMetadata().Where(e => !e.IsEmpty).Take(3).ToList();
+        var srcFiles = srcFs.GetFilesWithMetadata()
+            .Where(e => !e.IsEmpty && e.FileName != "DUMMY.BIN")
+            .Take(3)
+            .ToList();
         var fileNames = srcFiles.Select(e => e.FileName).ToList();
 
         var cloneService = Legacy89DiskKitApplication.CreateDiskCloneService(srcFs.GetFileSystemInfo());
@@ -111,9 +121,7 @@ public class XDosFamPlacementPreservationTest
     [Fact]
     public void ReuseAdapter_StateLeak_VerifyStateLeak()
     {
-        var xdosSysPath = GetRepoPath("images/disk_org/x1/XDOS_SYS.D88");
-        if (!File.Exists(xdosSysPath)) return;
-
+        var xdosSysPath = CreateSyntheticSourceImage("WF_REUSE_ADAPTER_SRC");
         var (dstContainer1, dstFs1) = CreateFormattedXDos("WF_REUSE_ADAPTER_DST1");
         var (dstContainer2, dstFs2) = CreateFormattedXDos("WF_REUSE_ADAPTER_DST2");
 

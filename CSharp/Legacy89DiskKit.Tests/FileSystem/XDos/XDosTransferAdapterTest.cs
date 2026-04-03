@@ -14,24 +14,9 @@ namespace Legacy89DiskKit.Tests.FileSystem.XDos;
 
 public class XDosTransferAdapterTest
 {
-    private static string GetRepoPath(string relativePath)
-    {
-        var baseDirectory = AppContext.BaseDirectory;
-        var repoRoot = Path.GetFullPath(Path.Combine(baseDirectory, "../../../../.."));
-        return Path.Combine(repoRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
-    }
-
     private (IDiskContainer container, XDosFileSystem fs) CreateFormattedDisk(string name)
     {
-        var path = GetRepoPath($"images/test/{name}.D88");
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        if (File.Exists(path)) File.Delete(path);
-
-        using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var container = svc.CreateDisk(path, DiskType.TwoDD);
-        var fs = new XDosFileSystem(container);
-        fs.Format();
-        return (container, fs);
+        return TestDiskFixtureFactory.CreateOpenFormattedXDos($"{name}.D88", DiskType.TwoDD);
     }
 
     private static FileEntry GetFileEntry(XDosFileSystem fs, string fileName)

@@ -11,23 +11,9 @@ namespace Legacy89DiskKit.Tests;
 
 public class FileSystemTransferOrchestratorTest
 {
-    private static string GetRepoPath(string relativePath)
-    {
-        var baseDirectory = AppContext.BaseDirectory;
-        var repoRoot = Path.GetFullPath(Path.Combine(baseDirectory, "../../../../.."));
-        return Path.Combine(repoRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
-    }
-
     private XDosFileSystem CreateFormattedXDos(string name)
     {
-        var path = GetRepoPath($"images/test/{name}.D88");
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        if (File.Exists(path)) File.Delete(path);
-
-        using var svc = Legacy89DiskKitApplication.CreateDiskService();
-        var container = svc.CreateDisk(path, DiskType.TwoDD);
-        var fs = new XDosFileSystem(container);
-        fs.Format();
+        var (_, fs) = TestDiskFixtureFactory.CreateOpenFormattedXDos($"{name}.D88", DiskType.TwoDD);
         return fs;
     }
 

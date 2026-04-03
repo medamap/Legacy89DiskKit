@@ -19,7 +19,7 @@ internal static class CliCommandRunner
         IReadOnlyList<string> arguments,
         IReadOnlyDictionary<string, string?>? environmentVariables)
     {
-        var cliDllPath = GetRepoPath("csharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll");
+        var cliDllPath = GetRepoPath("CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll");
         Assert.True(File.Exists(cliDllPath), $"CLI assembly was not found: {cliDllPath}");
 
         var escapedArguments = string.Join(
