@@ -234,7 +234,13 @@ public static class Legacy89DiskKitApplication
         var registry = new EncoderRegistry();
         registry.Register("X1", new X1CharacterEncoder());
         registry.Register("SJIS", new ShiftJisCharacterEncoder());
+        registry.Register("ShiftJIS", new ShiftJisCharacterEncoder());
         registry.Register("Shift-JIS", new ShiftJisCharacterEncoder());
+        registry.Register("Shift_JIS", new ShiftJisCharacterEncoder());
+        registry.Register("sjis", new ShiftJisCharacterEncoder());
+        registry.Register("shiftjis", new ShiftJisCharacterEncoder());
+        registry.Register("shift-jis", new ShiftJisCharacterEncoder());
+        registry.Register("shift_jis", new ShiftJisCharacterEncoder());
         registry.Register("MSX", new ShiftJisCharacterEncoder());
         registry.Register("PC88", new ShiftJisCharacterEncoder());
         return registry;

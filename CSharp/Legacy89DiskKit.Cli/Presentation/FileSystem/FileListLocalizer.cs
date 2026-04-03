@@ -371,7 +371,7 @@ public static class FileListLocalizer
         public override string HuBasicFlagVerify => "Verify";
         public override string HuBasicFlagWriteProtect => "Write-protect";
         public override string LanguageOptionDescription => "Override UI language: ja or en";
-        public override string EncodingOptionDescription => "Override disk filename decoding and text I/O encoding (for example: X1 or Shift-JIS)";
+        public override string EncodingOptionDescription => "Override disk filename decoding and text I/O encoding (accepted examples: X1, SJIS, Shift-JIS, ShiftJIS, shift_jis)";
         public override string RootDescription => "Legacy89DiskKit CLI";
         public override string ListCommandDescription => "List files and disk summary information";
         public override string LayoutCommandDescription => "Inspect and edit directory entry layout. Use 'layout export IMAGE > plan.txt', then 'cat plan.txt | layout validate IMAGE --stdin' or '... apply IMAGE --stdin'.";
@@ -526,7 +526,7 @@ public static class FileListLocalizer
         public override string HuBasicFlagVerify => "ベリファイ";
         public override string HuBasicFlagWriteProtect => "書き込み保護";
         public override string LanguageOptionDescription => "UI 表示言語を指定します: ja または en";
-        public override string EncodingOptionDescription => "ディスク上ファイル名の表示デコードやテキスト入出力の文字エンコーディングを上書きします";
+        public override string EncodingOptionDescription => "ディスク上ファイル名の表示デコードやテキスト入出力の文字エンコーディングを上書きします（指定例: X1, SJIS, Shift-JIS, ShiftJIS, shift_jis）";
         public override string RootDescription => "Legacy89DiskKit CLI";
         public override string ListCommandDescription => "ファイル一覧とディスク概要を表示します";
         public override string LayoutCommandDescription => "ディレクトリエントリ順を確認・編集します。'layout export IMAGE > plan.txt' のあと、'cat plan.txt | layout validate IMAGE --stdin' や '... apply IMAGE --stdin' で流し込めます";
