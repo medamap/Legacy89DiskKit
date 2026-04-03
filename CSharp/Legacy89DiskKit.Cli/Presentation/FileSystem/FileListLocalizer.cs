@@ -172,6 +172,7 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string CheckUpdateWindowsMsiLabel { get; }
     string CheckUpdateAvailableMessage { get; }
     string CheckUpdateUpToDateMessage { get; }
+    string MultiSlotD88WriteNotSupportedMessage { get; }
     string ContainerLabel { get; }
     string DiskTypeLabel { get; }
     string MachineProfileLabel { get; }
@@ -371,6 +372,7 @@ public static class FileListLocalizer
         public abstract string CheckUpdateWindowsMsiLabel { get; }
         public abstract string CheckUpdateAvailableMessage { get; }
         public abstract string CheckUpdateUpToDateMessage { get; }
+        public abstract string MultiSlotD88WriteNotSupportedMessage { get; }
         public abstract string ContainerLabel { get; }
         public abstract string DiskTypeLabel { get; }
         public abstract string MachineProfileLabel { get; }
@@ -547,6 +549,7 @@ public static class FileListLocalizer
         public override string CheckUpdateWindowsMsiLabel => "Windows MSI";
         public override string CheckUpdateAvailableMessage => "An update is available.";
         public override string CheckUpdateUpToDateMessage => "You are using the latest version.";
+        public override string MultiSlotD88WriteNotSupportedMessage => "Write operations for multi-slot D88 containers are not supported yet. Split the container into a single-slot image and try again. Read operations currently target only the first slot.";
         public override string ContainerLabel => "Container";
         public override string DiskTypeLabel => "Disk Type";
         public override string MachineProfileLabel => "Machine Profile";
@@ -723,6 +726,7 @@ public static class FileListLocalizer
         public override string CheckUpdateWindowsMsiLabel => "Windows MSI";
         public override string CheckUpdateAvailableMessage => "新しいバージョンがあります。";
         public override string CheckUpdateUpToDateMessage => "現在のバージョンは最新です。";
+        public override string MultiSlotD88WriteNotSupportedMessage => "複数スロットを含む D88 コンテナへの書き込みはまだ未対応です。1 スロットのイメージへ分割してから、もう一度試してください。読み込みは現在先頭スロットのみ対応しています。";
         public override string ContainerLabel => "コンテナ";
         public override string DiskTypeLabel => "ディスク種別";
         public override string MachineProfileLabel => "マシンプロファイル";

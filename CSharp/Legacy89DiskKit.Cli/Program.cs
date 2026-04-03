@@ -155,6 +155,7 @@ fileInjectCommand.SetHandler((string imagePath, string hostFilePath, string? tar
 {
     try
     {
+        RejectWriteToMultiSlotD88(imagePath, localizer);
         archiveService.InjectFile(imagePath, hostFilePath, targetName, encodingOverride);
         PrintSuccess(localizer, localizer.FileInjectedMessage);
     }
@@ -172,7 +173,7 @@ fileDeleteCommand.SetHandler((string imagePath, string diskFileName) =>
     try
     {
         using var diskService = CreateDiskService();
-        diskService.OpenDisk(imagePath, false);
+        OpenWritableDisk(diskService, imagePath, localizer);
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
@@ -197,7 +198,7 @@ fileRenameCommand.SetHandler((string imagePath, string sourceName, string newNam
     try
     {
         using var diskService = CreateDiskService();
-        diskService.OpenDisk(imagePath, false);
+        OpenWritableDisk(diskService, imagePath, localizer);
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
@@ -222,7 +223,7 @@ fileCopyCommand.SetHandler((string imagePath, string sourceName, string targetNa
     try
     {
         using var diskService = CreateDiskService();
-        diskService.OpenDisk(imagePath, false);
+        OpenWritableDisk(diskService, imagePath, localizer);
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
@@ -253,7 +254,7 @@ fileCrossCopyCommand.SetHandler((string srcPath, string destPath, string[] files
         if (srcFs == null) return;
 
         using var destDisk = CreateDiskService();
-        destDisk.OpenDisk(destPath, false);
+        OpenWritableDisk(destDisk, destPath, localizer);
         var destFs = RequireFileSystem(destDisk.FileSystem, localizer);
         if (destFs == null) return;
 
@@ -347,7 +348,7 @@ diskFormatCommand.SetHandler((string imagePath, string? explicitFileSystemName) 
     try
     {
         using var diskService = CreateDiskService();
-        var container = diskService.OpenDisk(imagePath, false);
+        var container = OpenWritableDisk(diskService, imagePath, localizer);
         if (!string.IsNullOrWhiteSpace(explicitFileSystemName))
         {
             using var explicitFs = explicitFileSystemResolver.Create(explicitFileSystemName, container);
@@ -395,7 +396,7 @@ diskSectorCopyCommand.SetHandler((string srcPath, string destPath, bool force) =
         IDiskContainer destDisk;
         if (File.Exists(destPath))
         {
-            destDisk = diskService.OpenDisk(destPath, false);
+            destDisk = OpenWritableDisk(diskService, destPath, localizer);
         }
         else
         {
@@ -454,7 +455,7 @@ sectorImportCommand.SetHandler((string imagePath, int sector, string hostFilePat
     {
         var data = File.ReadAllBytes(hostFilePath);
         using var diskService = CreateDiskService();
-        using var container = diskService.OpenDisk(imagePath, false);
+        using var container = OpenWritableDisk(diskService, imagePath, localizer);
         WriteLinearSectors(container, sector, data, count);
         container.Save();
         PrintSuccess(localizer, localizer.FileInjectedMessage);
@@ -512,7 +513,7 @@ diskBootCopyCommand.SetHandler((string srcPath, string destPath, bool force) =>
 
         if (File.Exists(destPath))
         {
-            destDisk = destDiskService.OpenDisk(destPath, false);
+            destDisk = OpenWritableDisk(destDiskService, destPath, localizer);
             destFs = RequireFileSystem(destDiskService.FileSystem, localizer);
             if (destFs == null) return;
         }
@@ -857,7 +858,7 @@ bootClearCommand.SetHandler((string imagePath) =>
     try
     {
         using var diskService = CreateDiskService();
-        diskService.OpenDisk(imagePath, false);
+        OpenWritableDisk(diskService, imagePath, localizer);
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
@@ -883,6 +884,10 @@ bootCloneCommand.SetHandler((string src, string dest, string files) =>
 {
     try
     {
+        if (File.Exists(dest))
+        {
+            RejectWriteToMultiSlotD88(dest, localizer);
+        }
         archiveService.CloneBootable(src, dest, files.Split(','));
         PrintSuccess(localizer, localizer.BootableDiskCreatedMessage);
     }
@@ -980,7 +985,7 @@ bootImportCommand.SetHandler(async (string imagePath, string binaryPath, string 
         }
 
         using var diskService = CreateDiskService();
-        var container = diskService.OpenDisk(imagePath, false);
+        var container = OpenWritableDisk(diskService, imagePath, localizer);
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
@@ -1057,7 +1062,7 @@ layoutMoveCommand.SetHandler((string imagePath, string sourceName, string before
     try
     {
         using var diskService = CreateDiskService();
-        diskService.OpenDisk(imagePath, false);
+        OpenWritableDisk(diskService, imagePath, localizer);
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
@@ -1082,7 +1087,7 @@ layoutInsertLabelCommand.SetHandler((string imagePath, string labelText, string 
     try
     {
         using var diskService = CreateDiskService();
-        diskService.OpenDisk(imagePath, false);
+        OpenWritableDisk(diskService, imagePath, localizer);
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
@@ -1106,7 +1111,7 @@ layoutSortCommand.SetHandler((string imagePath, string sortBy) =>
     try
     {
         using var diskService = CreateDiskService();
-        diskService.OpenDisk(imagePath, false);
+        OpenWritableDisk(diskService, imagePath, localizer);
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
@@ -1197,7 +1202,7 @@ layoutApplyCommand.SetHandler((string imagePath, string? inputPath, bool fromStd
     try
     {
         using var diskService = CreateDiskService();
-        diskService.OpenDisk(imagePath, false);
+        OpenWritableDisk(diskService, imagePath, localizer);
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
@@ -1234,6 +1239,7 @@ injectCommand.SetHandler((string imagePath, string hostFilePath, string? targetN
 {
     try
     {
+        RejectWriteToMultiSlotD88(imagePath, localizer);
         archiveService.InjectFile(imagePath, hostFilePath, targetName, encodingOverride);
         PrintSuccess(localizer, localizer.FileInjectedMessage);
     }
@@ -1795,6 +1801,72 @@ static string FormatDiskType(DiskType diskType)
 static string FormatGeometry(DiskGeometryInfo geometry)
 {
     return $"{geometry.Cylinders}c x {geometry.Heads}h x {geometry.SectorsPerTrack}spt x {geometry.BytesPerSector}bps";
+}
+
+static IDiskContainer OpenWritableDisk(DiskService diskService, string imagePath, IConsoleLocalizer localizer)
+{
+    RejectWriteToMultiSlotD88(imagePath, localizer);
+    return diskService.OpenDisk(imagePath, false);
+}
+
+static void RejectWriteToMultiSlotD88(string imagePath, IConsoleLocalizer localizer)
+{
+    if (!File.Exists(imagePath))
+    {
+        return;
+    }
+
+    if (!string.Equals(Path.GetExtension(imagePath), ".d88", StringComparison.OrdinalIgnoreCase))
+    {
+        return;
+    }
+
+    var slotCount = CountD88Slots(File.ReadAllBytes(imagePath));
+    if (slotCount > 1)
+    {
+        throw new InvalidOperationException(localizer.MultiSlotD88WriteNotSupportedMessage);
+    }
+}
+
+static int CountD88Slots(byte[] imageData)
+{
+    if (imageData.Length < 0x2b0)
+    {
+        return 0;
+    }
+
+    var offset = 0;
+    var count = 0;
+    while (offset + 0x2b0 <= imageData.Length)
+    {
+        var mediaTypeOffset = offset + 0x1b;
+        var diskSizeOffset = offset + 0x1c;
+        if (mediaTypeOffset >= imageData.Length || diskSizeOffset + 4 > imageData.Length)
+        {
+            break;
+        }
+
+        var mediaType = imageData[mediaTypeOffset];
+        if (!Enum.IsDefined(typeof(DiskType), mediaType))
+        {
+            break;
+        }
+
+        var diskSize = BitConverter.ToUInt32(imageData, diskSizeOffset);
+        if (diskSize < 0x2b0 || offset + diskSize > imageData.Length)
+        {
+            break;
+        }
+
+        count++;
+        offset += (int)diskSize;
+        if (offset == imageData.Length)
+        {
+            break;
+        }
+    }
+
+    return count;
 }
 
 static byte[] ReadLinearSectors(IDiskContainer container, int startSector, int count)

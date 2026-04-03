@@ -1,6 +1,7 @@
 using Legacy89DiskKit.Application;
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.Infrastructure.DiskImage.Container;
 using Legacy89DiskKit.Infrastructure.FileSystem.XDos;
 
 namespace Legacy89DiskKit.Tests;
@@ -85,5 +86,37 @@ internal static class TestDiskFixtureFactory
         var fs = new XDosFileSystem(container);
         fs.Format();
         return (container, fs);
+    }
+
+    public static string CreateMultiSlotD88WithFormattedHuBasicFirstSlot(string fileName)
+    {
+        var path = CreateTempDiskPath(fileName);
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+        }
+
+        var firstSlotPath = CreateFormattedHuBasicDisk($"FIRST_{fileName}", DiskType.TwoD);
+        var secondSlotPath = CreateTempDiskPath($"SECOND_{fileName}");
+        if (File.Exists(secondSlotPath))
+        {
+            File.Delete(secondSlotPath);
+        }
+
+        using (var service = Legacy89DiskKitApplication.CreateDiskService())
+        {
+            service.CreateDisk(secondSlotPath, DiskType.TwoD, "SLOT1");
+        }
+
+        var firstBytes = File.ReadAllBytes(firstSlotPath);
+        var secondBytes = File.ReadAllBytes(secondSlotPath);
+        var combined = new byte[firstBytes.Length + secondBytes.Length];
+        Buffer.BlockCopy(firstBytes, 0, combined, 0, firstBytes.Length);
+        Buffer.BlockCopy(secondBytes, 0, combined, firstBytes.Length, secondBytes.Length);
+        File.WriteAllBytes(path, combined);
+
+        File.Delete(firstSlotPath);
+        File.Delete(secondSlotPath);
+        return path;
     }
 }
