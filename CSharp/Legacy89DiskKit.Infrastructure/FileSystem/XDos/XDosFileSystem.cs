@@ -317,5 +317,6 @@ public class XDosFileSystem : IFileSystem
         LoadAddress:      e.StartAddress,
         EndAddress:       e.FileType == XDosFileType.Asc ? null : (ushort)(e.StartAddress + e.SizeLow),
         ExecutionAddress: e.FileType == XDosFileType.Asc ? null : e.ExecAddressOrSizeHigh,
-        RawFileName:      e.RawFileName);
+        RawFileName:      e.RawFileName,
+        FileSystemMetadata: new XDosFileMetadata(e.FileType, e.RawFileType, e.Attribute, e.TimestampRaw));
 }

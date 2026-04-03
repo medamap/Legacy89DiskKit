@@ -7,6 +7,7 @@ public static class FileListFormatterFactory
         return fileSystemName switch
         {
             "Hu-BASIC" => new HuBasicFileListFormatter(),
+            "X-DOS" => new XDosFileListFormatter(),
             _ => new DefaultFileListFormatter()
         };
     }
