@@ -64,7 +64,7 @@ public record HuBasicConfiguration
                 FatSectors = 2,
                 DirectoryTrack = 1,
                 DirectorySector = 7,
-                DirectorySectors = 20
+                DirectorySectors = 16
             },
             _ => throw new ArgumentException($"Unsupported disk type for Hu-BASIC: {diskType}")
         };

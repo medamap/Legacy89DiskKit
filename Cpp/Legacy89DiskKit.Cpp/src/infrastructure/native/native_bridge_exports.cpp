@@ -131,7 +131,7 @@ int NativeBridgeExports::OpenDisk(const char* path, std::int32_t read_only_flag)
     if (path == nullptr) return LDK_STATUS_ERROR_INVALID_ARGUMENT;
     auto result = NativeFileSystemSession::Open(path, read_only_flag != 0);
     if (!result.ok()) return LdkStatusFromStatus(result.status());
-    return RegisterHandle(std::move(result.value()), std::string("open:") + path, read_only_flag == 0);
+    return RegisterHandle(std::move(result.value()), "open-disk", read_only_flag == 0);
 }
 
 int NativeBridgeExports::OpenDiskFromBuffer(const void* data, std::int32_t length, std::int32_t read_only_flag)
@@ -140,7 +140,7 @@ int NativeBridgeExports::OpenDiskFromBuffer(const void* data, std::int32_t lengt
     std::vector<std::uint8_t> buffer(static_cast<const uint8_t*>(data), static_cast<const uint8_t*>(data) + length);
     auto result = NativeFileSystemSession::OpenFromBuffer(buffer, read_only_flag != 0);
     if (!result.ok()) return LdkStatusFromStatus(result.status());
-    return RegisterHandle(std::move(result.value()), "open:buffer", read_only_flag == 0);
+    return RegisterHandle(std::move(result.value()), "open-disk-from-buffer", read_only_flag == 0);
 }
 
 int NativeBridgeExports::CreateDisk(const char* path, std::int32_t disk_type, const char* name)
@@ -148,7 +148,7 @@ int NativeBridgeExports::CreateDisk(const char* path, std::int32_t disk_type, co
     if (path == nullptr || std::string_view(path).empty()) return LDK_STATUS_ERROR_INVALID_ARGUMENT;
     auto result = NativeFileSystemSession::Create(path, static_cast<DiskType>(disk_type), name ? name : "");
     if (!result.ok()) return LdkStatusFromStatus(result.status());
-    return RegisterHandle(std::move(result.value()), std::string("create:") + path, true);
+    return RegisterHandle(std::move(result.value()), "create-disk", true);
 }
 
 int NativeBridgeExports::CloseDisk(std::int32_t handle)
@@ -175,7 +175,7 @@ int NativeBridgeExports::GetHandleLifecycleSummary(char* buffer, std::int32_t ca
 int NativeBridgeExports::GetHandleValueSummary(char* buffer, std::int32_t capacity) { return 0; }
 int NativeBridgeExports::GetBufferStringPolicySummary(char* buffer, std::int32_t capacity) { return 0; }
 int NativeBridgeExports::GetMutationPolicySummary(char* buffer, std::int32_t capacity) { return 0; }
-int NativeBridgeExports::GetBackendKind(char* buffer, std::int32_t capacity) { return WriteUtf8(buffer, capacity, "native-library"); }
+int NativeBridgeExports::GetBackendKind(char* buffer, std::int32_t capacity) { return WriteUtf8(buffer, capacity, "cpp-bridge"); }
 int NativeBridgeExports::GetBackendImplementation(char* buffer, std::int32_t capacity) { return WriteUtf8(buffer, capacity, "libLegacy89DiskKitCpp"); }
 int NativeBridgeExports::GetBackendTarget(char* buffer, std::int32_t capacity) { return WriteUtf8(buffer, capacity, "C++ Core"); }
 int NativeBridgeExports::GetBackendSummary(char* buffer, std::int32_t capacity) { return WriteUtf8(buffer, capacity, "C++ Core Backend"); }

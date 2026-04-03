@@ -1,3 +1,4 @@
+using Legacy89DiskKit.Domain.CharacterEncoding.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 
 namespace Legacy89DiskKit.Application.FileSystem;
@@ -12,7 +13,7 @@ public class MsxBootMetadataService
             var bootArea = fileSystem.ReadBootArea();
             if (bootArea != null && bootArea.Any(b => b != 0x00))
             {
-                return new BootInfoSummary(BootInfoMode.SectorResident);
+                return new BootInfoSummary(BootInfoMode.SectorResident, MachineFamily: MachineType.MSX);
             }
         }
 

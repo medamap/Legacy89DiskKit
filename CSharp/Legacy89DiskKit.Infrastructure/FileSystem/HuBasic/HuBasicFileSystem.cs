@@ -50,6 +50,11 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
 
     public IEnumerable<FileEntry> GetFiles()
     {
+        return GetFilesWithMetadata();
+    }
+
+    public IReadOnlyList<FileEntry> GetFilesWithMetadata()
+    {
         var files = new List<FileEntry>();
         for (int s = 0; s < _config.DirectorySectors; s++)
         {
@@ -92,10 +97,24 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
 
     public void WriteFile(string fileName, byte[] data, ExtendedFileAttributes attributes, ushort? loadAddress = null, ushort? executionAddress = null)
     {
+        WriteFileInternal(fileName, data, attributes, loadAddress, executionAddress);
+    }
+
+    public void WriteFileInternal(
+        string fileName,
+        byte[] data,
+        ExtendedFileAttributes attributes,
+        ushort? loadAddress = null,
+        ushort? executionAddress = null,
+        byte[]? forcedRawName = null,
+        byte[]? forcedRawExtension = null,
+        DateTime? forcedModifiedAt = null,
+        HuBasicFileMetadata? forcedMetadata = null)
+    {
         if (_diskContainer.IsReadOnly)
             throw new InvalidOperationException("Cannot write to read-only disk");
 
-        if (FileExists(fileName))
+        if (FileExists(fileName) && forcedRawName == null)
             throw new FileSystemException($"File already exists: {fileName}");
 
         if (data.Length > 0xFFFF)
@@ -122,6 +141,18 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
 
         // Create and add directory entry
         var entry = HuBasicDirectoryRules.CreateFileEntryForWrite(fileName, data, attributes, allocatedClusters[0], loadAddress, executionAddress);
+        
+        if (forcedRawName != null || forcedRawExtension != null || forcedModifiedAt != null || forcedMetadata != null)
+        {
+            entry = entry with
+            {
+                RawFileName = forcedRawName ?? entry.RawFileName,
+                RawExtension = forcedRawExtension ?? entry.RawExtension,
+                LastModifiedAt = forcedModifiedAt ?? entry.LastModifiedAt,
+                FileSystemMetadata = forcedMetadata ?? entry.FileSystemMetadata
+            };
+        }
+
         AddDirectoryEntry(entry);
     }
 
@@ -239,17 +270,28 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
         if (_diskContainer.IsReadOnly)
             throw new InvalidOperationException("Cannot format read-only disk");
 
-        // Initialize FAT with all free (0x00) except reserved clusters
+        foreach (var sector in _diskContainer.GetAllSectors())
+        {
+            var erased = new byte[sector.Size];
+            Array.Fill(erased, (byte)0xE5);
+            _diskContainer.WriteSector(sector.Cylinder, sector.Head, sector.Sector, erased);
+        }
+
         var fatData = new byte[_config.FatSectors * _config.SectorSize];
         for (int i = 0; i < _config.ReservedClusters; i++)
         {
-            // Standard Hu-BASIC uses 0x01, 0x02... 0x8F for reserved tracks
-            int next = (i == _config.ReservedClusters - 1) ? 0x8F : i + 1;
+            int next = i == 0 && _config.ReservedClusters > 1 ? 0x01 : 0x8F;
             _fatManager.SetFatEntry(fatData, i, (ushort)next);
         }
+
+        int activeFatEntries = _config.FatSectors * 128;
+        for (int cluster = _config.TotalClusters; cluster < activeFatEntries; cluster++)
+        {
+            _fatManager.SetFatEntry(fatData, cluster, 0x8F);
+        }
+
         _fatManager.WriteFat(fatData);
 
-        // Initialize Directory with 0xFF (End of Directory)
         var emptySector = new byte[_config.SectorSize];
         Array.Fill(emptySector, (byte)0xFF);
         for (int s = 0; s < _config.DirectorySectors; s++)

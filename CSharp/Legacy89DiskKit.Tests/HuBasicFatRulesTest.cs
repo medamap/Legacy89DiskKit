@@ -10,7 +10,7 @@ public class HuBasicFatRulesTest
     [Fact]
     public void GetClusterChain_FollowsLinksUntilTerminal()
     {
-        var fat = new byte[16];
+        var fat = new byte[256];
         var config = HuBasicConfiguration.GetDefault(DiskType.TwoD);
 
         HuBasicFatRules.SetEntry(fat, 2, 3);
@@ -34,15 +34,15 @@ public class HuBasicFatRulesTest
     [Fact]
     public void GetEntry_ReturnsTerminalForOutOfRangeCluster()
     {
-        var fat = new byte[4];
+        var fat = new byte[256];
 
-        Assert.Equal(0x8F, HuBasicFatRules.GetEntry(fat, 9));
+        Assert.Equal(0x8F, HuBasicFatRules.GetEntry(fat, 129));
     }
 
     [Fact]
     public void ApplyChain_WritesTerminalFlagToLastCluster()
     {
-        var fat = new byte[16];
+        var fat = new byte[256];
 
         HuBasicFatRules.ApplyChain(fat, new[] { 2, 3, 4 }, 0x82);
 

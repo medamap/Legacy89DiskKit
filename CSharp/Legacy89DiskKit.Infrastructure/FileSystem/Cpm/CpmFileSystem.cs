@@ -41,7 +41,19 @@ public class CpmFileSystem : IFileSystem
 
     public void Format() { }
 
-    public byte[] ReadBootArea() => Array.Empty<byte>();
+    public byte[] ReadBootArea()
+    {
+        try
+        {
+            // For CP/M on PC-8801 etc., the boot area is typically Track 0.
+            // We return Sector 1 as a representative boot sector.
+            return _diskContainer.ReadSector(0, 0, 1);
+        }
+        catch
+        {
+            return Array.Empty<byte>();
+        }
+    }
 
     public void WriteBootArea(byte[] data) { }
 

@@ -4,19 +4,38 @@ namespace Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
 
 public static class HuBasicFatRules
 {
+    private static int GetFatEntryCapacity(byte[] fatData)
+    {
+        if (fatData == null) throw new ArgumentNullException(nameof(fatData));
+        return (fatData.Length / 256) * 128;
+    }
+
+    private static int GetPhysicalOffset(byte[] fatData, int cluster)
+    {
+        int capacity = GetFatEntryCapacity(fatData);
+        if (cluster < 0 || cluster >= capacity)
+        {
+            return -1;
+        }
+
+        return (cluster / 128) * 256 + (cluster % 128);
+    }
+
     public static int GetEntry(byte[] fatData, int cluster)
     {
         if (fatData == null) throw new ArgumentNullException(nameof(fatData));
-        if (cluster < 0 || cluster >= fatData.Length) return 0x8F;
-        return fatData[cluster];
+        int offset = GetPhysicalOffset(fatData, cluster);
+        if (offset < 0) return 0x8F;
+        return fatData[offset];
     }
 
     public static void SetEntry(byte[] fatData, int cluster, int value)
     {
         if (fatData == null) throw new ArgumentNullException(nameof(fatData));
-        if (cluster >= 0 && cluster < fatData.Length)
+        int offset = GetPhysicalOffset(fatData, cluster);
+        if (offset >= 0)
         {
-            fatData[cluster] = (byte)value;
+            fatData[offset] = (byte)value;
         }
     }
 

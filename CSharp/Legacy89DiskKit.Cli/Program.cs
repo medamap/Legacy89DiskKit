@@ -788,6 +788,116 @@ bootCloneCommand.SetHandler((string src, string dest, string files) =>
     }
 }, cloneSrcArgument, cloneDestArgument, filesOption);
 
+var bootExportOutputOption = new Option<string>(new[] { "--output", "-o" }, localizer.BootExportOutputOptionDescription) { IsRequired = true };
+
+var bootExportCommand = new Command("export", localizer.BootExportCommandDescription);
+bootExportCommand.AddArgument(imageArgument);
+bootExportCommand.AddOption(bootExportOutputOption);
+bootExportCommand.SetHandler(async (string imagePath, string outputPath) =>
+{
+    try
+    {
+        using var diskService = CreateDiskService();
+        var container = diskService.OpenDisk(imagePath, true);
+        var fs = RequireFileSystem(diskService.FileSystem, localizer);
+        if (fs == null)
+        {
+            return;
+        }
+
+        var exportService = Legacy89DiskKitApplication.CreateBootEntryExportService();
+        var entries = exportService.ExportEntries(container, fs);
+
+        if (entries.Count == 0)
+        {
+            PrintError(localizer, localizer.BootNoEntriesFoundMessage);
+            return;
+        }
+
+        Directory.CreateDirectory(outputPath);
+
+        foreach (var entry in entries)
+        {
+            var binPath = Path.Combine(outputPath, entry.SuggestedBinaryFileName);
+            var jsonPath = Path.Combine(outputPath, entry.SuggestedMetadataFileName);
+
+            await File.WriteAllBytesAsync(binPath, entry.Payload);
+            
+            var sidecar = new System.Text.Json.Nodes.JsonObject
+            {
+                ["machineFamily"] = entry.MachineFamily.ToString(),
+                ["mode"] = entry.Mode.ToString(),
+                ["displayName"] = entry.DisplayName,
+                ["suggestedBinaryFileName"] = entry.SuggestedBinaryFileName,
+                ["payloadLength"] = entry.Payload.Length,
+                ["loadAddress"] = entry.LoadAddress,
+                ["executionAddress"] = entry.ExecutionAddress
+            };
+            
+            var options = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
+            var json = sidecar.ToJsonString(options);
+            await File.WriteAllTextAsync(jsonPath, json);
+        }
+
+        PrintSuccess(localizer, string.Format(localizer.BootEntriesExportedMessage, outputPath));
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+}, imageArgument, bootExportOutputOption);
+
+var bootImportBinaryOption = new Option<string>(new[] { "--binary", "-b" }, localizer.BootImportBinaryOptionDescription) { IsRequired = true };
+var bootImportMetadataOption = new Option<string>(new[] { "--metadata", "-m" }, localizer.BootImportMetadataOptionDescription) { IsRequired = true };
+var bootImportStartRecordOption = new Option<int?>("--start-record", "Explicit start record for file-backed boot import.");
+
+var bootImportCommand = new Command("import", localizer.BootImportCommandDescription);
+bootImportCommand.AddArgument(imageArgument);
+bootImportCommand.AddOption(bootImportBinaryOption);
+bootImportCommand.AddOption(bootImportMetadataOption);
+bootImportCommand.AddOption(bootImportStartRecordOption);
+bootImportCommand.SetHandler(async (string imagePath, string binaryPath, string metadataPath, int? startRecord) =>
+{
+    try
+    {
+        var binary = await File.ReadAllBytesAsync(binaryPath);
+        var json = await File.ReadAllTextAsync(metadataPath);
+        
+        var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        var metadata = System.Text.Json.JsonSerializer.Deserialize<Legacy89DiskKit.Application.FileSystem.BootEntryImportMetadata>(json, options);
+        if (metadata == null)
+        {
+            throw new InvalidOperationException("Failed to deserialize boot metadata from sidecar file.");
+        }
+        if (startRecord != null)
+        {
+            metadata = metadata with { StartRecord = (ushort)startRecord.Value };
+        }
+
+        using var diskService = CreateDiskService();
+        var container = diskService.OpenDisk(imagePath, false);
+        var fs = RequireFileSystem(diskService.FileSystem, localizer);
+        if (fs == null)
+        {
+            return;
+        }
+
+        var importService = Legacy89DiskKitApplication.CreateBootEntryImportService();
+        importService.ImportEntry(container, fs, metadata, binary);
+        
+        container.Save();
+
+        PrintSuccess(localizer, localizer.BootEntryImportedMessage);
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+}, imageArgument, bootImportBinaryOption, bootImportMetadataOption, bootImportStartRecordOption);
+
+bootCommand.AddCommand(bootExportCommand);
+bootCommand.AddCommand(bootImportCommand);
 bootCommand.AddCommand(bootShowCommand);
 bootCommand.AddCommand(bootClearCommand);
 bootCommand.AddCommand(bootCloneCommand);
@@ -1077,7 +1187,7 @@ static string[] RewriteLegacyArgs(string[] rawArgs)
 
 static bool IsBootSubcommand(string value)
 {
-    return value is "show" or "clear" or "clone" or "-h" or "--help";
+    return value is "export" or "import" or "show" or "clear" or "clone" or "-h" or "--help";
 }
 
 static DiskService CreateDiskService()

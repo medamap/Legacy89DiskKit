@@ -120,7 +120,7 @@ public class DiskCloneService
 
             var fileNames = srcFs.GetFiles()
                 .Where(entry => !entry.Attributes.StandardAttributes.HasFlag(Domain.FileSystem.Model.FileAttributes.Directory))
-                .Select(entry => entry.FileName);
+                .Select(entry => entry.FullName);
 
             TransferFiles(srcFs, dstFs, fileNames, srcAdapter, dstAdapter);
         }
@@ -129,6 +129,24 @@ public class DiskCloneService
             if (srcAdapter is Legacy89DiskKit.Infrastructure.FileSystem.XDos.XDosTransferAdapter srcFinal) srcFinal.IsCloneMode = srcPrevMode;
             if (dstAdapter is Legacy89DiskKit.Infrastructure.FileSystem.XDos.XDosTransferAdapter dstFinal) dstFinal.IsCloneMode = dstPrevMode;
         }
+    }
+
+    /// <summary>
+    /// Clones a Hu-BASIC disk to a new destination: formats the destination, copies the boot area,
+    /// then transfers all files using HuBasicTransferAdapter for high fidelity.
+    /// </summary>
+    public void CloneHuBasicBootable(
+        IFileSystem srcFs, IFileSystemTransferAdapter srcAdapter,
+        IFileSystem dstFs, IFileSystemTransferAdapter dstAdapter)
+    {
+        var bootArea = srcFs.ReadBootArea();
+        dstFs.Format();
+        dstFs.WriteBootArea(bootArea);
+
+        var fileNames = srcFs.GetFiles()
+            .Select(entry => entry.FullName);
+
+        TransferFiles(srcFs, dstFs, fileNames, srcAdapter, dstAdapter);
     }
 
     /// <summary>

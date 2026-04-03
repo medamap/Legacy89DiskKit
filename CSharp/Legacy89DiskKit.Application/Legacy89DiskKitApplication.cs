@@ -46,6 +46,24 @@ public static class Legacy89DiskKitApplication
         return new FileSystem.DirectoryLayoutService();
     }
 
+    /// <summary>
+    /// Creates the supported boot profile service.
+    /// </summary>
+    public static FileSystem.IBootProfileService CreateBootProfileService()
+    {
+        return new FileSystem.CompositeBootProfileService();
+    }
+
+    public static FileSystem.IBootEntryExportService CreateBootEntryExportService()
+    {
+        return new FileSystem.BootEntryExportService();
+    }
+
+    public static FileSystem.IBootEntryImportService CreateBootEntryImportService()
+    {
+        return new FileSystem.BootEntryImportService();
+    }
+
     public static Drive.DriveMountService CreateDriveMountService()
     {
         return new Drive.DriveMountService();
@@ -202,6 +220,7 @@ public static class Legacy89DiskKitApplication
         var registry = new FileSystem.FileSystemRegistry();
         registry.Register(new XDosFileSystemProvider());
         registry.Register(new HuBasicFileSystemProvider());
+        registry.Register(new Infrastructure.FileSystem.Cpm.Provider.CpmFileSystemProvider());
         registry.Register(new N88BasicFileSystemProvider());
         registry.Register(new MsxDosFileSystemProvider());
         return registry;

@@ -32,7 +32,7 @@ public class FileSystemTransferOrchestrator
         var dstAdapter = Resolve(destFs);
 
         var entry = sourceFs.GetFiles()
-            .FirstOrDefault(e => e.FileName == sourceFileName)
+            .FirstOrDefault(e => e.FullName == sourceFileName)
             ?? throw new FileNotFoundException($"File not found: {sourceFileName}");
 
         var envelope = srcAdapter.Export(entry);

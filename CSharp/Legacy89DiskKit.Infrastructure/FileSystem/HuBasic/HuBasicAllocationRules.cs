@@ -8,18 +8,13 @@ public static class HuBasicAllocationRules
     public static int GetFatScanLimit(DiskType diskType, HuBasicConfiguration config)
     {
         if (config == null) throw new ArgumentNullException(nameof(config));
-        return diskType == DiskType.TwoHD ? 512 : config.TotalClusters;
+        return config.TotalClusters;
     }
 
     public static bool IsAllocatableCluster(DiskType diskType, HuBasicConfiguration config, int cluster)
     {
         if (config == null) throw new ArgumentNullException(nameof(config));
         if (cluster < config.ReservedClusters)
-        {
-            return false;
-        }
-
-        if (diskType == DiskType.TwoHD && (cluster % 256) >= 0x80)
         {
             return false;
         }

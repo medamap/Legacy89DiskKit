@@ -1,3 +1,5 @@
+using Legacy89DiskKit.Domain.CharacterEncoding.Model;
+
 namespace Legacy89DiskKit.Application.FileSystem;
 
 public enum BootInfoMode
@@ -11,5 +13,7 @@ public sealed record BootInfoSummary(
     BootInfoMode Mode,
     string? FileName = null,
     ushort? LoadAddress = null,
-    ushort? ExecutionAddress = null
+    ushort? ExecutionAddress = null,
+    string? DisplayName = null,
+    MachineType MachineFamily = MachineType.Unknown
 );

@@ -1,3 +1,4 @@
+using Legacy89DiskKit.Domain.CharacterEncoding.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
@@ -27,11 +28,11 @@ public class HuBasicMetadataService
             var fullName = string.IsNullOrWhiteSpace(bootRecord.Extension)
                 ? bootRecord.Name
                 : $"{bootRecord.Name}.{bootRecord.Extension}";
-            return new BootInfoSummary(BootInfoMode.FileBacked, fullName, bootRecord.LoadAddress, bootRecord.ExecutionAddress);
+            return new BootInfoSummary(BootInfoMode.FileBacked, fullName, bootRecord.LoadAddress, bootRecord.ExecutionAddress, MachineFamily: MachineType.X1);
         }
 
         return bootArea.Any(value => value != 0x00)
-            ? new BootInfoSummary(BootInfoMode.SectorResident)
+            ? new BootInfoSummary(BootInfoMode.SectorResident, MachineFamily: MachineType.X1)
             : new BootInfoSummary(BootInfoMode.None);
     }
 

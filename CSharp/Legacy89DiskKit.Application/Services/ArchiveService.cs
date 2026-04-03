@@ -121,6 +121,7 @@ public class ArchiveService
         
         Console.WriteLine($"Injecting '{sourceName}' as '{normalizedName}' (Encoding: {encodingId}, { (isAscii ? "ASCII" : "BIN") })...");
         fs.WriteFile(normalizedName, data, attributes);
+        diskService.Session?.Save();
     }
 
     private bool IsLikelyAscii(byte[] data)

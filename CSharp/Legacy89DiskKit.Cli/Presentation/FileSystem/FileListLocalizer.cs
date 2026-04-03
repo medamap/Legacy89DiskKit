@@ -144,6 +144,14 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string ValidationWarningLabel { get; }
     string BootShowTitle { get; }
     string OverwriteConfirmationMessage { get; }
+    string BootExportCommandDescription { get; }
+    string BootExportOutputOptionDescription { get; }
+    string BootEntriesExportedMessage { get; }
+    string BootNoEntriesFoundMessage { get; }
+    string BootImportCommandDescription { get; }
+    string BootImportBinaryOptionDescription { get; }
+    string BootImportMetadataOptionDescription { get; }
+    string BootEntryImportedMessage { get; }
 }
 
 public static class FileListLocalizer
@@ -307,6 +315,14 @@ public static class FileListLocalizer
         public abstract string BootModeNone { get; }
         public abstract string BootShowTitle { get; }
         public abstract string OverwriteConfirmationMessage { get; }
+        public abstract string BootExportCommandDescription { get; }
+        public abstract string BootExportOutputOptionDescription { get; }
+        public abstract string BootEntriesExportedMessage { get; }
+        public abstract string BootNoEntriesFoundMessage { get; }
+        public abstract string BootImportCommandDescription { get; }
+        public abstract string BootImportBinaryOptionDescription { get; }
+        public abstract string BootImportMetadataOptionDescription { get; }
+        public abstract string BootEntryImportedMessage { get; }
     }
 
     private sealed class EnglishConsoleLocalizer : ConsoleLocalizerBase
@@ -447,6 +463,14 @@ public static class FileListLocalizer
         public override string BootModeNone => "none";
         public override string BootShowTitle => "Boot Information";
         public override string OverwriteConfirmationMessage => "File '{0}' already exists. Overwrite? (y/N): ";
+        public override string BootExportCommandDescription => "Export boot entries as binary payloads and JSON sidecars";
+        public override string BootExportOutputOptionDescription => "Directory to write exported files to";
+        public override string BootEntriesExportedMessage => "Boot entries exported to: {0}";
+        public override string BootNoEntriesFoundMessage => "No exportable boot entries found on this disk.";
+        public override string BootImportCommandDescription => "Import a boot entry payload and its JSON sidecar metadata to the disk";
+        public override string BootImportBinaryOptionDescription => "Path to the .bin payload file";
+        public override string BootImportMetadataOptionDescription => "Path to the .json sidecar metadata file";
+        public override string BootEntryImportedMessage => "Boot entry successfully imported.";
     }
 
     private sealed class JapaneseConsoleLocalizer : ConsoleLocalizerBase
@@ -587,5 +611,13 @@ public static class FileListLocalizer
         public override string BootModeNone => "なし";
         public override string BootShowTitle => "ブート情報";
         public override string OverwriteConfirmationMessage => "ファイル '{0}' は既に存在します。上書きしますか？ (y/N): ";
+        public override string BootExportCommandDescription => "ブートエントリをバイナリデータとJSON情報ファイルとして出力します";
+        public override string BootExportOutputOptionDescription => "出力先ディレクトリ";
+        public override string BootEntriesExportedMessage => "ブートエントリを出力しました: {0}";
+        public override string BootNoEntriesFoundMessage => "出力可能なブートエントリが見つかりませんでした。";
+        public override string BootImportCommandDescription => "ブートエントリのバイナリとJSONメタデータをディスクにインポートします";
+        public override string BootImportBinaryOptionDescription => ".bin ペイロードファイルのパス";
+        public override string BootImportMetadataOptionDescription => ".json メタデータファイルのパス";
+        public override string BootEntryImportedMessage => "ブートエントリをインポートしました。";
     }
 }

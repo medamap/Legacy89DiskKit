@@ -1,3 +1,4 @@
+using Legacy89DiskKit.Domain.CharacterEncoding.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 
 namespace Legacy89DiskKit.Application.FileSystem;
@@ -19,9 +20,10 @@ public class X1BootEntrySummaryService
                     X1BootEntryKind.HuBasicFileBacked,
                     summary.FileName,
                     summary.LoadAddress,
-                    summary.ExecutionAddress);
+                    summary.ExecutionAddress,
+                    MachineFamily: MachineType.X1);
             }
-            return new X1BootEntrySummary(X1BootEntryKind.None);
+            return new X1BootEntrySummary(X1BootEntryKind.None, MachineFamily: MachineType.X1);
         }
 
         if (fsInfo.FileSystemName == "X-DOS")
@@ -29,12 +31,12 @@ public class X1BootEntrySummaryService
             var bootArea = fileSystem.ReadBootArea();
             if (IsXDosBootArea(bootArea))
             {
-                return new X1BootEntrySummary(X1BootEntryKind.XDosSectorResident);
+                return new X1BootEntrySummary(X1BootEntryKind.XDosSectorResident, MachineFamily: MachineType.X1);
             }
-            return new X1BootEntrySummary(X1BootEntryKind.None);
+            return new X1BootEntrySummary(X1BootEntryKind.None, MachineFamily: MachineType.X1);
         }
 
-        return new X1BootEntrySummary(X1BootEntryKind.Unsupported);
+        return new X1BootEntrySummary(X1BootEntryKind.Unsupported, MachineFamily: MachineType.Unknown);
     }
 
     private static bool IsXDosBootArea(byte[] bootArea)

@@ -2,18 +2,18 @@ using Legacy89DiskKit.Domain.CharacterEncoding.Model;
 
 namespace Legacy89DiskKit.Application.FileSystem;
 
-public enum X1BootEntryKind
+public enum Pc88BootEntryKind
 {
     None,
-    HuBasicFileBacked,
-    XDosSectorResident,
+    N88BasicSectorResident,
+    CpmSectorResident,
     Unsupported
 }
 
-public sealed record X1BootEntrySummary(
-    X1BootEntryKind Kind,
+public sealed record Pc88BootEntrySummary(
+    Pc88BootEntryKind Kind,
     string? DisplayName = null,
     ushort? LoadAddress = null,
     ushort? ExecutionAddress = null,
-    MachineType MachineFamily = MachineType.X1
+    MachineType MachineFamily = MachineType.PC8801
 );
