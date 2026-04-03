@@ -1,5 +1,6 @@
 using System.CommandLine;
 using System.Text;
+using Legacy89DiskKit.Cli;
 using Legacy89DiskKit.Application.CharacterEncoding;
 using Legacy89DiskKit.Application;
 using Legacy89DiskKit.Application.DiskImage;
@@ -27,7 +28,7 @@ if (requestedLanguage is { } languageCode && languageCode is not ("ja" or "en"))
     return 1;
 }
 
-var effectiveArgs = RewriteLegacyArgs(args);
+var effectiveArgs = RewriteUpdateCheckArgs(RewriteLegacyArgs(args));
 
 var localizer = FileListLocalizer.Create(requestedLanguage);
 var archiveService = new ArchiveService();
@@ -40,9 +41,11 @@ var rootCommand = new RootCommand(localizer.RootDescription);
 var languageOption = new Option<string?>(new[] { "--language", "-l" }, localizer.LanguageOptionDescription);
 var encodingOption = new Option<string?>(new[] { "--encoding", "-e" }, localizer.EncodingOptionDescription);
 var nativeOption = new Option<bool>(new[] { "--native" }, "Use C++ native implementation via NativeBridge");
+var checkUpdateOption = new Option<bool>("--check-update", localizer.CheckUpdateCommandDescription);
 rootCommand.AddGlobalOption(languageOption);
 rootCommand.AddGlobalOption(encodingOption);
 rootCommand.AddGlobalOption(nativeOption);
+rootCommand.AddGlobalOption(checkUpdateOption);
 
 // Initialize backend based on command line args
 if (effectiveArgs.Contains("--native"))
@@ -1139,6 +1142,37 @@ injectCommand.SetHandler((string imagePath, string hostFilePath, string? targetN
     }
 }, imageArgument, hostFileArgument, targetFileNameOption, encodingOption);
 
+var checkUpdateCommand = new Command("check-update", localizer.CheckUpdateCommandDescription);
+checkUpdateCommand.SetHandler(async () =>
+{
+    try
+    {
+        var checker = new ReleaseUpdateChecker();
+        var result = await checker.CheckAsync();
+
+        Console.WriteLine($"{localizer.CheckUpdateCurrentVersionLabel}: {result.CurrentVersion}");
+        Console.WriteLine($"{localizer.CheckUpdateLatestVersionLabel}: {result.LatestVersion ?? "unknown"}");
+
+        if (!string.IsNullOrWhiteSpace(result.ReleaseUrl))
+        {
+            Console.WriteLine($"{localizer.CheckUpdateReleaseUrlLabel}: {result.ReleaseUrl}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(result.WindowsMsiUrl))
+        {
+            Console.WriteLine($"{localizer.CheckUpdateWindowsMsiLabel}: {result.WindowsMsiUrl}");
+        }
+
+        Console.WriteLine(result.IsUpdateAvailable
+            ? localizer.CheckUpdateAvailableMessage
+            : localizer.CheckUpdateUpToDateMessage);
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+});
+
 rootCommand.AddCommand(listCommand);
 rootCommand.AddCommand(fileCommand);
 rootCommand.AddCommand(diskCommand);
@@ -1146,6 +1180,7 @@ rootCommand.AddCommand(hostCommand);
 rootCommand.AddCommand(bootCommand);
 rootCommand.AddCommand(layoutCommand);
 rootCommand.AddCommand(injectCommand);
+rootCommand.AddCommand(checkUpdateCommand);
 
 return await rootCommand.InvokeAsync(effectiveArgs);
 
@@ -1183,6 +1218,17 @@ static string[] RewriteLegacyArgs(string[] rawArgs)
     }
 
     return rawArgs;
+}
+
+static string[] RewriteUpdateCheckArgs(string[] rawArgs)
+{
+    if (!rawArgs.Any(arg => arg == "--check-update"))
+    {
+        return rawArgs;
+    }
+
+    var filteredArgs = rawArgs.Where(arg => arg != "--check-update").ToArray();
+    return ["check-update", .. filteredArgs];
 }
 
 static bool IsBootSubcommand(string value)

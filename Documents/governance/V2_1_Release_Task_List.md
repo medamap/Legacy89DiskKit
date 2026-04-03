@@ -10,12 +10,17 @@
 - `communication/` excluded from publication flow
 - Hu-BASIC empty-format parity aligned with true formatted disks
 - X1 Hu-BASIC logical-copy behavior improved enough for direct emulator validation
+- public CLI command alias direction fixed to `l89`
+- cross-platform local install scripts added
+- `l89 --check-update` added
+- Windows MSI build path prepared for a Windows host with WiX v4
 
 ## In Progress
 
 - README refresh for the new public baseline
 - public-facing support status split into dedicated guides
 - public-facing common use-case guide split from README
+- release-facing install and update guidance refinement
 
 ## Pending Before Main Merge
 
@@ -29,6 +34,7 @@
 - confirm release target commit
 - merge the refreshed `develop` into `main`
 - run release build for standalone CLI artifacts
+- build the Windows MSI on a Windows host with WiX v4 if it is part of the release payload
 - verify release archives locally
 - create a fresh `v2.1.0` tag
 - publish a fresh `v2.1.0` GitHub release with standalone CLI binaries

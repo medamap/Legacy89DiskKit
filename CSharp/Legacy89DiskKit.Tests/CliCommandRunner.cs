@@ -12,6 +12,13 @@ internal static class CliCommandRunner
 {
     public static async Task<CliCommandResult> RunAsync(params string[] arguments)
     {
+        return await RunAsync(arguments, null);
+    }
+
+    public static async Task<CliCommandResult> RunAsync(
+        IReadOnlyList<string> arguments,
+        IReadOnlyDictionary<string, string?>? environmentVariables)
+    {
         var cliDllPath = GetRepoPath("csharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll");
         Assert.True(File.Exists(cliDllPath), $"CLI assembly was not found: {cliDllPath}");
 
@@ -30,6 +37,21 @@ internal static class CliCommandRunner
                 WorkingDirectory = GetRepoPath(string.Empty)
             }
         };
+
+        if (environmentVariables != null)
+        {
+            foreach (var pair in environmentVariables)
+            {
+                if (pair.Value == null)
+                {
+                    process.StartInfo.Environment.Remove(pair.Key);
+                }
+                else
+                {
+                    process.StartInfo.Environment[pair.Key] = pair.Value;
+                }
+            }
+        }
 
         process.Start();
 

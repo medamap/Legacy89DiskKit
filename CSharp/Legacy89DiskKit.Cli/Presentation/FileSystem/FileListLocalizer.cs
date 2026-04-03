@@ -152,6 +152,13 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string BootImportBinaryOptionDescription { get; }
     string BootImportMetadataOptionDescription { get; }
     string BootEntryImportedMessage { get; }
+    string CheckUpdateCommandDescription { get; }
+    string CheckUpdateCurrentVersionLabel { get; }
+    string CheckUpdateLatestVersionLabel { get; }
+    string CheckUpdateReleaseUrlLabel { get; }
+    string CheckUpdateWindowsMsiLabel { get; }
+    string CheckUpdateAvailableMessage { get; }
+    string CheckUpdateUpToDateMessage { get; }
 }
 
 public static class FileListLocalizer
@@ -323,6 +330,13 @@ public static class FileListLocalizer
         public abstract string BootImportBinaryOptionDescription { get; }
         public abstract string BootImportMetadataOptionDescription { get; }
         public abstract string BootEntryImportedMessage { get; }
+        public abstract string CheckUpdateCommandDescription { get; }
+        public abstract string CheckUpdateCurrentVersionLabel { get; }
+        public abstract string CheckUpdateLatestVersionLabel { get; }
+        public abstract string CheckUpdateReleaseUrlLabel { get; }
+        public abstract string CheckUpdateWindowsMsiLabel { get; }
+        public abstract string CheckUpdateAvailableMessage { get; }
+        public abstract string CheckUpdateUpToDateMessage { get; }
     }
 
     private sealed class EnglishConsoleLocalizer : ConsoleLocalizerBase
@@ -471,6 +485,13 @@ public static class FileListLocalizer
         public override string BootImportBinaryOptionDescription => "Path to the .bin payload file";
         public override string BootImportMetadataOptionDescription => "Path to the .json sidecar metadata file";
         public override string BootEntryImportedMessage => "Boot entry successfully imported.";
+        public override string CheckUpdateCommandDescription => "Check GitHub Releases for a newer public version";
+        public override string CheckUpdateCurrentVersionLabel => "Current version";
+        public override string CheckUpdateLatestVersionLabel => "Latest version";
+        public override string CheckUpdateReleaseUrlLabel => "Release URL";
+        public override string CheckUpdateWindowsMsiLabel => "Windows MSI";
+        public override string CheckUpdateAvailableMessage => "An update is available.";
+        public override string CheckUpdateUpToDateMessage => "You are using the latest version.";
     }
 
     private sealed class JapaneseConsoleLocalizer : ConsoleLocalizerBase
@@ -619,5 +640,12 @@ public static class FileListLocalizer
         public override string BootImportBinaryOptionDescription => ".bin ペイロードファイルのパス";
         public override string BootImportMetadataOptionDescription => ".json メタデータファイルのパス";
         public override string BootEntryImportedMessage => "ブートエントリをインポートしました。";
+        public override string CheckUpdateCommandDescription => "GitHub Releases を確認して新しい公開版があるか調べます";
+        public override string CheckUpdateCurrentVersionLabel => "現在のバージョン";
+        public override string CheckUpdateLatestVersionLabel => "最新バージョン";
+        public override string CheckUpdateReleaseUrlLabel => "リリースURL";
+        public override string CheckUpdateWindowsMsiLabel => "Windows MSI";
+        public override string CheckUpdateAvailableMessage => "新しいバージョンがあります。";
+        public override string CheckUpdateUpToDateMessage => "現在のバージョンは最新です。";
     }
 }

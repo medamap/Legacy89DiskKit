@@ -211,6 +211,7 @@ Archive names:
 - `Legacy89DiskKit.Cli-vX.Y.Z-linux-x64.tar.gz`
 - `Legacy89DiskKit.Cli-vX.Y.Z-osx-x64.tar.gz`
 - `Legacy89DiskKit.Cli-vX.Y.Z-osx-arm64.tar.gz`
+- `Legacy89DiskKit.Cli-vX.Y.Z-win-x64.msi` (when built on Windows with WiX v4)
 - `Legacy89DiskKit.Native-vX.Y.Z-<host-rid>.zip|tar.gz`
 
 ## Smoke Checks
@@ -221,6 +222,11 @@ The local release script verifies at minimum:
 - `Legacy89DiskKit.Cli disk --help`
 - `Legacy89DiskKit.Cli list --help`
 - one real command against a known sample image on the host platform
+
+The installed-command smoke check should verify at minimum:
+
+- `l89 --help`
+- `l89 --check-update`
 
 Also verify that documented options match the actual CLI:
 
@@ -265,6 +271,14 @@ The effective script behavior is equivalent to:
 
 ```bash
 dotnet publish CSharp/Legacy89DiskKit.NativeInterop/Legacy89DiskKit.NativeInterop.csproj -c Release -r <host-rid> -p:PublishAot=true -p:NativeLib=Shared -o publish/vX.Y.Z/native/<host-rid>/build
+```
+
+## Optional Windows MSI Packaging
+
+On a Windows host with WiX v4 installed, create the per-user MSI after the `win-x64` standalone publish is available:
+
+```powershell
+./scripts/build-cli-msi.ps1 -Version X.Y.Z
 ```
 
 ## Final v2.0.0 Closure Checklist
