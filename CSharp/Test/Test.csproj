@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Legacy89DiskKit\Legacy89DiskKit.csproj" />
+    <ProjectReference Include="..\..\obsolete\CSharp.Legacy89DiskKit\Legacy89DiskKit.csproj" />
   </ItemGroup>
 
   <ItemGroup>
