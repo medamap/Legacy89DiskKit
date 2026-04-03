@@ -76,6 +76,8 @@ On macOS or Linux, install a published CLI and create the public `l89` command:
 ./scripts/install.sh
 ```
 
+If your current shell does not pick up the updated `PATH` automatically, run the printed `export PATH=...` line once.
+
 To install from an existing published directory instead:
 
 ```bash
@@ -87,6 +89,8 @@ On Windows, install the CLI into the current user profile and add it to `PATH`:
 ```powershell
 ./scripts/install.ps1
 ```
+
+The PowerShell installer also updates the current PowerShell session `PATH` when needed.
 
 To install from an existing published directory instead:
 

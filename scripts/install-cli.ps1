@@ -87,11 +87,33 @@ $CmdBody = "@echo off`r`n`"%~dp0Legacy89DiskKit.Cli.exe`" %*`r`n"
 [System.IO.File]::WriteAllText($TargetCmd, $CmdBody, [System.Text.Encoding]::ASCII)
 
 $entries = @(Get-UserPathEntries)
+$userPathUpdated = $false
 if ($entries -notcontains $BinRoot) {
     $entries += $BinRoot
     Set-UserPathEntries $entries
+    $userPathUpdated = $true
+}
+
+$sessionEntries = @()
+if (-not [string]::IsNullOrWhiteSpace($env:PATH)) {
+    $sessionEntries = $env:PATH.Split(';', [System.StringSplitOptions]::RemoveEmptyEntries)
+}
+$sessionPathUpdated = $false
+if ($sessionEntries -notcontains $BinRoot) {
+    $env:PATH = if ([string]::IsNullOrWhiteSpace($env:PATH)) {
+        $BinRoot
+    } else {
+        "$BinRoot;$env:PATH"
+    }
+    $sessionPathUpdated = $true
 }
 
 Write-Host "Installed:"
 Write-Host "  $TargetExe"
 Write-Host "  $TargetCmd"
+if ($userPathUpdated) {
+    Write-Host "User PATH updated for future sessions: $BinRoot"
+}
+if ($sessionPathUpdated) {
+    Write-Host "Current PowerShell session PATH updated for: $BinRoot"
+}
