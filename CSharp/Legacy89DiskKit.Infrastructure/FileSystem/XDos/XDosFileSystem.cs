@@ -47,6 +47,8 @@ public class XDosFileSystem : IFileSystem
         FileSystemCapabilities.SupportsAttributes |
         FileSystemCapabilities.FixedFileNameLength;
 
+    public XDosMediaGeometry Geometry => _geometry;
+
     public DiskFileSystemInfo GetFileSystemInfo()
     {
         int free    = _fat.CountFreeRecords();
@@ -65,6 +67,18 @@ public class XDosFileSystem : IFileSystem
     public IReadOnlyList<XDosFamEntry> GetFamEntries(XDosDirectoryEntry entry)
     {
         return _fam.ReadFam(entry.FamPointer);
+    }
+
+    public XDosDirectoryEntry? FindDirectoryEntry(byte[] rawName, ushort rawType)
+    {
+        var normalized = NormalizeRawName(rawName);
+        return GetDirectory().FirstOrDefault(e => e.RawFileName.SequenceEqual(normalized) && e.RawFileType == rawType);
+    }
+
+    public byte[] ReadDirectoryEntryBytes(int sectorNumber, int offset)
+    {
+        var sector = _container.ReadSector(0, 1, sectorNumber);
+        return sector.AsSpan(offset, 32).ToArray();
     }
 
     public (int Sector, int Offset)? FindDirectorySlot(byte[] rawName, ushort rawType)

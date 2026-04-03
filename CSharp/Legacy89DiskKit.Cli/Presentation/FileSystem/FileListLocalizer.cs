@@ -14,6 +14,8 @@ public interface IFileListLocalizer
     string BootFileLabel { get; }
     string BootLoadLabel { get; }
     string BootExecLabel { get; }
+    string DirectoryAddressHeader { get; }
+    string BodyAddressHeader { get; }
     string BootModeFileBacked { get; }
     string BootModeSectorResident { get; }
     string BootModeNone { get; }
@@ -48,6 +50,7 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string LanguageOptionDescription { get; }
     string EncodingOptionDescription { get; }
     string FullHelpOptionDescription { get; }
+    string OutputFormatOptionDescription { get; }
     string RootDescription { get; }
     string FullHelpCommandDescription { get; }
     string ListCommandDescription { get; }
@@ -66,6 +69,8 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string FileRenameCommandDescription { get; }
     string FileCopyCommandDescription { get; }
     string FileCrossCopyCommandDescription { get; }
+    string FileInspectorCommandDescription { get; }
+    string FileInspectorDetailOptionDescription { get; }
     string DiskCommandDescription { get; }
     string DiskInspectorCommandDescription { get; }
     string DiskInspectorDetailOptionDescription { get; }
@@ -127,6 +132,7 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string DiskCreateFileSystemOptionDescription { get; }
     string DiskCreateNameOptionDescription { get; }
     string DiskFormatFsOptionDescription { get; }
+    string ExplicitFileSystemOptionDescription { get; }
     string SectorLocationArgumentDescription { get; }
     string SectorCountArgumentDescription { get; }
     string DumpLocationArgumentDescription { get; }
@@ -224,6 +230,8 @@ public static class FileListLocalizer
         public abstract string BootFileLabel { get; }
         public abstract string BootLoadLabel { get; }
         public abstract string BootExecLabel { get; }
+        public abstract string DirectoryAddressHeader { get; }
+        public abstract string BodyAddressHeader { get; }
         public abstract string NameHeader { get; }
         public abstract string AttrHeader { get; }
         public abstract string SizeHeader { get; }
@@ -251,6 +259,7 @@ public static class FileListLocalizer
         public abstract string LanguageOptionDescription { get; }
         public abstract string EncodingOptionDescription { get; }
         public abstract string FullHelpOptionDescription { get; }
+        public abstract string OutputFormatOptionDescription { get; }
         public abstract string RootDescription { get; }
         public abstract string FullHelpCommandDescription { get; }
         public abstract string ListCommandDescription { get; }
@@ -269,6 +278,8 @@ public static class FileListLocalizer
         public abstract string FileRenameCommandDescription { get; }
         public abstract string FileCopyCommandDescription { get; }
         public abstract string FileCrossCopyCommandDescription { get; }
+        public abstract string FileInspectorCommandDescription { get; }
+        public abstract string FileInspectorDetailOptionDescription { get; }
         public abstract string DiskCommandDescription { get; }
         public abstract string DiskInspectorCommandDescription { get; }
         public abstract string DiskInspectorDetailOptionDescription { get; }
@@ -330,6 +341,7 @@ public static class FileListLocalizer
         public abstract string DiskCreateFileSystemOptionDescription { get; }
         public abstract string DiskCreateNameOptionDescription { get; }
         public abstract string DiskFormatFsOptionDescription { get; }
+        public abstract string ExplicitFileSystemOptionDescription { get; }
         public abstract string SectorLocationArgumentDescription { get; }
         public abstract string SectorCountArgumentDescription { get; }
         public abstract string DumpLocationArgumentDescription { get; }
@@ -407,6 +419,8 @@ public static class FileListLocalizer
         public override string BootFileLabel => "Boot File";
         public override string BootLoadLabel => "Boot Load";
         public override string BootExecLabel => "Boot Exec";
+        public override string DirectoryAddressHeader => "DIR-ADR";
+        public override string BodyAddressHeader => "BDY-ADR";
         public override string NameHeader => "Name";
         public override string AttrHeader => "Attr";
         public override string SizeHeader => "Size";
@@ -434,6 +448,7 @@ public static class FileListLocalizer
         public override string LanguageOptionDescription => "Override UI language: ja or en";
         public override string EncodingOptionDescription => "Override disk filename decoding and text I/O encoding (accepted examples: X1, SJIS, Shift-JIS, ShiftJIS, shift_jis)";
         public override string FullHelpOptionDescription => "Print the complete command reference";
+        public override string OutputFormatOptionDescription => "Output format: table or csv";
         public override string RootDescription => "Legacy89DiskKit CLI. Use --full-help for the complete command reference.";
         public override string FullHelpCommandDescription => "Print the complete command reference";
         public override string ListCommandDescription => "List files and disk summary information";
@@ -452,6 +467,8 @@ public static class FileListLocalizer
         public override string FileRenameCommandDescription => "Rename one disk file";
         public override string FileCopyCommandDescription => "Duplicate a file inside the same disk image";
         public override string FileCrossCopyCommandDescription => "Copy files between different disk images with filename auto-shortening";
+        public override string FileInspectorCommandDescription => "Inspect one file in detail";
+        public override string FileInspectorDetailOptionDescription => "Detail level: short, normal, or full";
         public override string DiskCommandDescription => "Disk-level operations";
         public override string DiskInspectorCommandDescription => "Inspect disk/container, file system, and boot metadata";
         public override string DiskInspectorDetailOptionDescription => "Detail level: short, normal, or full";
@@ -513,6 +530,7 @@ public static class FileListLocalizer
         public override string DiskCreateFileSystemOptionDescription => "Optional file system to initialize: hu-basic, n88-basic, msx-dos, or xdos. When omitted, the disk remains unformatted";
         public override string DiskCreateNameOptionDescription => "Optional disk name for image containers that support it";
         public override string DiskFormatFsOptionDescription => "Explicit file system to format: hu-basic, n88-basic, msx-dos, or xdos";
+        public override string ExplicitFileSystemOptionDescription => "Explicit file system to use: hu-basic, n88-basic, msx-dos, or xdos";
         public override string SectorLocationArgumentDescription => "Starting linear sector number";
         public override string SectorCountArgumentDescription => "Number of sectors";
         public override string DumpLocationArgumentDescription => "Location: offset (0x...), linear sector, or cylinderN,sideN,sectorN";
@@ -590,6 +608,8 @@ public static class FileListLocalizer
         public override string BootFileLabel => "ブートファイル";
         public override string BootLoadLabel => "ブートLoad";
         public override string BootExecLabel => "ブートExec";
+        public override string DirectoryAddressHeader => "DIR-ADR";
+        public override string BodyAddressHeader => "BDY-ADR";
         public override string NameHeader => "名前";
         public override string AttrHeader => "属性";
         public override string SizeHeader => "サイズ";
@@ -617,6 +637,7 @@ public static class FileListLocalizer
         public override string LanguageOptionDescription => "UI 表示言語を指定します: ja または en";
         public override string EncodingOptionDescription => "ディスク上ファイル名の表示デコードやテキスト入出力の文字エンコーディングを上書きします（指定例: X1, SJIS, Shift-JIS, ShiftJIS, shift_jis）";
         public override string FullHelpOptionDescription => "全コマンドのヘルプをまとめて表示します";
+        public override string OutputFormatOptionDescription => "出力形式: table または csv";
         public override string RootDescription => "Legacy89DiskKit CLI。--full-help で全コマンドのヘルプを表示できます。";
         public override string FullHelpCommandDescription => "全コマンドのヘルプをまとめて表示します";
         public override string ListCommandDescription => "ファイル一覧とディスク概要を表示します";
@@ -635,6 +656,8 @@ public static class FileListLocalizer
         public override string FileRenameCommandDescription => "ディスク上のファイル名を変更します";
         public override string FileCopyCommandDescription => "同一ディスク内でファイルを複製します";
         public override string FileCrossCopyCommandDescription => "異なるディスクイメージ間でファイルをコピーします（ファイル名自動短縮機能付き）";
+        public override string FileInspectorCommandDescription => "単一ファイルの詳細情報を確認します";
+        public override string FileInspectorDetailOptionDescription => "詳細レベル: short, normal, full";
         public override string DiskCommandDescription => "ディスク単位の操作";
         public override string DiskInspectorCommandDescription => "コンテナ、ファイルシステム、ブート情報をまとめて確認します";
         public override string DiskInspectorDetailOptionDescription => "詳細レベル: short, normal, full";
@@ -696,6 +719,7 @@ public static class FileListLocalizer
         public override string DiskCreateFileSystemOptionDescription => "初期化する任意のファイルシステム: hu-basic, n88-basic, msx-dos, xdos。省略時は未フォーマットのままです";
         public override string DiskCreateNameOptionDescription => "対応コンテナに設定する任意のディスク名";
         public override string DiskFormatFsOptionDescription => "明示的にフォーマットするファイルシステム: hu-basic, n88-basic, msx-dos, xdos";
+        public override string ExplicitFileSystemOptionDescription => "明示的に使用するファイルシステム: hu-basic, n88-basic, msx-dos, xdos";
         public override string SectorLocationArgumentDescription => "開始する線形セクタ番号";
         public override string SectorCountArgumentDescription => "対象セクタ数";
         public override string DumpLocationArgumentDescription => "位置指定: offset (0x...), 線形セクタ番号, または cylinderN,sideN,sectorN";

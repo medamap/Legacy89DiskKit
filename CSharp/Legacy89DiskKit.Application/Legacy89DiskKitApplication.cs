@@ -64,6 +64,16 @@ public static class Legacy89DiskKitApplication
         return new FileSystem.BootEntryImportService();
     }
 
+    public static FileSystem.DiskInspectionService CreateDiskInspectionService()
+    {
+        return new FileSystem.DiskInspectionService();
+    }
+
+    public static FileSystem.FileInspectionService CreateFileInspectionService()
+    {
+        return new FileSystem.FileInspectionService();
+    }
+
     public static Drive.DriveMountService CreateDriveMountService()
     {
         return new Drive.DriveMountService();

@@ -26,7 +26,9 @@ public sealed record FileListEntryContext(
     string DisplayName,
     string DisplayBaseName,
     string DisplayExtension,
-    long? ActualSize = null
+    long? ActualSize = null,
+    long? DirectoryOffset = null,
+    long? BodyOffset = null
 );
 
 public sealed record FileListFormatContext(

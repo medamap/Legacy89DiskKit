@@ -75,6 +75,51 @@ public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
         return files;
     }
 
+    public (int SectorIndex, int Offset)? FindDirectorySlot(string fileName)
+    {
+        for (int s = 0; s < _config.DirectorySectors; s++)
+        {
+            var dirData = ReadDirectorySector(s);
+            for (int offset = 0; offset < _config.SectorSize; offset += 32)
+            {
+                byte mode = dirData[offset];
+                if (mode == 0xFF) return null;
+                if (mode == 0x00 || mode == 0xE5) continue;
+
+                var entryData = new byte[32];
+                Array.Copy(dirData, offset, entryData, 0, 32);
+                var entry = _dirParser.Parse(entryData);
+                if (entry.FullName.Equals(fileName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return (s, offset);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public byte[] ReadDirectoryEntryBytes(int sectorIndex, int offset)
+    {
+        var sector = ReadDirectorySector(sectorIndex);
+        return sector.AsSpan(offset, 32).ToArray();
+    }
+
+    public IReadOnlyList<int> GetClusterChain(int startCluster)
+    {
+        return _fatManager.GetClusterChain(startCluster);
+    }
+
+    public int GetStartRecordForCluster(int startCluster)
+    {
+        return startCluster * (_config.ClusterSize / _config.SectorSize);
+    }
+
+    public int GetDirectoryRecordNumber(int sectorIndex)
+    {
+        return (_config.DirectoryTrack * _config.SectorsPerTrack) + (_config.DirectorySector - 1) + sectorIndex;
+    }
+
     public byte[] ReadFile(string fileName)
     {
         var file = GetFiles().FirstOrDefault(f => f.FullName.Equals(fileName, StringComparison.OrdinalIgnoreCase));

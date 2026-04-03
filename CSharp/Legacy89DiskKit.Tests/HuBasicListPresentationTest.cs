@@ -73,9 +73,9 @@ public class HuBasicListPresentationTest
             new FileListEntryContext(entry, "PROGRAM.BIN", "PROGRAM", "BIN", 32)
         }), Localizer);
 
-        Assert.Equal(new[] { Localizer.NameHeader, Localizer.TypeHeader, Localizer.FlagsHeader, Localizer.SizeHeader, Localizer.LoadHeader, Localizer.EndHeader, Localizer.ExecHeader, Localizer.ClusterHeader, Localizer.NoteHeader }, view.Columns.Select(column => column.Header).ToArray());
+        Assert.Equal(new[] { Localizer.NameHeader, Localizer.TypeHeader, Localizer.FlagsHeader, Localizer.SizeHeader, Localizer.LoadHeader, Localizer.EndHeader, Localizer.ExecHeader, Localizer.DirectoryAddressHeader, Localizer.BodyAddressHeader, Localizer.NoteHeader }, view.Columns.Select(column => column.Header).ToArray());
         Assert.Single(view.Rows);
-        Assert.Equal(new[] { "PROGRAM      .BIN", "BIN", "PHVW", "32", "1200", "121F", "1300", "5", "" }, view.Rows[0].Values.ToArray());
+        Assert.Equal(new[] { "PROGRAM      .BIN", "BIN", "PHVW", "32", "1200", "121F", "1300", "--------", "--------", "" }, view.Rows[0].Values.ToArray());
         Assert.NotEmpty(view.Summary);
         Assert.NotEmpty(view.Legends);
     }
@@ -185,8 +185,8 @@ public class HuBasicListPresentationTest
                 new FileListEntryContext(basicEntry, "HELLO.BAS", "HELLO", "BAS", 135)
             }), Localizer);
 
-        Assert.Equal("*1", view.Rows[0].Values[8]);
-        Assert.Equal("*2", view.Rows[1].Values[8]);
+        Assert.Equal("*1", view.Rows[0].Values[9]);
+        Assert.Equal("*2", view.Rows[1].Values[9]);
         Assert.Equal(2, view.Footnotes.Count);
     }
 
@@ -217,7 +217,7 @@ public class HuBasicListPresentationTest
                 new FileListEntryContext(entry, "------------- .---", "-------------", "---", 0)
             }), Localizer);
 
-        Assert.Equal("*1", view.Rows[0].Values[8]);
+        Assert.Equal("*1", view.Rows[0].Values[9]);
         Assert.Single(view.Footnotes);
         Assert.Contains(view.Footnotes, item => item.Text == Localizer.HuBasicLabelEntryNote);
     }

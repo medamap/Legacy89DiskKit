@@ -14,6 +14,7 @@ using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
+using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;
@@ -36,6 +37,8 @@ var huBasicMetadataService = new HuBasicMetadataService();
 var directoryLayoutService = new DirectoryLayoutService();
 var explicitFileSystemResolver = new ExplicitFileSystemResolver();
 var bootProfileService = Legacy89DiskKitApplication.CreateBootProfileService();
+var diskInspectionService = Legacy89DiskKitApplication.CreateDiskInspectionService();
+var fileInspectionService = Legacy89DiskKitApplication.CreateFileInspectionService();
 
 var rootCommand = new RootCommand(localizer.RootDescription);
 
@@ -44,11 +47,13 @@ var encodingOption = new Option<string?>(new[] { "--encoding", "-e" }, localizer
 var nativeOption = new Option<bool>(new[] { "--native" }, "Use C++ native implementation via NativeBridge");
 var checkUpdateOption = new Option<bool>("--check-update", localizer.CheckUpdateCommandDescription);
 var fullHelpOption = new Option<bool>("--full-help", localizer.FullHelpOptionDescription);
+var outputFormatOption = new Option<string>("--output-format", () => "table", localizer.OutputFormatOptionDescription);
 rootCommand.AddGlobalOption(languageOption);
 rootCommand.AddGlobalOption(encodingOption);
 rootCommand.AddGlobalOption(nativeOption);
 rootCommand.AddGlobalOption(checkUpdateOption);
 rootCommand.AddGlobalOption(fullHelpOption);
+rootCommand.AddGlobalOption(outputFormatOption);
 
 // Initialize backend based on command line args
 if (effectiveArgs.Contains("--native"))
@@ -70,6 +75,7 @@ else
 }
 
 var imageArgument = new Argument<string>("image", localizer.ImageArgumentDescription);
+var explicitFileSystemOption = new Option<string?>(new[] { "--file-system", "-f" }, localizer.ExplicitFileSystemOptionDescription);
 
 var fullHelpCommand = new Command("full-help", localizer.FullHelpCommandDescription);
 fullHelpCommand.SetHandler(() =>
@@ -85,14 +91,15 @@ versionCommand.SetHandler(() =>
 
 var listCommand = new Command("list", localizer.ListCommandDescription);
 listCommand.AddArgument(imageArgument);
-listCommand.SetHandler((string imagePath, string? encodingOverride) =>
+listCommand.AddOption(explicitFileSystemOption);
+listCommand.SetHandler((string imagePath, string? fileSystemName, string? encodingOverride, string outputFormat) =>
 {
     Console.WriteLine($"{localizer.ListingFilesForMessage}: {imagePath}");
     try
     {
         using var diskService = CreateDiskService();
-        diskService.OpenDisk(imagePath, true);
-        var fs = RequireFileSystem(diskService.FileSystem, localizer);
+        var container = diskService.OpenDisk(imagePath, true);
+        var fs = RequireFileSystem(ResolveFileSystem(diskService, container, fileSystemName, explicitFileSystemResolver), localizer);
         if (fs == null)
         {
             return;
@@ -106,15 +113,16 @@ listCommand.SetHandler((string imagePath, string? encodingOverride) =>
         var bootRecordInfo = huBasicMetadataService.GetBootRecordInfo(fs);
         var bootSummary = huBasicMetadataService.GetBootSummary(fs);
         var view = formatter.Format(new FileListFormatContext(fsInfo, entries, bootRecordInfo, bootSummary), localizer);
-        RenderFileList(view, localizer);
+        RenderFileList(view, localizer, outputFormat);
     }
     catch (Exception ex)
     {
         PrintError(localizer, ex.Message);
     }
-}, imageArgument, encodingOption);
+}, imageArgument, explicitFileSystemOption, encodingOption, outputFormatOption);
 
 var fileCommand = new Command("file", localizer.FileCommandDescription);
+var fileInspectorDetailOption = new Option<string>("--detail", () => "normal", localizer.FileInspectorDetailOptionDescription);
 var diskFileArgument = new Argument<string>("disk-file", localizer.DiskFileArgumentDescription);
 var hostFileArgument = new Argument<string>("host-file", localizer.HostFileArgumentDescription);
 var hostPathArgument = new Argument<string>("host-path", localizer.HostPathArgumentDescription);
@@ -287,29 +295,51 @@ fileCrossCopyCommand.SetHandler((string srcPath, string destPath, string[] files
     }
 }, sourceImageArgument, destImageArgument, filesArgument, encodingOption);
 
+var fileInspectorCommand = new Command("inspector", localizer.FileInspectorCommandDescription);
+fileInspectorCommand.AddArgument(imageArgument);
+fileInspectorCommand.AddArgument(diskFileArgument);
+fileInspectorCommand.AddOption(fileInspectorDetailOption);
+fileInspectorCommand.AddOption(outputFormatOption);
+fileInspectorCommand.AddOption(explicitFileSystemOption);
+fileInspectorCommand.AddOption(encodingOption);
+fileInspectorCommand.SetHandler((string imagePath, string diskFileName, string detail, string outputFormat, string? fileSystemName, string? encodingOverride) =>
+{
+    try
+    {
+        PrintFileInspector(imagePath, diskFileName, detail, outputFormat, fileSystemName, encodingOverride, localizer, archiveService, fileInspectionService, explicitFileSystemResolver);
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+}, imageArgument, diskFileArgument, fileInspectorDetailOption, outputFormatOption, explicitFileSystemOption, encodingOption);
+
 fileCommand.AddCommand(fileExtractCommand);
 fileCommand.AddCommand(fileInjectCommand);
 fileCommand.AddCommand(fileDeleteCommand);
 fileCommand.AddCommand(fileRenameCommand);
 fileCommand.AddCommand(fileCopyCommand);
 fileCommand.AddCommand(fileCrossCopyCommand);
+fileCommand.AddCommand(fileInspectorCommand);
 
 var diskCommand = new Command("disk", localizer.DiskCommandDescription);
 var diskInspectorCommand = new Command("inspector", localizer.DiskInspectorCommandDescription);
 var diskInspectorDetailOption = new Option<string>("--detail", () => "short", localizer.DiskInspectorDetailOptionDescription);
 diskInspectorCommand.AddArgument(imageArgument);
 diskInspectorCommand.AddOption(diskInspectorDetailOption);
-diskInspectorCommand.SetHandler((string imagePath, string detail, string? encodingOverride) =>
+diskInspectorCommand.AddOption(outputFormatOption);
+diskInspectorCommand.AddOption(explicitFileSystemOption);
+diskInspectorCommand.SetHandler((string imagePath, string detail, string outputFormat, string? fileSystemName, string? encodingOverride) =>
 {
     try
     {
-        PrintInspector(imagePath, detail, encodingOverride, localizer, archiveService, huBasicMetadataService, bootProfileService);
+        PrintInspector(imagePath, detail, outputFormat, fileSystemName, encodingOverride, localizer, diskInspectionService, archiveService, huBasicMetadataService, bootProfileService, explicitFileSystemResolver);
     }
     catch (Exception ex)
     {
         PrintError(localizer, ex.Message);
     }
-}, imageArgument, diskInspectorDetailOption, encodingOption);
+}, imageArgument, diskInspectorDetailOption, outputFormatOption, explicitFileSystemOption, encodingOption);
 
 var diskCreateCommand = new Command("create", localizer.DiskCreateCommandDescription);
 var diskCreateImageFormatOption = new Option<string?>(new[] { "--image-format", "-i" }, localizer.DiskCreateImageFormatOptionDescription);
@@ -1461,8 +1491,14 @@ static FileTransferService CreateFileTransferService(DiskFileSystemInfo fsInfo, 
     return Legacy89DiskKitApplication.CreateFileTransferService(fsInfo, encodingOverride);
 }
 
-static void RenderFileList(FileListView view, IFileListLocalizer localizer)
+static void RenderFileList(FileListView view, IFileListLocalizer localizer, string outputFormat)
 {
+    if (string.Equals(outputFormat, "csv", StringComparison.OrdinalIgnoreCase))
+    {
+        RenderFileListCsv(view);
+        return;
+    }
+
     foreach (var item in view.Summary)
     {
         Console.WriteLine($"{item.Label}: {item.Value}");
@@ -1521,6 +1557,57 @@ static void RenderFileList(FileListView view, IFileListLocalizer localizer)
     }
 }
 
+static void RenderFileListCsv(FileListView view)
+{
+    var headers = view.Columns.Select(column => EscapeCsv(column.Header)).ToArray();
+    Console.WriteLine(string.Join(",", headers));
+    foreach (var row in view.Rows)
+    {
+        Console.WriteLine(string.Join(",", row.Values.Select(EscapeCsv)));
+    }
+}
+
+static void RenderInspectionReport(InspectionReport report, string outputFormat)
+{
+    if (string.Equals(outputFormat, "csv", StringComparison.OrdinalIgnoreCase))
+    {
+        Console.WriteLine("Section,Key,Value");
+        foreach (var item in report.Items)
+        {
+            Console.WriteLine($"{EscapeCsv(item.Section)},{EscapeCsv(item.Key)},{EscapeCsv(item.Value)}");
+        }
+
+        return;
+    }
+
+    string? currentSection = null;
+    foreach (var item in report.Items)
+    {
+        if (!string.Equals(currentSection, item.Section, StringComparison.Ordinal))
+        {
+            if (currentSection != null)
+            {
+                Console.WriteLine();
+            }
+
+            Console.WriteLine($"[{item.Section}]");
+            currentSection = item.Section;
+        }
+
+        Console.WriteLine($"{item.Key}: {item.Value}");
+    }
+}
+
+static string EscapeCsv(string value)
+{
+    if (value.Contains('"'))
+    {
+        value = value.Replace("\"", "\"\"");
+    }
+
+    return value.IndexOfAny([',', '"', '\r', '\n']) >= 0 ? $"\"{value}\"" : value;
+}
+
 static string FormatRow(IReadOnlyList<string> values, IReadOnlyList<FileListColumn> columns, IReadOnlyList<int> widths)
 {
     var cells = new string[values.Count];
@@ -1566,10 +1653,62 @@ static (DiskFileSystemInfo fsInfo, FileListEntryContext[] entries) BuildFileList
                 : fs.ReadFile(file.FullName).Length;
         }
 
-        entries.Add(new FileListEntryContext(file, displayName, displayBaseName, displayExtension, actualSize));
+        var (directoryOffset, bodyOffset) = ResolveFileOffsets(fs, file);
+        entries.Add(new FileListEntryContext(file, displayName, displayBaseName, displayExtension, actualSize, directoryOffset, bodyOffset));
     }
 
     return (fsInfo, entries.ToArray());
+}
+
+static (long? DirectoryOffset, long? BodyOffset) ResolveFileOffsets(IFileSystem fs, FileEntry file)
+{
+    return fs switch
+    {
+        HuBasicFileSystem huBasic => ResolveHuBasicOffsets(huBasic, file),
+        XDosFileSystem xdos => ResolveXDosOffsets(xdos, file),
+        _ => (null, null)
+    };
+}
+
+static (long? DirectoryOffset, long? BodyOffset) ResolveHuBasicOffsets(HuBasicFileSystem fs, FileEntry file)
+{
+    var slot = fs.FindDirectorySlot(file.FullName);
+    long? dirOffset = null;
+    if (slot is { } dirSlot)
+    {
+        dirOffset = ((long)fs.GetDirectoryRecordNumber(dirSlot.SectorIndex) * 256) + dirSlot.Offset;
+    }
+
+    var bodyOffset = (long)fs.GetStartRecordForCluster(file.StartCluster) * 256;
+    return (dirOffset, bodyOffset);
+}
+
+static (long? DirectoryOffset, long? BodyOffset) ResolveXDosOffsets(XDosFileSystem fs, FileEntry file)
+{
+    if (file.FileSystemMetadata is not XDosFileMetadata metadata || file.RawFileName == null)
+    {
+        return (null, null);
+    }
+
+    long? dirOffset = null;
+    var slot = fs.FindDirectorySlot(file.RawFileName, metadata.RawFileType);
+    if (slot is { } dirSlot)
+    {
+        dirOffset = ((long)fs.Geometry.DataSectorSize * (fs.Geometry.DataSectorsPerTrack + (dirSlot.Sector - 1))) + dirSlot.Offset;
+    }
+
+    long? bodyOffset = null;
+    var dirEntry = fs.FindDirectoryEntry(file.RawFileName, metadata.RawFileType);
+    if (dirEntry != null)
+    {
+        var fam = fs.GetFamEntries(dirEntry);
+        if (fam.Count > 0)
+        {
+            bodyOffset = (((long)fam[0].Track * fs.Geometry.DataSectorsPerTrack) + (fam[0].Sector - 1)) * fs.Geometry.DataSectorSize;
+        }
+    }
+
+    return (dirOffset, bodyOffset);
 }
 
 static bool IsProbablyVirtualLabel(FileEntry entry)
@@ -1699,126 +1838,110 @@ static void PrintCommandHelpRecursive(Command command, string commandPath, int d
 static void PrintInspector(
     string imagePath,
     string detail,
+    string outputFormat,
+    string? fileSystemName,
     string? encodingOverride,
     IConsoleLocalizer localizer,
+    DiskInspectionService diskInspectionService,
     ArchiveService archiveService,
     HuBasicMetadataService huBasicMetadataService,
-    IBootProfileService bootProfileService)
+    IBootProfileService bootProfileService,
+    ExplicitFileSystemResolver explicitFileSystemResolver)
 {
     using var diskService = CreateDiskService();
-    diskService.OpenDisk(imagePath, true);
+    var container = diskService.OpenDisk(imagePath, true);
 
     var metadata = diskService.GetContainerMetadata() ?? throw new InvalidOperationException("Container metadata is unavailable.");
-    var fileSystem = diskService.FileSystem;
+    var fileSystem = ResolveFileSystem(diskService, container, fileSystemName, explicitFileSystemResolver);
     var normalizedDetail = detail.Trim().ToLowerInvariant();
     if (normalizedDetail is not ("short" or "normal" or "full"))
     {
         throw new InvalidOperationException($"Unsupported detail level: {detail}");
     }
 
-    Console.WriteLine($"{localizer.ContainerLabel}: {metadata.ImageFormat}");
-    Console.WriteLine($"{localizer.DiskTypeLabel}: {FormatDiskType(metadata.DiskType)}");
+    var report = diskInspectionService.BuildReport(
+        metadata,
+        fileSystem,
+        fileSystem != null ? bootProfileService.GetBootProfile(fileSystem) : null,
+        normalizedDetail,
+        encodingOverride ?? fileSystem?.GetFileSystemInfo().DefaultEncodingId ?? "unknown");
 
-    if (fileSystem != null)
+    var mergedItems = report.Items.ToList();
+    if (fileSystem != null && normalizedDetail == "full")
     {
-        var fsInfo = fileSystem.GetFileSystemInfo();
-        var bootSummary = bootProfileService.GetBootProfile(fileSystem);
-        Console.WriteLine($"{localizer.MachineProfileLabel}: {ResolveMachineProfile(fsInfo, bootSummary)}");
-        Console.WriteLine($"{localizer.FileSystemLabel}: {fsInfo.FileSystemName}");
-
-        if (normalizedDetail is "short" or "normal" or "full")
+        if (fileSystem.GetFileSystemInfo().FileSystemName == "Hu-BASIC")
         {
-            Console.WriteLine($"{localizer.FilesLabel}: {fileSystem.GetFiles().Count()}");
-            Console.WriteLine($"{localizer.BootLabel}: {FormatBootMode(localizer, bootSummary.Mode)}");
-        }
-
-        if (normalizedDetail is "normal" or "full")
-        {
-            Console.WriteLine($"{localizer.TotalLabel}: {fsInfo.TotalCapacity}");
-            Console.WriteLine($"{localizer.UsedLabel}: {fsInfo.TotalCapacity - fsInfo.FreeSpace}");
-            Console.WriteLine($"{localizer.FreeLabel}: {fsInfo.FreeSpace}");
-            Console.WriteLine($"{localizer.EncodingLabel}: {encodingOverride ?? fsInfo.DefaultEncodingId}");
-        }
-
-        if (normalizedDetail == "full")
-        {
-            Console.WriteLine($"{localizer.GeometryLabel}: {FormatGeometry(metadata.Geometry)}");
-            Console.WriteLine($"{localizer.ImageSizeLabel}: {metadata.DeclaredImageSize}");
-            Console.WriteLine($"{localizer.WriteProtectedLabel}: {metadata.IsWriteProtected}");
-
-            if (bootSummary.FileName is { Length: > 0 })
+            var bootRecord = huBasicMetadataService.GetBootRecordInfo(fileSystem);
+            if (bootRecord is not null)
             {
-                Console.WriteLine($"{localizer.BootFileLabel}: {bootSummary.FileName}");
-            }
-
-            if (bootSummary.LoadAddress is { } loadAddress)
-            {
-                Console.WriteLine($"{localizer.BootLoadLabel}: {loadAddress:X4}");
-            }
-
-            if (bootSummary.ExecutionAddress is { } executionAddress)
-            {
-                Console.WriteLine($"{localizer.BootExecLabel}: {executionAddress:X4}");
-            }
-
-            if (fileSystem.GetFileSystemInfo().FileSystemName == "Hu-BASIC")
-            {
-                var bootRecord = huBasicMetadataService.GetBootRecordInfo(fileSystem);
-                if (bootRecord is not null)
-                {
-                    var fullName = string.IsNullOrWhiteSpace(bootRecord.Extension)
-                        ? bootRecord.Name
-                        : $"{bootRecord.Name}.{bootRecord.Extension}";
-                    Console.WriteLine($"{localizer.BootFileLabel}: {fullName}");
-                }
-            }
-
-            var (_, entries) = BuildFileListEntries(fileSystem, archiveService, encodingOverride);
-            foreach (var entry in entries.Take(10))
-            {
-                Console.WriteLine($"  {entry.DisplayName}");
+                var fullName = string.IsNullOrWhiteSpace(bootRecord.Extension)
+                    ? bootRecord.Name
+                    : $"{bootRecord.Name}.{bootRecord.Extension}";
+                mergedItems.Add(new InspectionItem("Boot", "Boot File", fullName));
             }
         }
 
+        var (_, entries) = BuildFileListEntries(fileSystem, archiveService, encodingOverride);
+        foreach (var entry in entries.Take(10))
+        {
+            mergedItems.Add(new InspectionItem("Preview", "File", entry.DisplayName));
+        }
+    }
+
+    RenderInspectionReport(report with { Items = mergedItems }, outputFormat);
+}
+
+static void PrintFileInspector(
+    string imagePath,
+    string diskFileName,
+    string detail,
+    string outputFormat,
+    string? fileSystemName,
+    string? encodingOverride,
+    IConsoleLocalizer localizer,
+    ArchiveService archiveService,
+    FileInspectionService fileInspectionService,
+    ExplicitFileSystemResolver explicitFileSystemResolver)
+{
+    var normalizedDetail = detail.Trim().ToLowerInvariant();
+    if (normalizedDetail is not ("short" or "normal" or "full"))
+    {
+        throw new InvalidOperationException($"Unsupported detail level: {detail}");
+    }
+
+    using var diskService = CreateDiskService();
+    var container = diskService.OpenDisk(imagePath, true);
+    var fs = RequireFileSystem(ResolveFileSystem(diskService, container, fileSystemName, explicitFileSystemResolver), localizer);
+    if (fs == null)
+    {
         return;
     }
 
-    Console.WriteLine($"{localizer.MachineProfileLabel}: unknown");
-    Console.WriteLine($"{localizer.FileSystemLabel}: {localizer.FileSystemNotDetectedMessage}");
-
-    if (normalizedDetail is "normal" or "full")
+    var (_, entries) = BuildFileListEntries(fs, archiveService, encodingOverride);
+    var target = entries.FirstOrDefault(x =>
+        x.DisplayName.Equals(diskFileName, StringComparison.OrdinalIgnoreCase) ||
+        x.Entry.FullName.Equals(diskFileName, StringComparison.OrdinalIgnoreCase));
+    if (target == null)
     {
-        Console.WriteLine($"{localizer.GeometryLabel}: {FormatGeometry(metadata.Geometry)}");
-        Console.WriteLine($"{localizer.ImageSizeLabel}: {metadata.DeclaredImageSize}");
-        Console.WriteLine($"{localizer.WriteProtectedLabel}: {metadata.IsWriteProtected}");
-    }
-}
-
-static string ResolveMachineProfile(DiskFileSystemInfo fsInfo, BootInfoSummary bootSummary)
-{
-    if (bootSummary.MachineFamily != Legacy89DiskKit.Domain.CharacterEncoding.Model.MachineType.Unknown)
-    {
-        return bootSummary.MachineFamily.ToString();
+        throw new FileNotFoundException($"File not found: {diskFileName}");
     }
 
-    return string.IsNullOrWhiteSpace(fsInfo.PlatformId) ? "unknown" : fsInfo.PlatformId;
+    var report = fileInspectionService.BuildReport(fs, target.Entry, target.DisplayName, normalizedDetail);
+    RenderInspectionReport(report, outputFormat);
 }
 
-static string FormatDiskType(DiskType diskType)
+static IFileSystem? ResolveFileSystem(
+    DiskService diskService,
+    IDiskContainer container,
+    string? fileSystemName,
+    ExplicitFileSystemResolver explicitFileSystemResolver)
 {
-    return diskType switch
+    if (string.IsNullOrWhiteSpace(fileSystemName))
     {
-        DiskType.TwoD => "2D",
-        DiskType.TwoDD => "2DD",
-        DiskType.TwoHD => "2HD",
-        DiskType.HardDisk => "HardDisk",
-        _ => diskType.ToString()
-    };
-}
+        return diskService.FileSystem;
+    }
 
-static string FormatGeometry(DiskGeometryInfo geometry)
-{
-    return $"{geometry.Cylinders}c x {geometry.Heads}h x {geometry.SectorsPerTrack}spt x {geometry.BytesPerSector}bps";
+    return explicitFileSystemResolver.Create(fileSystemName, container);
 }
 
 static IDiskContainer OpenWritableDisk(DiskService diskService, string imagePath, IConsoleLocalizer localizer)

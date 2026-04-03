@@ -47,13 +47,14 @@ public class XDosListPresentationTest
                 Localizer.SizeHeader,
                 Localizer.LoadHeader,
                 Localizer.ExecHeader,
-                Localizer.ClusterHeader
+                Localizer.DirectoryAddressHeader,
+                Localizer.BodyAddressHeader
             },
             view.Columns.Select(column => column.Header).ToArray());
 
         Assert.Single(view.Rows);
         Assert.Equal(
-            new[] { "X-DOS System", "SYS", "H---:0", "10240", "8000", "8100", "2" },
+            new[] { "X-DOS System", "SYS", "H---:0", "10240", "8000", "8100", "--------", "--------" },
             view.Rows[0].Values.ToArray());
         Assert.Contains(view.Legends, item => item.Key == "H" && item.Description == Localizer.XDosFlagSecret);
         Assert.Contains(view.Legends, item => item.Key == "W" && item.Description == Localizer.XDosFlagWriteProtect);

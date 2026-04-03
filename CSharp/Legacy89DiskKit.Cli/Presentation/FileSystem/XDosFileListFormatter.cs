@@ -17,7 +17,8 @@ public class XDosFileListFormatter : IFileListFormatter
             new FileListColumn(localizer.SizeHeader, true),
             new FileListColumn(localizer.LoadHeader, true),
             new FileListColumn(localizer.ExecHeader, true),
-            new FileListColumn(localizer.ClusterHeader, true)
+            new FileListColumn(localizer.DirectoryAddressHeader, true),
+            new FileListColumn(localizer.BodyAddressHeader, true)
         };
 
         var rows = context.Entries
@@ -29,7 +30,8 @@ public class XDosFileListFormatter : IFileListFormatter
                 entry.Entry.Size.ToString(),
                 FormatHex(entry.Entry.LoadAddress),
                 FormatHex(entry.Entry.ExecutionAddress),
-                entry.Entry.StartCluster.ToString()
+                FormatOffset(entry.DirectoryOffset),
+                FormatOffset(entry.BodyOffset)
             }))
             .ToArray();
 
@@ -118,6 +120,11 @@ public class XDosFileListFormatter : IFileListFormatter
     private static string FormatHex(ushort? value)
     {
         return value.HasValue ? $"{value.Value:X4}" : "----";
+    }
+
+    private static string FormatOffset(long? value)
+    {
+        return value.HasValue ? $"{value.Value:X8}" : "--------";
     }
 
     private static string FormatAttributeFlags(byte value)
