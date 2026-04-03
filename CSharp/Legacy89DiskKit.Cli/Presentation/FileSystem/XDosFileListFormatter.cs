@@ -49,22 +49,70 @@ public class XDosFileListFormatter : IFileListFormatter
     {
         if (entry.FileSystemMetadata is XDosFileMetadata metadata)
         {
+            var rawType = metadata.RawFileType;
+            if ((rawType & 0x8000) != 0 && rawType != (ushort)XDosFileType.Dir)
+            {
+                return DecodeUserDefinedType(rawType);
+            }
+
+            ushort subtype = (ushort)(rawType & 0x00FF);
             return metadata.FileType switch
             {
                 XDosFileType.Bin => "BIN",
                 XDosFileType.Bas => "BAS",
-                XDosFileType.Cmd => "CMD",
+                XDosFileType.Cmd => subtype switch
+                {
+                    0x10 => "SX-BASIC",
+                    0x11 => "XASM",
+                    0x12 => "XEDIT",
+                    0x13 => "SLANG",
+                    0x00 => "CMD",
+                    _ => $"CMD:{subtype:X2}"
+                },
                 XDosFileType.Asc => "ASC",
-                XDosFileType.Sub => "SUB",
+                XDosFileType.Sub => subtype switch
+                {
+                    0x00 => "SUB",
+                    0x01 => "PRINTER",
+                    >= 0x10 and <= 0x1F => $"OVL{subtype - 0x10:X1}",
+                    >= 0x20 and <= 0x2F => $"ACM{subtype - 0x20:X1}",
+                    _ => $"SUB:{subtype:X2}"
+                },
                 XDosFileType.Bat => "BAT",
-                XDosFileType.Sys => "SYS",
+                XDosFileType.Sys => subtype switch
+                {
+                    0x00 => "SYS",
+                    0x01 => "SYS:X1",
+                    0x02 => "SYS:MZ",
+                    _ => $"SYS:{subtype:X2}"
+                },
                 XDosFileType.Dic => "DIC",
                 XDosFileType.Dir => "DIR",
-                _ => $"0x{metadata.RawFileType:X4}"
+                _ => $"0x{rawType:X4}"
             };
         }
 
         return "UNK";
+    }
+
+    private static string DecodeUserDefinedType(ushort rawType)
+    {
+        rawType &= 0x7FFF;
+        Span<char> chars = stackalloc char[3];
+        chars[0] = DecodeUserTypeChar((rawType >> 10) & 0x1F);
+        chars[1] = DecodeUserTypeChar((rawType >> 5) & 0x1F);
+        chars[2] = DecodeUserTypeChar(rawType & 0x1F);
+        return chars.ToString();
+    }
+
+    private static char DecodeUserTypeChar(int value)
+    {
+        return value switch
+        {
+            0 => '@',
+            >= 1 and <= 26 => (char)('A' + value - 1),
+            _ => '?'
+        };
     }
 
     private static string FormatHex(ushort? value)

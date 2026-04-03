@@ -61,6 +61,29 @@ public class XDosListPresentationTest
         Assert.Contains(view.Legends, item => item.Key == "K" && item.Description == Localizer.XDosFlagKanji);
     }
 
+    [Theory]
+    [InlineData((ushort)0x0310, "SX-BASIC")]
+    [InlineData((ushort)0x0311, "XASM")]
+    [InlineData((ushort)0x0312, "XEDIT")]
+    [InlineData((ushort)0x0510, "OVL0")]
+    [InlineData((ushort)0x0518, "OVL8")]
+    [InlineData((ushort)0x0520, "ACM0")]
+    [InlineData((ushort)0x0701, "SYS:X1")]
+    [InlineData((ushort)0x0702, "SYS:MZ")]
+    public void XDosFileListFormatter_DecodesKnownSubtypeLabels(ushort rawType, string expectedType)
+    {
+        Assert.Equal(expectedType, FormatType(rawType));
+    }
+
+    [Theory]
+    [InlineData("PCM")]
+    [InlineData("GRA")]
+    [InlineData("MUS")]
+    public void XDosFileListFormatter_DecodesUserDefinedSubtypeLabels(string expectedType)
+    {
+        Assert.Equal(expectedType, FormatType(EncodeUserType(expectedType)));
+    }
+
     [Fact]
     public async Task CliList_XDosDisk_UsesExtendedFormatter()
     {
@@ -76,5 +99,59 @@ public class XDosListPresentationTest
         Assert.Contains("----:0", result.StandardOutput);
         Assert.Contains("Legends:", result.StandardOutput);
         Assert.Contains("8000", result.StandardOutput);
+    }
+
+    private static string FormatType(ushort rawType)
+    {
+        var formatter = new XDosFileListFormatter();
+        var entry = new FileEntry(
+            "ENTRY",
+            string.Empty,
+            512,
+            null,
+            null,
+            new ExtendedFileAttributes(DomainFileAttributes.None, 0x00, false, "X-DOS"),
+            1,
+            0x8000,
+            0x81FF,
+            0x8000,
+            null,
+            null,
+            new XDosFileMetadata((XDosFileType)(rawType & 0xFF00), rawType, 0x00, 0)
+        );
+
+        var view = formatter.Format(new FileListFormatContext(
+            new DiskFileSystemInfo("X-DOS", 399360, 45056, 1024, 74, "X1", "X1"),
+            new[]
+            {
+                new FileListEntryContext(entry, "ENTRY", "ENTRY", string.Empty, 512)
+            }), Localizer);
+
+        return view.Rows[0].Values[1];
+    }
+
+    private static ushort EncodeUserType(string name)
+    {
+        name = name.ToUpperInvariant().PadRight(3, '@');
+        ushort raw = 0x8000;
+        raw |= (ushort)(EncodeUserTypeChar(name[0]) << 10);
+        raw |= (ushort)(EncodeUserTypeChar(name[1]) << 5);
+        raw |= EncodeUserTypeChar(name[2]);
+        return raw;
+    }
+
+    private static ushort EncodeUserTypeChar(char ch)
+    {
+        if (ch == '@')
+        {
+            return 0;
+        }
+
+        if (ch is >= 'A' and <= 'Z')
+        {
+            return (ushort)(ch - 'A' + 1);
+        }
+
+        throw new ArgumentOutOfRangeException(nameof(ch), $"Unsupported user type character: {ch}");
     }
 }
