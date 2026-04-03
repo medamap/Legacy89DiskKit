@@ -42,7 +42,9 @@ public interface IConsoleLocalizer : IFileListLocalizer
 {
     string LanguageOptionDescription { get; }
     string EncodingOptionDescription { get; }
+    string FullHelpOptionDescription { get; }
     string RootDescription { get; }
+    string FullHelpCommandDescription { get; }
     string ListCommandDescription { get; }
     string LayoutCommandDescription { get; }
     string LayoutShowCommandDescription { get; }
@@ -60,8 +62,14 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string FileCopyCommandDescription { get; }
     string FileCrossCopyCommandDescription { get; }
     string DiskCommandDescription { get; }
+    string DiskInspectorCommandDescription { get; }
+    string DiskInspectorDetailOptionDescription { get; }
     string DiskCreateCommandDescription { get; }
     string DiskFormatCommandDescription { get; }
+    string SectorCommandDescription { get; }
+    string SectorExportCommandDescription { get; }
+    string SectorImportCommandDescription { get; }
+    string DiskDumpCommandDescription { get; }
     string HostCommandDescription { get; }
     string HostStdioCommandDescription { get; }
     string HostObservableOptionDescription { get; }
@@ -109,10 +117,15 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string LayoutSortByOptionDescription { get; }
     string BootFilesOptionDescription { get; }
     string TargetFileNameOptionDescription { get; }
+    string DiskCreateImageFormatOptionDescription { get; }
     string DiskCreateDiskTypeOptionDescription { get; }
     string DiskCreateFileSystemOptionDescription { get; }
     string DiskCreateNameOptionDescription { get; }
     string DiskFormatFsOptionDescription { get; }
+    string SectorLocationArgumentDescription { get; }
+    string SectorCountArgumentDescription { get; }
+    string DumpLocationArgumentDescription { get; }
+    string DumpLengthArgumentDescription { get; }
     string DiskSectorCopyCommandDescription { get; }
     string DiskSectorCopyForceOptionDescription { get; }
     string ListingFilesForMessage { get; }
@@ -159,6 +172,14 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string CheckUpdateWindowsMsiLabel { get; }
     string CheckUpdateAvailableMessage { get; }
     string CheckUpdateUpToDateMessage { get; }
+    string ContainerLabel { get; }
+    string DiskTypeLabel { get; }
+    string MachineProfileLabel { get; }
+    string GeometryLabel { get; }
+    string ImageSizeLabel { get; }
+    string WriteProtectedLabel { get; }
+    string EncodingLabel { get; }
+    string FullHelpFooter { get; }
 }
 
 public static class FileListLocalizer
@@ -217,7 +238,9 @@ public static class FileListLocalizer
         public abstract string HuBasicFlagWriteProtect { get; }
         public abstract string LanguageOptionDescription { get; }
         public abstract string EncodingOptionDescription { get; }
+        public abstract string FullHelpOptionDescription { get; }
         public abstract string RootDescription { get; }
+        public abstract string FullHelpCommandDescription { get; }
         public abstract string ListCommandDescription { get; }
         public abstract string LayoutCommandDescription { get; }
         public abstract string LayoutShowCommandDescription { get; }
@@ -235,8 +258,14 @@ public static class FileListLocalizer
         public abstract string FileCopyCommandDescription { get; }
         public abstract string FileCrossCopyCommandDescription { get; }
         public abstract string DiskCommandDescription { get; }
+        public abstract string DiskInspectorCommandDescription { get; }
+        public abstract string DiskInspectorDetailOptionDescription { get; }
         public abstract string DiskCreateCommandDescription { get; }
         public abstract string DiskFormatCommandDescription { get; }
+        public abstract string SectorCommandDescription { get; }
+        public abstract string SectorExportCommandDescription { get; }
+        public abstract string SectorImportCommandDescription { get; }
+        public abstract string DiskDumpCommandDescription { get; }
         public abstract string HostCommandDescription { get; }
         public abstract string HostStdioCommandDescription { get; }
         public abstract string HostObservableOptionDescription { get; }
@@ -284,10 +313,15 @@ public static class FileListLocalizer
         public abstract string LayoutSortByOptionDescription { get; }
         public abstract string BootFilesOptionDescription { get; }
         public abstract string TargetFileNameOptionDescription { get; }
+        public abstract string DiskCreateImageFormatOptionDescription { get; }
         public abstract string DiskCreateDiskTypeOptionDescription { get; }
         public abstract string DiskCreateFileSystemOptionDescription { get; }
         public abstract string DiskCreateNameOptionDescription { get; }
         public abstract string DiskFormatFsOptionDescription { get; }
+        public abstract string SectorLocationArgumentDescription { get; }
+        public abstract string SectorCountArgumentDescription { get; }
+        public abstract string DumpLocationArgumentDescription { get; }
+        public abstract string DumpLengthArgumentDescription { get; }
         public abstract string DiskSectorCopyCommandDescription { get; }
         public abstract string DiskSectorCopyForceOptionDescription { get; }
         public abstract string ListingFilesForMessage { get; }
@@ -337,6 +371,14 @@ public static class FileListLocalizer
         public abstract string CheckUpdateWindowsMsiLabel { get; }
         public abstract string CheckUpdateAvailableMessage { get; }
         public abstract string CheckUpdateUpToDateMessage { get; }
+        public abstract string ContainerLabel { get; }
+        public abstract string DiskTypeLabel { get; }
+        public abstract string MachineProfileLabel { get; }
+        public abstract string GeometryLabel { get; }
+        public abstract string ImageSizeLabel { get; }
+        public abstract string WriteProtectedLabel { get; }
+        public abstract string EncodingLabel { get; }
+        public abstract string FullHelpFooter { get; }
     }
 
     private sealed class EnglishConsoleLocalizer : ConsoleLocalizerBase
@@ -372,7 +414,9 @@ public static class FileListLocalizer
         public override string HuBasicFlagWriteProtect => "Write-protect";
         public override string LanguageOptionDescription => "Override UI language: ja or en";
         public override string EncodingOptionDescription => "Override disk filename decoding and text I/O encoding (accepted examples: X1, SJIS, Shift-JIS, ShiftJIS, shift_jis)";
-        public override string RootDescription => "Legacy89DiskKit CLI";
+        public override string FullHelpOptionDescription => "Print the complete command reference";
+        public override string RootDescription => "Legacy89DiskKit CLI. Use --full-help for the complete command reference.";
+        public override string FullHelpCommandDescription => "Print the complete command reference";
         public override string ListCommandDescription => "List files and disk summary information";
         public override string LayoutCommandDescription => "Inspect and edit directory entry layout. Use 'layout export IMAGE > plan.txt', then 'cat plan.txt | layout validate IMAGE --stdin' or '... apply IMAGE --stdin'.";
         public override string LayoutShowCommandDescription => "Show the current directory entry order";
@@ -390,8 +434,14 @@ public static class FileListLocalizer
         public override string FileCopyCommandDescription => "Duplicate a file inside the same disk image";
         public override string FileCrossCopyCommandDescription => "Copy files between different disk images with filename auto-shortening";
         public override string DiskCommandDescription => "Disk-level operations";
+        public override string DiskInspectorCommandDescription => "Inspect disk/container, file system, and boot metadata";
+        public override string DiskInspectorDetailOptionDescription => "Detail level: short, normal, or full";
         public override string DiskCreateCommandDescription => "Create a new disk image and initialize it with an explicit file system";
         public override string DiskFormatCommandDescription => "Reinitialize an existing disk image, preferably with an explicit file system";
+        public override string SectorCommandDescription => "Sector-level import/export operations";
+        public override string SectorExportCommandDescription => "Export sectors from a disk image to a host file";
+        public override string SectorImportCommandDescription => "Import host bytes into sectors of a disk image";
+        public override string DiskDumpCommandDescription => "Dump bytes or sectors from a disk image";
         public override string HostCommandDescription => "External host integration operations";
         public override string HostStdioCommandDescription => "Run the emulator host protocol over standard input/output";
         public override string HostObservableOptionDescription => "Emit notification-aware exchanges that include IRQ, DRQ, and advance-request notifications";
@@ -439,10 +489,15 @@ public static class FileListLocalizer
         public override string LayoutSortByOptionDescription => "Sort key: name, ext, type";
         public override string BootFilesOptionDescription => "Comma-separated list of files to copy or 'all'";
         public override string TargetFileNameOptionDescription => "Override the filename on the target disk";
+        public override string DiskCreateImageFormatOptionDescription => "Container/image format: d88, d77, 2d, or dsk";
         public override string DiskCreateDiskTypeOptionDescription => "Disk media type: 2d, 2dd, or 2hd";
         public override string DiskCreateFileSystemOptionDescription => "File system to initialize: hu-basic, n88-basic, msx-dos, or xdos";
         public override string DiskCreateNameOptionDescription => "Optional disk name for image containers that support it";
         public override string DiskFormatFsOptionDescription => "Explicit file system to format: hu-basic, n88-basic, msx-dos, or xdos";
+        public override string SectorLocationArgumentDescription => "Starting linear sector number";
+        public override string SectorCountArgumentDescription => "Number of sectors";
+        public override string DumpLocationArgumentDescription => "Location: offset (0x...), linear sector, or cylinderN,sideN,sectorN";
+        public override string DumpLengthArgumentDescription => "Length in bytes, or '<N>sector' to dump sectors";
         public override string DiskSectorCopyCommandDescription => "Perform a sector-by-sector physical copy between disk images";
         public override string DiskSectorCopyForceOptionDescription => "Skip overwrite confirmation";
         public override string ListingFilesForMessage => "Listing files for";
@@ -492,6 +547,14 @@ public static class FileListLocalizer
         public override string CheckUpdateWindowsMsiLabel => "Windows MSI";
         public override string CheckUpdateAvailableMessage => "An update is available.";
         public override string CheckUpdateUpToDateMessage => "You are using the latest version.";
+        public override string ContainerLabel => "Container";
+        public override string DiskTypeLabel => "Disk Type";
+        public override string MachineProfileLabel => "Machine Profile";
+        public override string GeometryLabel => "Geometry";
+        public override string ImageSizeLabel => "Image Size";
+        public override string WriteProtectedLabel => "Write Protected";
+        public override string EncodingLabel => "Encoding";
+        public override string FullHelpFooter => "Use '<command> --help' for detailed help on one command.";
     }
 
     private sealed class JapaneseConsoleLocalizer : ConsoleLocalizerBase
@@ -527,7 +590,9 @@ public static class FileListLocalizer
         public override string HuBasicFlagWriteProtect => "書き込み保護";
         public override string LanguageOptionDescription => "UI 表示言語を指定します: ja または en";
         public override string EncodingOptionDescription => "ディスク上ファイル名の表示デコードやテキスト入出力の文字エンコーディングを上書きします（指定例: X1, SJIS, Shift-JIS, ShiftJIS, shift_jis）";
-        public override string RootDescription => "Legacy89DiskKit CLI";
+        public override string FullHelpOptionDescription => "全コマンドのヘルプをまとめて表示します";
+        public override string RootDescription => "Legacy89DiskKit CLI。--full-help で全コマンドのヘルプを表示できます。";
+        public override string FullHelpCommandDescription => "全コマンドのヘルプをまとめて表示します";
         public override string ListCommandDescription => "ファイル一覧とディスク概要を表示します";
         public override string LayoutCommandDescription => "ディレクトリエントリ順を確認・編集します。'layout export IMAGE > plan.txt' のあと、'cat plan.txt | layout validate IMAGE --stdin' や '... apply IMAGE --stdin' で流し込めます";
         public override string LayoutShowCommandDescription => "現在のディレクトリエントリ順を表示します";
@@ -545,8 +610,14 @@ public static class FileListLocalizer
         public override string FileCopyCommandDescription => "同一ディスク内でファイルを複製します";
         public override string FileCrossCopyCommandDescription => "異なるディスクイメージ間でファイルをコピーします（ファイル名自動短縮機能付き）";
         public override string DiskCommandDescription => "ディスク単位の操作";
+        public override string DiskInspectorCommandDescription => "コンテナ、ファイルシステム、ブート情報をまとめて確認します";
+        public override string DiskInspectorDetailOptionDescription => "詳細レベル: short, normal, full";
         public override string DiskCreateCommandDescription => "新しいディスクイメージを作成し、指定したファイルシステムで初期化します";
         public override string DiskFormatCommandDescription => "既存ディスクイメージを再初期化します。明示的なファイルシステム指定を推奨します";
+        public override string SectorCommandDescription => "セクタ単位の入出力";
+        public override string SectorExportCommandDescription => "ディスクイメージからセクタをホストファイルへ出力します";
+        public override string SectorImportCommandDescription => "ホストファイルの内容をディスクイメージのセクタへ書き戻します";
+        public override string DiskDumpCommandDescription => "ディスクイメージからバイト列やセクタ列をダンプ表示します";
         public override string HostCommandDescription => "外部ホスト連携の操作";
         public override string HostStdioCommandDescription => "標準入出力でエミュレータホストプロトコルを実行";
         public override string HostObservableOptionDescription => "IRQ、DRQ、advance-request 通知を含む通知対応 exchange を出力します";
@@ -594,10 +665,15 @@ public static class FileListLocalizer
         public override string LayoutSortByOptionDescription => "ソートキー: name, ext, type";
         public override string BootFilesOptionDescription => "コピーするファイル一覧。all も指定可能";
         public override string TargetFileNameOptionDescription => "ターゲットディスク上のファイル名を上書きします";
+        public override string DiskCreateImageFormatOptionDescription => "コンテナ/イメージ形式: d88, d77, 2d, dsk";
         public override string DiskCreateDiskTypeOptionDescription => "ディスク種別: 2d, 2dd, 2hd";
         public override string DiskCreateFileSystemOptionDescription => "初期化するファイルシステム: hu-basic, n88-basic, msx-dos, xdos";
         public override string DiskCreateNameOptionDescription => "対応コンテナに設定する任意のディスク名";
         public override string DiskFormatFsOptionDescription => "明示的にフォーマットするファイルシステム: hu-basic, n88-basic, msx-dos, xdos";
+        public override string SectorLocationArgumentDescription => "開始する線形セクタ番号";
+        public override string SectorCountArgumentDescription => "対象セクタ数";
+        public override string DumpLocationArgumentDescription => "位置指定: offset (0x...), 線形セクタ番号, または cylinderN,sideN,sectorN";
+        public override string DumpLengthArgumentDescription => "バイト数、または '<N>sector' 形式のセクタ数";
         public override string DiskSectorCopyCommandDescription => "ディスクイメージ間でセクタ単位の物理コピーを実行します";
         public override string DiskSectorCopyForceOptionDescription => "上書き確認をスキップします";
         public override string ListingFilesForMessage => "Listing files for";
@@ -647,5 +723,13 @@ public static class FileListLocalizer
         public override string CheckUpdateWindowsMsiLabel => "Windows MSI";
         public override string CheckUpdateAvailableMessage => "新しいバージョンがあります。";
         public override string CheckUpdateUpToDateMessage => "現在のバージョンは最新です。";
+        public override string ContainerLabel => "コンテナ";
+        public override string DiskTypeLabel => "ディスク種別";
+        public override string MachineProfileLabel => "マシンプロファイル";
+        public override string GeometryLabel => "物理フォーマット";
+        public override string ImageSizeLabel => "イメージサイズ";
+        public override string WriteProtectedLabel => "書き込み保護";
+        public override string EncodingLabel => "文字コード";
+        public override string FullHelpFooter => "個別の詳細は '<command> --help' でも確認できます。";
     }
 }

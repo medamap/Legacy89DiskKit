@@ -28,13 +28,14 @@ if (requestedLanguage is { } languageCode && languageCode is not ("ja" or "en"))
     return 1;
 }
 
-var effectiveArgs = RewriteUpdateCheckArgs(RewriteLegacyArgs(args));
+var effectiveArgs = RewriteFullHelpArgs(RewriteUpdateCheckArgs(RewriteImplicitInspectorArgs(RewriteLegacyArgs(args))));
 
 var localizer = FileListLocalizer.Create(requestedLanguage);
 var archiveService = new ArchiveService();
 var huBasicMetadataService = new HuBasicMetadataService();
 var directoryLayoutService = new DirectoryLayoutService();
 var explicitFileSystemResolver = new ExplicitFileSystemResolver();
+var bootProfileService = Legacy89DiskKitApplication.CreateBootProfileService();
 
 var rootCommand = new RootCommand(localizer.RootDescription);
 
@@ -42,10 +43,12 @@ var languageOption = new Option<string?>(new[] { "--language", "-l" }, localizer
 var encodingOption = new Option<string?>(new[] { "--encoding", "-e" }, localizer.EncodingOptionDescription);
 var nativeOption = new Option<bool>(new[] { "--native" }, "Use C++ native implementation via NativeBridge");
 var checkUpdateOption = new Option<bool>("--check-update", localizer.CheckUpdateCommandDescription);
+var fullHelpOption = new Option<bool>("--full-help", localizer.FullHelpOptionDescription);
 rootCommand.AddGlobalOption(languageOption);
 rootCommand.AddGlobalOption(encodingOption);
 rootCommand.AddGlobalOption(nativeOption);
 rootCommand.AddGlobalOption(checkUpdateOption);
+rootCommand.AddGlobalOption(fullHelpOption);
 
 // Initialize backend based on command line args
 if (effectiveArgs.Contains("--native"))
@@ -67,6 +70,12 @@ else
 }
 
 var imageArgument = new Argument<string>("image", localizer.ImageArgumentDescription);
+
+var fullHelpCommand = new Command("full-help", localizer.FullHelpCommandDescription);
+fullHelpCommand.SetHandler(() =>
+{
+    PrintFullHelp(rootCommand, localizer);
+});
 
 var listCommand = new Command("list", localizer.ListCommandDescription);
 listCommand.AddArgument(imageArgument);
@@ -112,6 +121,7 @@ var newNameArgument = new Argument<string>("new-name", localizer.NewNameArgument
 var targetFileNameOption = new Option<string?>(new[] { "--target-name", "-n" }, localizer.TargetFileNameOptionDescription);
 
 var fileExtractCommand = new Command("extract", localizer.FileExtractCommandDescription);
+fileExtractCommand.AddAlias("export");
 fileExtractCommand.AddArgument(imageArgument);
 fileExtractCommand.AddArgument(diskFileArgument);
 fileExtractCommand.AddArgument(hostPathArgument);
@@ -137,6 +147,7 @@ fileExtractCommand.SetHandler((string imagePath, string diskFileName, string hos
 }, imageArgument, diskFileArgument, hostPathArgument, encodingOption);
 
 var fileInjectCommand = new Command("inject", localizer.FileInjectCommandDescription);
+fileInjectCommand.AddAlias("import");
 fileInjectCommand.AddArgument(imageArgument);
 fileInjectCommand.AddArgument(hostFileArgument);
 fileInjectCommand.AddOption(targetFileNameOption);
@@ -277,21 +288,40 @@ fileCommand.AddCommand(fileCopyCommand);
 fileCommand.AddCommand(fileCrossCopyCommand);
 
 var diskCommand = new Command("disk", localizer.DiskCommandDescription);
+var diskInspectorCommand = new Command("inspector", localizer.DiskInspectorCommandDescription);
+var diskInspectorDetailOption = new Option<string>("--detail", () => "short", localizer.DiskInspectorDetailOptionDescription);
+diskInspectorCommand.AddArgument(imageArgument);
+diskInspectorCommand.AddOption(diskInspectorDetailOption);
+diskInspectorCommand.SetHandler((string imagePath, string detail, string? encodingOverride) =>
+{
+    try
+    {
+        PrintInspector(imagePath, detail, encodingOverride, localizer, archiveService, huBasicMetadataService, bootProfileService);
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+}, imageArgument, diskInspectorDetailOption, encodingOption);
+
 var diskCreateCommand = new Command("create", localizer.DiskCreateCommandDescription);
+var diskCreateImageFormatOption = new Option<string?>(new[] { "--image-format", "-i" }, localizer.DiskCreateImageFormatOptionDescription);
 var diskTypeOption = new Option<string>(new[] { "--disk-type", "-d" }, localizer.DiskCreateDiskTypeOptionDescription) { IsRequired = true };
 var diskFileSystemOption = new Option<string?>(new[] { "--file-system", "-f" }, localizer.DiskCreateFileSystemOptionDescription);
 var diskNameOption = new Option<string?>(new[] { "--name", "-n" }, localizer.DiskCreateNameOptionDescription);
 diskCreateCommand.AddArgument(imageArgument);
+diskCreateCommand.AddOption(diskCreateImageFormatOption);
 diskCreateCommand.AddOption(diskTypeOption);
 diskCreateCommand.AddOption(diskFileSystemOption);
 diskCreateCommand.AddOption(diskNameOption);
-diskCreateCommand.SetHandler((string imagePath, string diskTypeName, string? fileSystemName, string? diskName) =>
+diskCreateCommand.SetHandler((string imagePath, string? imageFormatName, string diskTypeName, string? fileSystemName, string? diskName) =>
 {
     try
     {
         using var diskService = CreateDiskService();
         var diskType = ParseDiskType(diskTypeName);
-        var container = diskService.CreateDisk(imagePath, diskType, diskName ?? string.Empty);
+        var resolvedImagePath = ResolveCreatePath(imagePath, imageFormatName);
+        var container = diskService.CreateDisk(resolvedImagePath, diskType, diskName ?? string.Empty);
         
         if (!string.IsNullOrWhiteSpace(fileSystemName))
         {
@@ -306,7 +336,7 @@ diskCreateCommand.SetHandler((string imagePath, string diskTypeName, string? fil
     {
         PrintError(localizer, ex.Message);
     }
-}, imageArgument, diskTypeOption, diskFileSystemOption, diskNameOption);
+}, imageArgument, diskCreateImageFormatOption, diskTypeOption, diskFileSystemOption, diskNameOption);
 
 var diskFormatCommand = new Command("format", localizer.DiskFormatCommandDescription);
 var explicitFormatFsOption = new Option<string?>(new[] { "--file-system", "-f" }, localizer.DiskFormatFsOptionDescription);
@@ -341,6 +371,7 @@ diskFormatCommand.SetHandler((string imagePath, string? explicitFileSystemName) 
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, explicitFormatFsOption);
+diskCommand.AddCommand(diskInspectorCommand);
 diskCommand.AddCommand(diskCreateCommand);
 diskCommand.AddCommand(diskFormatCommand);
 
@@ -386,6 +417,76 @@ diskSectorCopyCommand.SetHandler((string srcPath, string destPath, bool force) =
     }
 }, sourceImageArgument, destImageArgument, forceOption);
 diskCommand.AddCommand(diskSectorCopyCommand);
+
+var sectorCommand = new Command("sector", localizer.SectorCommandDescription);
+var sectorLocationArgument = new Argument<int>("sector", localizer.SectorLocationArgumentDescription);
+var sectorCountArgument = new Argument<int>("count", localizer.SectorCountArgumentDescription);
+var sectorExportCommand = new Command("export", localizer.SectorExportCommandDescription);
+sectorExportCommand.AddArgument(imageArgument);
+sectorExportCommand.AddArgument(sectorLocationArgument);
+sectorExportCommand.AddArgument(sectorCountArgument);
+sectorExportCommand.AddArgument(hostPathArgument);
+sectorExportCommand.SetHandler((string imagePath, int sector, int count, string hostPath) =>
+{
+    try
+    {
+        using var diskService = CreateDiskService();
+        using var container = diskService.OpenDisk(imagePath, true);
+        var payload = ReadLinearSectors(container, sector, count);
+        File.WriteAllBytes(hostPath, payload);
+        PrintSuccess(localizer, localizer.FileExtractedMessage);
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+}, imageArgument, sectorLocationArgument, sectorCountArgument, hostPathArgument);
+
+var sectorImportCountOption = new Option<int?>(new[] { "--count", "-c" }, "Number of sectors to write. If omitted, infer from file length.");
+var sectorImportCommand = new Command("import", localizer.SectorImportCommandDescription);
+sectorImportCommand.AddArgument(imageArgument);
+sectorImportCommand.AddArgument(sectorLocationArgument);
+sectorImportCommand.AddArgument(hostFileArgument);
+sectorImportCommand.AddOption(sectorImportCountOption);
+sectorImportCommand.SetHandler((string imagePath, int sector, string hostFilePath, int? count) =>
+{
+    try
+    {
+        var data = File.ReadAllBytes(hostFilePath);
+        using var diskService = CreateDiskService();
+        using var container = diskService.OpenDisk(imagePath, false);
+        WriteLinearSectors(container, sector, data, count);
+        container.Save();
+        PrintSuccess(localizer, localizer.FileInjectedMessage);
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+}, imageArgument, sectorLocationArgument, hostFileArgument, sectorImportCountOption);
+sectorCommand.AddCommand(sectorExportCommand);
+sectorCommand.AddCommand(sectorImportCommand);
+diskCommand.AddCommand(sectorCommand);
+
+var dumpLocationArgument = new Argument<string>("location", localizer.DumpLocationArgumentDescription);
+var dumpLengthArgument = new Argument<string>("length", localizer.DumpLengthArgumentDescription);
+var diskDumpCommand = new Command("dump", localizer.DiskDumpCommandDescription);
+diskDumpCommand.AddArgument(imageArgument);
+diskDumpCommand.AddArgument(dumpLocationArgument);
+diskDumpCommand.AddArgument(dumpLengthArgument);
+diskDumpCommand.SetHandler((string imagePath, string location, string length) =>
+{
+    try
+    {
+        var bytes = ReadDumpBytes(imagePath, location, length);
+        PrintHexDump(bytes);
+    }
+    catch (Exception ex)
+    {
+        PrintError(localizer, ex.Message);
+    }
+}, imageArgument, dumpLocationArgument, dumpLengthArgument);
+diskCommand.AddCommand(diskDumpCommand);
 
 var diskBootCopyCommand = new Command("boot-copy", "Copy boot area (IPL) from source disk to destination disk");
 diskBootCopyCommand.AddArgument(sourceImageArgument);
@@ -1174,6 +1275,7 @@ checkUpdateCommand.SetHandler(async () =>
 });
 
 rootCommand.AddCommand(listCommand);
+rootCommand.AddCommand(fullHelpCommand);
 rootCommand.AddCommand(fileCommand);
 rootCommand.AddCommand(diskCommand);
 rootCommand.AddCommand(hostCommand);
@@ -1231,9 +1333,66 @@ static string[] RewriteUpdateCheckArgs(string[] rawArgs)
     return ["check-update", .. filteredArgs];
 }
 
+static string[] RewriteFullHelpArgs(string[] rawArgs)
+{
+    if (!rawArgs.Any(arg => arg == "--full-help"))
+    {
+        return rawArgs;
+    }
+
+    var filteredArgs = rawArgs.Where(arg => arg != "--full-help").ToArray();
+    return ["full-help", .. filteredArgs];
+}
+
+static string[] RewriteImplicitInspectorArgs(string[] rawArgs)
+{
+    if (rawArgs.Length == 0)
+    {
+        return rawArgs;
+    }
+
+    var first = rawArgs[0];
+    if (first.StartsWith("-", StringComparison.Ordinal) || IsTopLevelCommand(first) || !LooksLikeDiskImagePath(first))
+    {
+        return rawArgs;
+    }
+
+    return ["disk", "inspector", .. rawArgs];
+}
+
 static bool IsBootSubcommand(string value)
 {
     return value is "export" or "import" or "show" or "clear" or "clone" or "-h" or "--help";
+}
+
+static bool IsTopLevelCommand(string value)
+{
+    return value is
+        "list" or
+        "full-help" or
+        "file" or
+        "disk" or
+        "host" or
+        "boot" or
+        "layout" or
+        "inject" or
+        "check-update" or
+        "-h" or
+        "--help";
+}
+
+static bool LooksLikeDiskImagePath(string value)
+{
+    if (File.Exists(value))
+    {
+        return true;
+    }
+
+    var extension = Path.GetExtension(value);
+    return extension.Equals(".d88", StringComparison.OrdinalIgnoreCase) ||
+           extension.Equals(".d77", StringComparison.OrdinalIgnoreCase) ||
+           extension.Equals(".2d", StringComparison.OrdinalIgnoreCase) ||
+           extension.Equals(".dsk", StringComparison.OrdinalIgnoreCase);
 }
 
 static DiskService CreateDiskService()
@@ -1410,6 +1569,461 @@ static bool IsProbablyVirtualLabel(FileEntry entry)
 
     return (looksDecorative || suspiciousCluster || hasSentinelAddresses) &&
            (labelFlags || suspiciousCluster || hasSentinelAddresses);
+}
+
+static string ResolveCreatePath(string imagePath, string? imageFormatName)
+{
+    if (string.IsNullOrWhiteSpace(imageFormatName))
+    {
+        return imagePath;
+    }
+
+    var normalizedExtension = ParseImageFormat(imageFormatName);
+    var currentExtension = Path.GetExtension(imagePath);
+    if (string.IsNullOrWhiteSpace(currentExtension))
+    {
+        return $"{imagePath}{normalizedExtension}";
+    }
+
+    if (!currentExtension.Equals(normalizedExtension, StringComparison.OrdinalIgnoreCase))
+    {
+        throw new InvalidOperationException($"Image path extension '{currentExtension}' does not match requested image format '{normalizedExtension}'.");
+    }
+
+    return imagePath;
+}
+
+static string ParseImageFormat(string imageFormatName)
+{
+    var normalized = imageFormatName.Trim().ToLowerInvariant();
+    return normalized switch
+    {
+        "d88" or ".d88" => ".d88",
+        "d77" or ".d77" => ".d77",
+        "2d" or ".2d" => ".2d",
+        "dsk" or ".dsk" => ".dsk",
+        _ => throw new InvalidOperationException($"Unsupported image format: {imageFormatName}")
+    };
+}
+
+static void PrintFullHelp(Command rootCommand, IConsoleLocalizer localizer)
+{
+    Console.WriteLine(localizer.RootDescription);
+    Console.WriteLine();
+    PrintCommandHelpRecursive(rootCommand, "l89", 0);
+    Console.WriteLine();
+    Console.WriteLine(localizer.FullHelpFooter);
+}
+
+static void PrintCommandHelpRecursive(Command command, string commandPath, int depth)
+{
+    var indent = new string(' ', depth * 2);
+    var commandAliases = string.Join(", ", command.Aliases.Where(x => !string.Equals(x, command.Name, StringComparison.OrdinalIgnoreCase)));
+    Console.WriteLine(string.IsNullOrWhiteSpace(commandAliases)
+        ? $"{indent}{commandPath}"
+        : $"{indent}{commandPath} (aliases: {commandAliases})");
+    if (!string.IsNullOrWhiteSpace(command.Description))
+    {
+        Console.WriteLine($"{indent}  {command.Description}");
+    }
+
+    var arguments = command.Arguments.ToArray();
+    if (arguments.Length > 0)
+    {
+        Console.WriteLine($"{indent}  Arguments:");
+        foreach (var argument in arguments)
+        {
+            Console.WriteLine($"{indent}    <{argument.Name}>  {argument.Description}");
+        }
+    }
+
+    var options = command.Options.ToArray();
+    if (options.Length > 0)
+    {
+        Console.WriteLine($"{indent}  Options:");
+        foreach (var option in options.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase))
+        {
+            var aliases = string.Join(", ", option.Aliases);
+            Console.WriteLine($"{indent}    {aliases}  {option.Description}");
+        }
+    }
+
+    var subcommands = command.Subcommands
+        .Where(x => !string.Equals(x.Name, "help", StringComparison.OrdinalIgnoreCase))
+        .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+    if (subcommands.Length == 0)
+    {
+        return;
+    }
+
+    Console.WriteLine($"{indent}  Commands:");
+    foreach (var subcommand in subcommands)
+    {
+        var aliases = string.Join(", ", subcommand.Aliases.Where(x => !string.Equals(x, subcommand.Name, StringComparison.OrdinalIgnoreCase)));
+        var suffix = string.IsNullOrWhiteSpace(aliases) ? string.Empty : $" [{aliases}]";
+        Console.WriteLine($"{indent}    {subcommand.Name}{suffix}  {subcommand.Description}");
+    }
+
+    foreach (var subcommand in subcommands)
+    {
+        Console.WriteLine();
+        PrintCommandHelpRecursive(subcommand, $"{commandPath} {subcommand.Name}", depth + 1);
+    }
+}
+
+static void PrintInspector(
+    string imagePath,
+    string detail,
+    string? encodingOverride,
+    IConsoleLocalizer localizer,
+    ArchiveService archiveService,
+    HuBasicMetadataService huBasicMetadataService,
+    IBootProfileService bootProfileService)
+{
+    using var diskService = CreateDiskService();
+    diskService.OpenDisk(imagePath, true);
+
+    var metadata = diskService.GetContainerMetadata() ?? throw new InvalidOperationException("Container metadata is unavailable.");
+    var fileSystem = diskService.FileSystem;
+    var normalizedDetail = detail.Trim().ToLowerInvariant();
+    if (normalizedDetail is not ("short" or "normal" or "full"))
+    {
+        throw new InvalidOperationException($"Unsupported detail level: {detail}");
+    }
+
+    Console.WriteLine($"{localizer.ContainerLabel}: {metadata.ImageFormat}");
+    Console.WriteLine($"{localizer.DiskTypeLabel}: {FormatDiskType(metadata.DiskType)}");
+
+    if (fileSystem != null)
+    {
+        var fsInfo = fileSystem.GetFileSystemInfo();
+        var bootSummary = bootProfileService.GetBootProfile(fileSystem);
+        Console.WriteLine($"{localizer.MachineProfileLabel}: {ResolveMachineProfile(fsInfo, bootSummary)}");
+        Console.WriteLine($"{localizer.FileSystemLabel}: {fsInfo.FileSystemName}");
+
+        if (normalizedDetail is "short" or "normal" or "full")
+        {
+            Console.WriteLine($"{localizer.FilesLabel}: {fileSystem.GetFiles().Count()}");
+            Console.WriteLine($"{localizer.BootLabel}: {FormatBootMode(localizer, bootSummary.Mode)}");
+        }
+
+        if (normalizedDetail is "normal" or "full")
+        {
+            Console.WriteLine($"{localizer.TotalLabel}: {fsInfo.TotalCapacity}");
+            Console.WriteLine($"{localizer.UsedLabel}: {fsInfo.TotalCapacity - fsInfo.FreeSpace}");
+            Console.WriteLine($"{localizer.FreeLabel}: {fsInfo.FreeSpace}");
+            Console.WriteLine($"{localizer.EncodingLabel}: {encodingOverride ?? fsInfo.DefaultEncodingId}");
+        }
+
+        if (normalizedDetail == "full")
+        {
+            Console.WriteLine($"{localizer.GeometryLabel}: {FormatGeometry(metadata.Geometry)}");
+            Console.WriteLine($"{localizer.ImageSizeLabel}: {metadata.DeclaredImageSize}");
+            Console.WriteLine($"{localizer.WriteProtectedLabel}: {metadata.IsWriteProtected}");
+
+            if (bootSummary.FileName is { Length: > 0 })
+            {
+                Console.WriteLine($"{localizer.BootFileLabel}: {bootSummary.FileName}");
+            }
+
+            if (bootSummary.LoadAddress is { } loadAddress)
+            {
+                Console.WriteLine($"{localizer.BootLoadLabel}: {loadAddress:X4}");
+            }
+
+            if (bootSummary.ExecutionAddress is { } executionAddress)
+            {
+                Console.WriteLine($"{localizer.BootExecLabel}: {executionAddress:X4}");
+            }
+
+            if (fileSystem.GetFileSystemInfo().FileSystemName == "Hu-BASIC")
+            {
+                var bootRecord = huBasicMetadataService.GetBootRecordInfo(fileSystem);
+                if (bootRecord is not null)
+                {
+                    var fullName = string.IsNullOrWhiteSpace(bootRecord.Extension)
+                        ? bootRecord.Name
+                        : $"{bootRecord.Name}.{bootRecord.Extension}";
+                    Console.WriteLine($"{localizer.BootFileLabel}: {fullName}");
+                }
+            }
+
+            var (_, entries) = BuildFileListEntries(fileSystem, archiveService, encodingOverride);
+            foreach (var entry in entries.Take(10))
+            {
+                Console.WriteLine($"  {entry.DisplayName}");
+            }
+        }
+
+        return;
+    }
+
+    Console.WriteLine($"{localizer.MachineProfileLabel}: unknown");
+    Console.WriteLine($"{localizer.FileSystemLabel}: {localizer.FileSystemNotDetectedMessage}");
+
+    if (normalizedDetail is "normal" or "full")
+    {
+        Console.WriteLine($"{localizer.GeometryLabel}: {FormatGeometry(metadata.Geometry)}");
+        Console.WriteLine($"{localizer.ImageSizeLabel}: {metadata.DeclaredImageSize}");
+        Console.WriteLine($"{localizer.WriteProtectedLabel}: {metadata.IsWriteProtected}");
+    }
+}
+
+static string ResolveMachineProfile(DiskFileSystemInfo fsInfo, BootInfoSummary bootSummary)
+{
+    if (bootSummary.MachineFamily != Legacy89DiskKit.Domain.CharacterEncoding.Model.MachineType.Unknown)
+    {
+        return bootSummary.MachineFamily.ToString();
+    }
+
+    return string.IsNullOrWhiteSpace(fsInfo.PlatformId) ? "unknown" : fsInfo.PlatformId;
+}
+
+static string FormatDiskType(DiskType diskType)
+{
+    return diskType switch
+    {
+        DiskType.TwoD => "2D",
+        DiskType.TwoDD => "2DD",
+        DiskType.TwoHD => "2HD",
+        DiskType.HardDisk => "HardDisk",
+        _ => diskType.ToString()
+    };
+}
+
+static string FormatGeometry(DiskGeometryInfo geometry)
+{
+    return $"{geometry.Cylinders}c x {geometry.Heads}h x {geometry.SectorsPerTrack}spt x {geometry.BytesPerSector}bps";
+}
+
+static byte[] ReadLinearSectors(IDiskContainer container, int startSector, int count)
+{
+    if (startSector < 0)
+    {
+        throw new InvalidOperationException("Sector number must be zero or greater.");
+    }
+
+    if (count <= 0)
+    {
+        throw new InvalidOperationException("Sector count must be greater than zero.");
+    }
+
+    var sectors = GetOrderedSectors(container);
+    if (startSector + count > sectors.Count)
+    {
+        throw new InvalidOperationException("Requested sector range is outside the disk image.");
+    }
+
+    using var stream = new MemoryStream();
+    for (var i = 0; i < count; i++)
+    {
+        var sectorInfo = sectors[startSector + i];
+        var data = container.ReadSector(sectorInfo.Cylinder, sectorInfo.Head, sectorInfo.Sector);
+        stream.Write(data, 0, data.Length);
+    }
+
+    return stream.ToArray();
+}
+
+static void WriteLinearSectors(IDiskContainer container, int startSector, byte[] data, int? explicitSectorCount)
+{
+    if (startSector < 0)
+    {
+        throw new InvalidOperationException("Sector number must be zero or greater.");
+    }
+
+    var sectors = GetOrderedSectors(container);
+    if (startSector >= sectors.Count)
+    {
+        throw new InvalidOperationException("Requested sector range is outside the disk image.");
+    }
+
+    var sectorSize = sectors[startSector].Size;
+    var sectorCount = explicitSectorCount ?? (data.Length + sectorSize - 1) / sectorSize;
+    if (sectorCount <= 0)
+    {
+        throw new InvalidOperationException("Sector count must be greater than zero.");
+    }
+
+    if (startSector + sectorCount > sectors.Count)
+    {
+        throw new InvalidOperationException("Requested sector range is outside the disk image.");
+    }
+
+    if (data.Length > sectorCount * sectorSize)
+    {
+        throw new InvalidOperationException("Input file is larger than the requested sector range.");
+    }
+
+    for (var i = 0; i < sectorCount; i++)
+    {
+        var offset = i * sectorSize;
+        var chunkSize = Math.Min(sectorSize, Math.Max(0, data.Length - offset));
+        var buffer = new byte[sectorSize];
+        if (chunkSize > 0)
+        {
+            Array.Copy(data, offset, buffer, 0, chunkSize);
+        }
+
+        var sectorInfo = sectors[startSector + i];
+        container.WriteSector(sectorInfo.Cylinder, sectorInfo.Head, sectorInfo.Sector, buffer);
+    }
+}
+
+static byte[] ReadDumpBytes(string imagePath, string locationText, string lengthText)
+{
+    var location = ParseDumpLocation(locationText);
+    var length = ParseDumpLength(lengthText);
+    if (location.Kind == "offset")
+    {
+        if (length.Kind != "bytes")
+        {
+            throw new InvalidOperationException("Offset dump length must be specified in bytes.");
+        }
+
+        var imageData = File.ReadAllBytes(imagePath);
+        if (location.Offset + length.ByteCount > imageData.LongLength)
+        {
+            throw new InvalidOperationException("Requested dump range is outside the image file.");
+        }
+
+        return imageData.AsSpan((int)location.Offset, length.ByteCount).ToArray();
+    }
+
+    using var diskService = CreateDiskService();
+    using var container = diskService.OpenDisk(imagePath, true);
+    var sectors = GetOrderedSectors(container);
+    var startIndex = location.Kind switch
+    {
+        "linear-sector" => location.LinearSector,
+        "chs" => FindSectorIndex(sectors, location.Cylinder, location.Head, location.Sector),
+        _ => throw new InvalidOperationException("Unsupported dump location.")
+    };
+
+    if (startIndex < 0 || startIndex >= sectors.Count)
+    {
+        throw new InvalidOperationException("Requested dump location is outside the disk image.");
+    }
+
+    if (length.Kind == "sectors")
+    {
+        return ReadLinearSectors(container, startIndex, length.SectorCount);
+    }
+
+    using var stream = new MemoryStream();
+    var remainingBytes = length.ByteCount;
+    for (var index = startIndex; index < sectors.Count && remainingBytes > 0; index++)
+    {
+        var sectorInfo = sectors[index];
+        var data = container.ReadSector(sectorInfo.Cylinder, sectorInfo.Head, sectorInfo.Sector);
+        var copyLength = Math.Min(remainingBytes, data.Length);
+        stream.Write(data, 0, copyLength);
+        remainingBytes -= copyLength;
+    }
+
+    if (remainingBytes > 0)
+    {
+        throw new InvalidOperationException("Requested dump range is outside the disk image.");
+    }
+
+    return stream.ToArray();
+}
+
+static List<SectorInfo> GetOrderedSectors(IDiskContainer container)
+{
+    return container.GetAllSectors()
+        .OrderBy(x => x.Cylinder)
+        .ThenBy(x => x.Head)
+        .ThenBy(x => x.Sector)
+        .ToList();
+}
+
+static int FindSectorIndex(IReadOnlyList<SectorInfo> sectors, int cylinder, int head, int sector)
+{
+    for (var i = 0; i < sectors.Count; i++)
+    {
+        var value = sectors[i];
+        if (value.Cylinder == cylinder && value.Head == head && value.Sector == sector)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+static (string Kind, long Offset, int LinearSector, int Cylinder, int Head, int Sector) ParseDumpLocation(string text)
+{
+    var value = text.Trim();
+    if (value.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+    {
+        return ("offset", Convert.ToInt64(value, 16), 0, 0, 0, 0);
+    }
+
+    if (value.Contains(',', StringComparison.Ordinal))
+    {
+        var parts = value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length != 3)
+        {
+            throw new InvalidOperationException($"Unsupported dump location: {text}");
+        }
+
+        return ("chs", 0, 0,
+            ParsePrefixedInt(parts[0], "cylinder"),
+            ParsePrefixedInt(parts[1], "side"),
+            ParsePrefixedInt(parts[2], "sector"));
+    }
+
+    if (int.TryParse(value, out var linearSector))
+    {
+        return ("linear-sector", 0, linearSector, 0, 0, 0);
+    }
+
+    throw new InvalidOperationException($"Unsupported dump location: {text}");
+}
+
+static (string Kind, int ByteCount, int SectorCount) ParseDumpLength(string text)
+{
+    var value = text.Trim().ToLowerInvariant();
+    if (value.EndsWith("sectors", StringComparison.Ordinal))
+    {
+        return ("sectors", 0, int.Parse(value[..^7]));
+    }
+
+    if (value.EndsWith("sector", StringComparison.Ordinal))
+    {
+        return ("sectors", 0, int.Parse(value[..^6]));
+    }
+
+    if (value.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+    {
+        return ("bytes", Convert.ToInt32(value, 16), 0);
+    }
+
+    return ("bytes", int.Parse(value), 0);
+}
+
+static int ParsePrefixedInt(string text, string prefix)
+{
+    if (!text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+    {
+        throw new InvalidOperationException($"Unsupported dump location component: {text}");
+    }
+
+    return int.Parse(text[prefix.Length..]);
+}
+
+static void PrintHexDump(byte[] bytes)
+{
+    const int bytesPerLine = 16;
+    for (var offset = 0; offset < bytes.Length; offset += bytesPerLine)
+    {
+        var chunk = bytes.Skip(offset).Take(bytesPerLine).ToArray();
+        var hex = string.Join(" ", chunk.Select(x => x.ToString("X2")));
+        var ascii = new string(chunk.Select(x => x >= 0x20 && x <= 0x7E ? (char)x : '.').ToArray());
+        Console.WriteLine($"{offset:X8}  {hex.PadRight(bytesPerLine * 3 - 1)}  {ascii}");
+    }
 }
 
 static string ResolveDisplayName(
