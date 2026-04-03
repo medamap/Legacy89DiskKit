@@ -93,7 +93,12 @@ public class ArchiveService
         destFs.WriteBootArea(bootData);
         destDisk.CloseDisk();
     }
-    public void InjectFile(string diskPath, string hostFilePath, string? targetFileName = null, string? encodingOverride = null)
+    public void InjectFile(
+        string diskPath,
+        string hostFilePath,
+        string? targetFileName = null,
+        string? encodingOverride = null,
+        TextTransferOptions? textOptions = null)
     {
         using var diskService = new DiskService(new ManagedNativeBridgeBackend(), _fsRegistry);
         diskService.OpenDisk(diskPath, false); // Open for writing
@@ -114,13 +119,22 @@ public class ArchiveService
         string normalizedName = normalizationService.Normalize(sourceName, encodingId, fsInfo.MaxBaseNameLength, fsInfo.MaxExtensionLength, existingNames);
         
         byte[] data = File.ReadAllBytes(hostFilePath);
-        
-        // Simple heuristic for ASCII vs Binary
+
         bool isAscii = IsLikelyAscii(data);
-        var attributes = fs.CreateDefaultAttributes(isAscii);
-        
         Console.WriteLine($"Injecting '{sourceName}' as '{normalizedName}' (Encoding: {encodingId}, { (isAscii ? "ASCII" : "BIN") })...");
-        fs.WriteFile(normalizedName, data, attributes);
+
+        if (isAscii)
+        {
+            var encoder = _encoderRegistry.GetEncoder(encodingId) ?? throw new InvalidOperationException($"Unsupported encoding: {encodingId}");
+            var transferService = new FileTransferService(encoder);
+            transferService.ImportFile(fs, hostFilePath, normalizedName, true, textOptions);
+        }
+        else
+        {
+            var attributes = fs.CreateDefaultAttributes(false);
+            fs.WriteFile(normalizedName, data, attributes);
+        }
+
         diskService.Session?.Save();
     }
 

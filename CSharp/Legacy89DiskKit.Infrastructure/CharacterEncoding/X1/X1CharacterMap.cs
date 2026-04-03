@@ -15,6 +15,7 @@ public static class X1CharacterMap
             byteToText[i] = "";
         }
 
+        byteToText[0x09] = "\t";
         byteToText[0x0D] = "\n";
         byteToText[0x1A] = "";
 
@@ -119,6 +120,7 @@ public static class X1CharacterMap
 
         textToByte["\n"] = 0x0D;
         textToByte["\r"] = 0x0D;
+        textToByte["\t"] = 0x09;
         byteToText[0x1A] = "\x1A";
         textToByte["\x1A"] = 0x1A;
 

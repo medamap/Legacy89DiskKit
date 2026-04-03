@@ -127,6 +127,9 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string LayoutSortByOptionDescription { get; }
     string BootFilesOptionDescription { get; }
     string TargetFileNameOptionDescription { get; }
+    string TabModeOptionDescription { get; }
+    string TabWidthOptionDescription { get; }
+    string TruncateTextOnOverflowOptionDescription { get; }
     string DiskCreateImageFormatOptionDescription { get; }
     string DiskCreateDiskTypeOptionDescription { get; }
     string DiskCreateFileSystemOptionDescription { get; }
@@ -336,6 +339,9 @@ public static class FileListLocalizer
         public abstract string LayoutSortByOptionDescription { get; }
         public abstract string BootFilesOptionDescription { get; }
         public abstract string TargetFileNameOptionDescription { get; }
+        public abstract string TabModeOptionDescription { get; }
+        public abstract string TabWidthOptionDescription { get; }
+        public abstract string TruncateTextOnOverflowOptionDescription { get; }
         public abstract string DiskCreateImageFormatOptionDescription { get; }
         public abstract string DiskCreateDiskTypeOptionDescription { get; }
         public abstract string DiskCreateFileSystemOptionDescription { get; }
@@ -525,6 +531,9 @@ public static class FileListLocalizer
         public override string LayoutSortByOptionDescription => "Sort key: name, ext, type";
         public override string BootFilesOptionDescription => "Comma-separated list of files to copy or 'all'";
         public override string TargetFileNameOptionDescription => "Override the filename on the target disk";
+        public override string TabModeOptionDescription => "Tab handling for plain text files: keep, spaces, or remove";
+        public override string TabWidthOptionDescription => "Tab stop width when --tab-mode spaces is used";
+        public override string TruncateTextOnOverflowOptionDescription => "When tab expansion exceeds the filesystem text limit, truncate instead of failing";
         public override string DiskCreateImageFormatOptionDescription => "Container/image format: d88, d77, 2d, or dsk (default: d88)";
         public override string DiskCreateDiskTypeOptionDescription => "Disk media type: 2d, 2dd, or 2hd (default: 2d)";
         public override string DiskCreateFileSystemOptionDescription => "Optional file system to initialize: hu-basic, n88-basic, msx-dos, or xdos. When omitted, the disk remains unformatted";
@@ -714,6 +723,9 @@ public static class FileListLocalizer
         public override string LayoutSortByOptionDescription => "ソートキー: name, ext, type";
         public override string BootFilesOptionDescription => "コピーするファイル一覧。all も指定可能";
         public override string TargetFileNameOptionDescription => "ターゲットディスク上のファイル名を上書きします";
+        public override string TabModeOptionDescription => "プレーンテキストのタブ処理: keep, spaces, remove";
+        public override string TabWidthOptionDescription => "--tab-mode spaces 使用時のタブ幅";
+        public override string TruncateTextOnOverflowOptionDescription => "タブ展開でファイルシステム上限を超えた場合にエラーではなく切り詰めます";
         public override string DiskCreateImageFormatOptionDescription => "コンテナ/イメージ形式: d88, d77, 2d, dsk（既定値: d88）";
         public override string DiskCreateDiskTypeOptionDescription => "ディスク種別: 2d, 2dd, 2hd（既定値: 2d）";
         public override string DiskCreateFileSystemOptionDescription => "初期化する任意のファイルシステム: hu-basic, n88-basic, msx-dos, xdos。省略時は未フォーマットのままです";

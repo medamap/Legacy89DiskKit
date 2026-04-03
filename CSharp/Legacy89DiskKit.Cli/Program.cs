@@ -133,51 +133,97 @@ var sourceNameArgument = new Argument<string>("source", localizer.SourceNameArgu
 var targetNameArgument = new Argument<string>("target", localizer.TargetNameArgumentDescription);
 var newNameArgument = new Argument<string>("new-name", localizer.NewNameArgumentDescription);
 var targetFileNameOption = new Option<string?>(new[] { "--target-name", "-n" }, localizer.TargetFileNameOptionDescription);
+var tabModeOption = new Option<string>("--tab-mode", () => "keep", localizer.TabModeOptionDescription);
+var tabWidthOption = new Option<int>("--tab-width", () => 4, localizer.TabWidthOptionDescription);
+var truncateTextOnOverflowOption = new Option<bool>("--truncate-text-on-overflow", localizer.TruncateTextOnOverflowOptionDescription);
 
 var fileExtractCommand = new Command("extract", localizer.FileExtractCommandDescription);
 fileExtractCommand.AddAlias("export");
 fileExtractCommand.AddArgument(imageArgument);
 fileExtractCommand.AddArgument(diskFileArgument);
 fileExtractCommand.AddArgument(hostPathArgument);
-fileExtractCommand.SetHandler((string imagePath, string diskFileName, string hostPath, string? encodingOverride) =>
+fileExtractCommand.AddOption(explicitFileSystemOption);
+fileExtractCommand.AddOption(tabModeOption);
+fileExtractCommand.AddOption(tabWidthOption);
+fileExtractCommand.SetHandler((string imagePath, string diskFileName, string hostPath, string? fileSystemName, string tabMode, int tabWidth, string? encodingOverride) =>
 {
     try
     {
         using var diskService = CreateDiskService();
-        diskService.OpenDisk(imagePath, true);
-        var fs = RequireFileSystem(diskService.FileSystem, localizer);
+        var container = diskService.OpenDisk(imagePath, true);
+        var fs = RequireFileSystem(ResolveFileSystem(diskService, container, fileSystemName, explicitFileSystemResolver), localizer);
         if (fs == null)
         {
             return;
         }
 
-        CreateFileTransferService(fs.GetFileSystemInfo(), encodingOverride).ExportFile(fs, diskFileName, hostPath);
+        CreateFileTransferService(fs.GetFileSystemInfo(), encodingOverride).ExportFile(
+            fs,
+            diskFileName,
+            hostPath,
+            new TextTransferOptions(TabMode: tabMode, TabWidth: tabWidth));
         PrintSuccess(localizer, localizer.FileExtractedMessage);
     }
     catch (Exception ex)
     {
         PrintError(localizer, ex.Message);
     }
-}, imageArgument, diskFileArgument, hostPathArgument, encodingOption);
+}, imageArgument, diskFileArgument, hostPathArgument, explicitFileSystemOption, tabModeOption, tabWidthOption, encodingOption);
 
 var fileInjectCommand = new Command("inject", localizer.FileInjectCommandDescription);
 fileInjectCommand.AddAlias("import");
 fileInjectCommand.AddArgument(imageArgument);
 fileInjectCommand.AddArgument(hostFileArgument);
 fileInjectCommand.AddOption(targetFileNameOption);
-fileInjectCommand.SetHandler((string imagePath, string hostFilePath, string? targetName, string? encodingOverride) =>
+fileInjectCommand.AddOption(explicitFileSystemOption);
+fileInjectCommand.AddOption(tabModeOption);
+fileInjectCommand.AddOption(tabWidthOption);
+fileInjectCommand.AddOption(truncateTextOnOverflowOption);
+fileInjectCommand.SetHandler((string imagePath, string hostFilePath, string? targetName, string? fileSystemName, string tabMode, int tabWidth, bool truncateTextOnOverflow, string? encodingOverride) =>
 {
     try
     {
         RejectWriteToMultiSlotD88(imagePath, localizer);
-        archiveService.InjectFile(imagePath, hostFilePath, targetName, encodingOverride);
+        using var diskService = CreateDiskService();
+        var container = OpenWritableDisk(diskService, imagePath, localizer);
+        var fs = RequireFileSystem(ResolveFileSystem(diskService, container, fileSystemName, explicitFileSystemResolver), localizer);
+        if (fs == null)
+        {
+            return;
+        }
+
+        var fsInfo = fs.GetFileSystemInfo();
+        var encodingId = encodingOverride ?? fsInfo.DefaultEncodingId;
+        var existingNames = new HashSet<string>(fs.GetFiles().Select(f => f.FullName.ToUpperInvariant()));
+        var sourceName = targetName ?? Path.GetFileName(hostFilePath);
+        var normalizationService = new FileNameNormalizationService(archiveService.EncoderRegistry);
+        var normalizedName = normalizationService.Normalize(sourceName, encodingId, fsInfo.MaxBaseNameLength, fsInfo.MaxExtensionLength, existingNames);
+        var data = File.ReadAllBytes(hostFilePath);
+        var isAscii = IsLikelyAsciiPayload(data);
+
+        if (isAscii)
+        {
+            CreateFileTransferService(fsInfo, encodingOverride).ImportFile(
+                fs,
+                hostFilePath,
+                normalizedName,
+                true,
+                new TextTransferOptions(TabMode: tabMode, TabWidth: tabWidth, TruncateOnOverflow: truncateTextOnOverflow));
+        }
+        else
+        {
+            var attributes = fs.CreateDefaultAttributes(false);
+            fs.WriteFile(normalizedName, data, attributes);
+        }
+
+        diskService.Session?.Save();
         PrintSuccess(localizer, localizer.FileInjectedMessage);
     }
     catch (Exception ex)
     {
         PrintError(localizer, ex.Message);
     }
-}, imageArgument, hostFileArgument, targetFileNameOption, encodingOption);
+}, imageArgument, hostFileArgument, targetFileNameOption, explicitFileSystemOption, tabModeOption, tabWidthOption, truncateTextOnOverflowOption, encodingOption);
 
 var fileDeleteCommand = new Command("delete", localizer.FileDeleteCommandDescription);
 fileDeleteCommand.AddArgument(imageArgument);
@@ -1732,6 +1778,31 @@ static bool IsProbablyVirtualLabel(FileEntry entry)
 
     return (looksDecorative || suspiciousCluster || hasSentinelAddresses) &&
            (labelFlags || suspiciousCluster || hasSentinelAddresses);
+}
+
+static bool IsLikelyAsciiPayload(byte[] data)
+{
+    if (data.Length == 0)
+    {
+        return true;
+    }
+
+    int count = Math.Min(data.Length, 1024);
+    int nonPrintable = 0;
+    for (int i = 0; i < count; i++)
+    {
+        if (data[i] == 0)
+        {
+            return false;
+        }
+
+        if (data[i] < 32 && data[i] != 9 && data[i] != 10 && data[i] != 13 && data[i] != 0x1A)
+        {
+            nonPrintable++;
+        }
+    }
+
+    return (double)nonPrintable / count < 0.1;
 }
 
 static string ResolveCreatePath(string imagePath, string? imageFormatName)
