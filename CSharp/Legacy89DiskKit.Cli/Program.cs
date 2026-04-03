@@ -28,7 +28,7 @@ if (requestedLanguage is { } languageCode && languageCode is not ("ja" or "en"))
     return 1;
 }
 
-var effectiveArgs = RewriteFullHelpArgs(RewriteUpdateCheckArgs(RewriteImplicitInspectorArgs(RewriteLegacyArgs(args))));
+var effectiveArgs = RewriteVersionArgs(RewriteFullHelpArgs(RewriteUpdateCheckArgs(RewriteImplicitInspectorArgs(RewriteLegacyArgs(args)))));
 
 var localizer = FileListLocalizer.Create(requestedLanguage);
 var archiveService = new ArchiveService();
@@ -75,6 +75,12 @@ var fullHelpCommand = new Command("full-help", localizer.FullHelpCommandDescript
 fullHelpCommand.SetHandler(() =>
 {
     PrintFullHelp(rootCommand, localizer);
+});
+
+var versionCommand = new Command("version", localizer.VersionCommandDescription);
+versionCommand.SetHandler(() =>
+{
+    Console.WriteLine(VersionDisplay.GetDisplayVersion());
 });
 
 var listCommand = new Command("list", localizer.ListCommandDescription);
@@ -1282,6 +1288,7 @@ checkUpdateCommand.SetHandler(async () =>
 
 rootCommand.AddCommand(listCommand);
 rootCommand.AddCommand(fullHelpCommand);
+rootCommand.AddCommand(versionCommand);
 rootCommand.AddCommand(fileCommand);
 rootCommand.AddCommand(diskCommand);
 rootCommand.AddCommand(hostCommand);
@@ -1348,6 +1355,17 @@ static string[] RewriteFullHelpArgs(string[] rawArgs)
 
     var filteredArgs = rawArgs.Where(arg => arg != "--full-help").ToArray();
     return ["full-help", .. filteredArgs];
+}
+
+static string[] RewriteVersionArgs(string[] rawArgs)
+{
+    if (!rawArgs.Any(arg => arg is "--version" or "-v"))
+    {
+        return rawArgs;
+    }
+
+    var filteredArgs = rawArgs.Where(arg => arg is not "--version" and not "-v").ToArray();
+    return ["version", .. filteredArgs];
 }
 
 static string[] RewriteImplicitInspectorArgs(string[] rawArgs)

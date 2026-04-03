@@ -166,6 +166,7 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string BootImportMetadataOptionDescription { get; }
     string BootEntryImportedMessage { get; }
     string CheckUpdateCommandDescription { get; }
+    string VersionCommandDescription { get; }
     string CheckUpdateCurrentVersionLabel { get; }
     string CheckUpdateLatestVersionLabel { get; }
     string CheckUpdateReleaseUrlLabel { get; }
@@ -366,6 +367,7 @@ public static class FileListLocalizer
         public abstract string BootImportMetadataOptionDescription { get; }
         public abstract string BootEntryImportedMessage { get; }
         public abstract string CheckUpdateCommandDescription { get; }
+        public abstract string VersionCommandDescription { get; }
         public abstract string CheckUpdateCurrentVersionLabel { get; }
         public abstract string CheckUpdateLatestVersionLabel { get; }
         public abstract string CheckUpdateReleaseUrlLabel { get; }
@@ -543,6 +545,7 @@ public static class FileListLocalizer
         public override string BootImportMetadataOptionDescription => "Path to the .json sidecar metadata file";
         public override string BootEntryImportedMessage => "Boot entry successfully imported.";
         public override string CheckUpdateCommandDescription => "Check GitHub Releases for a newer public version";
+        public override string VersionCommandDescription => "Show the CLI version";
         public override string CheckUpdateCurrentVersionLabel => "Current version";
         public override string CheckUpdateLatestVersionLabel => "Latest version";
         public override string CheckUpdateReleaseUrlLabel => "Release URL";
@@ -720,6 +723,7 @@ public static class FileListLocalizer
         public override string BootImportMetadataOptionDescription => ".json メタデータファイルのパス";
         public override string BootEntryImportedMessage => "ブートエントリをインポートしました。";
         public override string CheckUpdateCommandDescription => "GitHub Releases を確認して新しい公開版があるか調べます";
+        public override string VersionCommandDescription => "CLI のバージョンを表示します";
         public override string CheckUpdateCurrentVersionLabel => "現在のバージョン";
         public override string CheckUpdateLatestVersionLabel => "最新バージョン";
         public override string CheckUpdateReleaseUrlLabel => "リリースURL";

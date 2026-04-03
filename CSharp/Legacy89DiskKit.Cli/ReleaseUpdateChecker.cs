@@ -1,5 +1,4 @@
 using System.Net.Http.Headers;
-using System.Reflection;
 using System.Text.Json;
 
 namespace Legacy89DiskKit.Cli;
@@ -17,7 +16,8 @@ public sealed class ReleaseUpdateChecker
 
     private readonly HttpClient httpClient;
     private readonly string latestReleaseApiUrl;
-    private readonly string currentVersion;
+    private readonly string currentVersionDisplay;
+    private readonly string currentVersionNormalized;
 
     public ReleaseUpdateChecker(HttpClient? httpClient = null, string? latestReleaseApiUrl = null, string? currentVersion = null)
     {
@@ -25,13 +25,17 @@ public sealed class ReleaseUpdateChecker
         this.latestReleaseApiUrl = latestReleaseApiUrl
             ?? Environment.GetEnvironmentVariable("LEGACY89_UPDATE_API_URL")
             ?? DefaultLatestReleaseApiUrl;
-        this.currentVersion = NormalizeVersion(currentVersion
-            ?? Environment.GetEnvironmentVariable("LEGACY89_UPDATE_CURRENT_VERSION")
-            ?? ResolveCurrentVersion());
+        var configuredVersion = currentVersion
+            ?? Environment.GetEnvironmentVariable("LEGACY89_UPDATE_CURRENT_VERSION");
+        this.currentVersionDisplay = string.IsNullOrWhiteSpace(configuredVersion)
+            ? VersionDisplay.GetDisplayVersion()
+            : configuredVersion.Trim();
+        this.currentVersionNormalized = NormalizeVersion(configuredVersion
+            ?? VersionDisplay.GetNormalizedVersion());
 
         if (!this.httpClient.DefaultRequestHeaders.UserAgent.Any())
         {
-            this.httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Legacy89DiskKit", this.currentVersion));
+            this.httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Legacy89DiskKit", this.currentVersionNormalized));
         }
     }
 
@@ -40,7 +44,7 @@ public sealed class ReleaseUpdateChecker
         using var response = await httpClient.GetAsync(latestReleaseApiUrl, cancellationToken);
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
-            return new ReleaseUpdateInfo(currentVersion, null, null, null, false);
+            return new ReleaseUpdateInfo(currentVersionDisplay, null, null, null, false);
         }
 
         response.EnsureSuccessStatusCode();
@@ -54,28 +58,12 @@ public sealed class ReleaseUpdateChecker
         var releaseUrl = root.TryGetProperty("html_url", out var htmlUrlElement) ? htmlUrlElement.GetString() : null;
         var windowsMsiUrl = TryFindWindowsMsiUrl(root);
 
-        var current = ParseVersion(currentVersion);
+        var current = ParseVersion(currentVersionNormalized);
         var latest = ParseVersion(latestVersion);
         var isUpdateAvailable = current != null && latest != null && latest > current;
 
-        return new ReleaseUpdateInfo(currentVersion, latestVersion, releaseUrl, windowsMsiUrl, isUpdateAvailable);
+        return new ReleaseUpdateInfo(currentVersionDisplay, latestVersion, releaseUrl, windowsMsiUrl, isUpdateAvailable);
     }
-
-    private static string ResolveCurrentVersion()
-    {
-        var informationalVersion = Assembly.GetEntryAssembly()?
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-            .InformationalVersion;
-
-        if (!string.IsNullOrWhiteSpace(informationalVersion))
-        {
-            return informationalVersion;
-        }
-
-        var assemblyVersion = Assembly.GetEntryAssembly()?.GetName().Version?.ToString();
-        return string.IsNullOrWhiteSpace(assemblyVersion) ? "0.0.0" : assemblyVersion;
-    }
-
     private static string? TryFindWindowsMsiUrl(JsonElement root)
     {
         if (!root.TryGetProperty("assets", out var assetsElement) || assetsElement.ValueKind != JsonValueKind.Array)
