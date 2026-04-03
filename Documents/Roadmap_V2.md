@@ -13,7 +13,7 @@ It exists to answer these questions clearly:
 
 This roadmap intentionally prefers many small, explicit migration phases over a smaller number of broad product phases.
 
-When a phase touches C++ structure, use [Cpp_Ddd_Folder_Migration_Rulebook.md](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md) to decide whether the touched files should also move into a DDD-oriented folder layout.
+When a phase touches C++ structure, use [Cpp_Ddd_Folder_Migration_Rulebook.md](Cpp_Ddd_Folder_Migration_Rulebook.md) to decide whether the touched files should also move into a DDD-oriented folder layout.
 
 ## Layer Model
 
@@ -134,7 +134,7 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - Layer: Domain
   - C# source area: raw-direction notes and future preservation model
   - Expected C++ target: encoded-track, metadata, integrity, and conversion domain contracts
-  - Structural relocation: newly introduced raw preservation headers should be created directly under `domain/raw/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
+  - Structural relocation: newly introduced raw preservation headers should be created directly under `domain/raw/` per the [DDD folder migration rulebook](Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 ### Infrastructure Phases
 
@@ -142,67 +142,67 @@ A Presentation phase is complete when there is a real executable, bridge, or fro
   - Layer: Infrastructure
   - C# source area: path or buffer image loading shells
   - Expected C++ target: buffer-oriented container construction entrypoints
-  - Structural relocation: newly introduced buffer-loading infrastructure should be created directly under `infrastructure/disk_image/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
+  - Structural relocation: newly introduced buffer-loading infrastructure should be created directly under `infrastructure/disk_image/` per the [DDD folder migration rulebook](Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 - [x] Phase V2-12: Raw disk container infrastructure
   - Layer: Infrastructure
   - C# source area: raw container assembly and sector access shells
   - Expected C++ target: concrete raw container adapters over migrated domain rules
-  - Structural relocation: newly introduced raw container infrastructure should be created directly under `infrastructure/disk_image/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
+  - Structural relocation: newly introduced raw container infrastructure should be created directly under `infrastructure/disk_image/` per the [DDD folder migration rulebook](Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 - [x] Phase V2-13: D88 container infrastructure
   - Layer: Infrastructure
   - C# source area: D88 container shell and concrete sector access
   - Expected C++ target: concrete D88 container adapters over migrated parser and domain rules
-  - Structural relocation: newly introduced D88 container infrastructure should be created directly under `infrastructure/disk_image/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
+  - Structural relocation: newly introduced D88 container infrastructure should be created directly under `infrastructure/disk_image/` per the [DDD folder migration rulebook](Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 - [x] Phase V2-14: Character encoding table infrastructure
   - Layer: Infrastructure
   - C# source area: concrete encoding table and conversion data
   - Expected C++ target: reusable encoding table data and lookup infrastructure
-  - Structural relocation: newly introduced character-encoding infrastructure should be created directly under `infrastructure/character_encoding/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
+  - Structural relocation: newly introduced character-encoding infrastructure should be created directly under `infrastructure/character_encoding/` per the [DDD folder migration rulebook](Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 - [x] Phase V2-15: Hu-BASIC filesystem infrastructure
   - Layer: Infrastructure
   - C# source area: Hu-BASIC filesystem implementation shell
   - Expected C++ target: concrete Hu-BASIC container-backed infrastructure over domain rules
-  - Structural relocation: newly introduced Hu-BASIC filesystem infrastructure should be created directly under `infrastructure/filesystem/hu_basic/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
+  - Structural relocation: newly introduced Hu-BASIC filesystem infrastructure should be created directly under `infrastructure/filesystem/hu_basic/` per the [DDD folder migration rulebook](Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 - [x] Phase V2-16: N88-BASIC filesystem infrastructure
   - Layer: Infrastructure
   - C# source area: N88-BASIC filesystem implementation shell
   - Expected C++ target: concrete N88-BASIC container-backed infrastructure over domain rules
-  - Structural relocation: newly introduced N88-BASIC filesystem infrastructure should be created directly under `infrastructure/filesystem/n88_basic/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
+  - Structural relocation: newly introduced N88-BASIC filesystem infrastructure should be created directly under `infrastructure/filesystem/n88_basic/` per the [DDD folder migration rulebook](Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 - [x] Phase V2-17: MSX-DOS filesystem infrastructure
   - Layer: Infrastructure
   - C# source area: MSX-DOS filesystem implementation shell
   - Expected C++ target: concrete MSX-DOS container-backed infrastructure over domain rules
-  - Structural relocation: newly introduced MSX-DOS filesystem infrastructure should be created directly under `infrastructure/filesystem/msx_dos/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
+  - Structural relocation: newly introduced MSX-DOS filesystem infrastructure should be created directly under `infrastructure/filesystem/msx_dos/` per the [DDD folder migration rulebook](Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 - [x] Phase V2-18: Explicit filesystem selection infrastructure
   - Layer: Infrastructure
   - C# source area: explicit resolver and provider wiring
   - Expected C++ target: provider-independent selection and resolver infrastructure
-  - Structural relocation: newly introduced explicit selection infrastructure should be created directly under `infrastructure/filesystem/` and filesystem-specific explicit helpers should remain under their family subfolders per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
+  - Structural relocation: newly introduced explicit selection infrastructure should be created directly under `infrastructure/filesystem/` and filesystem-specific explicit helpers should remain under their family subfolders per the [DDD folder migration rulebook](Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 - [x] Phase V2-19: Filesystem detection infrastructure
   - Layer: Infrastructure
   - C# source area: filesystem detection and candidate evaluation
   - Expected C++ target: detection infrastructure over concrete container and filesystem adapters
-  - Structural relocation: newly introduced filesystem detection infrastructure should be created directly under `infrastructure/filesystem/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
+  - Structural relocation: newly introduced filesystem detection infrastructure should be created directly under `infrastructure/filesystem/` per the [DDD folder migration rulebook](Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 - [x] Phase V2-20: Mounted-medium and controller-medium infrastructure
   - Layer: Infrastructure
   - C# source area: mounted medium binding and controller-facing medium adapters
   - Expected C++ target: concrete mounted-medium and controller-medium adapters
-  - Structural relocation: newly introduced mounted-medium infrastructure should be created directly under `infrastructure/drive/`, and newly introduced controller-facing medium adapters should be created directly under `infrastructure/fdc/medium/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
+  - Structural relocation: newly introduced mounted-medium infrastructure should be created directly under `infrastructure/drive/`, and newly introduced controller-facing medium adapters should be created directly under `infrastructure/fdc/medium/` per the [DDD folder migration rulebook](Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 - [x] Phase V2-21: Native bridge infrastructure over C++ implementations
   - Layer: Infrastructure
   - C# source area: current native bridge backed by managed implementation
   - Expected C++ target: ABI-compatible native bridge backed by C++ implementations
-  - Structural relocation: newly introduced native bridge infrastructure should be created directly under `infrastructure/native/` per the [DDD folder migration rulebook](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Cpp_Ddd_Folder_Migration_Rulebook.md)
+  - Structural relocation: newly introduced native bridge infrastructure should be created directly under `infrastructure/native/` per the [DDD folder migration rulebook](Cpp_Ddd_Folder_Migration_Rulebook.md)
 
 - [x] Phase V2-22: WASM path-independent infrastructure
   - Layer: Infrastructure

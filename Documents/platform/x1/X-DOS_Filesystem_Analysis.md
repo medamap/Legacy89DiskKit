@@ -4,7 +4,7 @@
 
 This document reconstructs the X-DOS on-disk filesystem format from:
 
-- direct repository-local disk analysis of `images/disk_org/x1/XDOS_SYS.D88` and related samples
+- direct repository-local disk analysis of X-DOS system-disk samples and related media
 - previously collected reverse-engineering notes under `analysis/xdos-kernel/`
 - contemporary printed documentation visible in the user-provided `X1通信研究所 3` pages 58-60
 
@@ -597,9 +597,7 @@ addition to physical track/sector addressing.
 
 **Confirmed**
 
-The extracted file:
-
-- `/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/analysis/xdos-kernel/X-DOS.DEF`
+The extracted `X-DOS.DEF` file
 
 provides an independent assembler-side confirmation of several filesystem structures already
 reconstructed from disk and print evidence.

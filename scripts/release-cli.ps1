@@ -16,14 +16,12 @@ $TestProjectPath = Join-Path $RepoRoot "CSharp/Legacy89DiskKit.Tests/Legacy89Dis
 $ReleaseNotesPath = Join-Path $RepoRoot "RELEASE_NOTES_v$Version.md"
 $PublishRoot = Join-Path $RepoRoot "publish/v$Version"
 $ReleaseRoot = Join-Path $RepoRoot "release/v$Version"
-$SampleImage = Join-Path $RepoRoot "images/disk_org/x1/X1turboIIIDemo.d88"
+$SampleImage = $env:LEGACY89_SAMPLE_IMAGE
 $Rids = @("win-x64", "linux-x64", "osx-x64", "osx-arm64")
 
 if (-not (Test-Path $ProjectPath)) { throw "CLI project not found: $ProjectPath" }
 if (-not (Test-Path $TestProjectPath)) { throw "Test project not found: $TestProjectPath" }
 if (-not (Test-Path $ReleaseNotesPath)) { throw "Release notes not found: $ReleaseNotesPath" }
-if (-not (Test-Path $SampleImage)) { throw "Sample image not found: $SampleImage" }
-
 Remove-Item $PublishRoot -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item $ReleaseRoot -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Path $PublishRoot | Out-Null
@@ -58,7 +56,10 @@ $HostArtifact = Join-Path (Join-Path $PublishRoot "win-x64") "Legacy89DiskKit.Cl
 & $HostArtifact --help | Out-Null
 & $HostArtifact disk --help | Out-Null
 & $HostArtifact list --help | Out-Null
-& $HostArtifact list $SampleImage -e sjis | Out-Null
+if ($SampleImage) {
+    if (-not (Test-Path $SampleImage)) { throw "Sample image not found: $SampleImage" }
+    & $HostArtifact list $SampleImage -e sjis | Out-Null
+}
 
 foreach ($Rid in $Rids) {
     $ArchivePath = Join-Path $ReleaseRoot "Legacy89DiskKit.Cli-v$Version-$Rid.zip"

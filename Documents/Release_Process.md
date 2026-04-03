@@ -177,7 +177,8 @@ The local release script expects:
 - release notes:
   - `RELEASE_NOTES_vX.Y.Z.md`
 - host smoke-test sample image:
-  - `images/disk_org/x1/X1turboIIIDemo.d88`
+  - set `LEGACY89_SAMPLE_IMAGE` to a local disk image path when you want a media-based smoke check
+  - if `LEGACY89_SAMPLE_IMAGE` is not set, the release scripts still run help-only smoke checks
 
 The native release script expects:
 
@@ -188,7 +189,8 @@ The native release script expects:
 - public header:
   - `include/legacy89diskkit_native.h`
 - host smoke-test sample image:
-  - `images/disk_org/x1/X1turboIIIDemo.d88`
+  - set `LEGACY89_SAMPLE_IMAGE` to a local disk image path when you want a media-based smoke check
+  - if `LEGACY89_SAMPLE_IMAGE` is not set, the release scripts still run help-only smoke checks
 
 ## Packaging Layout
 

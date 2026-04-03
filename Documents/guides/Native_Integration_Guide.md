@@ -96,7 +96,7 @@ The current native line should therefore be treated as:
 #include <stdio.h>
 
 int main(void) {
-    int32_t handle = ldk_open_disk("images/disk_org/x1/X1turboIIIDemo.d88", true);
+    int32_t handle = ldk_open_disk("samples/X1Demo.d88", true);
     if (handle <= 0) {
         fprintf(stderr, "open failed: %d\n", handle);
         return 1;

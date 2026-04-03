@@ -51,7 +51,7 @@ Preferred services:
 using Legacy89DiskKit.Application;
 
 using var diskService = Legacy89DiskKitApplication.CreateDiskService();
-diskService.OpenDisk("images/disk_org/x1/X1turboIIIDemo.d88");
+diskService.OpenDisk("samples/X1Demo.d88");
 
 var fileSystem = diskService.FileSystem
     ?? throw new InvalidOperationException("File system was not detected.");
@@ -82,7 +82,7 @@ resolver.InitializeForDetection(fileSystem);
 using Legacy89DiskKit.Application;
 
 using var diskService = Legacy89DiskKitApplication.CreateDiskService();
-diskService.OpenDisk("images/disk_org/x1/X1turboIIIDemo.d88");
+diskService.OpenDisk("samples/X1Demo.d88");
 
 var fileSystem = diskService.FileSystem
     ?? throw new InvalidOperationException("File system was not detected.");
@@ -98,7 +98,7 @@ transfer.ImportFile(fileSystem, "README.txt", "README.DOC", isAscii: true);
 using Legacy89DiskKit.Application;
 
 using var diskService = Legacy89DiskKitApplication.CreateDiskService();
-diskService.OpenDisk("images/disk_org/x1/XPL3A.2D", readOnly: false);
+diskService.OpenDisk("samples/LayoutDemo.2D", readOnly: false);
 
 var fileSystem = diskService.FileSystem
     ?? throw new InvalidOperationException("File system was not detected.");

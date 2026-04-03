@@ -4,8 +4,8 @@
 
 X-DOS is a Sharp X1-exclusive operating system developed and distributed by C&S Soft (Regulus).
 Its filesystem does not resemble any of the other formats supported by Legacy89DiskKit.
-This document records the results of direct binary analysis of `images/disk_org/x1/XDOS_SYS.D88`
-and `images/disk_org/x1/XDOSUTIL.D88`, supplemented by SLANG source code files salvaged from the
+This document records the results of direct binary analysis of repository-local X-DOS system and utility disk samples,
+supplemented by SLANG source code files salvaged from the
 disk images themselves.
 
 Analysis date: 2026-03-18

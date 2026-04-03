@@ -9,7 +9,7 @@ It exists to prevent two problems:
 1. migration progress becomes hard to understand because code placement does not reflect the intended architectural layer
 2. file moves break include paths, CMake definitions, and tests without a stable record of the intended target location
 
-Use this document together with [Roadmap V2](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/Documents/Roadmap_V2.md).
+Use this document together with [Roadmap V2](Roadmap_V2.md).
 
 ## Core Rule
 

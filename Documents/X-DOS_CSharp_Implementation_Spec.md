@@ -525,11 +525,7 @@ FDC access routine, toggling bit4 of the MB8877A MSDR register = side select).
 
 File: `csharp/Legacy89DiskKit.Tests/FileSystem/XDos/XDosFileSystemTest.cs`
 
-Use the real disk images at:
-- `images/disk_org/x1/XDOS_SYS.D88`
-- `images/disk_org/x1/XDOSUTIL.D88`
-
-These paths should be resolved relative to the repository root.
+Use real X-DOS system and utility disk samples available in the local verification environment.
 
 ### Required test cases
 

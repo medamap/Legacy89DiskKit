@@ -19,7 +19,7 @@ TEST_PROJECT_PATH="$REPO_ROOT/CSharp/Legacy89DiskKit.Tests/Legacy89DiskKit.Tests
 RELEASE_NOTES_PATH="$REPO_ROOT/RELEASE_NOTES_v${VERSION}.md"
 PUBLISH_ROOT="$REPO_ROOT/publish/v${VERSION}"
 RELEASE_ROOT="$REPO_ROOT/release/v${VERSION}"
-SAMPLE_IMAGE="$REPO_ROOT/images/disk_org/x1/X1turboIIIDemo.d88"
+SAMPLE_IMAGE="${LEGACY89_SAMPLE_IMAGE:-}"
 RIDS=("win-x64" "linux-x64" "osx-x64" "osx-arm64")
 
 if [[ ! -f "$PROJECT_PATH" ]]; then
@@ -34,11 +34,6 @@ fi
 
 if [[ ! -f "$RELEASE_NOTES_PATH" ]]; then
   echo "Release notes not found: $RELEASE_NOTES_PATH" >&2
-  exit 1
-fi
-
-if [[ ! -f "$SAMPLE_IMAGE" ]]; then
-  echo "Sample image not found: $SAMPLE_IMAGE" >&2
   exit 1
 fi
 
@@ -98,7 +93,14 @@ echo "Running smoke checks on $HOST_RID"
 "$HOST_ARTIFACT" --help >/dev/null
 "$HOST_ARTIFACT" disk --help >/dev/null
 "$HOST_ARTIFACT" list --help >/dev/null
-"$HOST_ARTIFACT" list "$SAMPLE_IMAGE" -e sjis >/dev/null
+if [[ -n "$SAMPLE_IMAGE" ]]; then
+  if [[ ! -f "$SAMPLE_IMAGE" ]]; then
+    echo "Sample image not found: $SAMPLE_IMAGE" >&2
+    exit 1
+  fi
+
+  "$HOST_ARTIFACT" list "$SAMPLE_IMAGE" -e sjis >/dev/null
+fi
 
 for RID in "${RIDS[@]}"; do
   ARCHIVE_BASENAME="Legacy89DiskKit.Cli-v${VERSION}-${RID}"
