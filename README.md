@@ -33,9 +33,14 @@ The CLI is the primary release artifact.
 ## Build
 
 ```bash
-dotnet build CSharp/Legacy89DiskKit.Cli/Legacy89DiskKit.Cli.csproj
-dotnet test CSharp/Legacy89DiskKit.Tests/Legacy89DiskKit.Tests.csproj /p:UseAppHost=false
+./scripts/build.sh
 ```
+
+```powershell
+pwsh ./scripts/build.ps1
+```
+
+The build scripts run the managed build and tests first. If `cmake` is available, they also build the C++ library, run native tests, and then run the managed-to-native validation pass. When the native toolchain is unavailable, the scripts print a clear skip message because C# is currently ahead of C++ integration.
 
 ## Installed Command
 
@@ -68,35 +73,35 @@ Native companion release automation:
 On macOS or Linux, install a published CLI and create the public `l89` command:
 
 ```bash
-./scripts/install-cli.sh --source ./publish/v2.1.0/osx-arm64
+./scripts/install.sh
 ```
 
-For a user-local install:
+To install from an existing published directory instead:
 
 ```bash
-./scripts/install-cli.sh --source ./publish/v2.1.0/linux-x64 --prefix ~/.local
+./scripts/install.sh --source ./publish/v2.1.0/linux-x64 --prefix ~/.local
 ```
 
 On Windows, install the CLI into the current user profile and add it to `PATH`:
 
 ```powershell
-./scripts/install-cli.ps1
+./scripts/install.ps1
 ```
 
 To install from an existing published directory instead:
 
 ```powershell
-./scripts/install-cli.ps1 -SourcePath .\publish\v2.1.0\win-x64
+./scripts/install.ps1 -SourcePath .\publish\v2.1.0\win-x64
 ```
 
 To uninstall:
 
 ```bash
-./scripts/install-cli.sh --uninstall
+./scripts/uninstall.sh
 ```
 
 ```powershell
-./scripts/install-cli.ps1 -Uninstall
+./scripts/uninstall.ps1
 ```
 
 The installed command is always:
@@ -111,18 +116,41 @@ Show CLI help:
 
 ```bash
 l89 --help
+l89 --full-help
 ```
 
 Create blank media:
 
 ```bash
-l89 disk create ./workdisk.d88 --disk-type 2d
+l89 disk create ./workdisk --image-format d88 --disk-type 2d
 ```
 
 Format an existing image explicitly:
 
 ```bash
 l89 disk format ./workdisk.d88 --file-system hu-basic
+```
+
+Inspect a disk image:
+
+```bash
+l89 ./workdisk.d88
+l89 disk inspector ./workdisk.d88 --detail full
+```
+
+Import or export one file:
+
+```bash
+l89 file import ./workdisk.d88 ./hello.txt --target-name HELLO.TXT
+l89 file export ./workdisk.d88 HELLO.TXT ./hello-out.txt
+```
+
+Inspect or move raw sectors:
+
+```bash
+l89 disk sector export ./workdisk.d88 0 1 ./sector.bin
+l89 disk sector import ./workdisk.d88 0 ./sector.bin --count 1
+l89 disk dump ./workdisk.d88 cylinder0,side0,sector1 32
 ```
 
 Show boot metadata:

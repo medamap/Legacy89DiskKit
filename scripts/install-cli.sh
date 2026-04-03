@@ -4,7 +4,7 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/install-cli.sh --source <publish-dir-or-executable> [--prefix <prefix>]
+  scripts/install-cli.sh [--source <publish-dir-or-executable>] [--prefix <prefix>] [--configuration <Configuration>] [--rid <rid>]
   scripts/install-cli.sh --uninstall [--prefix <prefix>]
 
 This installs the published executable as:
@@ -13,6 +13,7 @@ and creates:
   <prefix>/bin/l89 -> ../lib/legacy89diskkit/Legacy89DiskKit.Cli
 
 Defaults:
+  source=auto-publish current repo CLI when omitted
   prefix=/usr/local when writable, otherwise ~/.local
 EOF
 }
@@ -20,6 +21,8 @@ EOF
 SOURCE=""
 UNINSTALL=0
 PREFIX=""
+CONFIGURATION="Release"
+RID=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -29,6 +32,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --prefix)
       PREFIX="${2:-}"
+      shift 2
+      ;;
+    --configuration)
+      CONFIGURATION="${2:-}"
+      shift 2
+      ;;
+    --rid)
+      RID="${2:-}"
       shift 2
       ;;
     --uninstall)
@@ -68,10 +79,41 @@ if [[ "$UNINSTALL" -eq 1 ]]; then
   exit 0
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_PATH="$REPO_ROOT/CSharp/Legacy89DiskKit.Cli/Legacy89DiskKit.Cli.csproj"
+
 if [[ -z "$SOURCE" ]]; then
-  echo "--source is required unless --uninstall is specified." >&2
-  usage >&2
-  exit 1
+  if [[ ! -f "$PROJECT_PATH" ]]; then
+    echo "CLI project not found: $PROJECT_PATH" >&2
+    exit 1
+  fi
+
+  if [[ -z "$RID" ]]; then
+    case "$(uname -s):$(uname -m)" in
+      Darwin:arm64) RID="osx-arm64" ;;
+      Darwin:x86_64) RID="osx-x64" ;;
+      Linux:x86_64) RID="linux-x64" ;;
+      *)
+        echo "Unsupported host platform for auto-publish: $(uname -s) $(uname -m)" >&2
+        exit 1
+        ;;
+    esac
+  fi
+
+  PUBLISH_ROOT="${TMPDIR:-/tmp}/Legacy89DiskKit-install"
+  SOURCE="$PUBLISH_ROOT/$RID"
+  rm -rf "$SOURCE"
+  mkdir -p "$SOURCE"
+
+  echo "Publishing Legacy89DiskKit CLI for $RID..."
+  dotnet publish "$PROJECT_PATH" \
+    -c "$CONFIGURATION" \
+    -r "$RID" \
+    --self-contained true \
+    -p:PublishSingleFile=true \
+    -p:PublishAot=false \
+    -o "$SOURCE"
 fi
 
 mkdir -p "$BIN_DIR" "$LIB_DIR"
