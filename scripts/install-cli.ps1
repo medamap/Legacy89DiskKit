@@ -1,10 +1,16 @@
 param(
     [string]$SourcePath,
     [string]$InstallRoot = "$env:LocalAppData\Programs\Legacy89DiskKit",
+    [string]$Configuration = "Release",
+    [string]$Rid = "win-x64",
     [switch]$Uninstall
 )
 
 $ErrorActionPreference = "Stop"
+
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$RepoRoot = Split-Path -Parent $ScriptDir
+$ProjectPath = Join-Path $RepoRoot "CSharp/Legacy89DiskKit.Cli/Legacy89DiskKit.Cli.csproj"
 
 function Get-UserPathEntries {
     $current = [Environment]::GetEnvironmentVariable("PATH", "User")
@@ -36,7 +42,27 @@ if ($Uninstall) {
 }
 
 if ([string]::IsNullOrWhiteSpace($SourcePath)) {
-    throw "Specify -SourcePath with a published executable or directory."
+    if (-not (Test-Path $ProjectPath)) {
+        throw "CLI project not found: $ProjectPath"
+    }
+
+    $PublishRoot = Join-Path ([System.IO.Path]::GetTempPath()) "Legacy89DiskKit-install"
+    $SourcePath = Join-Path $PublishRoot $Rid
+
+    if (Test-Path $SourcePath) {
+        Remove-Item $SourcePath -Recurse -Force
+    }
+
+    New-Item -ItemType Directory -Path $SourcePath -Force | Out-Null
+
+    Write-Host "Publishing Legacy89DiskKit CLI for $Rid..."
+    dotnet publish $ProjectPath `
+        -c $Configuration `
+        -r $Rid `
+        --self-contained true `
+        -p:PublishSingleFile=true `
+        -p:PublishAot=false `
+        -o $SourcePath
 }
 
 $SourceExe = if (Test-Path $SourcePath -PathType Container) {

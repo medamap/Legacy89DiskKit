@@ -77,7 +77,13 @@ For a user-local install:
 ./scripts/install-cli.sh --source ./publish/v2.1.0/linux-x64 --prefix ~/.local
 ```
 
-On Windows, install a published CLI into the current user profile and add it to `PATH`:
+On Windows, install the CLI into the current user profile and add it to `PATH`:
+
+```powershell
+./scripts/install-cli.ps1
+```
+
+To install from an existing published directory instead:
 
 ```powershell
 ./scripts/install-cli.ps1 -SourcePath .\publish\v2.1.0\win-x64
