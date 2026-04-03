@@ -53,8 +53,12 @@ public class XDosListPresentationTest
 
         Assert.Single(view.Rows);
         Assert.Equal(
-            new[] { "X-DOS System", "SYS", "0x80", "10240", "8000", "8100", "2" },
+            new[] { "X-DOS System", "SYS", "H---:0", "10240", "8000", "8100", "2" },
             view.Rows[0].Values.ToArray());
+        Assert.Contains(view.Legends, item => item.Key == "H" && item.Description == Localizer.XDosFlagSecret);
+        Assert.Contains(view.Legends, item => item.Key == "W" && item.Description == Localizer.XDosFlagWriteProtect);
+        Assert.Contains(view.Legends, item => item.Key == "S" && item.Description == Localizer.XDosFlagSystem);
+        Assert.Contains(view.Legends, item => item.Key == "K" && item.Description == Localizer.XDosFlagKanji);
     }
 
     [Fact]
@@ -69,6 +73,8 @@ public class XDosListPresentationTest
         Assert.Contains("Load", result.StandardOutput);
         Assert.Contains("Exec", result.StandardOutput);
         Assert.Contains("FILE00.BIN | BIN", result.StandardOutput);
+        Assert.Contains("----:0", result.StandardOutput);
+        Assert.Contains("Legends:", result.StandardOutput);
         Assert.Contains("8000", result.StandardOutput);
     }
 }

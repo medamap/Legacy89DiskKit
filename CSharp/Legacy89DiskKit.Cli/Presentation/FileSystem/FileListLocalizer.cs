@@ -36,6 +36,11 @@ public interface IFileListLocalizer
     string HuBasicFlagHidden { get; }
     string HuBasicFlagVerify { get; }
     string HuBasicFlagWriteProtect { get; }
+    string XDosFlagSecret { get; }
+    string XDosFlagWriteProtect { get; }
+    string XDosFlagSystem { get; }
+    string XDosFlagKanji { get; }
+    string XDosFlagUserNibble { get; }
 }
 
 public interface IConsoleLocalizer : IFileListLocalizer
@@ -238,6 +243,11 @@ public static class FileListLocalizer
         public abstract string HuBasicFlagHidden { get; }
         public abstract string HuBasicFlagVerify { get; }
         public abstract string HuBasicFlagWriteProtect { get; }
+        public abstract string XDosFlagSecret { get; }
+        public abstract string XDosFlagWriteProtect { get; }
+        public abstract string XDosFlagSystem { get; }
+        public abstract string XDosFlagKanji { get; }
+        public abstract string XDosFlagUserNibble { get; }
         public abstract string LanguageOptionDescription { get; }
         public abstract string EncodingOptionDescription { get; }
         public abstract string FullHelpOptionDescription { get; }
@@ -416,6 +426,11 @@ public static class FileListLocalizer
         public override string HuBasicFlagHidden => "Hidden";
         public override string HuBasicFlagVerify => "Verify";
         public override string HuBasicFlagWriteProtect => "Write-protect";
+        public override string XDosFlagSecret => "Secret";
+        public override string XDosFlagWriteProtect => "Write-protect";
+        public override string XDosFlagSystem => "System";
+        public override string XDosFlagKanji => "Kanji";
+        public override string XDosFlagUserNibble => "User attribute nibble (bits 0-3)";
         public override string LanguageOptionDescription => "Override UI language: ja or en";
         public override string EncodingOptionDescription => "Override disk filename decoding and text I/O encoding (accepted examples: X1, SJIS, Shift-JIS, ShiftJIS, shift_jis)";
         public override string FullHelpOptionDescription => "Print the complete command reference";
@@ -594,6 +609,11 @@ public static class FileListLocalizer
         public override string HuBasicFlagHidden => "隠し";
         public override string HuBasicFlagVerify => "ベリファイ";
         public override string HuBasicFlagWriteProtect => "書き込み保護";
+        public override string XDosFlagSecret => "シークレット";
+        public override string XDosFlagWriteProtect => "書き込み保護";
+        public override string XDosFlagSystem => "システム";
+        public override string XDosFlagKanji => "漢字";
+        public override string XDosFlagUserNibble => "ユーザー属性ニブル (bit 0-3)";
         public override string LanguageOptionDescription => "UI 表示言語を指定します: ja または en";
         public override string EncodingOptionDescription => "ディスク上ファイル名の表示デコードやテキスト入出力の文字エンコーディングを上書きします（指定例: X1, SJIS, Shift-JIS, ShiftJIS, shift_jis）";
         public override string FullHelpOptionDescription => "全コマンドのヘルプをまとめて表示します";

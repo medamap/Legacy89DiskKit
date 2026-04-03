@@ -25,7 +25,7 @@ public class XDosFileListFormatter : IFileListFormatter
             {
                 entry.DisplayName,
                 FormatType(entry.Entry),
-                $"0x{entry.Entry.Attributes.RawAttributes:X2}",
+                FormatAttributeFlags(entry.Entry.Attributes.RawAttributes),
                 entry.Entry.Size.ToString(),
                 FormatHex(entry.Entry.LoadAddress),
                 FormatHex(entry.Entry.ExecutionAddress),
@@ -33,7 +33,16 @@ public class XDosFileListFormatter : IFileListFormatter
             }))
             .ToArray();
 
-        return new FileListView(summary, columns, rows, Array.Empty<FileListLegendItem>(), Array.Empty<FileListFootnote>());
+        var legends = new[]
+        {
+            new FileListLegendItem("H", localizer.XDosFlagSecret),
+            new FileListLegendItem("W", localizer.XDosFlagWriteProtect),
+            new FileListLegendItem("S", localizer.XDosFlagSystem),
+            new FileListLegendItem("K", localizer.XDosFlagKanji),
+            new FileListLegendItem("0-F", localizer.XDosFlagUserNibble)
+        };
+
+        return new FileListView(summary, columns, rows, legends, Array.Empty<FileListFootnote>());
     }
 
     private static string FormatType(FileEntry entry)
@@ -61,6 +70,24 @@ public class XDosFileListFormatter : IFileListFormatter
     private static string FormatHex(ushort? value)
     {
         return value.HasValue ? $"{value.Value:X4}" : "----";
+    }
+
+    private static string FormatAttributeFlags(byte value)
+    {
+        return string.Create(6, value, static (buffer, raw) =>
+        {
+            buffer[0] = (raw & 0x80) != 0 ? 'H' : '-';
+            buffer[1] = (raw & 0x40) != 0 ? 'W' : '-';
+            buffer[2] = (raw & 0x20) != 0 ? 'S' : '-';
+            buffer[3] = (raw & 0x10) != 0 ? 'K' : '-';
+            buffer[4] = ':';
+            buffer[5] = GetHexNibble((byte)(raw & 0x0F));
+        });
+    }
+
+    private static char GetHexNibble(byte value)
+    {
+        return (char)(value < 10 ? '0' + value : 'A' + (value - 10));
     }
 
     private static IReadOnlyList<FileListSummaryItem> CreateSummary(FileListFormatContext context, IFileListLocalizer localizer)
