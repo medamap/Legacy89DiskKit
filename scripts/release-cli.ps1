@@ -48,7 +48,7 @@ foreach ($Rid in $Rids) {
     }
 
     if (-not (Test-Path $ExecutablePath)) {
-        throw "Expected executable not found for $Rid: $ExecutablePath"
+        throw "Expected executable not found for ${Rid}: $ExecutablePath"
     }
 }
 
