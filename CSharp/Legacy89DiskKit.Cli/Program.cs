@@ -306,7 +306,7 @@ diskInspectorCommand.SetHandler((string imagePath, string detail, string? encodi
 
 var diskCreateCommand = new Command("create", localizer.DiskCreateCommandDescription);
 var diskCreateImageFormatOption = new Option<string?>(new[] { "--image-format", "-i" }, localizer.DiskCreateImageFormatOptionDescription);
-var diskTypeOption = new Option<string>(new[] { "--disk-type", "-d" }, localizer.DiskCreateDiskTypeOptionDescription) { IsRequired = true };
+var diskTypeOption = new Option<string>(new[] { "--disk-type", "-d" }, () => "2d", localizer.DiskCreateDiskTypeOptionDescription);
 var diskFileSystemOption = new Option<string?>(new[] { "--file-system", "-f" }, localizer.DiskCreateFileSystemOptionDescription);
 var diskNameOption = new Option<string?>(new[] { "--name", "-n" }, localizer.DiskCreateNameOptionDescription);
 diskCreateCommand.AddArgument(imageArgument);

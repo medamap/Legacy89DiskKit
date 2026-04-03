@@ -436,7 +436,7 @@ public static class FileListLocalizer
         public override string DiskCommandDescription => "Disk-level operations";
         public override string DiskInspectorCommandDescription => "Inspect disk/container, file system, and boot metadata";
         public override string DiskInspectorDetailOptionDescription => "Detail level: short, normal, or full";
-        public override string DiskCreateCommandDescription => "Create a new disk image and initialize it with an explicit file system";
+        public override string DiskCreateCommandDescription => "Create a new disk image. When --file-system is omitted, it remains unformatted";
         public override string DiskFormatCommandDescription => "Reinitialize an existing disk image, preferably with an explicit file system";
         public override string SectorCommandDescription => "Sector-level import/export operations";
         public override string SectorExportCommandDescription => "Export sectors from a disk image to a host file";
@@ -489,9 +489,9 @@ public static class FileListLocalizer
         public override string LayoutSortByOptionDescription => "Sort key: name, ext, type";
         public override string BootFilesOptionDescription => "Comma-separated list of files to copy or 'all'";
         public override string TargetFileNameOptionDescription => "Override the filename on the target disk";
-        public override string DiskCreateImageFormatOptionDescription => "Container/image format: d88, d77, 2d, or dsk";
-        public override string DiskCreateDiskTypeOptionDescription => "Disk media type: 2d, 2dd, or 2hd";
-        public override string DiskCreateFileSystemOptionDescription => "File system to initialize: hu-basic, n88-basic, msx-dos, or xdos";
+        public override string DiskCreateImageFormatOptionDescription => "Container/image format: d88, d77, 2d, or dsk (default: d88)";
+        public override string DiskCreateDiskTypeOptionDescription => "Disk media type: 2d, 2dd, or 2hd (default: 2d)";
+        public override string DiskCreateFileSystemOptionDescription => "Optional file system to initialize: hu-basic, n88-basic, msx-dos, or xdos. When omitted, the disk remains unformatted";
         public override string DiskCreateNameOptionDescription => "Optional disk name for image containers that support it";
         public override string DiskFormatFsOptionDescription => "Explicit file system to format: hu-basic, n88-basic, msx-dos, or xdos";
         public override string SectorLocationArgumentDescription => "Starting linear sector number";
@@ -509,7 +509,7 @@ public static class FileListLocalizer
         public override string FileDeletedMessage => "File deleted.";
         public override string FileRenamedMessage => "File renamed.";
         public override string FileCopiedMessage => "File copied.";
-        public override string DiskCreatedMessage => "Disk created and formatted.";
+        public override string DiskCreatedMessage => "Disk created.";
         public override string DiskFormattedMessage => "Disk formatted.";
         public override string DiskSectorCopiedMessage => "Disk sector copy completed. {0} tracks copied, {1} sectors skipped.";
         public override string LayoutUpdatedMessage => "Directory layout updated.";
@@ -612,7 +612,7 @@ public static class FileListLocalizer
         public override string DiskCommandDescription => "ディスク単位の操作";
         public override string DiskInspectorCommandDescription => "コンテナ、ファイルシステム、ブート情報をまとめて確認します";
         public override string DiskInspectorDetailOptionDescription => "詳細レベル: short, normal, full";
-        public override string DiskCreateCommandDescription => "新しいディスクイメージを作成し、指定したファイルシステムで初期化します";
+        public override string DiskCreateCommandDescription => "新しいディスクイメージを作成します。--file-system を省略した場合は未フォーマットのままです";
         public override string DiskFormatCommandDescription => "既存ディスクイメージを再初期化します。明示的なファイルシステム指定を推奨します";
         public override string SectorCommandDescription => "セクタ単位の入出力";
         public override string SectorExportCommandDescription => "ディスクイメージからセクタをホストファイルへ出力します";
@@ -665,9 +665,9 @@ public static class FileListLocalizer
         public override string LayoutSortByOptionDescription => "ソートキー: name, ext, type";
         public override string BootFilesOptionDescription => "コピーするファイル一覧。all も指定可能";
         public override string TargetFileNameOptionDescription => "ターゲットディスク上のファイル名を上書きします";
-        public override string DiskCreateImageFormatOptionDescription => "コンテナ/イメージ形式: d88, d77, 2d, dsk";
-        public override string DiskCreateDiskTypeOptionDescription => "ディスク種別: 2d, 2dd, 2hd";
-        public override string DiskCreateFileSystemOptionDescription => "初期化するファイルシステム: hu-basic, n88-basic, msx-dos, xdos";
+        public override string DiskCreateImageFormatOptionDescription => "コンテナ/イメージ形式: d88, d77, 2d, dsk（既定値: d88）";
+        public override string DiskCreateDiskTypeOptionDescription => "ディスク種別: 2d, 2dd, 2hd（既定値: 2d）";
+        public override string DiskCreateFileSystemOptionDescription => "初期化する任意のファイルシステム: hu-basic, n88-basic, msx-dos, xdos。省略時は未フォーマットのままです";
         public override string DiskCreateNameOptionDescription => "対応コンテナに設定する任意のディスク名";
         public override string DiskFormatFsOptionDescription => "明示的にフォーマットするファイルシステム: hu-basic, n88-basic, msx-dos, xdos";
         public override string SectorLocationArgumentDescription => "開始する線形セクタ番号";
@@ -685,7 +685,7 @@ public static class FileListLocalizer
         public override string FileDeletedMessage => "ファイルを削除しました。";
         public override string FileRenamedMessage => "ファイル名を変更しました。";
         public override string FileCopiedMessage => "ファイルを複製しました。";
-        public override string DiskCreatedMessage => "ディスクを作成してフォーマットしました。";
+        public override string DiskCreatedMessage => "ディスクを作成しました。";
         public override string DiskFormattedMessage => "ディスクをフォーマットしました。";
         public override string DiskSectorCopiedMessage => "セクタコピーが完了しました（{0} トラックをコピー、{1} セクタをスキップ）。";
         public override string LayoutUpdatedMessage => "ディレクトリエントリ順を更新しました。";
