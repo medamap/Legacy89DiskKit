@@ -54,12 +54,12 @@ public static class Legacy89DiskKitApplication
         return new Legacy89DiskKit.FileSystem.Application.CompositeBootProfileService();
     }
 
-    public static FileSystem.IBootEntryExportService CreateBootEntryExportService()
+    public static Legacy89DiskKit.FileSystem.Application.IBootEntryExportService CreateBootEntryExportService()
     {
         return new FileSystem.BootEntryExportService();
     }
 
-    public static FileSystem.IBootEntryImportService CreateBootEntryImportService()
+    public static Legacy89DiskKit.FileSystem.Application.IBootEntryImportService CreateBootEntryImportService()
     {
         return new FileSystem.BootEntryImportService();
     }

@@ -2,7 +2,7 @@ using Legacy89DiskKit.Domain.CharacterEncoding.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.FileSystem.Application;
 
-namespace Legacy89DiskKit.Application.FileSystem;
+namespace Legacy89DiskKit.FileSystem.Application;
 public class X1BootEntrySummaryService
 {
     private readonly HuBasicMetadataService _huBasicMetadataService = new();

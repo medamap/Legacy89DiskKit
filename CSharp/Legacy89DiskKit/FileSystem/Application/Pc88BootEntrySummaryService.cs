@@ -2,7 +2,7 @@ using Legacy89DiskKit.Domain.CharacterEncoding.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.FileSystem.Application;
 
-namespace Legacy89DiskKit.Application.FileSystem;
+namespace Legacy89DiskKit.FileSystem.Application;
 public class Pc88BootEntrySummaryService
 {
     public Pc88BootEntrySummary GetSummary(IFileSystem fileSystem)

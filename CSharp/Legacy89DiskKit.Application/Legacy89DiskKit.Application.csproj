@@ -72,4 +72,24 @@
       <Link>FileSystem/Application/CompositeBootProfileService.cs</Link>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/IBootEntryExportService.cs">
+      <Link>FileSystem/Application/IBootEntryExportService.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/IBootEntryImportService.cs">
+      <Link>FileSystem/Application/IBootEntryImportService.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/X1BootEntrySummaryService.cs">
+      <Link>FileSystem/Application/X1BootEntrySummaryService.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/Pc88BootEntrySummaryService.cs">
+      <Link>FileSystem/Application/Pc88BootEntrySummaryService.cs</Link>
+    </Compile>
+  </ItemGroup>
 </Project>
