@@ -206,9 +206,9 @@ public static class Legacy89DiskKitApplication
     /// <summary>
     /// Creates the supported explicit filesystem resolver.
     /// </summary>
-    public static FileSystem.ExplicitFileSystemResolver CreateExplicitFileSystemResolver()
+    public static Legacy89DiskKit.FileSystem.Application.ExplicitFileSystemResolver CreateExplicitFileSystemResolver()
     {
-        return new FileSystem.ExplicitFileSystemResolver();
+        return new Legacy89DiskKit.FileSystem.Application.ExplicitFileSystemResolver();
     }
 
     /// <summary>

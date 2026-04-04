@@ -1,5 +1,6 @@
 using Legacy89DiskKit.Application.DiskImage;
 using Legacy89DiskKit.Application.FileSystem;
+using Legacy89DiskKit.FileSystem.Application;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Infrastructure.DiskImage.Container;
@@ -71,7 +72,7 @@ public class CliBootImportTest : IDisposable
         using (var diskService = new DiskService())
         {
             var container = diskService.OpenDisk(imagePath, true);
-            var resolver = new Legacy89DiskKit.Application.FileSystem.ExplicitFileSystemResolver();
+            var resolver = new ExplicitFileSystemResolver();
             var fs = resolver.Create("hu-basic", container);
             Assert.Empty(fs.GetFiles());
 

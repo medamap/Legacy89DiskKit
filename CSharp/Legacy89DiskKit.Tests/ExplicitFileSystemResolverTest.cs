@@ -1,4 +1,5 @@
 using Legacy89DiskKit.Application.FileSystem;
+using Legacy89DiskKit.FileSystem.Application;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Infrastructure.DiskImage.Container;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;

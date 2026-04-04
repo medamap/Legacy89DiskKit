@@ -7,7 +7,7 @@ using Legacy89DiskKit.Infrastructure.FileSystem.Msx;
 using Legacy89DiskKit.Infrastructure.FileSystem.Pc88;
 using Legacy89DiskKit.Infrastructure.FileSystem.XDos;
 
-namespace Legacy89DiskKit.Application.FileSystem;
+namespace Legacy89DiskKit.FileSystem.Application;
 
 public sealed class ExplicitFileSystemResolver
 {
