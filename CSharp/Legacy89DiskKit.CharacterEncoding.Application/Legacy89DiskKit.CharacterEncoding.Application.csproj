@@ -5,7 +5,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../Legacy89DiskKit.Domain/Legacy89DiskKit.Domain.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.CharacterEncoding.Domain/Legacy89DiskKit.CharacterEncoding.Domain.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.FileSystem.Domain/Legacy89DiskKit.FileSystem.Domain.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../Legacy89DiskKit/CharacterEncoding/Application/CharacterEncodingResolver.cs">

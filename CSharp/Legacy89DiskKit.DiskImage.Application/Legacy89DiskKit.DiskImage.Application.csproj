@@ -5,8 +5,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../Legacy89DiskKit.Domain/Legacy89DiskKit.Domain.csproj" />
-    <ProjectReference Include="../Legacy89DiskKit.Infrastructure/Legacy89DiskKit.Infrastructure.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.DiskImage.Domain/Legacy89DiskKit.DiskImage.Domain.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.FileSystem.Domain/Legacy89DiskKit.FileSystem.Domain.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.Native.Domain/Legacy89DiskKit.Native.Domain.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.DiskImage.Infrastructure/Legacy89DiskKit.DiskImage.Infrastructure.csproj" />
     <ProjectReference Include="../Legacy89DiskKit.FileSystem.Application/Legacy89DiskKit.FileSystem.Application.csproj" />
     <ProjectReference Include="../Legacy89DiskKit.Native.Application/Legacy89DiskKit.Native.Application.csproj" />
   </ItemGroup>

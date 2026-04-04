@@ -18,8 +18,19 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Legacy89DiskKit.Application\Legacy89DiskKit.Application.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.CharacterEncoding.Domain\Legacy89DiskKit.CharacterEncoding.Domain.csproj" />
     <ProjectReference Include="..\Legacy89DiskKit.Cli\Legacy89DiskKit.Cli.csproj" />
-    <ProjectReference Include="..\Legacy89DiskKit.Infrastructure\Legacy89DiskKit.Infrastructure.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.DiskImage.Domain\Legacy89DiskKit.DiskImage.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.Drive.Domain\Legacy89DiskKit.Drive.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.Fdc.Domain\Legacy89DiskKit.Fdc.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.FileSystem.Domain\Legacy89DiskKit.FileSystem.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.Native.Domain\Legacy89DiskKit.Native.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.Timing.Domain\Legacy89DiskKit.Timing.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.CharacterEncoding.Infrastructure\Legacy89DiskKit.CharacterEncoding.Infrastructure.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.DiskImage.Infrastructure\Legacy89DiskKit.DiskImage.Infrastructure.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.Drive.Infrastructure\Legacy89DiskKit.Drive.Infrastructure.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.Fdc.Infrastructure\Legacy89DiskKit.Fdc.Infrastructure.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.FileSystem.Infrastructure\Legacy89DiskKit.FileSystem.Infrastructure.csproj" />
     <ProjectReference Include="..\Legacy89DiskKit.NativeInterop\Legacy89DiskKit.NativeInterop.csproj" />
   </ItemGroup>
 
