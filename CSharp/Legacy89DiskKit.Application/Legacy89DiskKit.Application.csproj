@@ -11,6 +11,7 @@
     <ProjectReference Include="../Legacy89DiskKit.FileSystem.Application/Legacy89DiskKit.FileSystem.Application.csproj" />
     <ProjectReference Include="../Legacy89DiskKit.CharacterEncoding.Application/Legacy89DiskKit.CharacterEncoding.Application.csproj" />
     <ProjectReference Include="../Legacy89DiskKit.Drive.Application/Legacy89DiskKit.Drive.Application.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.Fdc.Application/Legacy89DiskKit.Fdc.Application.csproj" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup />
@@ -154,11 +155,7 @@
       <Link>Archive/Application/ArchiveService.cs</Link>
     </Compile>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/Fdc/Application/**/*.cs">
-      <LinkBase>Fdc/Application</LinkBase>
-    </Compile>
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Compile Remove="../Legacy89DiskKit/FileSystem/Application/BootEntryExportArtifact.cs" />
     <Compile Remove="../Legacy89DiskKit/FileSystem/Application/BootEntryImportMetadata.cs" />
@@ -172,5 +169,6 @@
     <Compile Remove="../Legacy89DiskKit/Drive/Application/DriveMountService.cs" />
     <Compile Remove="../Legacy89DiskKit/Drive/Application/MountedMediumBinding.cs" />
     <Compile Remove="../Legacy89DiskKit/Drive/Application/MountedMediumBindingService.cs" />
+    <Compile Remove="../Legacy89DiskKit/Fdc/Application/**/*.cs" />
   </ItemGroup>
 </Project>
