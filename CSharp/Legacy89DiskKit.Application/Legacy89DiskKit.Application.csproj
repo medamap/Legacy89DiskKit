@@ -47,4 +47,29 @@
       <Link>FileSystem/Application/TextTransferOptions.cs</Link>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/MsxBootProfileDetectorService.cs">
+      <Link>FileSystem/Application/MsxBootProfileDetectorService.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/MsxBootMetadataService.cs">
+      <Link>FileSystem/Application/MsxBootMetadataService.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/HuBasicMetadataService.cs">
+      <Link>FileSystem/Application/HuBasicMetadataService.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/IBootProfileService.cs">
+      <Link>FileSystem/Application/IBootProfileService.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/CompositeBootProfileService.cs">
+      <Link>FileSystem/Application/CompositeBootProfileService.cs</Link>
+    </Compile>
+  </ItemGroup>
 </Project>

@@ -1,7 +1,8 @@
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
+using Legacy89DiskKit.Application.FileSystem;
 using Legacy89DiskKit.FileSystem.Application;
 
-namespace Legacy89DiskKit.Application.FileSystem;
+namespace Legacy89DiskKit.FileSystem.Application;
 public class CompositeBootProfileService : IBootProfileService
 {
     private readonly X1BootEntrySummaryService _x1Service = new();

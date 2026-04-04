@@ -49,9 +49,9 @@ public static class Legacy89DiskKitApplication
     /// <summary>
     /// Creates the supported boot profile service.
     /// </summary>
-    public static FileSystem.IBootProfileService CreateBootProfileService()
+    public static Legacy89DiskKit.FileSystem.Application.IBootProfileService CreateBootProfileService()
     {
-        return new FileSystem.CompositeBootProfileService();
+        return new Legacy89DiskKit.FileSystem.Application.CompositeBootProfileService();
     }
 
     public static FileSystem.IBootEntryExportService CreateBootEntryExportService()
