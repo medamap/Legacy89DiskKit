@@ -8,7 +8,7 @@ using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
 using Legacy89DiskKit.FileSystem.Application;
 
-namespace Legacy89DiskKit.Application.FileSystem;
+namespace Legacy89DiskKit.FileSystem.Application;
 public class DirectoryLayoutService
 {
     private readonly EncoderRegistry _encoderRegistry;

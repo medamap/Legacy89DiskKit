@@ -112,4 +112,9 @@
       <Link>FileSystem/Application/ExplicitFileSystemResolver.cs</Link>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/DirectoryLayoutService.cs">
+      <Link>FileSystem/Application/DirectoryLayoutService.cs</Link>
+    </Compile>
+  </ItemGroup>
 </Project>

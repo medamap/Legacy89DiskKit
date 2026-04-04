@@ -41,9 +41,9 @@ public static class Legacy89DiskKitApplication
     /// <summary>
     /// Creates the supported directory layout service.
     /// </summary>
-    public static FileSystem.DirectoryLayoutService CreateDirectoryLayoutService()
+    public static Legacy89DiskKit.FileSystem.Application.DirectoryLayoutService CreateDirectoryLayoutService()
     {
-        return new FileSystem.DirectoryLayoutService();
+        return new Legacy89DiskKit.FileSystem.Application.DirectoryLayoutService();
     }
 
     /// <summary>
