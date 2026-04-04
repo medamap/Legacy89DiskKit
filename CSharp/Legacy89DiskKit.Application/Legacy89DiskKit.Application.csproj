@@ -22,101 +22,6 @@
   <ItemGroup />
   <ItemGroup />
   <ItemGroup />
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/MsxBootProfileDetectorService.cs">
-      <Link>FileSystem/Application/MsxBootProfileDetectorService.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/MsxBootMetadataService.cs">
-      <Link>FileSystem/Application/MsxBootMetadataService.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/HuBasicMetadataService.cs">
-      <Link>FileSystem/Application/HuBasicMetadataService.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/IBootProfileService.cs">
-      <Link>FileSystem/Application/IBootProfileService.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/CompositeBootProfileService.cs">
-      <Link>FileSystem/Application/CompositeBootProfileService.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/IBootEntryExportService.cs">
-      <Link>FileSystem/Application/IBootEntryExportService.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/IBootEntryImportService.cs">
-      <Link>FileSystem/Application/IBootEntryImportService.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/X1BootEntrySummaryService.cs">
-      <Link>FileSystem/Application/X1BootEntrySummaryService.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/Pc88BootEntrySummaryService.cs">
-      <Link>FileSystem/Application/Pc88BootEntrySummaryService.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/BootEntryExportService.cs">
-      <Link>FileSystem/Application/BootEntryExportService.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/BootEntryImportService.cs">
-      <Link>FileSystem/Application/BootEntryImportService.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/ExplicitFileSystemResolver.cs">
-      <Link>FileSystem/Application/ExplicitFileSystemResolver.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/DirectoryLayoutService.cs">
-      <Link>FileSystem/Application/DirectoryLayoutService.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/InspectionModels.cs">
-      <Link>FileSystem/Application/InspectionModels.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/DiskInspectionService.cs">
-      <Link>FileSystem/Application/DiskInspectionService.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/FileInspectionService.cs">
-      <Link>FileSystem/Application/FileInspectionService.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/FileTransferService.cs">
-      <Link>FileSystem/Application/FileTransferService.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/DiskCloneService.cs">
-      <Link>FileSystem/Application/DiskCloneService.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/FileSystemTransferOrchestrator.cs">
-      <Link>FileSystem/Application/FileSystemTransferOrchestrator.cs</Link>
-    </Compile>
-  </ItemGroup>
   <ItemGroup />
   <ItemGroup />
   <ItemGroup />
@@ -126,11 +31,26 @@
   <ItemGroup />
   <ItemGroup />
   <ItemGroup />
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/FileNameNormalizationService.cs">
-      <Link>FileSystem/Application/FileNameNormalizationService.cs</Link>
-    </Compile>
-  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
   <ItemGroup>
     <Compile Include="../Legacy89DiskKit/Archive/Application/ArchiveService.cs">
       <Link>Archive/Application/ArchiveService.cs</Link>
@@ -156,5 +76,25 @@
     <Compile Remove="../Legacy89DiskKit/Native/Application/ManagedNativeDiskSession.cs" />
     <Compile Remove="../Legacy89DiskKit/DiskImage/Application/DiskService.cs" />
     <Compile Remove="../Legacy89DiskKit/DiskImage/Application/NativeBridgeBackend.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/MsxBootProfileDetectorService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/MsxBootMetadataService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/HuBasicMetadataService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/IBootProfileService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/CompositeBootProfileService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/IBootEntryExportService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/IBootEntryImportService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/X1BootEntrySummaryService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/Pc88BootEntrySummaryService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/BootEntryExportService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/BootEntryImportService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/ExplicitFileSystemResolver.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/DirectoryLayoutService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/InspectionModels.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/DiskInspectionService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/FileInspectionService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/FileTransferService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/DiskCloneService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/FileSystemTransferOrchestrator.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/FileNameNormalizationService.cs" />
   </ItemGroup>
 </Project>

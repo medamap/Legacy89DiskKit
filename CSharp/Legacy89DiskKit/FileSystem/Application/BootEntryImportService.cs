@@ -1,8 +1,10 @@
 using Legacy89DiskKit.Domain.CharacterEncoding.Model;
+using Legacy89DiskKit.CharacterEncoding.Application;
+using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Domain.FileSystem.Model;
-using Legacy89DiskKit.Application;
+using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
 using Legacy89DiskKit.FileSystem.Application;
 
 namespace Legacy89DiskKit.FileSystem.Application;
@@ -67,7 +69,7 @@ public sealed class BootEntryImportService : IBootEntryImportService
                 bootArea = new byte[256];
             }
 
-            var encoder = Legacy89DiskKitApplication.ResolveEncoder(fsInfo);
+            var encoder = new CharacterEncodingResolver(CreateEncoderRegistry()).ResolveEncoder(fsInfo);
             var nameBytes = encoder.EncodeText(expectedName.PadRight(13, ' ').Substring(0, 13));
             var extBytes = encoder.EncodeText(expectedExt.PadRight(3, ' ').Substring(0, 3));
             bootArea[0] = 0x01; // Bootable flag
@@ -107,5 +109,22 @@ public sealed class BootEntryImportService : IBootEntryImportService
         }
 
         fileSystem.WriteBootArea(payload);
+    }
+
+    private static IEncoderRegistry CreateEncoderRegistry()
+    {
+        var registry = new EncoderRegistry();
+        registry.Register("X1", new X1CharacterEncoder());
+        registry.Register("SJIS", new ShiftJisCharacterEncoder());
+        registry.Register("ShiftJIS", new ShiftJisCharacterEncoder());
+        registry.Register("Shift-JIS", new ShiftJisCharacterEncoder());
+        registry.Register("Shift_JIS", new ShiftJisCharacterEncoder());
+        registry.Register("sjis", new ShiftJisCharacterEncoder());
+        registry.Register("shiftjis", new ShiftJisCharacterEncoder());
+        registry.Register("shift-jis", new ShiftJisCharacterEncoder());
+        registry.Register("shift_jis", new ShiftJisCharacterEncoder());
+        registry.Register("MSX", new ShiftJisCharacterEncoder());
+        registry.Register("PC88", new ShiftJisCharacterEncoder());
+        return registry;
     }
 }
