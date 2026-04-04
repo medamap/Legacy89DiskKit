@@ -2,6 +2,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Legacy89DiskKit.Domain\Legacy89DiskKit.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.CharacterEncoding.Infrastructure\Legacy89DiskKit.CharacterEncoding.Infrastructure.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.DiskImage.Infrastructure\Legacy89DiskKit.DiskImage.Infrastructure.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.Drive.Infrastructure\Legacy89DiskKit.Drive.Infrastructure.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.Fdc.Infrastructure\Legacy89DiskKit.Fdc.Infrastructure.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.FileSystem.Infrastructure\Legacy89DiskKit.FileSystem.Infrastructure.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -9,5 +14,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="CharacterEncoding/**/*.cs" />
+    <Compile Remove="DiskImage/**/*.cs" />
+    <Compile Remove="Drive/**/*.cs" />
+    <Compile Remove="Fdc/**/*.cs" />
+    <Compile Remove="FileSystem/**/*.cs" />
+  </ItemGroup>
 
 </Project>
