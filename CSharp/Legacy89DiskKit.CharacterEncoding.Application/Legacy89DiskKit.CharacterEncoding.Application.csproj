@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Legacy89DiskKit.Domain/Legacy89DiskKit.Domain.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/CharacterEncoding/Application/CharacterEncodingResolver.cs">
+      <Link>CharacterEncoding/Application/CharacterEncodingResolver.cs</Link>
+    </Compile>
+    <Compile Include="../Legacy89DiskKit/CharacterEncoding/Application/EncoderRegistry.cs">
+      <Link>CharacterEncoding/Application/EncoderRegistry.cs</Link>
+    </Compile>
+  </ItemGroup>
+</Project>

@@ -9,6 +9,7 @@
     <ProjectReference Include="..\Legacy89DiskKit.Domain\Legacy89DiskKit.Domain.csproj" />
     <ProjectReference Include="..\Legacy89DiskKit.Infrastructure\Legacy89DiskKit.Infrastructure.csproj" />
     <ProjectReference Include="../Legacy89DiskKit.FileSystem.Application/Legacy89DiskKit.FileSystem.Application.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.CharacterEncoding.Application/Legacy89DiskKit.CharacterEncoding.Application.csproj" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup />
@@ -127,16 +128,8 @@
       <Link>DiskImage/Application/NativeBridgeBackend.cs</Link>
     </Compile>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/CharacterEncoding/Application/CharacterEncodingResolver.cs">
-      <Link>CharacterEncoding/Application/CharacterEncodingResolver.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/CharacterEncoding/Application/EncoderRegistry.cs">
-      <Link>CharacterEncoding/Application/EncoderRegistry.cs</Link>
-    </Compile>
-  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup />
   <ItemGroup>
     <Compile Include="../Legacy89DiskKit/Drive/Application/DriveMountService.cs">
       <Link>Drive/Application/DriveMountService.cs</Link>
@@ -185,5 +178,7 @@
     <Compile Remove="../Legacy89DiskKit/FileSystem/Application/TextTransferOptions.cs" />
     <Compile Remove="../Legacy89DiskKit/FileSystem/Application/Pc88BootEntrySummary.cs" />
     <Compile Remove="../Legacy89DiskKit/FileSystem/Application/X1BootEntrySummary.cs" />
+    <Compile Remove="../Legacy89DiskKit/CharacterEncoding/Application/CharacterEncodingResolver.cs" />
+    <Compile Remove="../Legacy89DiskKit/CharacterEncoding/Application/EncoderRegistry.cs" />
   </ItemGroup>
 </Project>

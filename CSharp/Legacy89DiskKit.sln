@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Legacy89DiskKit.Tests", "Le
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Legacy89DiskKit.FileSystem.Application", "Legacy89DiskKit.FileSystem.Application\Legacy89DiskKit.FileSystem.Application.csproj", "{44C51862-03C7-4BBB-B466-EB507A9A77D2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Legacy89DiskKit.CharacterEncoding.Application", "Legacy89DiskKit.CharacterEncoding.Application\Legacy89DiskKit.CharacterEncoding.Application.csproj", "{84554969-3485-47F0-BBC9-DCCAF4412CDC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,5 +56,9 @@ Global
 		{44C51862-03C7-4BBB-B466-EB507A9A77D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{44C51862-03C7-4BBB-B466-EB507A9A77D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{44C51862-03C7-4BBB-B466-EB507A9A77D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84554969-3485-47F0-BBC9-DCCAF4412CDC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84554969-3485-47F0-BBC9-DCCAF4412CDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84554969-3485-47F0-BBC9-DCCAF4412CDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84554969-3485-47F0-BBC9-DCCAF4412CDC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
