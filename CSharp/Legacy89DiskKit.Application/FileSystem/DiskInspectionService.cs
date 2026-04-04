@@ -1,17 +1,12 @@
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Domain.FileSystem.Model;
+using Legacy89DiskKit.FileSystem.Application;
 
 namespace Legacy89DiskKit.Application.FileSystem;
-
 public sealed class DiskInspectionService
 {
-    public InspectionReport BuildReport(
-        DiskContainerMetadata metadata,
-        IFileSystem? fileSystem,
-        BootInfoSummary? bootSummary,
-        string detailLevel,
-        string encodingId)
+    public InspectionReport BuildReport(DiskContainerMetadata metadata, IFileSystem? fileSystem, BootInfoSummary? bootSummary, string detailLevel, string encodingId)
     {
         var normalizedDetail = detailLevel.Trim().ToLowerInvariant();
         var items = new List<InspectionItem>
@@ -19,7 +14,6 @@ public sealed class DiskInspectionService
             new("Disk", "Container", metadata.ImageFormat),
             new("Disk", "Disk Type", FormatDiskType(metadata.DiskType))
         };
-
         if (fileSystem == null)
         {
             items.Add(new("Disk", "Machine Profile", "unknown"));
@@ -36,12 +30,10 @@ public sealed class DiskInspectionService
 
         var fsInfo = fileSystem.GetFileSystemInfo();
         var machineProfile = ResolveMachineProfile(fsInfo, bootSummary);
-
         items.Add(new("Disk", "Machine Profile", machineProfile));
         items.Add(new("Disk", "File System", fsInfo.FileSystemName));
         items.Add(new("Disk", "Files", fileSystem.GetFiles().Count().ToString()));
         items.Add(new("Disk", "Boot", FormatBootMode(bootSummary?.Mode ?? BootInfoMode.None)));
-
         if (normalizedDetail is "normal" or "full")
         {
             items.Add(new("Disk", "Total", fsInfo.TotalCapacity.ToString()));
@@ -55,7 +47,6 @@ public sealed class DiskInspectionService
             items.Add(new("Disk", "Geometry", FormatGeometry(metadata.Geometry)));
             items.Add(new("Disk", "Image Size", metadata.DeclaredImageSize.ToString()));
             items.Add(new("Disk", "Write Protected", metadata.IsWriteProtected.ToString()));
-
             if (!string.IsNullOrWhiteSpace(bootSummary?.FileName))
             {
                 items.Add(new("Boot", "Boot File", bootSummary!.FileName!));
@@ -91,12 +82,8 @@ public sealed class DiskInspectionService
         DiskType.TwoDD => "2DD",
         DiskType.TwoHD => "2HD",
         DiskType.HardDisk => "HardDisk",
-        _ => diskType.ToString()
-    };
-
-    private static string FormatGeometry(DiskGeometryInfo geometry)
-        => $"{geometry.Cylinders}c x {geometry.Heads}h x {geometry.SectorsPerTrack}spt x {geometry.BytesPerSector}bps";
-
+        _ => diskType.ToString()};
+    private static string FormatGeometry(DiskGeometryInfo geometry) => $"{geometry.Cylinders}c x {geometry.Heads}h x {geometry.SectorsPerTrack}spt x {geometry.BytesPerSector}bps";
     private static string FormatBootMode(BootInfoMode mode) => mode switch
     {
         BootInfoMode.FileBacked => "file-backed",

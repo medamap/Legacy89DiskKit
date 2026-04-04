@@ -1,8 +1,8 @@
 using Legacy89DiskKit.Domain.CharacterEncoding.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Application;
 
 namespace Legacy89DiskKit.Application.FileSystem;
-
 public class MsxBootMetadataService
 {
     public BootInfoSummary GetBootSummary(IFileSystem fileSystem)

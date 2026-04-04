@@ -37,4 +37,9 @@
       <Link>FileSystem/Application/BootEntryExportArtifact.cs</Link>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/BootInfoSummary.cs">
+      <Link>FileSystem/Application/BootInfoSummary.cs</Link>
+    </Compile>
+  </ItemGroup>
 </Project>
