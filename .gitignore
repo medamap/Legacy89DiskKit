@@ -352,3 +352,4 @@ images/
 !images/.gitkeep
 temp/
 out.txt
+opencode.json
