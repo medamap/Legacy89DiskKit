@@ -1,6 +1,6 @@
 using System.Text;
 using Legacy89DiskKit.Application;
-using Legacy89DiskKit.Application.Fdc.Hosts.Protocol;
+using Legacy89DiskKit.Fdc.Application.Hosts.Protocol;
 using Legacy89DiskKit.Infrastructure.DiskImage.Container;
 using Xunit;
 

@@ -84,112 +84,112 @@ public static class Legacy89DiskKitApplication
         return new Legacy89DiskKit.Drive.Application.MountedMediumBindingService();
     }
 
-    public static Fdc.FdcAccessService CreateFdcAccessService(IFdcController controller, IControllerClock? clock = null)
+    public static Legacy89DiskKit.Fdc.Application.FdcAccessService CreateFdcAccessService(IFdcController controller, IControllerClock? clock = null)
     {
-        return new Fdc.FdcAccessService(controller, clock);
+        return new Legacy89DiskKit.Fdc.Application.FdcAccessService(controller, clock);
     }
 
-    public static Fdc.Hosts.EventDrivenEmulatorFdcHostAdapter CreateEventDrivenEmulatorFdcHostAdapter()
+    public static Legacy89DiskKit.Fdc.Application.Hosts.EventDrivenEmulatorFdcHostAdapter CreateEventDrivenEmulatorFdcHostAdapter()
     {
-        return new Fdc.Hosts.EventDrivenEmulatorFdcHostAdapter(
+        return new Legacy89DiskKit.Fdc.Application.Hosts.EventDrivenEmulatorFdcHostAdapter(
             CreateDriveMountService(),
             CreateMountedMediumBindingService(),
             new DiskContainerFactory());
     }
 
-    public static Fdc.Hosts.Protocol.EmulatorHostProtocolEndpoint CreateEmulatorHostProtocolEndpoint()
+    public static Legacy89DiskKit.Fdc.Application.Hosts.Protocol.EmulatorHostProtocolEndpoint CreateEmulatorHostProtocolEndpoint()
     {
-        return new Fdc.Hosts.Protocol.EmulatorHostProtocolEndpoint(CreateEventDrivenEmulatorFdcHostAdapter());
+        return new Legacy89DiskKit.Fdc.Application.Hosts.Protocol.EmulatorHostProtocolEndpoint(CreateEventDrivenEmulatorFdcHostAdapter());
     }
 
-    public static Fdc.Hosts.Protocol.EmulatorHostProtocolTextSession CreateEmulatorHostProtocolTextSession()
+    public static Legacy89DiskKit.Fdc.Application.Hosts.Protocol.EmulatorHostProtocolTextSession CreateEmulatorHostProtocolTextSession()
     {
-        return new Fdc.Hosts.Protocol.EmulatorHostProtocolTextSession(CreateEmulatorHostProtocolEndpoint());
+        return new Legacy89DiskKit.Fdc.Application.Hosts.Protocol.EmulatorHostProtocolTextSession(CreateEmulatorHostProtocolEndpoint());
     }
 
-    public static Fdc.Hosts.Protocol.EmulatorHostProtocolStdioRunner CreateEmulatorHostProtocolStdioRunner()
+    public static Legacy89DiskKit.Fdc.Application.Hosts.Protocol.EmulatorHostProtocolStdioRunner CreateEmulatorHostProtocolStdioRunner()
     {
-        return new Fdc.Hosts.Protocol.EmulatorHostProtocolStdioRunner(CreateEmulatorHostProtocolTextSession());
+        return new Legacy89DiskKit.Fdc.Application.Hosts.Protocol.EmulatorHostProtocolStdioRunner(CreateEmulatorHostProtocolTextSession());
     }
 
-    public static Fdc.Hosts.Protocol.EmulatorHostObservableProtocolSession CreateEmulatorHostObservableProtocolSession()
+    public static Legacy89DiskKit.Fdc.Application.Hosts.Protocol.EmulatorHostObservableProtocolSession CreateEmulatorHostObservableProtocolSession()
     {
-        return new Fdc.Hosts.Protocol.EmulatorHostObservableProtocolSession(CreateEventDrivenEmulatorFdcHostAdapter());
+        return new Legacy89DiskKit.Fdc.Application.Hosts.Protocol.EmulatorHostObservableProtocolSession(CreateEventDrivenEmulatorFdcHostAdapter());
     }
 
-    public static Fdc.Hosts.Protocol.EmulatorHostObservableProtocolStdioRunner CreateEmulatorHostObservableProtocolStdioRunner()
+    public static Legacy89DiskKit.Fdc.Application.Hosts.Protocol.EmulatorHostObservableProtocolStdioRunner CreateEmulatorHostObservableProtocolStdioRunner()
     {
-        return new Fdc.Hosts.Protocol.EmulatorHostObservableProtocolStdioRunner(CreateEmulatorHostObservableProtocolSession());
+        return new Legacy89DiskKit.Fdc.Application.Hosts.Protocol.EmulatorHostObservableProtocolStdioRunner(CreateEmulatorHostObservableProtocolSession());
     }
 
-    public static IReadOnlyList<Fdc.Hosts.Protocol.EmulatorHostRequest> CreateReadOnlyD88PathScript(string imagePath, int driveNumber = 0)
+    public static IReadOnlyList<Legacy89DiskKit.Fdc.Application.Hosts.Protocol.EmulatorHostRequest> CreateReadOnlyD88PathScript(string imagePath, int driveNumber = 0)
     {
-        return Fdc.Hosts.Scripting.EmulatorHostRequestScriptFactory.CreateReadOnlyD88ByPathSequence(imagePath, driveNumber);
+        return Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostRequestScriptFactory.CreateReadOnlyD88ByPathSequence(imagePath, driveNumber);
     }
 
-    public static IReadOnlyList<Fdc.Hosts.Protocol.EmulatorHostRequest> CreateReadOnlyD88BufferScript(byte[] imageData, string imageFormat = "d88", int driveNumber = 0)
+    public static IReadOnlyList<Legacy89DiskKit.Fdc.Application.Hosts.Protocol.EmulatorHostRequest> CreateReadOnlyD88BufferScript(byte[] imageData, string imageFormat = "d88", int driveNumber = 0)
     {
-        return Fdc.Hosts.Scripting.EmulatorHostRequestScriptFactory.CreateReadOnlyD88ByBufferSequence(imageData, imageFormat, driveNumber);
+        return Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostRequestScriptFactory.CreateReadOnlyD88ByBufferSequence(imageData, imageFormat, driveNumber);
     }
 
-    public static IReadOnlyList<Fdc.Hosts.Protocol.EmulatorHostRequest> CreateReadOnlyRawBufferScript(byte[] imageData, string imageFormat = "2d", int driveNumber = 0)
+    public static IReadOnlyList<Legacy89DiskKit.Fdc.Application.Hosts.Protocol.EmulatorHostRequest> CreateReadOnlyRawBufferScript(byte[] imageData, string imageFormat = "2d", int driveNumber = 0)
     {
-        return Fdc.Hosts.Scripting.EmulatorHostRequestScriptFactory.CreateReadOnlyRawByBufferSequence(imageData, imageFormat, driveNumber);
+        return Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostRequestScriptFactory.CreateReadOnlyRawByBufferSequence(imageData, imageFormat, driveNumber);
     }
 
-    public static async Task<Fdc.Hosts.Scripting.EmulatorHostBundle> ReadEmulatorHostBundleAsync(
+    public static async Task<Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostBundle> ReadEmulatorHostBundleAsync(
         string outputDirectory,
         string baseName,
         CancellationToken cancellationToken = default)
     {
-        return await Fdc.Hosts.Scripting.EmulatorHostBundleReader.ReadAsync(outputDirectory, baseName, cancellationToken);
+        return await Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostBundleReader.ReadAsync(outputDirectory, baseName, cancellationToken);
     }
 
-    public static Fdc.Hosts.Scripting.EmulatorHostProofReport BuildEmulatorHostProofReport(
-        IReadOnlyList<Fdc.Hosts.Scripting.EmulatorHostTranscriptEntry> transcript,
+    public static Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostProofReport BuildEmulatorHostProofReport(
+        IReadOnlyList<Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostTranscriptEntry> transcript,
         string openMode,
         string exchangeMode)
     {
-        return Fdc.Hosts.Scripting.EmulatorHostProofReportBuilder.Build(transcript, openMode, exchangeMode);
+        return Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostProofReportBuilder.Build(transcript, openMode, exchangeMode);
     }
 
     public static IReadOnlyList<string> CompareEmulatorHostBundle(
-        Fdc.Hosts.Scripting.EmulatorHostBundle bundle,
-        Fdc.Hosts.Scripting.EmulatorHostProofExpectation expectation)
+        Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostBundle bundle,
+        Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostProofExpectation expectation)
     {
-        return Fdc.Hosts.Scripting.EmulatorHostBundleComparer.Compare(bundle, expectation);
+        return Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostBundleComparer.Compare(bundle, expectation);
     }
 
     public static IReadOnlyList<string> CompareEmulatorHostProofReport(
-        Fdc.Hosts.Scripting.EmulatorHostProofReport report,
-        Fdc.Hosts.Scripting.EmulatorHostProofExpectation expectation)
+        Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostProofReport report,
+        Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostProofExpectation expectation)
     {
-        return Fdc.Hosts.Scripting.EmulatorHostProofReportComparer.Compare(report, expectation);
+        return Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostProofReportComparer.Compare(report, expectation);
     }
 
-    public static async Task<IReadOnlyList<Fdc.Hosts.Scripting.EmulatorHostTranscriptEntry>> ReadEmulatorHostTranscriptAsync(
+    public static async Task<IReadOnlyList<Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostTranscriptEntry>> ReadEmulatorHostTranscriptAsync(
         string transcriptPath,
         CancellationToken cancellationToken = default)
     {
-        return await Fdc.Hosts.Scripting.EmulatorHostTranscriptFileStore.LoadAsync(transcriptPath, cancellationToken);
+        return await Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostTranscriptFileStore.LoadAsync(transcriptPath, cancellationToken);
     }
 
-    public static async Task<IReadOnlyList<Fdc.Hosts.Protocol.EmulatorHostRequest>> ReadEmulatorHostRequestScriptAsync(
+    public static async Task<IReadOnlyList<Legacy89DiskKit.Fdc.Application.Hosts.Protocol.EmulatorHostRequest>> ReadEmulatorHostRequestScriptAsync(
         string requestScriptPath,
         CancellationToken cancellationToken = default)
     {
-        return await Fdc.Hosts.Scripting.EmulatorHostRequestScriptFileStore.LoadAsync(requestScriptPath, cancellationToken);
+        return await Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostRequestScriptFileStore.LoadAsync(requestScriptPath, cancellationToken);
     }
 
     public static async Task WriteEmulatorHostBundleAsync(
         string outputDirectory,
         string baseName,
-        Fdc.Hosts.Scripting.EmulatorHostProofReport report,
-        IReadOnlyList<Fdc.Hosts.Scripting.EmulatorHostTranscriptEntry> transcript,
-        IReadOnlyList<Fdc.Hosts.Protocol.EmulatorHostRequest>? requestScript = null,
+        Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostProofReport report,
+        IReadOnlyList<Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostTranscriptEntry> transcript,
+        IReadOnlyList<Legacy89DiskKit.Fdc.Application.Hosts.Protocol.EmulatorHostRequest>? requestScript = null,
         CancellationToken cancellationToken = default)
     {
-        await Fdc.Hosts.Scripting.EmulatorHostBundleWriter.WriteAsync(
+        await Legacy89DiskKit.Fdc.Application.Hosts.Scripting.EmulatorHostBundleWriter.WriteAsync(
             outputDirectory,
             baseName,
             report,
@@ -198,9 +198,9 @@ public static class Legacy89DiskKitApplication
             cancellationToken);
     }
 
-    public static Fdc.Hosts.XmilWebStyleFdcHostAdapter CreateXmilWebStyleFdcHostAdapter()
+    public static Legacy89DiskKit.Fdc.Application.Hosts.XmilWebStyleFdcHostAdapter CreateXmilWebStyleFdcHostAdapter()
     {
-        return new Fdc.Hosts.XmilWebStyleFdcHostAdapter(CreateEventDrivenEmulatorFdcHostAdapter());
+        return new Legacy89DiskKit.Fdc.Application.Hosts.XmilWebStyleFdcHostAdapter(CreateEventDrivenEmulatorFdcHostAdapter());
     }
 
     /// <summary>

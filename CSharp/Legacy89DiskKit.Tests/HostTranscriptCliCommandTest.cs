@@ -1,5 +1,5 @@
-using Legacy89DiskKit.Application.Fdc.Hosts.Protocol;
-using Legacy89DiskKit.Application.Fdc.Hosts.Scripting;
+using Legacy89DiskKit.Fdc.Application.Hosts.Protocol;
+using Legacy89DiskKit.Fdc.Application.Hosts.Scripting;
 using Legacy89DiskKit.Domain.Fdc.Model;
 using Xunit;
 

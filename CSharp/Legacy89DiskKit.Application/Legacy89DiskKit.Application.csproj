@@ -202,4 +202,9 @@
       <Link>Archive/Application/ArchiveService.cs</Link>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/Fdc/Application/**/*.cs">
+      <LinkBase>Fdc/Application</LinkBase>
+    </Compile>
+  </ItemGroup>
 </Project>

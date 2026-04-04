@@ -1,4 +1,4 @@
-using Legacy89DiskKit.Application.Fdc.Hosts.Protocol;
+using Legacy89DiskKit.Fdc.Application.Hosts.Protocol;
 
 namespace Legacy89DiskKit.Tests;
 

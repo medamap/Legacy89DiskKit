@@ -7,7 +7,7 @@ internal static class HostProofBundleWriter
         string baseName,
         HostProofReport report,
         IReadOnlyList<HostProofTranscriptEntry> transcript,
-        IReadOnlyList<Legacy89DiskKit.Application.Fdc.Hosts.Protocol.EmulatorHostRequest>? requestScript = null,
+        IReadOnlyList<Legacy89DiskKit.Fdc.Application.Hosts.Protocol.EmulatorHostRequest>? requestScript = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(outputDirectory);

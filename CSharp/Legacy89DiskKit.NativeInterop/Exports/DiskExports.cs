@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using System.Linq;
 using Legacy89DiskKit.NativeInterop.Types;
 using Legacy89DiskKit.NativeInterop.Core;
-using Legacy89DiskKit.Application.DiskImage;
+using Legacy89DiskKit.DiskImage.Application;
 
 namespace Legacy89DiskKit.NativeInterop.Exports;
 

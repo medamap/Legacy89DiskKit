@@ -20,7 +20,7 @@ internal static class HostProofBundleReader
         var markdown = await File.ReadAllTextAsync(markdownPath, cancellationToken);
         var transcript = await HostProofTranscriptFileStore.LoadAsync(transcriptPath, cancellationToken);
 
-        IReadOnlyList<Legacy89DiskKit.Application.Fdc.Hosts.Protocol.EmulatorHostRequest> requestScript = [];
+        IReadOnlyList<Legacy89DiskKit.Fdc.Application.Hosts.Protocol.EmulatorHostRequest> requestScript = [];
         if (!string.IsNullOrWhiteSpace(manifest.RequestScriptFileName))
         {
             var requestPath = Path.Combine(outputDirectory, manifest.RequestScriptFileName);

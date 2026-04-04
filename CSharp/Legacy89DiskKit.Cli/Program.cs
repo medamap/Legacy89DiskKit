@@ -6,7 +6,7 @@ using Legacy89DiskKit.Application;
 using Legacy89DiskKit.DiskImage.Application;
 using Legacy89DiskKit.FileSystem.Application;
 using Legacy89DiskKit.Archive.Application;
-using Legacy89DiskKit.Application.Fdc.Hosts.Scripting;
+using Legacy89DiskKit.Fdc.Application.Hosts.Scripting;
 using Legacy89DiskKit.Cli.Presentation.FileSystem;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;

@@ -1,4 +1,4 @@
-using Legacy89DiskKit.Application.Native;
+using Legacy89DiskKit.Native.Application;
 using Legacy89DiskKit.Domain.Native;
 
 namespace Legacy89DiskKit.DiskImage.Application;

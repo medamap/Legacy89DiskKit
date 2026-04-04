@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using Legacy89DiskKit.Application.Fdc.Hosts.Protocol;
+using Legacy89DiskKit.Fdc.Application.Hosts.Protocol;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;
