@@ -1,0 +1,44 @@
+{
+  "PlanName": "filesystem-application-readmodels-project-split-main",
+  "AppliedSlices": [
+    "filesystem-application-readmodels-project-create"
+  ],
+  "Operations": [
+    "Preflight: passed",
+    "BackupRoot: /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/.maichan-backup-readmodels-split",
+    "[Slice] filesystem-application-readmodels-project-create",
+    "ProjectCreate: /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.FileSystem.Application/Legacy89DiskKit.FileSystem.Application.csproj",
+    "ProjectReference: /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.Application/Legacy89DiskKit.Application.csproj \u002B= /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.FileSystem.Application/Legacy89DiskKit.FileSystem.Application.csproj",
+    "CompileInclude: /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.FileSystem.Application/Legacy89DiskKit.FileSystem.Application.csproj \u002B= /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit/FileSystem/Application/BootEntryExportArtifact.cs",
+    "CompileInclude: /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.FileSystem.Application/Legacy89DiskKit.FileSystem.Application.csproj \u002B= /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit/FileSystem/Application/BootEntryImportMetadata.cs",
+    "CompileInclude: /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.FileSystem.Application/Legacy89DiskKit.FileSystem.Application.csproj \u002B= /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit/FileSystem/Application/BootInfoSummary.cs",
+    "CompileInclude: /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.FileSystem.Application/Legacy89DiskKit.FileSystem.Application.csproj \u002B= /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit/FileSystem/Application/DirectoryLayoutTextPlan.cs",
+    "CompileInclude: /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.FileSystem.Application/Legacy89DiskKit.FileSystem.Application.csproj \u002B= /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit/FileSystem/Application/TextTransferOptions.cs",
+    "CompileInclude: /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.FileSystem.Application/Legacy89DiskKit.FileSystem.Application.csproj \u002B= /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit/FileSystem/Application/Pc88BootEntrySummary.cs",
+    "CompileInclude: /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.FileSystem.Application/Legacy89DiskKit.FileSystem.Application.csproj \u002B= /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit/FileSystem/Application/X1BootEntrySummary.cs",
+    "CompileIncludeRemove: /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.Application/Legacy89DiskKit.Application.csproj -= ../Legacy89DiskKit/FileSystem/Application/BootEntryExportArtifact.cs",
+    "CompileIncludeRemove: /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.Application/Legacy89DiskKit.Application.csproj -= ../Legacy89DiskKit/FileSystem/Application/BootEntryImportMetadata.cs",
+    "CompileIncludeRemove: /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.Application/Legacy89DiskKit.Application.csproj -= ../Legacy89DiskKit/FileSystem/Application/BootInfoSummary.cs",
+    "CompileIncludeRemove: /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.Application/Legacy89DiskKit.Application.csproj -= ../Legacy89DiskKit/FileSystem/Application/DirectoryLayoutTextPlan.cs",
+    "CompileIncludeRemove: /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.Application/Legacy89DiskKit.Application.csproj -= ../Legacy89DiskKit/FileSystem/Application/TextTransferOptions.cs",
+    "CompileIncludeRemove: /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.Application/Legacy89DiskKit.Application.csproj -= ../Legacy89DiskKit/FileSystem/Application/Pc88BootEntrySummary.cs",
+    "CompileIncludeRemove: /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.Application/Legacy89DiskKit.Application.csproj -= ../Legacy89DiskKit/FileSystem/Application/X1BootEntrySummary.cs",
+    "SolutionAdd: /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.sln \u002B= /Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/CSharp/Legacy89DiskKit.FileSystem.Application/Legacy89DiskKit.FileSystem.Application.csproj",
+    "[Milestone] filesystem-application-readmodels-project-split-green",
+    "Verify: dotnet build CSharp/Legacy89DiskKit.Cli/Legacy89DiskKit.Cli.csproj",
+    "Verify: dotnet test CSharp/Legacy89DiskKit.Tests/Legacy89DiskKit.Tests.csproj /p:UseAppHost=false --filter \u0022BootEntry|Layout|TextTransfer|Version|CliCreateBlankTest\u0022"
+  ],
+  "VerificationCommands": [
+    "dotnet build CSharp/Legacy89DiskKit.Cli/Legacy89DiskKit.Cli.csproj",
+    "dotnet test CSharp/Legacy89DiskKit.Tests/Legacy89DiskKit.Tests.csproj /p:UseAppHost=false --filter \u0022BootEntry|Layout|TextTransfer|Version|CliCreateBlankTest\u0022"
+  ],
+  "Warnings": [],
+  "Backups": [
+    "/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/.maichan-backup-readmodels-split/CSharp/Legacy89DiskKit.Application/Legacy89DiskKit.Application.csproj",
+    "/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/.maichan-backup-readmodels-split/CSharp/Legacy89DiskKit.FileSystem.Application/Legacy89DiskKit.FileSystem.Application.csproj",
+    "/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/.maichan-backup-readmodels-split/CSharp/Legacy89DiskKit.sln"
+  ],
+  "CompletedMilestones": [
+    "filesystem-application-readmodels-project-split-green"
+  ]
+}

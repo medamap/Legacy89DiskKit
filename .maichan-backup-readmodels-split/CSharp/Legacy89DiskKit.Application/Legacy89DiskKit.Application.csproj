@@ -8,15 +8,42 @@
   <ItemGroup>
     <ProjectReference Include="..\Legacy89DiskKit.Domain\Legacy89DiskKit.Domain.csproj" />
     <ProjectReference Include="..\Legacy89DiskKit.Infrastructure\Legacy89DiskKit.Infrastructure.csproj" />
-    <ProjectReference Include="../Legacy89DiskKit.FileSystem.Application/Legacy89DiskKit.FileSystem.Application.csproj" />
   </ItemGroup>
-  <ItemGroup />
-  <ItemGroup />
-  <ItemGroup />
-  <ItemGroup />
-  <ItemGroup />
-  <ItemGroup />
-  <ItemGroup />
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/DirectoryLayoutTextPlan.cs">
+      <Link>FileSystem/Application/DirectoryLayoutTextPlan.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/X1BootEntrySummary.cs">
+      <Link>FileSystem/Application/X1BootEntrySummary.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/BootEntryImportMetadata.cs">
+      <Link>FileSystem/Application/BootEntryImportMetadata.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/Pc88BootEntrySummary.cs">
+      <Link>FileSystem/Application/Pc88BootEntrySummary.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/BootEntryExportArtifact.cs">
+      <Link>FileSystem/Application/BootEntryExportArtifact.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/BootInfoSummary.cs">
+      <Link>FileSystem/Application/BootInfoSummary.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/TextTransferOptions.cs">
+      <Link>FileSystem/Application/TextTransferOptions.cs</Link>
+    </Compile>
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="../Legacy89DiskKit/FileSystem/Application/MsxBootProfileDetectorService.cs">
       <Link>FileSystem/Application/MsxBootProfileDetectorService.cs</Link>
@@ -176,14 +203,5 @@
     <Compile Include="../Legacy89DiskKit/Fdc/Application/**/*.cs">
       <LinkBase>Fdc/Application</LinkBase>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/BootEntryExportArtifact.cs" />
-    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/BootEntryImportMetadata.cs" />
-    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/BootInfoSummary.cs" />
-    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/DirectoryLayoutTextPlan.cs" />
-    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/TextTransferOptions.cs" />
-    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/Pc88BootEntrySummary.cs" />
-    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/X1BootEntrySummary.cs" />
   </ItemGroup>
 </Project>

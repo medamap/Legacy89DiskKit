@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Legacy89DiskKit.Domain/Legacy89DiskKit.Domain.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/BootEntryExportArtifact.cs">
+      <Link>FileSystem/Application/BootEntryExportArtifact.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/BootEntryImportMetadata.cs">
+      <Link>FileSystem/Application/BootEntryImportMetadata.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/BootInfoSummary.cs">
+      <Link>FileSystem/Application/BootInfoSummary.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/DirectoryLayoutTextPlan.cs">
+      <Link>FileSystem/Application/DirectoryLayoutTextPlan.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/TextTransferOptions.cs">
+      <Link>FileSystem/Application/TextTransferOptions.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/Pc88BootEntrySummary.cs">
+      <Link>FileSystem/Application/Pc88BootEntrySummary.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/X1BootEntrySummary.cs">
+      <Link>FileSystem/Application/X1BootEntrySummary.cs</Link>
+    </Compile>
+  </ItemGroup>
+</Project>
