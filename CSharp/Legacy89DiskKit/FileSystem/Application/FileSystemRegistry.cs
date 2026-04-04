@@ -2,7 +2,7 @@ using Legacy89DiskKit.Domain.FileSystem.Interface.Registry;
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 
-namespace Legacy89DiskKit.Application.FileSystem;
+namespace Legacy89DiskKit.FileSystem.Application;
 
 public class FileSystemRegistry : IFileSystemRegistry
 {

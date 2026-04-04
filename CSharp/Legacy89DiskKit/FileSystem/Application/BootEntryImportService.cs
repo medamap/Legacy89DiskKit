@@ -2,9 +2,10 @@ using Legacy89DiskKit.Domain.CharacterEncoding.Model;
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Domain.FileSystem.Model;
+using Legacy89DiskKit.Application;
 using Legacy89DiskKit.FileSystem.Application;
 
-namespace Legacy89DiskKit.Application.FileSystem;
+namespace Legacy89DiskKit.FileSystem.Application;
 public sealed class BootEntryImportService : IBootEntryImportService
 {
     public void ImportEntry(IDiskContainer container, IFileSystem fileSystem, BootEntryImportMetadata metadata, byte[] payload)

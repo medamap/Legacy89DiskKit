@@ -92,4 +92,19 @@
       <Link>FileSystem/Application/Pc88BootEntrySummaryService.cs</Link>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/FileSystemRegistry.cs">
+      <Link>FileSystem/Application/FileSystemRegistry.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/BootEntryExportService.cs">
+      <Link>FileSystem/Application/BootEntryExportService.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/BootEntryImportService.cs">
+      <Link>FileSystem/Application/BootEntryImportService.cs</Link>
+    </Compile>
+  </ItemGroup>
 </Project>

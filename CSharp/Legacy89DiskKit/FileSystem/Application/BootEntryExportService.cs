@@ -6,7 +6,7 @@ using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Models;
 using Legacy89DiskKit.FileSystem.Application;
 
-namespace Legacy89DiskKit.Application.FileSystem;
+namespace Legacy89DiskKit.FileSystem.Application;
 public sealed class BootEntryExportService : IBootEntryExportService
 {
     private readonly X1BootEntrySummaryService _x1Service = new();

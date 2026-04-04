@@ -56,12 +56,12 @@ public static class Legacy89DiskKitApplication
 
     public static Legacy89DiskKit.FileSystem.Application.IBootEntryExportService CreateBootEntryExportService()
     {
-        return new FileSystem.BootEntryExportService();
+        return new Legacy89DiskKit.FileSystem.Application.BootEntryExportService();
     }
 
     public static Legacy89DiskKit.FileSystem.Application.IBootEntryImportService CreateBootEntryImportService()
     {
-        return new FileSystem.BootEntryImportService();
+        return new Legacy89DiskKit.FileSystem.Application.BootEntryImportService();
     }
 
     public static FileSystem.DiskInspectionService CreateDiskInspectionService()
@@ -227,7 +227,7 @@ public static class Legacy89DiskKitApplication
     /// </summary>
     public static IFileSystemRegistry CreateFileSystemRegistry()
     {
-        var registry = new FileSystem.FileSystemRegistry();
+        var registry = new Legacy89DiskKit.FileSystem.Application.FileSystemRegistry();
         registry.Register(new XDosFileSystemProvider());
         registry.Register(new HuBasicFileSystemProvider());
         registry.Register(new Infrastructure.FileSystem.Cpm.Provider.CpmFileSystemProvider());
