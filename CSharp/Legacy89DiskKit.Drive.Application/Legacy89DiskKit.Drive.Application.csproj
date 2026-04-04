@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Legacy89DiskKit.Domain/Legacy89DiskKit.Domain.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.Infrastructure/Legacy89DiskKit.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/Drive/Application/DriveMountService.cs">
+      <Link>Drive/Application/DriveMountService.cs</Link>
+    </Compile>
+    <Compile Include="../Legacy89DiskKit/Drive/Application/MountedMediumBinding.cs">
+      <Link>Drive/Application/MountedMediumBinding.cs</Link>
+    </Compile>
+    <Compile Include="../Legacy89DiskKit/Drive/Application/MountedMediumBindingService.cs">
+      <Link>Drive/Application/MountedMediumBindingService.cs</Link>
+    </Compile>
+  </ItemGroup>
+</Project>
