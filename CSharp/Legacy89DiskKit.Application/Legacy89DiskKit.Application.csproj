@@ -42,4 +42,9 @@
       <Link>FileSystem/Application/BootInfoSummary.cs</Link>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/TextTransferOptions.cs">
+      <Link>FileSystem/Application/TextTransferOptions.cs</Link>
+    </Compile>
+  </ItemGroup>
 </Project>

@@ -4,15 +4,13 @@ using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
 using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
-
 using DomainAttr = Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes;
+using Legacy89DiskKit.FileSystem.Application;
 
 namespace Legacy89DiskKit.Application.FileSystem;
-
 public class FileTransferService
 {
     private readonly ICharacterEncoder _encoder;
-
     public FileTransferService(ICharacterEncoder encoder)
     {
         _encoder = encoder;
@@ -22,14 +20,12 @@ public class FileTransferService
     {
         byte[] diskData;
         textOptions ??= new TextTransferOptions();
-
         if (isAscii)
         {
             string text = File.ReadAllText(hostPath);
             text = TransformTabs(text, textOptions.TabMode, textOptions.TabWidth);
             diskData = _encoder.EncodeText(text);
             diskData = ConstrainTextPayloadForWrite(fs, diskData, textOptions.TruncateOnOverflow);
-            
             // Ensure 0x1A terminator for Hu-BASIC text files
             if (diskData.Length == 0 || diskData[^1] != 0x1A)
             {
@@ -52,11 +48,10 @@ public class FileTransferService
     {
         byte[] diskData = fs.ReadFile(diskFileName);
         textOptions ??= new TextTransferOptions();
-        
         // Find the file entry to check attributes
         var entry = fs.GetFiles().FirstOrDefault(f => f.FullName.Equals(diskFileName, StringComparison.OrdinalIgnoreCase));
-        if (entry == null) throw new FileNotFoundException($"File not found on disk: {diskFileName}");
-
+        if (entry == null)
+            throw new FileNotFoundException($"File not found on disk: {diskFileName}");
         if (ShouldTreatAsPlainText(entry))
         {
             string newline = textOptions.NewlineOverride ?? Environment.NewLine;
@@ -114,8 +109,7 @@ public class FileTransferService
         {
             "spaces" => ExpandTabs(text, tabWidth),
             "remove" => text.Replace("\t", string.Empty, StringComparison.Ordinal),
-            _ => throw new InvalidOperationException($"Unsupported tab mode: {tabMode}")
-        };
+            _ => throw new InvalidOperationException($"Unsupported tab mode: {tabMode}")};
     }
 
     private static string ExpandTabs(string text, int tabWidth)
