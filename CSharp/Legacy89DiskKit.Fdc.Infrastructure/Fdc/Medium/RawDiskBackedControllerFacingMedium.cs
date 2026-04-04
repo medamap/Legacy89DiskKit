@@ -1,7 +1,7 @@
-using Legacy89DiskKit.Domain.Fdc.Interface;
-using Legacy89DiskKit.Infrastructure.DiskImage.Container;
+using Legacy89DiskKit.Fdc.Domain.Interface;
+using Legacy89DiskKit.DiskImage.Infrastructure.Container;
 
-namespace Legacy89DiskKit.Infrastructure.Fdc.Medium;
+namespace Legacy89DiskKit.Fdc.Infrastructure.Medium;
 
 public class RawDiskBackedControllerFacingMedium : SectorBackedControllerFacingMedium
 {

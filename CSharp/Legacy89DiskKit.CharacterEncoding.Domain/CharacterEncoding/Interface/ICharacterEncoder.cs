@@ -1,6 +1,6 @@
-using Legacy89DiskKit.Domain.CharacterEncoding.Model;
+using Legacy89DiskKit.CharacterEncoding.Domain.Model;
 
-namespace Legacy89DiskKit.Domain.CharacterEncoding.Interface;
+namespace Legacy89DiskKit.CharacterEncoding.Domain.Interface;
 
 public interface ICharacterEncoder
 {

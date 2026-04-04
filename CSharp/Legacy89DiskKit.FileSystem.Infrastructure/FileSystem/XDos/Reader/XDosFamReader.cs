@@ -1,7 +1,7 @@
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.FileSystem.Domain.Model.XDos;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.XDos.Reader;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.XDos.Reader;
 
 public record XDosFamEntry(byte Track, byte Sector, byte RecordCount);
 

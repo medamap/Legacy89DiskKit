@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Domain.FileSystem.Model.XDos;
+namespace Legacy89DiskKit.FileSystem.Domain.Model.XDos;
 
 public enum XDosFileType : ushort
 {

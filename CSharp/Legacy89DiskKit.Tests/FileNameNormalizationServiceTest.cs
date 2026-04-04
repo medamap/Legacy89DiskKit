@@ -2,7 +2,7 @@ using Xunit;
 using System.Collections.Generic;
 using Legacy89DiskKit.Archive.Application;
 using Legacy89DiskKit.FileSystem.Application;
-using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
+using Legacy89DiskKit.CharacterEncoding.Infrastructure.Encoder;
 using Legacy89DiskKit.CharacterEncoding.Application;
 
 namespace Legacy89DiskKit.Tests

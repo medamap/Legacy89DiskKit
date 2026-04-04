@@ -1,7 +1,7 @@
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.Native;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.Native.Domain;
 using Legacy89DiskKit.NativeInterop.Types;
 
 namespace Legacy89DiskKit.NativeInterop.Core;

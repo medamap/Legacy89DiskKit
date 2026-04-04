@@ -1,14 +1,14 @@
-using Legacy89DiskKit.Application;
 using Legacy89DiskKit.FileSystem.Application;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Interface.Registry;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;
 
 public class CpmIntegrationTest
 {
-    private class MockDiskContainer : Legacy89DiskKit.Domain.DiskImage.Interface.Container.IDiskContainer
+    private class MockDiskContainer : Legacy89DiskKit.DiskImage.Domain.Interface.Container.IDiskContainer
     {
         public string FilePath => "mock.d88";
         public DiskType DiskType => DiskType.TwoD;
@@ -59,7 +59,7 @@ public class CpmIntegrationTest
     public void Registry_ShouldDetectCpm_WithMockContainer()
     {
         // Arrange
-        var registry = Legacy89DiskKitApplication.CreateFileSystemRegistry();
+        var registry = CreateFileSystemRegistry();
         var container = new MockDiskContainer();
 
         // Act
@@ -74,9 +74,9 @@ public class CpmIntegrationTest
     public void BootProfileService_ShouldReturnCpmProfile_ForCpmFileSystem()
     {
         // Arrange
-        var bootService = Legacy89DiskKitApplication.CreateBootProfileService();
+        var bootService = new CompositeBootProfileService();
         var container = new MockDiskContainer();
-        var fileSystem = new Infrastructure.FileSystem.Cpm.CpmFileSystem(container);
+        var fileSystem = new Legacy89DiskKit.FileSystem.Infrastructure.Cpm.CpmFileSystem(container);
 
         // Act
         var profile = bootService.GetBootProfile(fileSystem);
@@ -84,16 +84,27 @@ public class CpmIntegrationTest
         // Assert
         Assert.Equal(BootInfoMode.SectorResident, profile.Mode);
         Assert.Equal("CP/M", profile.DisplayName);
-        Assert.Equal(Legacy89DiskKit.Domain.CharacterEncoding.Model.MachineType.PC8801, profile.MachineFamily);
+        Assert.Equal(Legacy89DiskKit.CharacterEncoding.Domain.Model.MachineType.PC8801, profile.MachineFamily);
     }
 
     [Fact]
     public void ExplicitResolver_ShouldKeepCpmReserved()
     {
-        var resolver = Legacy89DiskKitApplication.CreateExplicitFileSystemResolver();
+        var resolver = new ExplicitFileSystemResolver();
         var container = new MockDiskContainer();
 
         var ex = Assert.Throws<NotSupportedException>(() => resolver.Create("cpm", container));
         Assert.Contains("This feature is reserved, please request!!", ex.Message);
+    }
+
+    private static IFileSystemRegistry CreateFileSystemRegistry()
+    {
+        var registry = new FileSystemRegistry();
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.XDos.Provider.XDosFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Provider.HuBasicFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.Cpm.Provider.CpmFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.Pc88.Provider.N88BasicFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.Msx.Provider.MsxDosFileSystemProvider());
+        return registry;
     }
 }

@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Domain.FileSystem.Model;
+namespace Legacy89DiskKit.FileSystem.Domain.Model;
 
 [Flags]
 public enum FileAttributes

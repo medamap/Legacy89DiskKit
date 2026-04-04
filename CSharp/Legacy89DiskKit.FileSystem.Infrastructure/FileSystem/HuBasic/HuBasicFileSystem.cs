@@ -1,13 +1,13 @@
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.FileSystem.Interface.Layout;
-using Legacy89DiskKit.Domain.FileSystem.Model;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Models;
-using Legacy89DiskKit.Domain.FileSystem.Exception;
-using DomainAttr = Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Interface.Layout;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Models;
+using Legacy89DiskKit.FileSystem.Domain.Exception;
+using DomainAttr = Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.HuBasic;
 
 public class HuBasicFileSystem : IFileSystem, IDirectoryLayoutProvider
 {

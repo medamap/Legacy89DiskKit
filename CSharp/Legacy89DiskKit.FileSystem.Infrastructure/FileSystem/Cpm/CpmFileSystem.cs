@@ -1,9 +1,9 @@
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.FileSystem.Model;
-using DomainAttr = Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using DomainAttr = Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.Cpm;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.Cpm;
 
 public class CpmFileSystem : IFileSystem
 {

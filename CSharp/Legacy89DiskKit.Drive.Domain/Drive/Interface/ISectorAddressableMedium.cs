@@ -1,6 +1,6 @@
-using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.DiskImage.Domain.Model;
 
-namespace Legacy89DiskKit.Domain.Drive.Interface;
+namespace Legacy89DiskKit.Drive.Domain.Interface;
 
 public interface ISectorAddressableMedium : IMountedMedium
 {

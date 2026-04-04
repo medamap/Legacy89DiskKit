@@ -1,9 +1,10 @@
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.FileSystem.Interface.Layout;
-using Legacy89DiskKit.Domain.FileSystem.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Interface.Layout;
+using Legacy89DiskKit.FileSystem.Domain.Model;
 using Legacy89DiskKit.NativeInterop.Types;
-using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
-using Legacy89DiskKit.Application;
+using Legacy89DiskKit.CharacterEncoding.Domain.Interface;
+using Legacy89DiskKit.CharacterEncoding.Application;
+using Legacy89DiskKit.CharacterEncoding.Infrastructure.Encoder;
 using System.Text;
 
 namespace Legacy89DiskKit.NativeInterop.Core;
@@ -20,7 +21,7 @@ public sealed class LibraryNativeFileSystem : IFileSystem, IDirectoryLayoutProvi
         
         var fsInfo = GetFileSystemInfo();
         _fileSystemName = fsInfo.FileSystemName;
-        _encoder = Legacy89DiskKitApplication.ResolveEncoder(fsInfo);
+        _encoder = ResolveEncoder(fsInfo);
     }
 
     public DiskFileSystemInfo GetFileSystemInfo()
@@ -96,7 +97,7 @@ public sealed class LibraryNativeFileSystem : IFileSystem, IDirectoryLayoutProvi
                         e.Size,
                         null,
                         null,
-                        new ExtendedFileAttributes(Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes.None, (byte)e.Attributes, isAscii),
+                        new ExtendedFileAttributes(Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes.None, (byte)e.Attributes, isAscii),
                         0,
                         e.LoadAddress,
                         null,
@@ -172,7 +173,7 @@ public sealed class LibraryNativeFileSystem : IFileSystem, IDirectoryLayoutProvi
         else if (_fileSystemName == "N88-BASIC") raw = (byte)(isAscii ? 0x04 : 0x01);
         else if (_fileSystemName == "MSX-DOS") raw = 0x00;
         
-        return new ExtendedFileAttributes(Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes.None, raw, isAscii);
+        return new ExtendedFileAttributes(Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes.None, raw, isAscii);
     }
 
     public void Format()
@@ -252,6 +253,16 @@ public sealed class LibraryNativeFileSystem : IFileSystem, IDirectoryLayoutProvi
         var result = new byte[length];
         Array.Copy(source, result, Math.Min(source.Length, length));
         return result;
+    }
+
+    private static ICharacterEncoder ResolveEncoder(DiskFileSystemInfo fsInfo)
+    {
+        var registry = new EncoderRegistry();
+        registry.Register("X1", new X1CharacterEncoder());
+        registry.Register("SJIS", new ShiftJisCharacterEncoder());
+        registry.Register("MSX", new ShiftJisCharacterEncoder());
+        registry.Register("PC88", new ShiftJisCharacterEncoder());
+        return new CharacterEncodingResolver(registry).ResolveEncoder(fsInfo, null);
     }
 
     public void Dispose()

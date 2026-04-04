@@ -1,6 +1,5 @@
-using Legacy89DiskKit.Application;
 using Legacy89DiskKit.Fdc.Application.Hosts.Protocol;
-using Legacy89DiskKit.Infrastructure.DiskImage.Container;
+using Legacy89DiskKit.DiskImage.Infrastructure.Container;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;
@@ -30,10 +29,10 @@ public class EmulatorHostProtocolEndpointTest
     [Fact]
     public void Endpoint_CanHandleJsonRequests()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0x41, 0x42, 0x43 });
 
-        var adapter = Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter();
+        var adapter = CreateEventDrivenEmulatorFdcHostAdapter();
         adapter.OpenDisk(0, container);
         var endpoint = new EmulatorHostProtocolEndpoint(adapter);
 
@@ -65,7 +64,7 @@ public class EmulatorHostProtocolEndpointTest
     [Fact]
     public void Endpoint_CanReportCapabilities()
     {
-        var endpoint = new EmulatorHostProtocolEndpoint(Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter());
+        var endpoint = new EmulatorHostProtocolEndpoint(CreateEventDrivenEmulatorFdcHostAdapter());
 
         var payload = endpoint.Handle(EmulatorHostProtocolCodec.SerializeRequest(
             new EmulatorHostRequest(EmulatorHostRequestKind.QueryCapabilities)));
@@ -83,10 +82,10 @@ public class EmulatorHostProtocolEndpointTest
     [Fact]
     public void Endpoint_CanOpenDiskByBufferPayload()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0x61 });
 
-        var endpoint = new EmulatorHostProtocolEndpoint(Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter());
+        var endpoint = new EmulatorHostProtocolEndpoint(CreateEventDrivenEmulatorFdcHostAdapter());
         var sequence = HostProofSequence.CreateReadOnlyD88ByBufferSequence(container.ToImageData());
         var openPayload = endpoint.Handle(EmulatorHostProtocolCodec.SerializeRequest(sequence[1]));
         var openResponse = EmulatorHostProtocolCodec.DeserializeResponse(openPayload);
@@ -108,7 +107,7 @@ public class EmulatorHostProtocolEndpointTest
     [Fact]
     public void Endpoint_CanOpenAndCloseDiskByPath()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0x51 });
 
         var imagePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.d88");
@@ -116,7 +115,7 @@ public class EmulatorHostProtocolEndpointTest
 
         try
         {
-            var endpoint = new EmulatorHostProtocolEndpoint(Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter());
+            var endpoint = new EmulatorHostProtocolEndpoint(CreateEventDrivenEmulatorFdcHostAdapter());
 
             var openPayload = endpoint.Handle(EmulatorHostProtocolCodec.SerializeRequest(
                 new EmulatorHostRequest(EmulatorHostRequestKind.OpenDiskPath, ImagePath: imagePath, DriveNumber: 0, ReadOnly: true)));
@@ -146,5 +145,13 @@ public class EmulatorHostProtocolEndpointTest
         {
             File.Delete(imagePath);
         }
+    }
+
+    private static Legacy89DiskKit.Fdc.Application.Hosts.EventDrivenEmulatorFdcHostAdapter CreateEventDrivenEmulatorFdcHostAdapter()
+    {
+        return new Legacy89DiskKit.Fdc.Application.Hosts.EventDrivenEmulatorFdcHostAdapter(
+            new Legacy89DiskKit.Drive.Application.DriveMountService(),
+            new Legacy89DiskKit.Drive.Application.MountedMediumBindingService(),
+            new Legacy89DiskKit.DiskImage.Infrastructure.Factory.DiskContainerFactory());
     }
 }

@@ -32,7 +32,7 @@ public class HostProofReportBuilderTest
                 new EmulatorHostExchange(
                     new EmulatorHostResponse(
                         RegisterValue: null,
-                        VisibleState: new Legacy89DiskKit.Domain.Fdc.Model.FdcVisibleState(0, 0, 0, 0, 1, 0, false, false, false),
+                        VisibleState: new Legacy89DiskKit.Fdc.Domain.Model.FdcVisibleState(0, 0, 0, 0, 1, 0, false, false, false),
                         IrqAsserted: false,
                         DrqAsserted: false,
                         PendingAdvanceMicroseconds: null),
@@ -42,7 +42,7 @@ public class HostProofReportBuilderTest
                 new EmulatorHostExchange(
                     new EmulatorHostResponse(
                         RegisterValue: null,
-                        VisibleState: new Legacy89DiskKit.Domain.Fdc.Model.FdcVisibleState(0, 0, 1, 0, 1, 0, true, true, true),
+                        VisibleState: new Legacy89DiskKit.Fdc.Domain.Model.FdcVisibleState(0, 0, 1, 0, 1, 0, true, true, true),
                         IrqAsserted: true,
                         DrqAsserted: true,
                         PendingAdvanceMicroseconds: null),

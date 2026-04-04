@@ -1,6 +1,6 @@
 using Legacy89DiskKit.FileSystem.Application;
-using Legacy89DiskKit.Domain.FileSystem.Model;
-using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Model.XDos;
 
 namespace Legacy89DiskKit.Cli.Presentation.FileSystem;
 

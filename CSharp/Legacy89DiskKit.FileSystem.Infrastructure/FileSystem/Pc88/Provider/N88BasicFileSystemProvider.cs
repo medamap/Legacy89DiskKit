@@ -1,9 +1,9 @@
-using Legacy89DiskKit.Domain.FileSystem.Interface.Registry;
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.Registry;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.DiskImage.Domain.Model;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.Pc88.Provider;
 
 public class N88BasicFileSystemProvider : IFileSystemProvider
 {

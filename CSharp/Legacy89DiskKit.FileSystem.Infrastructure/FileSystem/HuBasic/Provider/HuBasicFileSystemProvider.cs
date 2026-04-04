@@ -1,10 +1,10 @@
-using Legacy89DiskKit.Domain.FileSystem.Interface.Registry;
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
+using Legacy89DiskKit.FileSystem.Domain.Interface.Registry;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic;
 using System.Text;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Provider;
 
 public class HuBasicFileSystemProvider : IFileSystemProvider
 {

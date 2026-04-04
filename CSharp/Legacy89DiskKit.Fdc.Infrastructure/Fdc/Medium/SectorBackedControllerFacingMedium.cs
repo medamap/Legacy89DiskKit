@@ -1,7 +1,7 @@
-using Legacy89DiskKit.Domain.Fdc.Interface;
-using Legacy89DiskKit.Domain.Fdc.Model;
+using Legacy89DiskKit.Fdc.Domain.Interface;
+using Legacy89DiskKit.Fdc.Domain.Model;
 
-namespace Legacy89DiskKit.Infrastructure.Fdc.Medium;
+namespace Legacy89DiskKit.Fdc.Infrastructure.Medium;
 
 public abstract class SectorBackedControllerFacingMedium : IControllerFacingMedium
 {

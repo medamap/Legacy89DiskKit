@@ -1,7 +1,6 @@
 using System.Text;
-using Legacy89DiskKit.Application;
 using Legacy89DiskKit.Fdc.Application.Hosts.Protocol;
-using Legacy89DiskKit.Infrastructure.DiskImage.Container;
+using Legacy89DiskKit.DiskImage.Infrastructure.Container;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;
@@ -11,10 +10,10 @@ public class EmulatorHostObservableProtocolStdioRunnerTest
     [Fact]
     public async Task Runner_CanEmitNotificationAwareExchanges()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0x21 });
 
-        var adapter = Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter();
+        var adapter = CreateEventDrivenEmulatorFdcHostAdapter();
         adapter.OpenDisk(0, container);
 
         var requests = string.Join(Environment.NewLine, new[]
@@ -47,5 +46,13 @@ public class EmulatorHostObservableProtocolStdioRunnerTest
         Assert.Contains(exchanges[3].Notifications, x => x.Kind == EmulatorHostNotificationKind.AdvanceRequested);
         Assert.Contains(exchanges[4].Notifications, x => x.Kind == EmulatorHostNotificationKind.IrqChanged && x.SignalState == true);
         Assert.Contains(exchanges[4].Notifications, x => x.Kind == EmulatorHostNotificationKind.DrqChanged && x.SignalState == true);
+    }
+
+    private static Legacy89DiskKit.Fdc.Application.Hosts.EventDrivenEmulatorFdcHostAdapter CreateEventDrivenEmulatorFdcHostAdapter()
+    {
+        return new Legacy89DiskKit.Fdc.Application.Hosts.EventDrivenEmulatorFdcHostAdapter(
+            new Legacy89DiskKit.Drive.Application.DriveMountService(),
+            new Legacy89DiskKit.Drive.Application.MountedMediumBindingService(),
+            new Legacy89DiskKit.DiskImage.Infrastructure.Factory.DiskContainerFactory());
     }
 }

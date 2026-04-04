@@ -1,7 +1,6 @@
 using System.Text;
-using Legacy89DiskKit.Application;
 using Legacy89DiskKit.Fdc.Application.Hosts.Protocol;
-using Legacy89DiskKit.Infrastructure.DiskImage.Container;
+using Legacy89DiskKit.DiskImage.Infrastructure.Container;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;
@@ -11,10 +10,10 @@ public class EmulatorHostProtocolTextSessionTest
     [Fact]
     public void Session_CanHandleSingleRequestLine()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0x41 });
 
-        var adapter = Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter();
+        var adapter = CreateEventDrivenEmulatorFdcHostAdapter();
         adapter.OpenDisk(0, container);
         var endpoint = new EmulatorHostProtocolEndpoint(adapter);
         var session = new EmulatorHostProtocolTextSession(endpoint);
@@ -33,7 +32,7 @@ public class EmulatorHostProtocolTextSessionTest
     [Fact]
     public void Session_CanReportPlainTransportCapabilities()
     {
-        var endpoint = new EmulatorHostProtocolEndpoint(Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter());
+        var endpoint = new EmulatorHostProtocolEndpoint(CreateEventDrivenEmulatorFdcHostAdapter());
         var session = new EmulatorHostProtocolTextSession(endpoint);
 
         var payload = session.HandleLine(EmulatorHostProtocolCodec.SerializeRequest(
@@ -48,10 +47,10 @@ public class EmulatorHostProtocolTextSessionTest
     [Fact]
     public async Task Session_CanProcessLineDelimitedRequestsOverTextStreams()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0x41, 0x42 });
 
-        var adapter = Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter();
+        var adapter = CreateEventDrivenEmulatorFdcHostAdapter();
         adapter.OpenDisk(0, container);
         var endpoint = new EmulatorHostProtocolEndpoint(adapter);
         var session = new EmulatorHostProtocolTextSession(endpoint);
@@ -90,12 +89,20 @@ public class EmulatorHostProtocolTextSessionTest
     [Fact]
     public void Session_ReturnsErrorResponseForMalformedRequestLine()
     {
-        var endpoint = new EmulatorHostProtocolEndpoint(Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter());
+        var endpoint = new EmulatorHostProtocolEndpoint(CreateEventDrivenEmulatorFdcHostAdapter());
         var session = new EmulatorHostProtocolTextSession(endpoint);
 
         var payload = session.HandleLine("{not-json");
         var response = EmulatorHostProtocolCodec.DeserializeResponse(payload);
 
         Assert.False(string.IsNullOrWhiteSpace(response.ErrorMessage));
+    }
+
+    private static Legacy89DiskKit.Fdc.Application.Hosts.EventDrivenEmulatorFdcHostAdapter CreateEventDrivenEmulatorFdcHostAdapter()
+    {
+        return new Legacy89DiskKit.Fdc.Application.Hosts.EventDrivenEmulatorFdcHostAdapter(
+            new Legacy89DiskKit.Drive.Application.DriveMountService(),
+            new Legacy89DiskKit.Drive.Application.MountedMediumBindingService(),
+            new Legacy89DiskKit.DiskImage.Infrastructure.Factory.DiskContainerFactory());
     }
 }

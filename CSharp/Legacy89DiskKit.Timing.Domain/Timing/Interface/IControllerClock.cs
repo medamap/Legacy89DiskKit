@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Domain.Timing.Interface;
+namespace Legacy89DiskKit.Timing.Domain.Interface;
 
 /// <summary>
 /// Represents the minimal timing progression contract for controller-oriented execution.

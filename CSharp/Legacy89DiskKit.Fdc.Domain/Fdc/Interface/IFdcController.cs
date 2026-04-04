@@ -1,6 +1,6 @@
-using Legacy89DiskKit.Domain.Fdc.Model;
+using Legacy89DiskKit.Fdc.Domain.Model;
 
-namespace Legacy89DiskKit.Domain.Fdc.Interface;
+namespace Legacy89DiskKit.Fdc.Domain.Interface;
 
 /// <summary>
 /// Represents the minimal controller-facing contract for future emulator-oriented access.

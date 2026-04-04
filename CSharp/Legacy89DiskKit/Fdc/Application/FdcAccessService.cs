@@ -1,6 +1,6 @@
-using Legacy89DiskKit.Domain.Fdc.Interface;
-using Legacy89DiskKit.Domain.Fdc.Model;
-using Legacy89DiskKit.Domain.Timing.Interface;
+using Legacy89DiskKit.Fdc.Domain.Interface;
+using Legacy89DiskKit.Fdc.Domain.Model;
+using Legacy89DiskKit.Timing.Domain.Interface;
 
 namespace Legacy89DiskKit.Fdc.Application;
 

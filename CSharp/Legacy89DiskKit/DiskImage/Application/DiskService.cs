@@ -1,12 +1,12 @@
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.DiskImage.Interface.Factory;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.FileSystem.Interface.Registry;
-using Legacy89DiskKit.Infrastructure.DiskImage.Factory;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Factory;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Interface.Registry;
+using Legacy89DiskKit.DiskImage.Infrastructure.Factory;
 using Legacy89DiskKit.FileSystem.Application;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.Native;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Provider;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.Native.Domain;
 using Legacy89DiskKit.Native.Application;
 
 namespace Legacy89DiskKit.DiskImage.Application;

@@ -1,6 +1,5 @@
-using Legacy89DiskKit.Application;
 using Legacy89DiskKit.Fdc.Application.Hosts.Protocol;
-using Legacy89DiskKit.Infrastructure.DiskImage.Container;
+using Legacy89DiskKit.DiskImage.Infrastructure.Container;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;
@@ -10,8 +9,8 @@ public class EventDrivenEmulatorFdcHostAdapterTest
     [Fact]
     public void Adapter_CanMountAndReportInsertedDisk()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
-        var adapter = Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter();
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
+        var adapter = CreateEventDrivenEmulatorFdcHostAdapter();
 
         adapter.OpenDisk(0, container);
 
@@ -22,10 +21,10 @@ public class EventDrivenEmulatorFdcHostAdapterTest
     [Fact]
     public void Adapter_CanReadSectorThroughRegisterBridge()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0x41, 0x42, 0x43 });
 
-        var adapter = Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter();
+        var adapter = CreateEventDrivenEmulatorFdcHostAdapter();
         adapter.OpenDisk(0, container);
         adapter.SelectDrive(0);
 
@@ -47,10 +46,10 @@ public class EventDrivenEmulatorFdcHostAdapterTest
     [Fact]
     public void Adapter_CanSwitchSideOnSelectedDrive()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 1, 1, new byte[] { 0x99 });
 
-        var adapter = Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter();
+        var adapter = CreateEventDrivenEmulatorFdcHostAdapter();
         adapter.OpenDisk(0, container);
         adapter.SelectDrive(0);
         adapter.SelectSide(1);
@@ -69,8 +68,8 @@ public class EventDrivenEmulatorFdcHostAdapterTest
     [Fact]
     public void Adapter_CanUnmountDisk()
     {
-        using var container = RawDiskContainer.CreateNewInMemory(Domain.DiskImage.Model.DiskType.TwoD);
-        var adapter = Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter();
+        using var container = RawDiskContainer.CreateNewInMemory(Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
+        var adapter = CreateEventDrivenEmulatorFdcHostAdapter();
         adapter.OpenDisk(1, container);
 
         var closed = adapter.CloseDisk(1);
@@ -82,10 +81,10 @@ public class EventDrivenEmulatorFdcHostAdapterTest
     [Fact]
     public void Adapter_RaisesIrqAndDrqCallbacksWhenSignalStateChanges()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0x55 });
 
-        var adapter = Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter();
+        var adapter = CreateEventDrivenEmulatorFdcHostAdapter();
         var irqStates = new List<bool>();
         var drqStates = new List<bool>();
         adapter.IrqChanged += value => irqStates.Add(value);
@@ -107,10 +106,10 @@ public class EventDrivenEmulatorFdcHostAdapterTest
     [Fact]
     public void Adapter_RaisesAdvanceRequestedWhenCommandStartsPendingWork()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0x10 });
 
-        var adapter = Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter();
+        var adapter = CreateEventDrivenEmulatorFdcHostAdapter();
         var requestedDelays = new List<TimeSpan>();
         adapter.AdvanceRequested += delay => requestedDelays.Add(delay);
 
@@ -126,10 +125,10 @@ public class EventDrivenEmulatorFdcHostAdapterTest
     [Fact]
     public void Adapter_CanHandleTransportNeutralRequests()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0x61, 0x62 });
 
-        var adapter = Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter();
+        var adapter = CreateEventDrivenEmulatorFdcHostAdapter();
         adapter.OpenDisk(0, container);
 
         adapter.Handle(new EmulatorHostRequest(EmulatorHostRequestKind.SelectDrive, DriveNumber: 0));
@@ -155,7 +154,7 @@ public class EventDrivenEmulatorFdcHostAdapterTest
     [Fact]
     public void Adapter_CanOpenDiskFromPath()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0x71, 0x72 });
 
         var imagePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.d88");
@@ -163,7 +162,7 @@ public class EventDrivenEmulatorFdcHostAdapterTest
 
         try
         {
-            var adapter = Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter();
+            var adapter = CreateEventDrivenEmulatorFdcHostAdapter();
             adapter.OpenDiskPath(0, imagePath);
             adapter.SelectDrive(0);
             adapter.WriteIo8(1, 0);
@@ -183,10 +182,10 @@ public class EventDrivenEmulatorFdcHostAdapterTest
     [Fact]
     public void Adapter_CanOpenDiskFromBuffer()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0x81, 0x82 });
 
-        var adapter = Legacy89DiskKitApplication.CreateEventDrivenEmulatorFdcHostAdapter();
+        var adapter = CreateEventDrivenEmulatorFdcHostAdapter();
         adapter.OpenDiskImage(0, container.ToImageData(), "d88");
         adapter.SelectDrive(0);
         adapter.WriteIo8(1, 0);
@@ -196,5 +195,13 @@ public class EventDrivenEmulatorFdcHostAdapterTest
 
         Assert.Equal(0x81, adapter.ReadIo8(3));
         Assert.Equal(0x82, adapter.ReadIo8(3));
+    }
+
+    private static Legacy89DiskKit.Fdc.Application.Hosts.EventDrivenEmulatorFdcHostAdapter CreateEventDrivenEmulatorFdcHostAdapter()
+    {
+        return new Legacy89DiskKit.Fdc.Application.Hosts.EventDrivenEmulatorFdcHostAdapter(
+            new Legacy89DiskKit.Drive.Application.DriveMountService(),
+            new Legacy89DiskKit.Drive.Application.MountedMediumBindingService(),
+            new Legacy89DiskKit.DiskImage.Infrastructure.Factory.DiskContainerFactory());
     }
 }

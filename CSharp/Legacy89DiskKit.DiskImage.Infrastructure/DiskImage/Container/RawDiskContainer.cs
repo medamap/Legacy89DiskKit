@@ -1,9 +1,9 @@
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.DiskImage.Exception;
-using Legacy89DiskKit.Infrastructure.DiskImage.Raw;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.DiskImage.Domain.Exception;
+using Legacy89DiskKit.DiskImage.Infrastructure.Raw;
 
-namespace Legacy89DiskKit.Infrastructure.DiskImage.Container;
+namespace Legacy89DiskKit.DiskImage.Infrastructure.Container;
 
 public class RawDiskContainer : IDiskContainer
 {

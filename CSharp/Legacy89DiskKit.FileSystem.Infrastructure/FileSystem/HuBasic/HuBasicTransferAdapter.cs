@@ -1,8 +1,8 @@
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.FileSystem.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Model;
 using System.Globalization;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.HuBasic;
 
 public class HuBasicTransferAdapter : IFileSystemTransferAdapter
 {

@@ -1,8 +1,8 @@
 using Legacy89DiskKit.Drive.Application;
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.DiskImage.Interface.Factory;
-using Legacy89DiskKit.Domain.Fdc.Interface;
-using Legacy89DiskKit.Domain.Fdc.Model;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Factory;
+using Legacy89DiskKit.Fdc.Domain.Interface;
+using Legacy89DiskKit.Fdc.Domain.Model;
 using Legacy89DiskKit.Fdc.Application.Hosts.Protocol;
 
 namespace Legacy89DiskKit.Fdc.Application.Hosts;

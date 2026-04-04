@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Domain.FileSystem.Exception;
+namespace Legacy89DiskKit.FileSystem.Domain.@Exception;
 
 public class FileSystemException : System.Exception
 {

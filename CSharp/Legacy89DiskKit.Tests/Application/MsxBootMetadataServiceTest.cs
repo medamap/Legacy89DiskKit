@@ -1,6 +1,6 @@
 using Legacy89DiskKit.FileSystem.Application;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.FileSystem.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Model;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests.Application;

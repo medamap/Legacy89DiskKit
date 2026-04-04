@@ -1,9 +1,9 @@
 using System.Text;
-using Legacy89DiskKit.Domain.FileSystem.Model;
-using DomainAttr = Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes;
-using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using DomainAttr = Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes;
+using Legacy89DiskKit.CharacterEncoding.Domain.Interface;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Models;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.Pc88.Models;
 
 public class N88BasicDirParser
 {

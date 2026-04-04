@@ -1,10 +1,10 @@
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.DiskImage.Exception;
-using Legacy89DiskKit.Infrastructure.DiskImage.D88;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.DiskImage.Domain.Exception;
+using Legacy89DiskKit.DiskImage.Infrastructure.D88;
 using System.Text;
 
-namespace Legacy89DiskKit.Infrastructure.DiskImage.Container;
+namespace Legacy89DiskKit.DiskImage.Infrastructure.Container;
 
 public class D88DiskContainer : IDiskContainer, IGeometryRebuildableDiskContainer, IDisposable
 {

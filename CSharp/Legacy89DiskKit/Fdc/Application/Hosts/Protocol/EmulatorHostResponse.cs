@@ -1,4 +1,4 @@
-using Legacy89DiskKit.Domain.Fdc.Model;
+using Legacy89DiskKit.Fdc.Domain.Model;
 
 namespace Legacy89DiskKit.Fdc.Application.Hosts.Protocol;
 

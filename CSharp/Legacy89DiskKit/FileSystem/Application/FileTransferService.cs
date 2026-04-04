@@ -1,10 +1,10 @@
 using System.Text;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.FileSystem.Model;
-using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
-using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
-using DomainAttr = Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using Legacy89DiskKit.CharacterEncoding.Domain.Interface;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic;
+using Legacy89DiskKit.FileSystem.Domain.Model.XDos;
+using DomainAttr = Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes;
 using Legacy89DiskKit.FileSystem.Application;
 
 namespace Legacy89DiskKit.FileSystem.Application;

@@ -1,8 +1,8 @@
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.Drive.Interface;
-using Legacy89DiskKit.Infrastructure.DiskImage.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.Drive.Domain.Interface;
+using Legacy89DiskKit.DiskImage.Infrastructure.Container;
 
-namespace Legacy89DiskKit.Infrastructure.Drive.Medium;
+namespace Legacy89DiskKit.Drive.Infrastructure.Medium;
 
 public class RawDiskBackedSectorAddressableMedium : ISectorAddressableMedium
 {

@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Domain.DiskImage.Exception;
+namespace Legacy89DiskKit.DiskImage.Domain.Exception;
 
 public class DiskImageException : System.Exception
 {

@@ -1,6 +1,6 @@
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.FileSystem.Model;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Model;
 using Legacy89DiskKit.FileSystem.Application;
 
 namespace Legacy89DiskKit.FileSystem.Application;
@@ -68,7 +68,7 @@ public sealed class DiskInspectionService
 
     private static string ResolveMachineProfile(DiskFileSystemInfo fsInfo, BootInfoSummary? bootSummary)
     {
-        if (bootSummary != null && bootSummary.MachineFamily != Domain.CharacterEncoding.Model.MachineType.Unknown)
+        if (bootSummary != null && bootSummary.MachineFamily != CharacterEncoding.Domain.Model.MachineType.Unknown)
         {
             return bootSummary.MachineFamily.ToString();
         }

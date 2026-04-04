@@ -1,6 +1,6 @@
 using System;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.XDos;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.XDos;
 
 /// <summary>
 /// Helper for decoding X-DOS raw BCD timestamp into a .NET DateTime.

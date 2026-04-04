@@ -1,6 +1,6 @@
-using Legacy89DiskKit.Domain.Drive.Model;
+using Legacy89DiskKit.Drive.Domain.Model;
 
-namespace Legacy89DiskKit.Domain.Drive.Interface;
+namespace Legacy89DiskKit.Drive.Domain.Interface;
 
 /// <summary>
 /// Represents a drive-level contract for controller-facing interaction.

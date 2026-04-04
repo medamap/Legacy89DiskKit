@@ -72,7 +72,7 @@ public static class FileExports
             byte[] data = new byte[length];
             Marshal.Copy(dataPtr, data, 0, length);
             
-            fs.WriteFile(fileName, data, new Legacy89DiskKit.Domain.FileSystem.Model.ExtendedFileAttributes((Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes)attributes, 0, false));
+            fs.WriteFile(fileName, data, new Legacy89DiskKit.FileSystem.Domain.Model.ExtendedFileAttributes((Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes)attributes, 0, false));
             return (int)LdkStatus.Success;
         }
         catch (Exception ex)
@@ -119,7 +119,7 @@ public static class FileExports
 
         try
         {
-            fs.UpdateAttributes(fileName, new Legacy89DiskKit.Domain.FileSystem.Model.ExtendedFileAttributes((Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes)attributes, 0, false));
+            fs.UpdateAttributes(fileName, new Legacy89DiskKit.FileSystem.Domain.Model.ExtendedFileAttributes((Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes)attributes, 0, false));
             return (int)LdkStatus.Success;
         }
         catch (Exception ex)

@@ -1,5 +1,5 @@
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Infrastructure.DiskImage.Raw;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.DiskImage.Infrastructure.Raw;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;

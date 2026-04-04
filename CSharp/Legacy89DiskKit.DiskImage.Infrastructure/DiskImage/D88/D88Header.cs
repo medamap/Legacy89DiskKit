@@ -1,6 +1,6 @@
-using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.DiskImage.Domain.Model;
 
-namespace Legacy89DiskKit.Infrastructure.DiskImage.D88;
+namespace Legacy89DiskKit.DiskImage.Infrastructure.D88;
 
 public sealed class D88Header
 {

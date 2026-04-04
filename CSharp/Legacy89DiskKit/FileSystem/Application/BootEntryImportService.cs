@@ -1,10 +1,10 @@
-using Legacy89DiskKit.Domain.CharacterEncoding.Model;
+using Legacy89DiskKit.CharacterEncoding.Domain.Model;
 using Legacy89DiskKit.CharacterEncoding.Application;
-using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.FileSystem.Model;
-using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
+using Legacy89DiskKit.CharacterEncoding.Domain.Interface.Registry;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using Legacy89DiskKit.CharacterEncoding.Infrastructure.Encoder;
 using Legacy89DiskKit.FileSystem.Application;
 
 namespace Legacy89DiskKit.FileSystem.Application;

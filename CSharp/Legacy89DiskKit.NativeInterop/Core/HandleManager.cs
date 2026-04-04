@@ -1,4 +1,4 @@
-using Legacy89DiskKit.Domain.Native;
+using Legacy89DiskKit.Native.Domain;
 using System.Collections.Concurrent;
 using Legacy89DiskKit.NativeInterop.Types;
 

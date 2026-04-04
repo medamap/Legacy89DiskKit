@@ -3,11 +3,11 @@ using System.Text;
 using Legacy89DiskKit.DiskImage.Application;
 using Legacy89DiskKit.FileSystem.Application;
 using Legacy89DiskKit.CharacterEncoding.Application;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
-using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;
-using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
-using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Provider;
+using Legacy89DiskKit.FileSystem.Infrastructure.Pc88.Provider;
+using Legacy89DiskKit.FileSystem.Infrastructure.Msx.Provider;
+using Legacy89DiskKit.CharacterEncoding.Infrastructure.Encoder;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
 
 namespace VerificationTool;
 
@@ -84,7 +84,7 @@ class Program
         try
         {
             var fsRegistry = SetupFileSystemRegistry();
-            var containerFactory = new Legacy89DiskKit.Infrastructure.DiskImage.Factory.DiskContainerFactory();
+            var containerFactory = new Legacy89DiskKit.DiskImage.Infrastructure.Factory.DiskContainerFactory();
             var diskService = new DiskService(containerFactory, fsRegistry);
 
             // 1. Open Source
@@ -225,10 +225,10 @@ class Program
             foreach (var file in files.Take(20)) // Limit to 20 for brief summary
             {
                 var attrs = file.Attributes.StandardAttributes;
-                string attrStr = $"R:{(attrs.HasFlag(Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes.ReadOnly) ? 'Y' : 'N')} " +
-                                 $"H:{(attrs.HasFlag(Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes.Hidden) ? 'Y' : 'N')} " +
-                                 $"S:{(attrs.HasFlag(Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes.System) ? 'Y' : 'N')} " +
-                                 $"D:{(attrs.HasFlag(Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes.Directory) ? 'Y' : 'N')}";
+                string attrStr = $"R:{(attrs.HasFlag(Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes.ReadOnly) ? 'Y' : 'N')} " +
+                                 $"H:{(attrs.HasFlag(Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes.Hidden) ? 'Y' : 'N')} " +
+                                 $"S:{(attrs.HasFlag(Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes.System) ? 'Y' : 'N')} " +
+                                 $"D:{(attrs.HasFlag(Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes.Directory) ? 'Y' : 'N')}";
                 
                 // Filenames might contain Katakana, encoder should handle it
                 Console.WriteLine($"  {file.FullName,-24} | {file.Size,8} | {attrStr,-12} | {(file.Attributes.IsAscii ? "ASC" : "BIN")} | SC:{file.StartCluster}");
@@ -272,7 +272,7 @@ class Program
     {
         try
         {
-            var containerFactory = new Legacy89DiskKit.Infrastructure.DiskImage.Factory.DiskContainerFactory();
+            var containerFactory = new Legacy89DiskKit.DiskImage.Infrastructure.Factory.DiskContainerFactory();
             using var container = containerFactory.Open(path, true);
             Console.WriteLine($"[SECTOR RANGE] {path} C:{cyl} H:{head} S:{startSec}-{startSec+count-1}");
             for (int s = startSec; s < startSec + count; s++)
@@ -297,7 +297,7 @@ class Program
         {
             Console.WriteLine($"Opening disk: {path}");
             var fsRegistry = SetupFileSystemRegistry();
-            var containerFactory = new Legacy89DiskKit.Infrastructure.DiskImage.Factory.DiskContainerFactory();
+            var containerFactory = new Legacy89DiskKit.DiskImage.Infrastructure.Factory.DiskContainerFactory();
             using var diskService = new DiskService(containerFactory, fsRegistry);
             diskService.OpenDisk(path, true);
             var fs = diskService.FileSystem;
@@ -306,7 +306,7 @@ class Program
 
             var type = fs.GetType();
             var configField = type.GetField("_config", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var config = configField?.GetValue(fs) as Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Models.HuBasicConfiguration;
+            var config = configField?.GetValue(fs) as Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Models.HuBasicConfiguration;
             
             if (config == null) { Console.WriteLine("Config Null - Field Not Found"); return; }
             Console.WriteLine($"Config: Track={config.DirectoryTrack}, Sector={config.DirectorySector}");
@@ -334,7 +334,7 @@ class Program
     static void DumpFiles(string path)
     {
         var fsRegistry = SetupFileSystemRegistry();
-        var containerFactory = new Legacy89DiskKit.Infrastructure.DiskImage.Factory.DiskContainerFactory();
+        var containerFactory = new Legacy89DiskKit.DiskImage.Infrastructure.Factory.DiskContainerFactory();
         using var diskService = new DiskService(containerFactory, fsRegistry);
         diskService.OpenDisk(path, true);
         var fs = diskService.FileSystem;
@@ -354,7 +354,7 @@ class Program
 
     static void DumpGeometry(string path)
     {
-        var containerFactory = new Legacy89DiskKit.Infrastructure.DiskImage.Factory.DiskContainerFactory();
+        var containerFactory = new Legacy89DiskKit.DiskImage.Infrastructure.Factory.DiskContainerFactory();
         using var container = containerFactory.Open(path, true);
         var sectors = container.GetAllSectors().ToList();
         var first = sectors.FirstOrDefault();

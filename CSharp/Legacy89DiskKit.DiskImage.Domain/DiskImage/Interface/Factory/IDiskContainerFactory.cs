@@ -1,7 +1,7 @@
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
 
-namespace Legacy89DiskKit.Domain.DiskImage.Interface.Factory;
+namespace Legacy89DiskKit.DiskImage.Domain.Interface.Factory;
 
 public interface IDiskContainerFactory
 {

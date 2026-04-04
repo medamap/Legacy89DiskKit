@@ -1,6 +1,6 @@
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Models;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Models;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;

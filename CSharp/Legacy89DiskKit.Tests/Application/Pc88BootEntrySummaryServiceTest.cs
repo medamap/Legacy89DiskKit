@@ -1,6 +1,6 @@
 using Legacy89DiskKit.FileSystem.Application;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.FileSystem.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Model;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests.Application;
@@ -43,7 +43,7 @@ public class Pc88BootEntrySummaryServiceTest
 
         Assert.Equal(Pc88BootEntryKind.N88BasicSectorResident, summary.Kind);
         Assert.Equal("N88-BASIC", summary.DisplayName);
-        Assert.Equal(Legacy89DiskKit.Domain.CharacterEncoding.Model.MachineType.PC8801, summary.MachineFamily);
+        Assert.Equal(Legacy89DiskKit.CharacterEncoding.Domain.Model.MachineType.PC8801, summary.MachineFamily);
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public class Pc88BootEntrySummaryServiceTest
 
         Assert.Equal(Pc88BootEntryKind.CpmSectorResident, summary.Kind);
         Assert.Equal("CP/M", summary.DisplayName);
-        Assert.Equal(Legacy89DiskKit.Domain.CharacterEncoding.Model.MachineType.PC8801, summary.MachineFamily);
+        Assert.Equal(Legacy89DiskKit.CharacterEncoding.Domain.Model.MachineType.PC8801, summary.MachineFamily);
     }
 
     [Fact]

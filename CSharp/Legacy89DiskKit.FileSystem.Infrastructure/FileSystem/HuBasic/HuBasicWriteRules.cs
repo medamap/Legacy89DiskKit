@@ -1,7 +1,7 @@
-using Legacy89DiskKit.Domain.FileSystem.Model;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Models;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Models;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.HuBasic;
 
 public static class HuBasicWriteRules
 {

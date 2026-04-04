@@ -1,4 +1,4 @@
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
 
 namespace Legacy89DiskKit.Fdc.Application.Hosts;
 

@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Infrastructure.CharacterEncoding.X1;
+namespace Legacy89DiskKit.CharacterEncoding.Infrastructure.X1;
 
 public static class X1CharacterMap
 {

@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Infrastructure.DiskImage.Raw;
+namespace Legacy89DiskKit.DiskImage.Infrastructure.Raw;
 
 public sealed class RawSectorAddressCalculator
 {

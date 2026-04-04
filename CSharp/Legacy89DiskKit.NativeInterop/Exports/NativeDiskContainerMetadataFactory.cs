@@ -1,4 +1,4 @@
-using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.DiskImage.Domain.Model;
 using Legacy89DiskKit.NativeInterop.Types;
 
 namespace Legacy89DiskKit.NativeInterop.Exports;

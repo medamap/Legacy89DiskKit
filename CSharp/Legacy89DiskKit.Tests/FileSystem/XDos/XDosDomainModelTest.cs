@@ -1,7 +1,7 @@
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
-using Legacy89DiskKit.Infrastructure.FileSystem.XDos.Reader;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Model.XDos;
+using Legacy89DiskKit.FileSystem.Infrastructure.XDos.Reader;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests.FileSystem.XDos;

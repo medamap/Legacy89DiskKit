@@ -1,6 +1,6 @@
 using Legacy89DiskKit.Fdc.Application.Hosts.Protocol;
 using Legacy89DiskKit.Fdc.Application.Hosts.Scripting;
-using Legacy89DiskKit.Domain.Fdc.Model;
+using Legacy89DiskKit.Fdc.Domain.Model;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;

@@ -1,10 +1,10 @@
 using System.Buffers.Binary;
 using System.Text;
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Model.XDos;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.XDos.Reader;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.XDos.Reader;
 
 public class XDosDirParser
 {

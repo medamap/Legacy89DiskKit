@@ -1,10 +1,9 @@
 using System.Text;
-using Legacy89DiskKit.Application;
 using Legacy89DiskKit.FileSystem.Application;
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.FileSystem.Model;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Model;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests.Application;
@@ -124,8 +123,13 @@ public class BootEntryExportServiceTest
     [Fact]
     public void ApplicationFactory_CreatesBootEntryExportService()
     {
-        var service = Legacy89DiskKitApplication.CreateBootEntryExportService();
+        var service = CreateBootEntryExportService();
         Assert.IsType<BootEntryExportService>(service);
+    }
+
+    private static IBootEntryExportService CreateBootEntryExportService()
+    {
+        return new BootEntryExportService();
     }
 
     private static void SeedRecords(FakeDiskContainer container, DiskType diskType, int startRecord, byte[] payload)

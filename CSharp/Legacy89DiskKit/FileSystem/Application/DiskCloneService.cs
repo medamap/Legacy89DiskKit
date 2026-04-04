@@ -1,9 +1,9 @@
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.FileSystem.Model;
-using Legacy89DiskKit.Domain.FileSystem.Exception;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Exception;
 using Legacy89DiskKit.FileSystem.Application;
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
 
 namespace Legacy89DiskKit.FileSystem.Application;
 
@@ -100,12 +100,12 @@ public class DiskCloneService
         bool srcPrevMode = false;
         bool dstPrevMode = false;
 
-        if (srcAdapter is Legacy89DiskKit.Infrastructure.FileSystem.XDos.XDosTransferAdapter srcX)
+        if (srcAdapter is Legacy89DiskKit.FileSystem.Infrastructure.XDos.XDosTransferAdapter srcX)
         {
             srcPrevMode = srcX.IsCloneMode;
             srcX.IsCloneMode = true;
         }
-        if (dstAdapter is Legacy89DiskKit.Infrastructure.FileSystem.XDos.XDosTransferAdapter dstX)
+        if (dstAdapter is Legacy89DiskKit.FileSystem.Infrastructure.XDos.XDosTransferAdapter dstX)
         {
             dstPrevMode = dstX.IsCloneMode;
             dstX.IsCloneMode = true;
@@ -118,15 +118,15 @@ public class DiskCloneService
             dstFs.WriteBootArea(bootArea);
 
             var fileNames = srcFs.GetFiles()
-                .Where(entry => !entry.Attributes.StandardAttributes.HasFlag(Domain.FileSystem.Model.FileAttributes.Directory))
+                .Where(entry => !entry.Attributes.StandardAttributes.HasFlag(FileSystem.Domain.Model.FileAttributes.Directory))
                 .Select(entry => entry.FullName);
 
             TransferFiles(srcFs, dstFs, fileNames, srcAdapter, dstAdapter);
         }
         finally
         {
-            if (srcAdapter is Legacy89DiskKit.Infrastructure.FileSystem.XDos.XDosTransferAdapter srcFinal) srcFinal.IsCloneMode = srcPrevMode;
-            if (dstAdapter is Legacy89DiskKit.Infrastructure.FileSystem.XDos.XDosTransferAdapter dstFinal) dstFinal.IsCloneMode = dstPrevMode;
+            if (srcAdapter is Legacy89DiskKit.FileSystem.Infrastructure.XDos.XDosTransferAdapter srcFinal) srcFinal.IsCloneMode = srcPrevMode;
+            if (dstAdapter is Legacy89DiskKit.FileSystem.Infrastructure.XDos.XDosTransferAdapter dstFinal) dstFinal.IsCloneMode = dstPrevMode;
         }
     }
 

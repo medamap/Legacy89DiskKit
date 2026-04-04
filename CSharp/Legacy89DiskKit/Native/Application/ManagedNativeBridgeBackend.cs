@@ -1,15 +1,15 @@
 using Legacy89DiskKit.CharacterEncoding.Application;
 using Legacy89DiskKit.FileSystem.Application;
-using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.FileSystem.Interface.Registry;
-using Legacy89DiskKit.Domain.Native;
-using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
-using Legacy89DiskKit.Infrastructure.DiskImage.Factory;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
-using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
-using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;
-using Legacy89DiskKit.Infrastructure.FileSystem.XDos.Provider;
+using Legacy89DiskKit.CharacterEncoding.Domain.Interface.Registry;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.Registry;
+using Legacy89DiskKit.Native.Domain;
+using Legacy89DiskKit.CharacterEncoding.Infrastructure.Encoder;
+using Legacy89DiskKit.DiskImage.Infrastructure.Factory;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Provider;
+using Legacy89DiskKit.FileSystem.Infrastructure.Msx.Provider;
+using Legacy89DiskKit.FileSystem.Infrastructure.Pc88.Provider;
+using Legacy89DiskKit.FileSystem.Infrastructure.XDos.Provider;
 
 namespace Legacy89DiskKit.Native.Application;
 
@@ -56,7 +56,7 @@ public sealed class ManagedNativeBridgeBackend : INativeBridgeBackend
         var registry = new FileSystemRegistry();
         registry.Register(new XDosFileSystemProvider());
         registry.Register(new HuBasicFileSystemProvider());
-        registry.Register(new Infrastructure.FileSystem.Cpm.Provider.CpmFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.Cpm.Provider.CpmFileSystemProvider());
         registry.Register(new N88BasicFileSystemProvider());
         registry.Register(new MsxDosFileSystemProvider());
         return registry;

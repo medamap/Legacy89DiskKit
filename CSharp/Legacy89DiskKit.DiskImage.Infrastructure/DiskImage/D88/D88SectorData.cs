@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Infrastructure.DiskImage.D88;
+namespace Legacy89DiskKit.DiskImage.Infrastructure.D88;
 
 public sealed class D88SectorData
 {

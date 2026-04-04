@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
-using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
-using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
+using Legacy89DiskKit.CharacterEncoding.Domain.Interface;
+using Legacy89DiskKit.CharacterEncoding.Domain.Interface.Registry;
 
 namespace Legacy89DiskKit.FileSystem.Application;
 

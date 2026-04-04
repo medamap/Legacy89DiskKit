@@ -1,11 +1,11 @@
 using System.Globalization;
 using System.Text;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.FileSystem.Model;
-using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
-using FileAttributes = Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Model.XDos;
+using FileAttributes = Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.XDos;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.XDos;
 
 public class XDosTransferAdapter : IFileSystemTransferAdapter
 {

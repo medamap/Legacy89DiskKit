@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Domain.Fdc.Model;
+namespace Legacy89DiskKit.Fdc.Domain.Model;
 
 /// <summary>
 /// Identifies a controller-visible register in the minimal FDC-facing contract.

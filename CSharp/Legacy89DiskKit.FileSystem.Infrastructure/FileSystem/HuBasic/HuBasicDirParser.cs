@@ -1,13 +1,13 @@
-using Legacy89DiskKit.Domain.FileSystem.Model;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Models;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Models;
 using System.Text;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.HuBasic;
 
 public class HuBasicDirParser
 {
     private readonly HuBasicConfiguration _config;
-    private readonly Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder.X1CharacterEncoder _encoder = new();
+    private readonly Legacy89DiskKit.CharacterEncoding.Infrastructure.Encoder.X1CharacterEncoder _encoder = new();
 
     public HuBasicDirParser(HuBasicConfiguration config)
     {
@@ -18,10 +18,10 @@ public class HuBasicDirParser
     {
         var rawEntry = HuBasicDirectoryEntryCodec.Parse(data, _encoder);
 
-        var standardAttr = Domain.FileSystem.Model.FileAttributes.None;
-        if ((rawEntry.ModeByte & 0x80) != 0) standardAttr |= Domain.FileSystem.Model.FileAttributes.Directory;
-        if ((rawEntry.ModeByte & 0x40) != 0) standardAttr |= Domain.FileSystem.Model.FileAttributes.ReadOnly;
-        if ((rawEntry.ModeByte & 0x10) != 0) standardAttr |= Domain.FileSystem.Model.FileAttributes.Hidden;
+        var standardAttr = Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes.None;
+        if ((rawEntry.ModeByte & 0x80) != 0) standardAttr |= Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes.Directory;
+        if ((rawEntry.ModeByte & 0x40) != 0) standardAttr |= Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes.ReadOnly;
+        if ((rawEntry.ModeByte & 0x10) != 0) standardAttr |= Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes.Hidden;
 
         var fileType = GetFileType(rawEntry.ModeByte);
         bool isAscii = fileType == HuBasicFileType.Ascii;
@@ -121,9 +121,9 @@ public class HuBasicDirParser
     {
         byte modeByte = (byte)(attributes.RawAttributes & 0x0F);
 
-        if ((attributes.StandardAttributes & Domain.FileSystem.Model.FileAttributes.Directory) != 0) modeByte |= 0x80;
-        if ((attributes.StandardAttributes & Domain.FileSystem.Model.FileAttributes.ReadOnly) != 0) modeByte |= 0x40;
-        if ((attributes.StandardAttributes & Domain.FileSystem.Model.FileAttributes.Hidden) != 0) modeByte |= 0x10;
+        if ((attributes.StandardAttributes & Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes.Directory) != 0) modeByte |= 0x80;
+        if ((attributes.StandardAttributes & Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes.ReadOnly) != 0) modeByte |= 0x40;
+        if ((attributes.StandardAttributes & Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes.Hidden) != 0) modeByte |= 0x10;
 
         if ((modeByte & 0x0F) == 0)
         {

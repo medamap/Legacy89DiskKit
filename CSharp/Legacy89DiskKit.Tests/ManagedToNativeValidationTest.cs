@@ -1,9 +1,8 @@
 using Legacy89DiskKit.Native.Application;
 using Xunit;
 using Legacy89DiskKit.NativeInterop.Core;
-using Legacy89DiskKit.Application;
 using Legacy89DiskKit.DiskImage.Application;
-using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.DiskImage.Domain.Model;
 using System.Runtime.InteropServices;
 
 namespace Legacy89DiskKit.Tests;
@@ -73,7 +72,7 @@ public class ManagedToNativeValidationTest
                 Assert.DoesNotContain(files, f => f.FullName == "NEW.BIN");
 
                 // Boot Area (Clone base) Flow
-                if (fs.Capabilities.HasFlag(Legacy89DiskKit.Domain.FileSystem.Model.FileSystemCapabilities.SupportsBootArea))
+                if (fs.Capabilities.HasFlag(Legacy89DiskKit.FileSystem.Domain.Model.FileSystemCapabilities.SupportsBootArea))
                 {
                     byte[] bootData = new byte[256];
                     bootData[0] = 0x01;

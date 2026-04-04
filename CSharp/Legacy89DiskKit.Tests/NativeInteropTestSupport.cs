@@ -1,9 +1,11 @@
 using System.Runtime.InteropServices;
-using Legacy89DiskKit.Application;
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.Native;
+using Legacy89DiskKit.DiskImage.Application;
+using Legacy89DiskKit.FileSystem.Application;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Interface.Registry;
+using Legacy89DiskKit.Native.Domain;
 using Legacy89DiskKit.NativeInterop.Exports;
 using Legacy89DiskKit.NativeInterop.Types;
 
@@ -64,10 +66,10 @@ internal sealed class TempFormattedDiskScope : IDisposable
     {
         ImagePath = Path.Combine(Path.GetTempPath(), $"ldk-native-{Guid.NewGuid():N}.d88");
 
-        using var service = Legacy89DiskKitApplication.CreateDiskService();
+        using var service = CreateDiskService();
         service.CreateDisk(ImagePath, DiskType.TwoD, "NATIVETEST");
 
-        var resolver = Legacy89DiskKitApplication.CreateExplicitFileSystemResolver();
+        var resolver = new ExplicitFileSystemResolver();
         var container = service.OpenDisk(ImagePath, readOnly: false);
         using var fileSystem = resolver.Create(fileSystemName, container);
         fileSystem.Format();
@@ -82,6 +84,22 @@ internal sealed class TempFormattedDiskScope : IDisposable
         {
             File.Delete(ImagePath);
         }
+    }
+
+    private static DiskService CreateDiskService()
+    {
+        return new DiskService(fsRegistry: CreateFileSystemRegistry());
+    }
+
+    private static IFileSystemRegistry CreateFileSystemRegistry()
+    {
+        var registry = new FileSystemRegistry();
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.XDos.Provider.XDosFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Provider.HuBasicFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.Cpm.Provider.CpmFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.Pc88.Provider.N88BasicFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.Msx.Provider.MsxDosFileSystemProvider());
+        return registry;
     }
 }
 

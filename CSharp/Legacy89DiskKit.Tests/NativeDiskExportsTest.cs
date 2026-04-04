@@ -1,12 +1,13 @@
 using Legacy89DiskKit.Native.Application;
 using System.Runtime.InteropServices;
-using Legacy89DiskKit.Application;
 using Legacy89DiskKit.DiskImage.Application;
-using Legacy89DiskKit.Domain.FileSystem.Model;
+using Legacy89DiskKit.FileSystem.Application;
+using Legacy89DiskKit.FileSystem.Domain.Interface.Registry;
+using Legacy89DiskKit.FileSystem.Domain.Model;
 using Legacy89DiskKit.NativeInterop.Core;
 using Legacy89DiskKit.NativeInterop.Types;
 using Xunit;
-using DiskFileAttributes = Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes;
+using DiskFileAttributes = Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes;
 
 namespace Legacy89DiskKit.Tests;
 
@@ -20,7 +21,7 @@ public class NativeDiskExportsTest
         HandleManager.Clear();
 
         using var disk = new TempFormattedDiskScope();
-        using var service = Legacy89DiskKitApplication.CreateDiskService();
+        using var service = CreateDiskService();
         service.OpenDisk(disk.ImagePath, readOnly: false);
         service.FileSystem!.WriteFile(
             "HELLO",
@@ -78,6 +79,22 @@ public class NativeDiskExportsTest
         {
             Marshal.FreeHGlobal(infoPtr);
         }
+    }
+
+    private static DiskService CreateDiskService()
+    {
+        return new DiskService(fsRegistry: CreateFileSystemRegistry());
+    }
+
+    private static IFileSystemRegistry CreateFileSystemRegistry()
+    {
+        var registry = new FileSystemRegistry();
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.XDos.Provider.XDosFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Provider.HuBasicFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.Cpm.Provider.CpmFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.Pc88.Provider.N88BasicFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.Msx.Provider.MsxDosFileSystemProvider());
+        return registry;
     }
 }
 

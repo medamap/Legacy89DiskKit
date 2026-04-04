@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Domain.CharacterEncoding.Model;
+namespace Legacy89DiskKit.CharacterEncoding.Domain.Model;
 
 public sealed record CharacterEncodingProfile(
     string EncodingId,

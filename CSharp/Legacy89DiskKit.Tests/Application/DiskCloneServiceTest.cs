@@ -1,8 +1,8 @@
 using Legacy89DiskKit.FileSystem.Application;
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.FileSystem.Model;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Model;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests.Application;
@@ -29,7 +29,7 @@ public class DiskCloneServiceTest
         public void RenameFile(string oldName, string newName) { }
         public void CopyFile(string sourceName, string targetName) { }
         public void UpdateAttributes(string fileName, ExtendedFileAttributes attributes) { }
-        public ExtendedFileAttributes CreateDefaultAttributes(bool isAscii) => new(Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes.None, 0, isAscii, "FAKE");
+        public ExtendedFileAttributes CreateDefaultAttributes(bool isAscii) => new(Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes.None, 0, isAscii, "FAKE");
         public void Format() { }
         public byte[] ReadBootArea() => Array.Empty<byte>();
         public void WriteBootArea(byte[] data) { }
@@ -162,7 +162,7 @@ public class DiskCloneServiceTest
             3,
             null,
             null,
-            new ExtendedFileAttributes(Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes.Hidden, 0x80, false, "X-DOS"),
+            new ExtendedFileAttributes(Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes.Hidden, 0x80, false, "X-DOS"),
             0,
             0xC800,
             null,

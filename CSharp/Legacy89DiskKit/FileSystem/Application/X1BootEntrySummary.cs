@@ -1,4 +1,4 @@
-using Legacy89DiskKit.Domain.CharacterEncoding.Model;
+using Legacy89DiskKit.CharacterEncoding.Domain.Model;
 
 namespace Legacy89DiskKit.FileSystem.Application;
 public enum X1BootEntryKind

@@ -1,11 +1,11 @@
 using Legacy89DiskKit.Cli.Presentation.FileSystem;
 using Legacy89DiskKit.FileSystem.Application;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.FileSystem.Model;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Models;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Models;
 using Xunit;
-using DomainFileAttributes = Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes;
+using DomainFileAttributes = Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes;
 
 namespace Legacy89DiskKit.Tests;
 public class HuBasicListPresentationTest

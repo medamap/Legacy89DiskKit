@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Domain.Drive.Model;
+namespace Legacy89DiskKit.Drive.Domain.Model;
 
 /// <summary>
 /// Represents the visible state of a mounted or mountable floppy drive.

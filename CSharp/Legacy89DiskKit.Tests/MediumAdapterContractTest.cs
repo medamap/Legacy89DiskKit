@@ -1,6 +1,6 @@
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.Drive.Interface;
-using Legacy89DiskKit.Domain.Fdc.Interface;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.Drive.Domain.Interface;
+using Legacy89DiskKit.Fdc.Domain.Interface;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;

@@ -1,9 +1,9 @@
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.FileSystem.Interface.Factory;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.FileSystem.Domain.Interface.Factory;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.Factory;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.Factory;
 
 public class FileSystemFactory : IFileSystemFactory
 {

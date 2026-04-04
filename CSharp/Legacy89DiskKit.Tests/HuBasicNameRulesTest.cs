@@ -1,4 +1,4 @@
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;

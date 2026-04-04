@@ -1,5 +1,5 @@
-using Legacy89DiskKit.Domain.Drive.Interface;
-using Legacy89DiskKit.Domain.Drive.Model;
+using Legacy89DiskKit.Drive.Domain.Interface;
+using Legacy89DiskKit.Drive.Domain.Model;
 
 namespace Legacy89DiskKit.Drive.Application;
 

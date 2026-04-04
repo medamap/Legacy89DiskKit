@@ -38,7 +38,7 @@ public static class DiskExports
 
             var session = NativeBridgeBackend.Current.CreateDisk(
                 path,
-                (Legacy89DiskKit.Domain.DiskImage.Model.DiskType)diskType,
+                (Legacy89DiskKit.DiskImage.Domain.Model.DiskType)diskType,
                 name);
             return HandleManager.Register(session, new HandleMetadata("create-disk", true));
         }

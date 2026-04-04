@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Domain.Drive.Interface;
+namespace Legacy89DiskKit.Drive.Domain.Interface;
 
 /// <summary>
 /// Represents a mounted medium that can back a drive-oriented workflow.

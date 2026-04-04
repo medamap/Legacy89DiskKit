@@ -1,11 +1,11 @@
 using System.Text;
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
-using Legacy89DiskKit.Infrastructure.FileSystem.Msx;
-using Legacy89DiskKit.Infrastructure.FileSystem.Pc88;
-using Legacy89DiskKit.Infrastructure.FileSystem.XDos;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic;
+using Legacy89DiskKit.FileSystem.Infrastructure.Msx;
+using Legacy89DiskKit.FileSystem.Infrastructure.Pc88;
+using Legacy89DiskKit.FileSystem.Infrastructure.XDos;
 
 namespace Legacy89DiskKit.FileSystem.Application;
 

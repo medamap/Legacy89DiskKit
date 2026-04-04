@@ -1,6 +1,6 @@
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.Msx.Models;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.Msx.Models;
 
 public class MsxDosFatManager
 {

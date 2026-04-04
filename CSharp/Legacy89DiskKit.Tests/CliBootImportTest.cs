@@ -1,8 +1,8 @@
 using Legacy89DiskKit.DiskImage.Application;
 using Legacy89DiskKit.FileSystem.Application;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Infrastructure.DiskImage.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.DiskImage.Infrastructure.Container;
 using Legacy89DiskKit.Cli.Presentation.FileSystem;
 using Xunit;
 using System.Text.Json;
@@ -78,7 +78,7 @@ public class CliBootImportTest : IDisposable
             var bootArea = fs.ReadBootArea();
             Assert.Equal(0x01, bootArea[0]); // Bootable flag
 
-            var bootInfo = new Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.HuBasicBootRecordParser().Parse(bootArea);
+            var bootInfo = new Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.HuBasicBootRecordParser().Parse(bootArea);
             Assert.NotNull(bootInfo);
             Assert.Equal("BASIC_CZ", bootInfo!.Name);
             Assert.Equal("Sys", bootInfo.Extension);

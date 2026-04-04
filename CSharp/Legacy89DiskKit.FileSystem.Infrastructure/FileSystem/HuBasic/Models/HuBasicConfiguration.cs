@@ -1,6 +1,6 @@
-using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.DiskImage.Domain.Model;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Models;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Models;
 
 public record HuBasicConfiguration
 {

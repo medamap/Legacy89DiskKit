@@ -1,14 +1,14 @@
 using System.IO;
 using Legacy89DiskKit.DiskImage.Application;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
-using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;
-using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
-using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
-using Legacy89DiskKit.Infrastructure.DiskImage.Factory;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Provider;
+using Legacy89DiskKit.FileSystem.Infrastructure.Pc88.Provider;
+using Legacy89DiskKit.FileSystem.Infrastructure.Msx.Provider;
+using Legacy89DiskKit.CharacterEncoding.Infrastructure.Encoder;
+using Legacy89DiskKit.DiskImage.Infrastructure.Factory;
 using Legacy89DiskKit.CharacterEncoding.Application;
 using Legacy89DiskKit.Native.Application;
-using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
+using Legacy89DiskKit.CharacterEncoding.Domain.Interface.Registry;
 using Legacy89DiskKit.FileSystem.Application;
 
 namespace Legacy89DiskKit.Archive.Application;

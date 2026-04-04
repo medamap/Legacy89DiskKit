@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Domain.Fdc.Model;
+namespace Legacy89DiskKit.Fdc.Domain.Model;
 
 [Flags]
 public enum FdcStatusFlags : byte

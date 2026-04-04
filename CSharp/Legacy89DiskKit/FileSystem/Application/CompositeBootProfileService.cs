@@ -1,4 +1,4 @@
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
 using Legacy89DiskKit.FileSystem.Application;
 
 namespace Legacy89DiskKit.FileSystem.Application;
@@ -43,8 +43,8 @@ public class CompositeBootProfileService : IBootProfileService
     {
         return pc88.Kind switch
         {
-            Pc88BootEntryKind.N88BasicSectorResident => new BootInfoSummary(BootInfoMode.SectorResident, DisplayName: pc88.DisplayName, MachineFamily: Domain.CharacterEncoding.Model.MachineType.PC8801),
-            Pc88BootEntryKind.CpmSectorResident => new BootInfoSummary(BootInfoMode.SectorResident, DisplayName: pc88.DisplayName, MachineFamily: Domain.CharacterEncoding.Model.MachineType.PC8801),
+            Pc88BootEntryKind.N88BasicSectorResident => new BootInfoSummary(BootInfoMode.SectorResident, DisplayName: pc88.DisplayName, MachineFamily: CharacterEncoding.Domain.Model.MachineType.PC8801),
+            Pc88BootEntryKind.CpmSectorResident => new BootInfoSummary(BootInfoMode.SectorResident, DisplayName: pc88.DisplayName, MachineFamily: CharacterEncoding.Domain.Model.MachineType.PC8801),
             _ => new BootInfoSummary(BootInfoMode.None, MachineFamily: pc88.MachineFamily)};
     }
 }

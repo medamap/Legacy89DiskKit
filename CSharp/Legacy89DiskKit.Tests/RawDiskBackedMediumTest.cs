@@ -1,10 +1,10 @@
-using Legacy89DiskKit.Domain.Drive.Interface;
-using Legacy89DiskKit.Domain.Fdc.Interface;
-using Legacy89DiskKit.Domain.Fdc.Model;
-using Legacy89DiskKit.Infrastructure.Fdc;
-using Legacy89DiskKit.Infrastructure.DiskImage.Container;
-using Legacy89DiskKit.Infrastructure.Drive.Medium;
-using Legacy89DiskKit.Infrastructure.Fdc.Medium;
+using Legacy89DiskKit.Drive.Domain.Interface;
+using Legacy89DiskKit.Fdc.Domain.Interface;
+using Legacy89DiskKit.Fdc.Domain.Model;
+using Legacy89DiskKit.Fdc.Infrastructure;
+using Legacy89DiskKit.DiskImage.Infrastructure.Container;
+using Legacy89DiskKit.Drive.Infrastructure.Medium;
+using Legacy89DiskKit.Fdc.Infrastructure.Medium;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;
@@ -14,7 +14,7 @@ public class RawDiskBackedMediumTest
     [Fact]
     public void RawDiskBackedSectorAddressableMedium_CanReadDecodedSectorData()
     {
-        using var container = RawDiskContainer.CreateNewInMemory(Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = RawDiskContainer.CreateNewInMemory(Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, CreateSector(256, 0x44));
 
         ISectorAddressableMedium medium = new RawDiskBackedSectorAddressableMedium(container);
@@ -29,7 +29,7 @@ public class RawDiskBackedMediumTest
     [Fact]
     public void RawDiskBackedControllerFacingMedium_CanServeReadSectorLikeFlow()
     {
-        using var container = RawDiskContainer.CreateNewInMemory(Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = RawDiskContainer.CreateNewInMemory(Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         var sector = CreateSector(256, 0x7E);
         sector[1] = 0x3C;
         sector[2] = 0x11;
@@ -67,7 +67,7 @@ public class RawDiskBackedMediumTest
     [Fact]
     public void RawDiskBackedControllerFacingMedium_ReturnsRecordNotFoundStatusForMissingSector()
     {
-        using var container = RawDiskContainer.CreateNewInMemory(Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = RawDiskContainer.CreateNewInMemory(Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         IControllerFacingMedium medium = new RawDiskBackedControllerFacingMedium(container);
 
         medium.Reset();
@@ -88,7 +88,7 @@ public class RawDiskBackedMediumTest
     [Fact]
     public void RawDiskBackedControllerFacingMedium_CanRestoreSeekAndForceInterrupt()
     {
-        using var container = RawDiskContainer.CreateNewInMemory(Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = RawDiskContainer.CreateNewInMemory(Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         IControllerFacingMedium medium = new RawDiskBackedControllerFacingMedium(container);
 
         medium.Reset();
@@ -118,16 +118,16 @@ public class RawDiskBackedMediumTest
     [Fact]
     public void FdcMediumController_GetVisibleState_DoesNotConsumeRawTransferData()
     {
-        using var container = RawDiskContainer.CreateNewInMemory(Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = RawDiskContainer.CreateNewInMemory(Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         var sector = CreateSector(256, 0x7E);
         sector[1] = 0x3C;
         container.WriteSector(0, 0, 1, sector);
 
         var controller = new FdcMediumController(new RawDiskBackedControllerFacingMedium(container));
 
-        controller.WriteRegister(Domain.Fdc.Model.FdcRegister.Track, 0);
-        controller.WriteRegister(Domain.Fdc.Model.FdcRegister.Sector, 1);
-        controller.WriteRegister(Domain.Fdc.Model.FdcRegister.CommandStatus, 0x80);
+        controller.WriteRegister(Legacy89DiskKit.Fdc.Domain.Model.FdcRegister.Track, 0);
+        controller.WriteRegister(Legacy89DiskKit.Fdc.Domain.Model.FdcRegister.Sector, 1);
+        controller.WriteRegister(Legacy89DiskKit.Fdc.Domain.Model.FdcRegister.CommandStatus, 0x80);
 
         Assert.True(controller.GetVisibleState().Busy);
         controller.Advance(TimeSpan.FromMilliseconds(1));
@@ -138,14 +138,14 @@ public class RawDiskBackedMediumTest
         Assert.Equal(0, visible.SelectedDrive);
         Assert.Equal(0, visible.SelectedSide);
         Assert.True(visible.Drq);
-        Assert.Equal(0x7E, controller.ReadRegister(Domain.Fdc.Model.FdcRegister.Data));
-        Assert.Equal(0x3C, controller.ReadRegister(Domain.Fdc.Model.FdcRegister.Data));
+        Assert.Equal(0x7E, controller.ReadRegister(Legacy89DiskKit.Fdc.Domain.Model.FdcRegister.Data));
+        Assert.Equal(0x3C, controller.ReadRegister(Legacy89DiskKit.Fdc.Domain.Model.FdcRegister.Data));
     }
 
     [Fact]
     public void RawDiskBackedControllerFacingMedium_ReturnsUnsupportedCommandStatus()
     {
-        using var container = RawDiskContainer.CreateNewInMemory(Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = RawDiskContainer.CreateNewInMemory(Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         IControllerFacingMedium medium = new RawDiskBackedControllerFacingMedium(container);
 
         medium.Reset();

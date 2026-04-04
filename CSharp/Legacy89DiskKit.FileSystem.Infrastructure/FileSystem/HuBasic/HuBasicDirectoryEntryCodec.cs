@@ -1,7 +1,7 @@
-using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Models;
+using Legacy89DiskKit.CharacterEncoding.Domain.Interface;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Models;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.HuBasic;
 
 public static class HuBasicDirectoryEntryCodec
 {

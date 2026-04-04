@@ -1,4 +1,4 @@
-using Legacy89DiskKit.Domain.FileSystem.Model;
+using Legacy89DiskKit.FileSystem.Domain.Model;
 using Legacy89DiskKit.FileSystem.Application;
 
 namespace Legacy89DiskKit.Cli.Presentation.FileSystem;

@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Domain.Fdc.Interface;
+namespace Legacy89DiskKit.Fdc.Domain.Interface;
 
 public interface ITimedFdcController
 {

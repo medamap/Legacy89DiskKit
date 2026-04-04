@@ -1,8 +1,8 @@
 using Legacy89DiskKit.DiskImage.Application;
 using Legacy89DiskKit.FileSystem.Application;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Infrastructure.DiskImage.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.DiskImage.Infrastructure.Container;
 using Legacy89DiskKit.Cli.Presentation.FileSystem;
 using Xunit;
 using System.Text.Json;

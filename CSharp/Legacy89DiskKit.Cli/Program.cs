@@ -2,23 +2,24 @@ using System.CommandLine;
 using System.Text;
 using Legacy89DiskKit.Cli;
 using Legacy89DiskKit.CharacterEncoding.Application;
-using Legacy89DiskKit.Application;
+using Legacy89DiskKit.CharacterEncoding.Domain.Interface.Registry;
 using Legacy89DiskKit.DiskImage.Application;
 using Legacy89DiskKit.FileSystem.Application;
 using Legacy89DiskKit.Archive.Application;
 using Legacy89DiskKit.Fdc.Application.Hosts.Scripting;
+using Legacy89DiskKit.Fdc.Application.Hosts.Protocol;
 using Legacy89DiskKit.Cli.Presentation.FileSystem;
-using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.FileSystem.Model;
-using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
-using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
-using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;
-using Legacy89DiskKit.Infrastructure.FileSystem.XDos;
+using Legacy89DiskKit.CharacterEncoding.Domain.Interface;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using Legacy89DiskKit.CharacterEncoding.Infrastructure.Encoder;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Provider;
+using Legacy89DiskKit.FileSystem.Infrastructure.Msx.Provider;
+using Legacy89DiskKit.FileSystem.Infrastructure.Pc88.Provider;
+using Legacy89DiskKit.FileSystem.Infrastructure.XDos;
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 var requestedLanguage = TryGetRequestedLanguage(args);
@@ -34,9 +35,9 @@ var archiveService = new ArchiveService();
 var huBasicMetadataService = new HuBasicMetadataService();
 var directoryLayoutService = new DirectoryLayoutService();
 var explicitFileSystemResolver = new ExplicitFileSystemResolver();
-var bootProfileService = Legacy89DiskKitApplication.CreateBootProfileService();
-var diskInspectionService = Legacy89DiskKitApplication.CreateDiskInspectionService();
-var fileInspectionService = Legacy89DiskKitApplication.CreateFileInspectionService();
+var bootProfileService = new CompositeBootProfileService();
+var diskInspectionService = new DiskInspectionService();
+var fileInspectionService = new FileInspectionService();
 var rootCommand = new RootCommand(localizer.RootDescription);
 var languageOption = new Option<string?>(new[] { "--language", "-l" }, localizer.LanguageOptionDescription);
 var encodingOption = new Option<string?>(new[] { "--encoding", "-e" }, localizer.EncodingOptionDescription);
@@ -302,7 +303,7 @@ fileCrossCopyCommand.SetHandler((string srcPath, string destPath, string[] files
             targetFiles = files[0].Split(',');
         }
 
-        var cloneService = Legacy89DiskKitApplication.CreateDiskCloneService(destFs.GetFileSystemInfo(), encodingOverride);
+        var cloneService = CreateDiskCloneService(destFs.GetFileSystemInfo(), encodingOverride);
         var srcAdapter = CreateTransferAdapter(srcFs);
         var destAdapter = CreateTransferAdapter(destFs);
         cloneService.TransferFiles(srcFs, destFs, targetFiles, srcAdapter, destAdapter);
@@ -612,11 +613,11 @@ hostStdioCommand.SetHandler(async (bool observable) =>
 {
     if (observable)
     {
-        await Legacy89DiskKitApplication.CreateEmulatorHostObservableProtocolStdioRunner().RunAsync();
+        await CreateEmulatorHostObservableProtocolStdioRunner().RunAsync();
         return;
     }
 
-    await Legacy89DiskKitApplication.CreateEmulatorHostProtocolStdioRunner().RunAsync();
+    await CreateEmulatorHostProtocolStdioRunner().RunAsync();
 }, hostObservableOption);
 hostScriptD88PathCommand.AddArgument(imageArgument);
 hostScriptD88PathCommand.AddArgument(hostOutputArgument);
@@ -624,7 +625,7 @@ hostScriptD88PathCommand.SetHandler(async (string imagePath, string outputPath) 
 {
     try
     {
-        var requests = Legacy89DiskKitApplication.CreateReadOnlyD88PathScript(imagePath);
+        var requests = CreateReadOnlyD88PathScript(imagePath);
         await EmulatorHostRequestScriptFileStore.SaveAsync(outputPath, requests);
         PrintSuccess(localizer, $"Host request script written: {outputPath}");
     }
@@ -640,7 +641,7 @@ hostScriptD88BufferCommand.SetHandler(async (string imagePath, string outputPath
     try
     {
         var imageData = await File.ReadAllBytesAsync(imagePath);
-        var requests = Legacy89DiskKitApplication.CreateReadOnlyD88BufferScript(imageData);
+        var requests = CreateReadOnlyD88BufferScript(imageData);
         await EmulatorHostRequestScriptFileStore.SaveAsync(outputPath, requests);
         PrintSuccess(localizer, $"Host request script written: {outputPath}");
     }
@@ -656,7 +657,7 @@ hostScriptRawBufferCommand.SetHandler(async (string imagePath, string outputPath
     try
     {
         var imageData = await File.ReadAllBytesAsync(imagePath);
-        var requests = Legacy89DiskKitApplication.CreateReadOnlyRawBufferScript(imageData);
+        var requests = CreateReadOnlyRawBufferScript(imageData);
         await EmulatorHostRequestScriptFileStore.SaveAsync(outputPath, requests);
         PrintSuccess(localizer, $"Host request script written: {outputPath}");
     }
@@ -670,7 +671,7 @@ hostScriptInspectCommand.SetHandler(async (string scriptPath) =>
 {
     try
     {
-        var requests = await Legacy89DiskKitApplication.ReadEmulatorHostRequestScriptAsync(scriptPath);
+        var requests = await ReadEmulatorHostRequestScriptAsync(scriptPath);
         Console.WriteLine($"RequestEntries: {requests.Count}");
         Console.WriteLine($"FirstKind: {requests.FirstOrDefault()?.Kind}");
         Console.WriteLine($"LastKind: {requests.LastOrDefault()?.Kind}");
@@ -692,7 +693,7 @@ hostBundleInspectCommand.SetHandler(async (string directoryPath, string baseName
     try
     {
         var bundle = await EmulatorHostBundleReader.ReadAsync(directoryPath, baseName);
-        var report = Legacy89DiskKitApplication.BuildEmulatorHostProofReport(bundle.Transcript, bundle.Manifest.OpenMode, bundle.Manifest.ExchangeMode);
+        var report = BuildEmulatorHostProofReport(bundle.Transcript, bundle.Manifest.OpenMode, bundle.Manifest.ExchangeMode);
         Console.WriteLine($"BaseName: {bundle.Manifest.BaseName}");
         Console.WriteLine($"OpenMode: {bundle.Manifest.OpenMode}");
         Console.WriteLine($"ExchangeMode: {bundle.Manifest.ExchangeMode}");
@@ -721,9 +722,9 @@ hostBundleVerifyCommand.AddArgument(hostBaseNameArgument);
 hostBundleVerifyCommand.AddArgument(hostBaselineArgument);
 hostBundleVerifyCommand.SetHandler(async (string directoryPath, string baseName, string baselineName) =>
 {
-    var bundle = await Legacy89DiskKitApplication.ReadEmulatorHostBundleAsync(directoryPath, baseName);
+    var bundle = await ReadEmulatorHostBundleAsync(directoryPath, baseName);
     var expectation = ParseHostBaseline(baselineName);
-    var mismatches = Legacy89DiskKitApplication.CompareEmulatorHostBundle(bundle, expectation);
+    var mismatches = CompareEmulatorHostBundle(bundle, expectation);
     if (mismatches.Count == 0)
     {
         PrintSuccess(localizer, $"Host-proof bundle matched baseline: {baselineName}");
@@ -742,10 +743,10 @@ hostBundlePackCommand.SetHandler(async (string transcriptPath, string directoryP
 {
     try
     {
-        var transcript = await Legacy89DiskKitApplication.ReadEmulatorHostTranscriptAsync(transcriptPath);
-        var requestScript = string.IsNullOrWhiteSpace(requestScriptPath) ? null : await Legacy89DiskKitApplication.ReadEmulatorHostRequestScriptAsync(requestScriptPath);
-        var report = Legacy89DiskKitApplication.BuildEmulatorHostProofReport(transcript, openMode, exchangeMode);
-        await Legacy89DiskKitApplication.WriteEmulatorHostBundleAsync(directoryPath, baseName, report, transcript, requestScript);
+        var transcript = await ReadEmulatorHostTranscriptAsync(transcriptPath);
+        var requestScript = string.IsNullOrWhiteSpace(requestScriptPath) ? null : await ReadEmulatorHostRequestScriptAsync(requestScriptPath);
+        var report = BuildEmulatorHostProofReport(transcript, openMode, exchangeMode);
+        await WriteEmulatorHostBundleAsync(directoryPath, baseName, report, transcript, requestScript);
         PrintSuccess(localizer, $"Host-proof bundle written: {Path.Combine(directoryPath, $"{baseName}.manifest.json")}");
     }
     catch (Exception ex)
@@ -760,8 +761,8 @@ hostTranscriptInspectCommand.SetHandler(async (string transcriptPath, string ope
 {
     try
     {
-        var transcript = await Legacy89DiskKitApplication.ReadEmulatorHostTranscriptAsync(transcriptPath);
-        var report = Legacy89DiskKitApplication.BuildEmulatorHostProofReport(transcript, openMode, exchangeMode);
+        var transcript = await ReadEmulatorHostTranscriptAsync(transcriptPath);
+        var report = BuildEmulatorHostProofReport(transcript, openMode, exchangeMode);
         Console.WriteLine($"TranscriptEntries: {transcript.Count}");
         Console.WriteLine($"OpenMode: {report.OpenMode}");
         Console.WriteLine($"ExchangeMode: {report.ExchangeMode}");
@@ -791,8 +792,8 @@ hostTranscriptReportCommand.SetHandler(async (string transcriptPath, string outp
 {
     try
     {
-        var transcript = await Legacy89DiskKitApplication.ReadEmulatorHostTranscriptAsync(transcriptPath);
-        var report = Legacy89DiskKitApplication.BuildEmulatorHostProofReport(transcript, openMode, exchangeMode);
+        var transcript = await ReadEmulatorHostTranscriptAsync(transcriptPath);
+        var report = BuildEmulatorHostProofReport(transcript, openMode, exchangeMode);
         var markdown = EmulatorHostProofReportMarkdownRenderer.Render(report);
         await File.WriteAllTextAsync(outputPath, markdown, Encoding.UTF8);
         PrintSuccess(localizer, $"Host-proof report written: {outputPath}");
@@ -808,10 +809,10 @@ hostTranscriptVerifyCommand.AddOption(hostOpenModeOption);
 hostTranscriptVerifyCommand.AddOption(hostExchangeModeOption);
 hostTranscriptVerifyCommand.SetHandler(async (string transcriptPath, string baselineName, string openMode, string exchangeMode) =>
 {
-    var transcript = await Legacy89DiskKitApplication.ReadEmulatorHostTranscriptAsync(transcriptPath);
-    var report = Legacy89DiskKitApplication.BuildEmulatorHostProofReport(transcript, openMode, exchangeMode);
+    var transcript = await ReadEmulatorHostTranscriptAsync(transcriptPath);
+    var report = BuildEmulatorHostProofReport(transcript, openMode, exchangeMode);
     var expectation = ParseHostBaseline(baselineName);
-    var mismatches = Legacy89DiskKitApplication.CompareEmulatorHostProofReport(report, expectation);
+    var mismatches = CompareEmulatorHostProofReport(report, expectation);
     if (mismatches.Count == 0)
     {
         PrintSuccess(localizer, $"Host-proof transcript matched baseline: {baselineName}");
@@ -933,7 +934,7 @@ bootExportCommand.SetHandler(async (string imagePath, string outputPath) =>
             return;
         }
 
-        var exportService = Legacy89DiskKitApplication.CreateBootEntryExportService();
+        var exportService = new BootEntryExportService();
         var entries = exportService.ExportEntries(container, fs);
         if (entries.Count == 0)
         {
@@ -1019,7 +1020,7 @@ bootImportCommand.SetHandler(async (string imagePath, string binaryPath, string 
             return;
         }
 
-        var importService = Legacy89DiskKitApplication.CreateBootEntryImportService();
+        var importService = new BootEntryImportService();
         importService.ImportEntry(container, fs, metadata, binary);
         container.Save();
         PrintSuccess(localizer, localizer.BootEntryImportedMessage);
@@ -1436,11 +1437,6 @@ static IFileSystem? RequireFileSystem(IFileSystem? fileSystem, IConsoleLocalizer
 
     PrintError(localizer, localizer.FileSystemNotDetectedMessage);
     return null;
-}
-
-static FileTransferService CreateFileTransferService(DiskFileSystemInfo fsInfo, string? encodingOverride)
-{
-    return Legacy89DiskKitApplication.CreateFileTransferService(fsInfo, encodingOverride);
 }
 
 static void RenderFileList(FileListView view, IFileListLocalizer localizer, string outputFormat)
@@ -2236,4 +2232,124 @@ static bool ConfirmOverwrite(IConsoleLocalizer localizer, string path)
     Console.Write(string.Format(localizer.OverwriteConfirmationMessage, path));
     var input = Console.ReadLine()?.Trim().ToLowerInvariant();
     return input == "y" || input == "yes";
+}
+
+static DiskCloneService CreateDiskCloneService(DiskFileSystemInfo fsInfo, string? encodingOverride = null)
+{
+    var transferService = CreateFileTransferService(fsInfo, encodingOverride);
+    var encoderRegistry = CreateEncoderRegistry();
+    var normalizationService = new FileNameNormalizationService(encoderRegistry);
+    return new DiskCloneService(transferService, normalizationService);
+}
+
+static EmulatorHostObservableProtocolStdioRunner CreateEmulatorHostObservableProtocolStdioRunner()
+{
+    return new EmulatorHostObservableProtocolStdioRunner(CreateEmulatorHostObservableProtocolSession());
+}
+
+static EmulatorHostObservableProtocolSession CreateEmulatorHostObservableProtocolSession()
+{
+    return new EmulatorHostObservableProtocolSession(CreateEventDrivenEmulatorFdcHostAdapter());
+}
+
+static EmulatorHostProtocolStdioRunner CreateEmulatorHostProtocolStdioRunner()
+{
+    return new EmulatorHostProtocolStdioRunner(CreateEmulatorHostProtocolTextSession());
+}
+
+static EmulatorHostProtocolTextSession CreateEmulatorHostProtocolTextSession()
+{
+    return new EmulatorHostProtocolTextSession(CreateEmulatorHostProtocolEndpoint());
+}
+
+static EmulatorHostProtocolEndpoint CreateEmulatorHostProtocolEndpoint()
+{
+    return new EmulatorHostProtocolEndpoint(CreateEventDrivenEmulatorFdcHostAdapter());
+}
+
+static Legacy89DiskKit.Fdc.Application.Hosts.EventDrivenEmulatorFdcHostAdapter CreateEventDrivenEmulatorFdcHostAdapter()
+{
+    return new Legacy89DiskKit.Fdc.Application.Hosts.EventDrivenEmulatorFdcHostAdapter(
+        new Legacy89DiskKit.Drive.Application.DriveMountService(),
+        new Legacy89DiskKit.Drive.Application.MountedMediumBindingService(),
+        new Legacy89DiskKit.DiskImage.Infrastructure.Factory.DiskContainerFactory());
+}
+
+static IReadOnlyList<EmulatorHostRequest> CreateReadOnlyD88PathScript(string imagePath, int driveNumber = 0)
+{
+    return EmulatorHostRequestScriptFactory.CreateReadOnlyD88ByPathSequence(imagePath, driveNumber);
+}
+
+static IReadOnlyList<EmulatorHostRequest> CreateReadOnlyD88BufferScript(byte[] imageData, string imageFormat = "d88", int driveNumber = 0)
+{
+    return EmulatorHostRequestScriptFactory.CreateReadOnlyD88ByBufferSequence(imageData, imageFormat, driveNumber);
+}
+
+static IReadOnlyList<EmulatorHostRequest> CreateReadOnlyRawBufferScript(byte[] imageData, string imageFormat = "2d", int driveNumber = 0)
+{
+    return EmulatorHostRequestScriptFactory.CreateReadOnlyRawByBufferSequence(imageData, imageFormat, driveNumber);
+}
+
+static async Task<IReadOnlyList<EmulatorHostRequest>> ReadEmulatorHostRequestScriptAsync(string requestScriptPath, CancellationToken cancellationToken = default)
+{
+    return await EmulatorHostRequestScriptFileStore.LoadAsync(requestScriptPath, cancellationToken);
+}
+
+static EmulatorHostProofReport BuildEmulatorHostProofReport(IReadOnlyList<EmulatorHostTranscriptEntry> transcript, string openMode, string exchangeMode)
+{
+    return EmulatorHostProofReportBuilder.Build(transcript, openMode, exchangeMode);
+}
+
+static async Task<EmulatorHostBundle> ReadEmulatorHostBundleAsync(string outputDirectory, string baseName, CancellationToken cancellationToken = default)
+{
+    return await EmulatorHostBundleReader.ReadAsync(outputDirectory, baseName, cancellationToken);
+}
+
+static IReadOnlyList<string> CompareEmulatorHostBundle(EmulatorHostBundle bundle, EmulatorHostProofExpectation expectation)
+{
+    return EmulatorHostBundleComparer.Compare(bundle, expectation);
+}
+
+static async Task<IReadOnlyList<EmulatorHostTranscriptEntry>> ReadEmulatorHostTranscriptAsync(string transcriptPath, CancellationToken cancellationToken = default)
+{
+    return await EmulatorHostTranscriptFileStore.LoadAsync(transcriptPath, cancellationToken);
+}
+
+static async Task WriteEmulatorHostBundleAsync(string outputDirectory, string baseName, EmulatorHostProofReport report, IReadOnlyList<EmulatorHostTranscriptEntry> transcript, IReadOnlyList<EmulatorHostRequest>? requestScript = null, CancellationToken cancellationToken = default)
+{
+    await EmulatorHostBundleWriter.WriteAsync(outputDirectory, baseName, report, transcript, requestScript, cancellationToken);
+}
+
+static IReadOnlyList<string> CompareEmulatorHostProofReport(EmulatorHostProofReport report, EmulatorHostProofExpectation expectation)
+{
+    return EmulatorHostProofReportComparer.Compare(report, expectation);
+}
+
+static FileTransferService CreateFileTransferService(DiskFileSystemInfo fsInfo, string? encodingOverride = null)
+{
+    var encoder = ResolveEncoder(fsInfo, encodingOverride);
+    return new FileTransferService(encoder);
+}
+
+static ICharacterEncoder ResolveEncoder(DiskFileSystemInfo fsInfo, string? encodingOverride = null)
+{
+    var registry = CreateEncoderRegistry();
+    return new CharacterEncodingResolver(registry).ResolveEncoder(fsInfo, encodingOverride);
+}
+
+static IEncoderRegistry CreateEncoderRegistry()
+{
+    var registry = new EncoderRegistry();
+    registry.Register("X1", new X1CharacterEncoder());
+    registry.Register("SJIS", new ShiftJisCharacterEncoder());
+    registry.Register("ShiftJIS", new ShiftJisCharacterEncoder());
+    registry.Register("Shift-JIS", new ShiftJisCharacterEncoder());
+    registry.Register("Shift_JIS", new ShiftJisCharacterEncoder());
+    registry.Register("sjis", new ShiftJisCharacterEncoder());
+    registry.Register("shiftjis", new ShiftJisCharacterEncoder());
+    registry.Register("shift-jis", new ShiftJisCharacterEncoder());
+    registry.Register("shift_jis", new ShiftJisCharacterEncoder());
+    registry.Register("MSX", new ShiftJisCharacterEncoder());
+    registry.Register("PC88", new ShiftJisCharacterEncoder());
+    return registry;
 }

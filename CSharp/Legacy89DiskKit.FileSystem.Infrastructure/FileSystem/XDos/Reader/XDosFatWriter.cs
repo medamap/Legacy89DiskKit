@@ -1,7 +1,7 @@
 using System.Buffers.Binary;
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.XDos.Reader;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.XDos.Reader;
 
 public class XDosFatWriter
 {

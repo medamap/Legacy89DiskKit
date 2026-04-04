@@ -1,7 +1,7 @@
-using Legacy89DiskKit.Domain.Drive.Model;
-using Legacy89DiskKit.Domain.Fdc.Interface;
-using Legacy89DiskKit.Domain.Fdc.Model;
-using Legacy89DiskKit.Domain.Timing.Interface;
+using Legacy89DiskKit.Drive.Domain.Model;
+using Legacy89DiskKit.Fdc.Domain.Interface;
+using Legacy89DiskKit.Fdc.Domain.Model;
+using Legacy89DiskKit.Timing.Domain.Interface;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;

@@ -1,6 +1,5 @@
-using Legacy89DiskKit.Application;
 using Legacy89DiskKit.Fdc.Application.Hosts;
-using Legacy89DiskKit.Infrastructure.DiskImage.Container;
+using Legacy89DiskKit.DiskImage.Infrastructure.Container;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;
@@ -10,8 +9,8 @@ public class XmilWebStyleFdcHostAdapterTest
     [Fact]
     public void Adapter_CanExposeGlobalStateSnapshot()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
-        var adapter = Legacy89DiskKitApplication.CreateXmilWebStyleFdcHostAdapter();
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
+        var adapter = CreateXmilWebStyleFdcHostAdapter();
 
         adapter.MountDisk(0, container);
         adapter.SetDrive(0);
@@ -28,13 +27,12 @@ public class XmilWebStyleFdcHostAdapterTest
     [Fact]
     public void Adapter_CanReadSectorThroughX1StyleEntrypoints()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0x31, 0x32 });
 
-        var adapter = Legacy89DiskKitApplication.CreateXmilWebStyleFdcHostAdapter();
+        var adapter = CreateXmilWebStyleFdcHostAdapter();
         adapter.MountDisk(0, container);
         adapter.SetDrive(0);
-
         adapter.X1FdcW(1, 0);
         adapter.X1FdcW(2, 1);
         adapter.X1FdcW(0, 0x80);
@@ -52,10 +50,10 @@ public class XmilWebStyleFdcHostAdapterTest
     [Fact]
     public void Adapter_CanRaiseGlobalSignalEvents()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0x77 });
 
-        var adapter = Legacy89DiskKitApplication.CreateXmilWebStyleFdcHostAdapter();
+        var adapter = CreateXmilWebStyleFdcHostAdapter();
         var irqStates = new List<bool>();
         var drqStates = new List<bool>();
         adapter.IrqChanged += value => irqStates.Add(value);
@@ -75,10 +73,10 @@ public class XmilWebStyleFdcHostAdapterTest
     [Fact]
     public void Adapter_CanScheduleAndRunEventObjects()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0x40 });
 
-        var adapter = Legacy89DiskKitApplication.CreateXmilWebStyleFdcHostAdapter();
+        var adapter = CreateXmilWebStyleFdcHostAdapter();
         var scheduled = new List<(XmilWebFdcEventKind Kind, TimeSpan Delay)>();
         adapter.EventScheduled += (kind, delay) => scheduled.Add((kind, delay));
 
@@ -97,13 +95,13 @@ public class XmilWebStyleFdcHostAdapterTest
     [Fact]
     public void Adapter_CanProveRawSectorImageBackedIntegration()
     {
-        using var container = RawDiskContainer.CreateNewInMemory(Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = RawDiskContainer.CreateNewInMemory(Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         var sectorData = new byte[256];
         sectorData[0] = 0x51;
         sectorData[1] = 0x52;
         container.WriteSector(0, 0, 1, sectorData);
 
-        var adapter = Legacy89DiskKitApplication.CreateXmilWebStyleFdcHostAdapter();
+        var adapter = CreateXmilWebStyleFdcHostAdapter();
         adapter.MountDisk(0, container);
         adapter.SetDrive(0);
         adapter.X1FdcW(1, 0);
@@ -115,5 +113,18 @@ public class XmilWebStyleFdcHostAdapterTest
         Assert.True(adapter.GetState().Drq);
         Assert.Equal((byte)0x51, adapter.X1FdcR(3));
         Assert.Equal((byte)0x52, adapter.X1FdcR(3));
+    }
+
+    private static XmilWebStyleFdcHostAdapter CreateXmilWebStyleFdcHostAdapter()
+    {
+        return new XmilWebStyleFdcHostAdapter(CreateEventDrivenEmulatorFdcHostAdapter());
+    }
+
+    private static Legacy89DiskKit.Fdc.Application.Hosts.EventDrivenEmulatorFdcHostAdapter CreateEventDrivenEmulatorFdcHostAdapter()
+    {
+        return new Legacy89DiskKit.Fdc.Application.Hosts.EventDrivenEmulatorFdcHostAdapter(
+            new Legacy89DiskKit.Drive.Application.DriveMountService(),
+            new Legacy89DiskKit.Drive.Application.MountedMediumBindingService(),
+            new Legacy89DiskKit.DiskImage.Infrastructure.Factory.DiskContainerFactory());
     }
 }

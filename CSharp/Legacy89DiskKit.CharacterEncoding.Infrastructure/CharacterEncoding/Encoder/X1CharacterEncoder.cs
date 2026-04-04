@@ -1,9 +1,9 @@
 using System.Text;
-using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
-using Legacy89DiskKit.Domain.CharacterEncoding.Model;
-using Legacy89DiskKit.Infrastructure.CharacterEncoding.X1;
+using Legacy89DiskKit.CharacterEncoding.Domain.Interface;
+using Legacy89DiskKit.CharacterEncoding.Domain.Model;
+using Legacy89DiskKit.CharacterEncoding.Infrastructure.X1;
 
-namespace Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
+namespace Legacy89DiskKit.CharacterEncoding.Infrastructure.Encoder;
 
 public class X1CharacterEncoder : ICharacterEncoder
 {

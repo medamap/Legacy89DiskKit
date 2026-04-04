@@ -1,7 +1,7 @@
-using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
-using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
-using Legacy89DiskKit.Domain.CharacterEncoding.Model;
-using Legacy89DiskKit.Domain.FileSystem.Model;
+using Legacy89DiskKit.CharacterEncoding.Domain.Interface;
+using Legacy89DiskKit.CharacterEncoding.Domain.Interface.Registry;
+using Legacy89DiskKit.CharacterEncoding.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Model;
 
 namespace Legacy89DiskKit.CharacterEncoding.Application;
 

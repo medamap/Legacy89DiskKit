@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Domain.DiskImage.Interface.Container;
+namespace Legacy89DiskKit.DiskImage.Domain.Interface.Container;
 
 public interface IGeometryRebuildableDiskContainer
 {

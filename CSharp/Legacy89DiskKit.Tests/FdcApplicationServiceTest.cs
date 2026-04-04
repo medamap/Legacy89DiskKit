@@ -1,8 +1,9 @@
-using Legacy89DiskKit.Application;
-using Legacy89DiskKit.Domain.Drive.Interface;
-using Legacy89DiskKit.Domain.Fdc.Interface;
-using Legacy89DiskKit.Domain.Fdc.Model;
-using Legacy89DiskKit.Domain.Timing.Interface;
+using Legacy89DiskKit.Drive.Application;
+using Legacy89DiskKit.Fdc.Application;
+using Legacy89DiskKit.Drive.Domain.Interface;
+using Legacy89DiskKit.Fdc.Domain.Interface;
+using Legacy89DiskKit.Fdc.Domain.Model;
+using Legacy89DiskKit.Timing.Domain.Interface;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;
@@ -12,7 +13,7 @@ public class FdcApplicationServiceTest
     [Fact]
     public void DriveMountService_CanMountAndExposeDriveState()
     {
-        var service = Legacy89DiskKitApplication.CreateDriveMountService();
+        var service = new DriveMountService();
         var medium = new FakeMountedMedium("d88", supportsDirectImageAccess: true, supportsControllerFacingAccess: true);
 
         service.Mount(0, medium);
@@ -33,7 +34,7 @@ public class FdcApplicationServiceTest
     {
         var controller = new FakeFdcController();
         var clock = new FakeControllerClock();
-        var service = Legacy89DiskKitApplication.CreateFdcAccessService(controller, clock);
+        var service = new FdcAccessService(controller, clock);
 
         service.WriteRegister(FdcRegister.Track, 0x22);
         service.WriteRegister(FdcRegister.Sector, 0x33);
@@ -52,7 +53,7 @@ public class FdcApplicationServiceTest
     public void FdcAccessService_ThrowsWhenTimingAdvanceIsUnavailable()
     {
         var controller = new FakeFdcController();
-        var service = Legacy89DiskKitApplication.CreateFdcAccessService(controller);
+        var service = new FdcAccessService(controller);
 
         var ex = Assert.Throws<InvalidOperationException>(() => service.Advance(TimeSpan.FromMilliseconds(1)));
 

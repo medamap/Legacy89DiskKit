@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Models;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Models;
 
 public sealed record HuBasicDirectoryEntryData(
     byte ModeByte,

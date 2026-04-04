@@ -1,8 +1,8 @@
 using System.Text;
-using Legacy89DiskKit.Domain.FileSystem.Model;
-using DomainAttr = Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using DomainAttr = Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.Msx.Models;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.Msx.Models;
 
 public class MsxDosDirParser
 {

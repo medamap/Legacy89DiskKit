@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using System.Linq;
-using Legacy89DiskKit.Infrastructure.DiskImage.Container;
-using Legacy89DiskKit.Infrastructure.FileSystem.XDos;
-using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.DiskImage.Infrastructure.Container;
+using Legacy89DiskKit.FileSystem.Infrastructure.XDos;
+using Legacy89DiskKit.DiskImage.Domain.Model;
 
 var path = "/tmp/debug_plain_2dd.d88";
 var c = D88DiskContainer.CreateNew(path, DiskType.TwoDD, "DBG");

@@ -1,15 +1,15 @@
 using System.Text;
 using System.Buffers.Binary;
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Infrastructure.DiskImage.Container;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.FileSystem.Model;
-using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
-using Legacy89DiskKit.Infrastructure.FileSystem.XDos.Reader;
-using FileAttributes = Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.DiskImage.Infrastructure.Container;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Model.XDos;
+using Legacy89DiskKit.FileSystem.Infrastructure.XDos.Reader;
+using FileAttributes = Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.XDos;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.XDos;
 
 public class XDosFileSystem : IFileSystem
 {

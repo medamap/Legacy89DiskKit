@@ -1,7 +1,7 @@
-using Legacy89DiskKit.Domain.FileSystem.Model;
-using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using Legacy89DiskKit.CharacterEncoding.Infrastructure.Encoder;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.HuBasic;
 
 public class HuBasicBootRecordParser
 {

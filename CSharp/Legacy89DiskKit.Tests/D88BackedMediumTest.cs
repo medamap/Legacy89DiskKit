@@ -1,10 +1,10 @@
-using Legacy89DiskKit.Domain.Fdc.Interface;
-using Legacy89DiskKit.Domain.Fdc.Model;
-using Legacy89DiskKit.Domain.Drive.Interface;
-using Legacy89DiskKit.Infrastructure.Fdc;
-using Legacy89DiskKit.Infrastructure.DiskImage.Container;
-using Legacy89DiskKit.Infrastructure.Drive.Medium;
-using Legacy89DiskKit.Infrastructure.Fdc.Medium;
+using Legacy89DiskKit.Fdc.Domain.Interface;
+using Legacy89DiskKit.Fdc.Domain.Model;
+using Legacy89DiskKit.Drive.Domain.Interface;
+using Legacy89DiskKit.Fdc.Infrastructure;
+using Legacy89DiskKit.DiskImage.Infrastructure.Container;
+using Legacy89DiskKit.Drive.Infrastructure.Medium;
+using Legacy89DiskKit.Fdc.Infrastructure.Medium;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;
@@ -14,7 +14,7 @@ public class D88BackedMediumTest
     [Fact]
     public void D88BackedSectorAddressableMedium_CanReadDecodedSectorData()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0xAB, 0xCD, 0xEF });
 
         ISectorAddressableMedium medium = new D88BackedSectorAddressableMedium(container);
@@ -29,7 +29,7 @@ public class D88BackedMediumTest
     [Fact]
     public void D88BackedControllerFacingMedium_CanServeReadSectorLikeFlow()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0x5A, 0x6B, 0x7C });
 
         IControllerFacingMedium medium = new D88BackedControllerFacingMedium(container);
@@ -64,7 +64,7 @@ public class D88BackedMediumTest
     [Fact]
     public void D88BackedControllerFacingMedium_ReturnsRecordNotFoundStatusForMissingSector()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         IControllerFacingMedium medium = new D88BackedControllerFacingMedium(container);
 
         medium.Reset();
@@ -85,7 +85,7 @@ public class D88BackedMediumTest
     [Fact]
     public void D88BackedControllerFacingMedium_CanRestoreSeekAndForceInterrupt()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         IControllerFacingMedium medium = new D88BackedControllerFacingMedium(container);
 
         medium.Reset();
@@ -115,14 +115,14 @@ public class D88BackedMediumTest
     [Fact]
     public void FdcMediumController_GetVisibleState_DoesNotConsumeTransferData()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0x5A, 0x6B, 0x7C });
 
         var controller = new FdcMediumController(new D88BackedControllerFacingMedium(container));
 
-        controller.WriteRegister(Domain.Fdc.Model.FdcRegister.Track, 0);
-        controller.WriteRegister(Domain.Fdc.Model.FdcRegister.Sector, 1);
-        controller.WriteRegister(Domain.Fdc.Model.FdcRegister.CommandStatus, 0x80);
+        controller.WriteRegister(Legacy89DiskKit.Fdc.Domain.Model.FdcRegister.Track, 0);
+        controller.WriteRegister(Legacy89DiskKit.Fdc.Domain.Model.FdcRegister.Sector, 1);
+        controller.WriteRegister(Legacy89DiskKit.Fdc.Domain.Model.FdcRegister.CommandStatus, 0x80);
 
         Assert.True(controller.GetVisibleState().Busy);
         controller.Advance(TimeSpan.FromMilliseconds(1));
@@ -133,14 +133,14 @@ public class D88BackedMediumTest
         Assert.Equal(0, visible.SelectedDrive);
         Assert.Equal(0, visible.SelectedSide);
         Assert.True(visible.Drq);
-        Assert.Equal(0x5A, controller.ReadRegister(Domain.Fdc.Model.FdcRegister.Data));
-        Assert.Equal(0x6B, controller.ReadRegister(Domain.Fdc.Model.FdcRegister.Data));
+        Assert.Equal(0x5A, controller.ReadRegister(Legacy89DiskKit.Fdc.Domain.Model.FdcRegister.Data));
+        Assert.Equal(0x6B, controller.ReadRegister(Legacy89DiskKit.Fdc.Domain.Model.FdcRegister.Data));
     }
 
     [Fact]
     public void FdcMediumController_ReflectsSelectedDriveAndSide()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         var medium = new D88BackedControllerFacingMedium(container);
         medium.SelectSide(1);
         var controller = new FdcMediumController(medium, selectedDrive: 2);
@@ -154,7 +154,7 @@ public class D88BackedMediumTest
     [Fact]
     public void D88BackedControllerFacingMedium_ReturnsUnsupportedCommandStatus()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         IControllerFacingMedium medium = new D88BackedControllerFacingMedium(container);
 
         medium.Reset();

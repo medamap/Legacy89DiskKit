@@ -1,9 +1,9 @@
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.Fdc.Interface;
-using Legacy89DiskKit.Infrastructure.DiskImage.Container;
-using Legacy89DiskKit.Infrastructure.Drive.Medium;
-using Legacy89DiskKit.Infrastructure.Fdc;
-using Legacy89DiskKit.Infrastructure.Fdc.Medium;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.Fdc.Domain.Interface;
+using Legacy89DiskKit.DiskImage.Infrastructure.Container;
+using Legacy89DiskKit.Drive.Infrastructure.Medium;
+using Legacy89DiskKit.Fdc.Infrastructure;
+using Legacy89DiskKit.Fdc.Infrastructure.Medium;
 
 namespace Legacy89DiskKit.Drive.Application;
 

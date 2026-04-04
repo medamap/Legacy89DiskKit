@@ -1,8 +1,9 @@
-using Legacy89DiskKit.Application;
-using Legacy89DiskKit.Domain.Fdc.Interface;
-using Legacy89DiskKit.Domain.Fdc.Model;
-using Legacy89DiskKit.Infrastructure.DiskImage.Container;
-using Legacy89DiskKit.Infrastructure.Fdc;
+using Legacy89DiskKit.Drive.Application;
+using Legacy89DiskKit.Fdc.Application;
+using Legacy89DiskKit.Fdc.Domain.Interface;
+using Legacy89DiskKit.Fdc.Domain.Model;
+using Legacy89DiskKit.DiskImage.Infrastructure.Container;
+using Legacy89DiskKit.Fdc.Infrastructure;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;
@@ -12,9 +13,9 @@ public class MountedMediumBindingServiceTest
     [Fact]
     public void BindingService_CanCreateAndMountD88Binding()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
-        var mountService = Legacy89DiskKitApplication.CreateDriveMountService();
-        var bindingService = Legacy89DiskKitApplication.CreateMountedMediumBindingService();
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
+        var mountService = new DriveMountService();
+        var bindingService = new MountedMediumBindingService();
 
         var binding = bindingService.MountContainer(mountService, 0, container);
         var state = mountService.GetState(0);
@@ -29,9 +30,9 @@ public class MountedMediumBindingServiceTest
     [Fact]
     public void BindingService_CanCreateAndMountRawBinding()
     {
-        using var container = RawDiskContainer.CreateNewInMemory(Domain.DiskImage.Model.DiskType.TwoD);
-        var mountService = Legacy89DiskKitApplication.CreateDriveMountService();
-        var bindingService = Legacy89DiskKitApplication.CreateMountedMediumBindingService();
+        using var container = RawDiskContainer.CreateNewInMemory(Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
+        var mountService = new DriveMountService();
+        var bindingService = new MountedMediumBindingService();
 
         var binding = bindingService.MountContainer(mountService, 1, container);
         var state = mountService.GetState(1);
@@ -46,13 +47,13 @@ public class MountedMediumBindingServiceTest
     [Fact]
     public void BoundControllerMedium_CanBeUsedThroughFdcAccessService()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 0, 1, new byte[] { 0x6C, 0x00, 0x00 });
 
-        var bindingService = Legacy89DiskKitApplication.CreateMountedMediumBindingService();
+        var bindingService = new MountedMediumBindingService();
         var binding = bindingService.CreateFromContainer(container);
         var controller = new FdcMediumController(binding.ControllerFacingMedium!);
-        var accessService = Legacy89DiskKitApplication.CreateFdcAccessService(controller);
+        var accessService = new FdcAccessService(controller);
 
         accessService.Reset();
         accessService.WriteRegister(FdcRegister.Track, 0);
@@ -66,10 +67,10 @@ public class MountedMediumBindingServiceTest
     [Fact]
     public void BindingService_CanCreateDriveAwareController()
     {
-        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Domain.DiskImage.Model.DiskType.TwoD);
+        using var container = D88DiskContainer.CreateNewInMemory("TESTDISK", Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoD);
         container.WriteSector(0, 1, 1, new byte[] { 0x6C, 0x7D });
 
-        var bindingService = Legacy89DiskKitApplication.CreateMountedMediumBindingService();
+        var bindingService = new MountedMediumBindingService();
         var binding = bindingService.CreateFromContainer(container);
         binding.ControllerFacingMedium!.SelectSide(1);
         var controller = bindingService.CreateController(binding, 3);

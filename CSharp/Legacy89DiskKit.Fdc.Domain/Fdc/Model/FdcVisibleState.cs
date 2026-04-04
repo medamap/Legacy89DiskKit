@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Domain.Fdc.Model;
+namespace Legacy89DiskKit.Fdc.Domain.Model;
 
 /// <summary>
 /// Represents the controller-visible state exposed through the minimal FDC-facing contract.

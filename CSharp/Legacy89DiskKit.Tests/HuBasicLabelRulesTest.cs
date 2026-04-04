@@ -1,7 +1,7 @@
-using DomainFileAttributes = Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes;
-using Legacy89DiskKit.Domain.FileSystem.Model;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Models;
+using DomainFileAttributes = Legacy89DiskKit.FileSystem.Domain.Model.FileAttributes;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic;
+using Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Models;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;

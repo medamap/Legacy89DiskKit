@@ -1,6 +1,6 @@
-using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.DiskImage.Domain.Model;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Models;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.Pc88.Models;
 
 public record N88BasicConfiguration(
     int SystemTrack,

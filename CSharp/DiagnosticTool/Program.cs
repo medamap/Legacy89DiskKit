@@ -1,7 +1,7 @@
 using System;
 using System.Text;
-using Legacy89DiskKit.Infrastructure.DiskImage.Factory;
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
+using Legacy89DiskKit.DiskImage.Infrastructure.Factory;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
 
 namespace DiagnosticTool;
 

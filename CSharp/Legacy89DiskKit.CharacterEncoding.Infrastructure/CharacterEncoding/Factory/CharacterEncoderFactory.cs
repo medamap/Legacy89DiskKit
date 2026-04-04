@@ -1,8 +1,8 @@
-using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
-using Legacy89DiskKit.Domain.CharacterEncoding.Model;
-using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
+using Legacy89DiskKit.CharacterEncoding.Domain.Interface;
+using Legacy89DiskKit.CharacterEncoding.Domain.Model;
+using Legacy89DiskKit.CharacterEncoding.Infrastructure.Encoder;
 
-namespace Legacy89DiskKit.Infrastructure.CharacterEncoding.Factory;
+namespace Legacy89DiskKit.CharacterEncoding.Infrastructure.Factory;
 
 public class CharacterEncoderFactory
 {

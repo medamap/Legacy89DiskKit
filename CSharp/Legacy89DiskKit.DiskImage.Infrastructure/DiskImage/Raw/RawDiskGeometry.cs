@@ -1,6 +1,6 @@
-using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.DiskImage.Domain.Model;
 
-namespace Legacy89DiskKit.Infrastructure.DiskImage.Raw;
+namespace Legacy89DiskKit.DiskImage.Infrastructure.Raw;
 
 public sealed record RawDiskGeometry(
     int Cylinders,

@@ -1,4 +1,4 @@
-using Legacy89DiskKit.Infrastructure.DiskImage.Container;
+using Legacy89DiskKit.DiskImage.Infrastructure.Container;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;
@@ -19,7 +19,7 @@ public class CliCreateBlankTest
 
             // Verify it's a valid D88 but likely empty/not formatted
             using var container = new D88DiskContainer(path, true);
-            Assert.Equal(Legacy89DiskKit.Domain.DiskImage.Model.DiskType.TwoHD, container.DiskType);
+            Assert.Equal(Legacy89DiskKit.DiskImage.Domain.Model.DiskType.TwoHD, container.DiskType);
             
             // If it's not formatted, 'list' command should fail to detect a filesystem.
             // (N88-BASIC does not detect 2HD by default, and we didn't format it).

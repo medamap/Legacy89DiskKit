@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Domain.DiskImage.Model;
+namespace Legacy89DiskKit.DiskImage.Domain.Model;
 
 public enum DiskType : byte
 {

@@ -1,9 +1,15 @@
-using Legacy89DiskKit.Application;
+using Legacy89DiskKit.DiskImage.Application;
 using Legacy89DiskKit.FileSystem.Application;
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
-using Legacy89DiskKit.Infrastructure.FileSystem.XDos;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.Registry;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Model.XDos;
+using Legacy89DiskKit.FileSystem.Infrastructure.XDos;
+using Legacy89DiskKit.CharacterEncoding.Application;
+using Legacy89DiskKit.CharacterEncoding.Domain.Interface;
+using Legacy89DiskKit.CharacterEncoding.Domain.Interface.Registry;
+using Legacy89DiskKit.CharacterEncoding.Infrastructure.Encoder;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests.FileSystem.XDos;
@@ -19,7 +25,7 @@ public class XDosFamPlacementPreservationTest
     {
         var path = TestDiskFixtureFactory.CreateFormattedXDosDisk($"{name}.D88", DiskType.TwoD);
 
-        using var service = Legacy89DiskKitApplication.CreateDiskService();
+        using var service = CreateDiskService();
         var container = service.OpenDisk(path, readOnly: false);
         var fs = new XDosFileSystem(container);
         fs.WriteFileInternal("SYS1.CMD", new byte[256], fs.CreateDefaultAttributes(false), 0x8000, 0x8100, forcedRawType: (ushort)XDosFileType.Cmd);
@@ -33,7 +39,7 @@ public class XDosFamPlacementPreservationTest
     {
         var path = TestDiskFixtureFactory.CreateFormattedXDosDisk($"{name}.D88", DiskType.TwoD);
 
-        using var service = Legacy89DiskKitApplication.CreateDiskService();
+        using var service = CreateDiskService();
         var container = service.OpenDisk(path, readOnly: false);
         var fs = new XDosFileSystem(container);
         fs.WriteFile("DUMMY.BIN", new byte[1024], fs.CreateDefaultAttributes(false));
@@ -50,13 +56,13 @@ public class XDosFamPlacementPreservationTest
         var xdosSysPath = CreateSyntheticSourceImage("WF_PRESERVE_FAM_SRC");
         var (dstContainer, dstFs) = CreateFormattedXDos("WF_PRESERVE_FAM_DST");
 
-        using var srcSvc = Legacy89DiskKitApplication.CreateDiskService();
+        using var srcSvc = CreateDiskService();
         var srcContainer = srcSvc.OpenDisk(xdosSysPath, readOnly: true);
         var srcFs = new XDosFileSystem(srcContainer);
 
         var srcFiles = srcFs.GetFilesWithMetadata().Where(e => !e.IsEmpty).ToList();
 
-        var cloneService = Legacy89DiskKitApplication.CreateDiskCloneService(srcFs.GetFileSystemInfo());
+        var cloneService = CreateDiskCloneService(srcFs.GetFileSystemInfo());
         cloneService.CloneXDosBootable(srcFs, new XDosTransferAdapter(srcFs), dstFs, new XDosTransferAdapter(dstFs));
 
         dstContainer.Save();
@@ -80,7 +86,7 @@ public class XDosFamPlacementPreservationTest
         var xdosSysPath = CreateSyntheticFragmentedSourceImage("WF_ORDINARY_XFER_SRC");
         var (dstContainer, dstFs) = CreateFormattedXDos("WF_ORDINARY_XFER_DST");
 
-        using var srcSvc = Legacy89DiskKitApplication.CreateDiskService();
+        using var srcSvc = CreateDiskService();
         var srcContainer = srcSvc.OpenDisk(xdosSysPath, readOnly: true);
         var srcFs = new XDosFileSystem(srcContainer);
 
@@ -90,7 +96,7 @@ public class XDosFamPlacementPreservationTest
             .ToList();
         var fileNames = srcFiles.Select(e => e.FileName).ToList();
 
-        var cloneService = Legacy89DiskKitApplication.CreateDiskCloneService(srcFs.GetFileSystemInfo());
+        var cloneService = CreateDiskCloneService(srcFs.GetFileSystemInfo());
         // Use default adapters (IsCloneMode = false)
         cloneService.TransferFiles(srcFs, dstFs, fileNames, new XDosTransferAdapter(srcFs), new XDosTransferAdapter(dstFs));
 
@@ -125,14 +131,14 @@ public class XDosFamPlacementPreservationTest
         var (dstContainer1, dstFs1) = CreateFormattedXDos("WF_REUSE_ADAPTER_DST1");
         var (dstContainer2, dstFs2) = CreateFormattedXDos("WF_REUSE_ADAPTER_DST2");
 
-        using var srcSvc = Legacy89DiskKitApplication.CreateDiskService();
+        using var srcSvc = CreateDiskService();
         var srcContainer = srcSvc.OpenDisk(xdosSysPath, readOnly: true);
         var srcFs = new XDosFileSystem(srcContainer);
 
         var srcAdapter = new XDosTransferAdapter(srcFs);
         var dstAdapter = new XDosTransferAdapter(dstFs1);
 
-        var cloneService = Legacy89DiskKitApplication.CreateDiskCloneService(srcFs.GetFileSystemInfo());
+        var cloneService = CreateDiskCloneService(srcFs.GetFileSystemInfo());
 
         // 1. First call: Clone (sets IsCloneMode = true)
         cloneService.CloneXDosBootable(srcFs, srcAdapter, dstFs1, dstAdapter);
@@ -140,5 +146,58 @@ public class XDosFamPlacementPreservationTest
         // After call, it should be reset to previous value (false)
         Assert.False(srcAdapter.IsCloneMode, "srcAdapter.IsCloneMode should be reset to false.");
         Assert.False(dstAdapter.IsCloneMode, "dstAdapter.IsCloneMode should be reset to false.");
+    }
+
+    private static DiskService CreateDiskService()
+    {
+        return new DiskService(fsRegistry: CreateFileSystemRegistry());
+    }
+
+    private static DiskCloneService CreateDiskCloneService(DiskFileSystemInfo fsInfo, string? encodingOverride = null)
+    {
+        var transferService = CreateFileTransferService(fsInfo, encodingOverride);
+        var encoderRegistry = CreateEncoderRegistry();
+        var normalizationService = new FileNameNormalizationService(encoderRegistry);
+        return new DiskCloneService(transferService, normalizationService);
+    }
+
+    private static FileTransferService CreateFileTransferService(DiskFileSystemInfo fsInfo, string? encodingOverride = null)
+    {
+        var encoder = ResolveEncoder(fsInfo, encodingOverride);
+        return new FileTransferService(encoder);
+    }
+
+    private static ICharacterEncoder ResolveEncoder(DiskFileSystemInfo fsInfo, string? encodingOverride = null)
+    {
+        var registry = CreateEncoderRegistry();
+        return new CharacterEncodingResolver(registry).ResolveEncoder(fsInfo, encodingOverride);
+    }
+
+    private static IEncoderRegistry CreateEncoderRegistry()
+    {
+        var registry = new EncoderRegistry();
+        registry.Register("X1", new X1CharacterEncoder());
+        registry.Register("SJIS", new ShiftJisCharacterEncoder());
+        registry.Register("ShiftJIS", new ShiftJisCharacterEncoder());
+        registry.Register("Shift-JIS", new ShiftJisCharacterEncoder());
+        registry.Register("Shift_JIS", new ShiftJisCharacterEncoder());
+        registry.Register("sjis", new ShiftJisCharacterEncoder());
+        registry.Register("shiftjis", new ShiftJisCharacterEncoder());
+        registry.Register("shift-jis", new ShiftJisCharacterEncoder());
+        registry.Register("shift_jis", new ShiftJisCharacterEncoder());
+        registry.Register("MSX", new ShiftJisCharacterEncoder());
+        registry.Register("PC88", new ShiftJisCharacterEncoder());
+        return registry;
+    }
+
+    private static IFileSystemRegistry CreateFileSystemRegistry()
+    {
+        var registry = new FileSystemRegistry();
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.XDos.Provider.XDosFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Provider.HuBasicFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.Cpm.Provider.CpmFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.Pc88.Provider.N88BasicFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.Msx.Provider.MsxDosFileSystemProvider());
+        return registry;
     }
 }

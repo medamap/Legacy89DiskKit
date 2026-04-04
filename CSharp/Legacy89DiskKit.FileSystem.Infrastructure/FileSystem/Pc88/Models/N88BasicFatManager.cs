@@ -1,6 +1,6 @@
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
 
-namespace Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Models;
+namespace Legacy89DiskKit.FileSystem.Infrastructure.Pc88.Models;
 
 public class N88BasicFatManager
 {

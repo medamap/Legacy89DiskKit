@@ -1,10 +1,9 @@
-using Legacy89DiskKit.Application;
 using Legacy89DiskKit.FileSystem.Application;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
-using Legacy89DiskKit.Domain.FileSystem.Model;
-using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
-using Legacy89DiskKit.Infrastructure.FileSystem.XDos;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Domain.Model;
+using Legacy89DiskKit.FileSystem.Domain.Model.XDos;
+using Legacy89DiskKit.FileSystem.Infrastructure.XDos;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests;

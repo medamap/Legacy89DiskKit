@@ -1,8 +1,10 @@
-using Legacy89DiskKit.Application;
-using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
-using Legacy89DiskKit.Domain.DiskImage.Model;
-using Legacy89DiskKit.Infrastructure.DiskImage.Container;
-using Legacy89DiskKit.Infrastructure.FileSystem.XDos;
+using Legacy89DiskKit.DiskImage.Application;
+using Legacy89DiskKit.FileSystem.Application;
+using Legacy89DiskKit.DiskImage.Domain.Interface.Container;
+using Legacy89DiskKit.DiskImage.Domain.Model;
+using Legacy89DiskKit.DiskImage.Infrastructure.Container;
+using Legacy89DiskKit.FileSystem.Domain.Interface.Registry;
+using Legacy89DiskKit.FileSystem.Infrastructure.XDos;
 
 namespace Legacy89DiskKit.Tests;
 
@@ -29,7 +31,7 @@ internal static class TestDiskFixtureFactory
             File.Delete(path);
         }
 
-        using var service = Legacy89DiskKitApplication.CreateDiskService();
+        using var service = CreateDiskService();
         var container = service.CreateDisk(path, diskType);
         var fs = new XDosFileSystem(container);
         fs.Format();
@@ -56,9 +58,9 @@ internal static class TestDiskFixtureFactory
             File.Delete(path);
         }
 
-        using var service = Legacy89DiskKitApplication.CreateDiskService();
+        using var service = CreateDiskService();
         var container = service.CreateDisk(path, diskType);
-        var resolver = Legacy89DiskKitApplication.CreateExplicitFileSystemResolver();
+        var resolver = new ExplicitFileSystemResolver();
         using var fileSystem = resolver.Create("hu-basic", container);
         fileSystem.Format();
 
@@ -81,7 +83,7 @@ internal static class TestDiskFixtureFactory
             File.Delete(path);
         }
 
-        using var service = Legacy89DiskKitApplication.CreateDiskService();
+        using var service = CreateDiskService();
         var container = service.CreateDisk(path, diskType);
         var fs = new XDosFileSystem(container);
         fs.Format();
@@ -103,7 +105,7 @@ internal static class TestDiskFixtureFactory
             File.Delete(secondSlotPath);
         }
 
-        using (var service = Legacy89DiskKitApplication.CreateDiskService())
+        using (var service = CreateDiskService())
         {
             service.CreateDisk(secondSlotPath, DiskType.TwoD, "SLOT1");
         }
@@ -118,5 +120,21 @@ internal static class TestDiskFixtureFactory
         File.Delete(firstSlotPath);
         File.Delete(secondSlotPath);
         return path;
+    }
+
+    private static DiskService CreateDiskService()
+    {
+        return new DiskService(fsRegistry: CreateFileSystemRegistry());
+    }
+
+    private static IFileSystemRegistry CreateFileSystemRegistry()
+    {
+        var registry = new FileSystemRegistry();
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.XDos.Provider.XDosFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.HuBasic.Provider.HuBasicFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.Cpm.Provider.CpmFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.Pc88.Provider.N88BasicFileSystemProvider());
+        registry.Register(new Legacy89DiskKit.FileSystem.Infrastructure.Msx.Provider.MsxDosFileSystemProvider());
+        return registry;
     }
 }

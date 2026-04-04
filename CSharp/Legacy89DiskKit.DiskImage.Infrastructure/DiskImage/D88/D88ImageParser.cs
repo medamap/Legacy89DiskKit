@@ -1,8 +1,8 @@
-using Legacy89DiskKit.Domain.DiskImage.Exception;
-using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.DiskImage.Domain.Exception;
+using Legacy89DiskKit.DiskImage.Domain.Model;
 using System.Text;
 
-namespace Legacy89DiskKit.Infrastructure.DiskImage.D88;
+namespace Legacy89DiskKit.DiskImage.Infrastructure.D88;
 
 public static class D88ImageParser
 {
