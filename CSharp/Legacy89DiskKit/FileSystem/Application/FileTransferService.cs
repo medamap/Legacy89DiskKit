@@ -7,7 +7,7 @@ using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
 using DomainAttr = Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes;
 using Legacy89DiskKit.FileSystem.Application;
 
-namespace Legacy89DiskKit.Application.FileSystem;
+namespace Legacy89DiskKit.FileSystem.Application;
 public class FileTransferService
 {
     private readonly ICharacterEncoder _encoder;

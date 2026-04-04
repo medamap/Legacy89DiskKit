@@ -32,10 +32,10 @@ public static class Legacy89DiskKitApplication
     /// <summary>
     /// Creates a preconfigured file transfer service for the specified filesystem info.
     /// </summary>
-    public static FileSystem.FileTransferService CreateFileTransferService(DiskFileSystemInfo fsInfo, string? encodingOverride = null)
+    public static Legacy89DiskKit.FileSystem.Application.FileTransferService CreateFileTransferService(DiskFileSystemInfo fsInfo, string? encodingOverride = null)
     {
         var encoder = ResolveEncoder(fsInfo, encodingOverride);
-        return new FileSystem.FileTransferService(encoder);
+        return new Legacy89DiskKit.FileSystem.Application.FileTransferService(encoder);
     }
 
     /// <summary>
@@ -214,12 +214,12 @@ public static class Legacy89DiskKitApplication
     /// <summary>
     /// Creates the supported disk clone service.
     /// </summary>
-    public static FileSystem.DiskCloneService CreateDiskCloneService(DiskFileSystemInfo fsInfo, string? encodingOverride = null)
+    public static Legacy89DiskKit.FileSystem.Application.DiskCloneService CreateDiskCloneService(DiskFileSystemInfo fsInfo, string? encodingOverride = null)
     {
         var transferService = CreateFileTransferService(fsInfo, encodingOverride);
         var encoderRegistry = CreateEncoderRegistry();
         var normalizationService = new Services.FileNameNormalizationService(encoderRegistry);
-        return new FileSystem.DiskCloneService(transferService, normalizationService);
+        return new Legacy89DiskKit.FileSystem.Application.DiskCloneService(transferService, normalizationService);
     }
 
     /// <summary>

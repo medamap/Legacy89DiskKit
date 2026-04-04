@@ -1,5 +1,5 @@
 using Legacy89DiskKit.Application.CharacterEncoding;
-using Legacy89DiskKit.Application.FileSystem;
+using Legacy89DiskKit.FileSystem.Application;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.Registry;

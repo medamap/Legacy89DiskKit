@@ -1,7 +1,7 @@
 using System;
 using System.Text;
 using Legacy89DiskKit.Application.DiskImage;
-using Legacy89DiskKit.Application.FileSystem;
+using Legacy89DiskKit.FileSystem.Application;
 using Legacy89DiskKit.Application.CharacterEncoding;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;

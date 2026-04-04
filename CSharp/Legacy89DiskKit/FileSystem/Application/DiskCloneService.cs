@@ -6,7 +6,7 @@ using Legacy89DiskKit.Application.Services;
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 
-namespace Legacy89DiskKit.Application.FileSystem;
+namespace Legacy89DiskKit.FileSystem.Application;
 
 public class DiskCloneService
 {

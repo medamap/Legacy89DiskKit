@@ -1,6 +1,5 @@
 using System.IO;
 using Legacy89DiskKit.Application.DiskImage;
-using Legacy89DiskKit.Application.FileSystem;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;

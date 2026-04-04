@@ -132,4 +132,19 @@
       <Link>FileSystem/Application/FileInspectionService.cs</Link>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/FileTransferService.cs">
+      <Link>FileSystem/Application/FileTransferService.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/DiskCloneService.cs">
+      <Link>FileSystem/Application/DiskCloneService.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/FileSystemTransferOrchestrator.cs">
+      <Link>FileSystem/Application/FileSystemTransferOrchestrator.cs</Link>
+    </Compile>
+  </ItemGroup>
 </Project>

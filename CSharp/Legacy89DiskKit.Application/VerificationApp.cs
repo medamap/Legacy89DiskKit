@@ -1,5 +1,5 @@
 using Legacy89DiskKit.Application.DiskImage;
-using Legacy89DiskKit.Application.FileSystem;
+using Legacy89DiskKit.FileSystem.Application;
 using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.FileSystem.Model;

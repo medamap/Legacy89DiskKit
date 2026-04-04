@@ -4,7 +4,7 @@ using Legacy89DiskKit.Cli;
 using Legacy89DiskKit.Application.CharacterEncoding;
 using Legacy89DiskKit.Application;
 using Legacy89DiskKit.Application.DiskImage;
-using Legacy89DiskKit.Application.FileSystem;
+using Legacy89DiskKit.FileSystem.Application;
 using Legacy89DiskKit.Application.Services;
 using Legacy89DiskKit.Application.Fdc.Hosts.Scripting;
 using Legacy89DiskKit.Cli.Presentation.FileSystem;
@@ -19,7 +19,6 @@ using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.XDos;
-using Legacy89DiskKit.FileSystem.Application;
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 var requestedLanguage = TryGetRequestedLanguage(args);
