@@ -13,6 +13,11 @@ Complete the remaining responsibility-first migration work in this repository so
 
 This plan is complete only when **all child tasks are complete**.
 
+## Update Note
+
+Additional follow-up instructions have been added for removing the remaining compatibility bootstrap.
+Read the appended task files before starting any final cleanup of `Legacy89DiskKit.Application`.
+
 ## Rules
 
 - Work in order.
@@ -32,6 +37,8 @@ This plan is complete only when **all child tasks are complete**.
 3. [03-Infrastructure-Namespace-Migration.md](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/plan_for_opencode/03-Infrastructure-Namespace-Migration.md)
 4. [04-Application-Bootstrap-Finalization.md](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/plan_for_opencode/04-Application-Bootstrap-Finalization.md)
 5. [05-Final-Verification-And-Image-Regeneration.md](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/plan_for_opencode/05-Final-Verification-And-Image-Regeneration.md)
+6. [08-Bootstrap-Dependency-Audit-And-Replacement.md](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/plan_for_opencode/08-Bootstrap-Dependency-Audit-And-Replacement.md)
+7. [09-Bootstrap-Removal-And-Final-Verification.md](/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/plan_for_opencode/09-Bootstrap-Removal-And-Final-Verification.md)
 
 ## Completion Definition
 

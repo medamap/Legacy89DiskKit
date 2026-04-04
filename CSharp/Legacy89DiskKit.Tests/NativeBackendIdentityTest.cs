@@ -20,7 +20,7 @@ public class NativeBackendIdentityTest
     {
         Assert.Equal("managed-bridge", NativeBackendIdentity.BackendKind);
         Assert.Equal("Legacy89DiskKit.NativeInterop", NativeBackendIdentity.BackendImplementation);
-        Assert.Equal("Legacy89DiskKit.Application", NativeBackendIdentity.BackendTarget);
+        Assert.Equal("managed-surface", NativeBackendIdentity.BackendTarget);
         Assert.Contains("managed-bridge", NativeBackendIdentity.GetBackendSummary());
     }
 
@@ -29,7 +29,7 @@ public class NativeBackendIdentityTest
     {
         Assert.Equal("managed-bridge", ReadSummary(NativeExportInvoker.GetBackendKind));
         Assert.Equal("Legacy89DiskKit.NativeInterop", ReadSummary(NativeExportInvoker.GetBackendImplementation));
-        Assert.Equal("Legacy89DiskKit.Application", ReadSummary(NativeExportInvoker.GetBackendTarget));
+        Assert.Equal("managed-surface", ReadSummary(NativeExportInvoker.GetBackendTarget));
         Assert.Contains("managed-bridge", ReadSummary(NativeExportInvoker.GetBackendSummary));
     }
 

@@ -23,7 +23,7 @@ public sealed class ManagedNativeBridgeBackend : INativeBridgeBackend
 
     public string BackendImplementation => "Legacy89DiskKit.NativeInterop";
 
-    public string BackendTarget => "Legacy89DiskKit.Application";
+    public string BackendTarget => "managed-surface";
 
     public ManagedNativeBridgeBackend(IFileSystemRegistry? registry = null)
     {

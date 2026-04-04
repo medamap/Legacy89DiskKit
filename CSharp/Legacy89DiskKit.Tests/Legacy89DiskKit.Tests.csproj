@@ -17,7 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Legacy89DiskKit.Application\Legacy89DiskKit.Application.csproj" />
     <ProjectReference Include="..\Legacy89DiskKit.CharacterEncoding.Domain\Legacy89DiskKit.CharacterEncoding.Domain.csproj" />
     <ProjectReference Include="..\Legacy89DiskKit.Cli\Legacy89DiskKit.Cli.csproj" />
     <ProjectReference Include="..\Legacy89DiskKit.DiskImage.Domain\Legacy89DiskKit.DiskImage.Domain.csproj" />
