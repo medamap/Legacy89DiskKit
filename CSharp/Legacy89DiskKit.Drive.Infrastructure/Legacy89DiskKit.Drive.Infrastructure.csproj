@@ -9,9 +9,4 @@
     <ProjectReference Include="../Legacy89DiskKit.Drive.Domain/Legacy89DiskKit.Drive.Domain.csproj" />
     <ProjectReference Include="../Legacy89DiskKit.DiskImage.Infrastructure/Legacy89DiskKit.DiskImage.Infrastructure.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit.Infrastructure/Drive/**/*.cs">
-      <Link>Drive/%(RecursiveDir)%(Filename)%(Extension)</Link>
-    </Compile>
-  </ItemGroup>
 </Project>

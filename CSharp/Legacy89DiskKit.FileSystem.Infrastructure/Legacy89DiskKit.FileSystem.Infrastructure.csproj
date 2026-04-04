@@ -11,9 +11,4 @@
     <ProjectReference Include="../Legacy89DiskKit.CharacterEncoding.Infrastructure/Legacy89DiskKit.CharacterEncoding.Infrastructure.csproj" />
     <ProjectReference Include="../Legacy89DiskKit.DiskImage.Infrastructure/Legacy89DiskKit.DiskImage.Infrastructure.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit.Infrastructure/FileSystem/**/*.cs">
-      <Link>FileSystem/%(RecursiveDir)%(Filename)%(Extension)</Link>
-    </Compile>
-  </ItemGroup>
 </Project>

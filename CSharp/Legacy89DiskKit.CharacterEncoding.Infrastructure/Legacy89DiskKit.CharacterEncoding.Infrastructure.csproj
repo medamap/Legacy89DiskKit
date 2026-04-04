@@ -7,9 +7,4 @@
   <ItemGroup>
     <ProjectReference Include="../Legacy89DiskKit.CharacterEncoding.Domain/Legacy89DiskKit.CharacterEncoding.Domain.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit.Infrastructure/CharacterEncoding/**/*.cs">
-      <Link>CharacterEncoding/%(RecursiveDir)%(Filename)%(Extension)</Link>
-    </Compile>
-  </ItemGroup>
 </Project>

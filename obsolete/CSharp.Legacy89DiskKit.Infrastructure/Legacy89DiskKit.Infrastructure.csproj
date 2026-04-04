@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\Legacy89DiskKit.Domain\Legacy89DiskKit.Domain.csproj" />
+    <ProjectReference Include="..\CSharp.Legacy89DiskKit.Domain\Legacy89DiskKit.Domain.csproj" />
     <ProjectReference Include="..\Legacy89DiskKit.CharacterEncoding.Infrastructure\Legacy89DiskKit.CharacterEncoding.Infrastructure.csproj" />
     <ProjectReference Include="..\Legacy89DiskKit.DiskImage.Infrastructure\Legacy89DiskKit.DiskImage.Infrastructure.csproj" />
     <ProjectReference Include="..\Legacy89DiskKit.Drive.Infrastructure\Legacy89DiskKit.Drive.Infrastructure.csproj" />
