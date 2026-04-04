@@ -12,6 +12,8 @@
     <ProjectReference Include="../Legacy89DiskKit.CharacterEncoding.Application/Legacy89DiskKit.CharacterEncoding.Application.csproj" />
     <ProjectReference Include="../Legacy89DiskKit.Drive.Application/Legacy89DiskKit.Drive.Application.csproj" />
     <ProjectReference Include="../Legacy89DiskKit.Fdc.Application/Legacy89DiskKit.Fdc.Application.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.Native.Application/Legacy89DiskKit.Native.Application.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.DiskImage.Application/Legacy89DiskKit.DiskImage.Application.csproj" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup />
@@ -66,11 +68,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/FileSystem/Application/FileSystemRegistry.cs">
-      <Link>FileSystem/Application/FileSystemRegistry.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="../Legacy89DiskKit/FileSystem/Application/BootEntryExportService.cs">
       <Link>FileSystem/Application/BootEntryExportService.cs</Link>
     </Compile>
@@ -120,31 +117,15 @@
       <Link>FileSystem/Application/FileSystemTransferOrchestrator.cs</Link>
     </Compile>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/DiskImage/Application/DiskService.cs">
-      <Link>DiskImage/Application/DiskService.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/DiskImage/Application/NativeBridgeBackend.cs">
-      <Link>DiskImage/Application/NativeBridgeBackend.cs</Link>
-    </Compile>
-  </ItemGroup>
   <ItemGroup />
   <ItemGroup />
   <ItemGroup />
   <ItemGroup />
   <ItemGroup />
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/Native/Application/ManagedNativeBridgeBackend.cs">
-      <Link>Native/Application/ManagedNativeBridgeBackend.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/Native/Application/ManagedNativeDiskSession.cs">
-      <Link>Native/Application/ManagedNativeDiskSession.cs</Link>
-    </Compile>
-  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
   <ItemGroup>
     <Compile Include="../Legacy89DiskKit/FileSystem/Application/FileNameNormalizationService.cs">
       <Link>FileSystem/Application/FileNameNormalizationService.cs</Link>
@@ -164,11 +145,16 @@
     <Compile Remove="../Legacy89DiskKit/FileSystem/Application/TextTransferOptions.cs" />
     <Compile Remove="../Legacy89DiskKit/FileSystem/Application/Pc88BootEntrySummary.cs" />
     <Compile Remove="../Legacy89DiskKit/FileSystem/Application/X1BootEntrySummary.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/FileSystemRegistry.cs" />
     <Compile Remove="../Legacy89DiskKit/CharacterEncoding/Application/CharacterEncodingResolver.cs" />
     <Compile Remove="../Legacy89DiskKit/CharacterEncoding/Application/EncoderRegistry.cs" />
     <Compile Remove="../Legacy89DiskKit/Drive/Application/DriveMountService.cs" />
     <Compile Remove="../Legacy89DiskKit/Drive/Application/MountedMediumBinding.cs" />
     <Compile Remove="../Legacy89DiskKit/Drive/Application/MountedMediumBindingService.cs" />
     <Compile Remove="../Legacy89DiskKit/Fdc/Application/**/*.cs" />
+    <Compile Remove="../Legacy89DiskKit/Native/Application/ManagedNativeBridgeBackend.cs" />
+    <Compile Remove="../Legacy89DiskKit/Native/Application/ManagedNativeDiskSession.cs" />
+    <Compile Remove="../Legacy89DiskKit/DiskImage/Application/DiskService.cs" />
+    <Compile Remove="../Legacy89DiskKit/DiskImage/Application/NativeBridgeBackend.cs" />
   </ItemGroup>
 </Project>

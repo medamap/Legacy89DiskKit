@@ -1,4 +1,3 @@
-using Legacy89DiskKit.Application;
 using Legacy89DiskKit.CharacterEncoding.Application;
 using Legacy89DiskKit.FileSystem.Application;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
@@ -54,7 +53,13 @@ public sealed class ManagedNativeBridgeBackend : INativeBridgeBackend
 
     private static IFileSystemRegistry CreateDefaultRegistry()
     {
-        return Legacy89DiskKitApplication.CreateFileSystemRegistry();
+        var registry = new FileSystemRegistry();
+        registry.Register(new XDosFileSystemProvider());
+        registry.Register(new HuBasicFileSystemProvider());
+        registry.Register(new Infrastructure.FileSystem.Cpm.Provider.CpmFileSystemProvider());
+        registry.Register(new N88BasicFileSystemProvider());
+        registry.Register(new MsxDosFileSystemProvider());
+        return registry;
     }
 
     public IFileSystemRegistry GetRegistry() => _registry;

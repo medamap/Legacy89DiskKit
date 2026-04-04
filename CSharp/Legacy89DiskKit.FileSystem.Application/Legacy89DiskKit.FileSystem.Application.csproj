@@ -43,4 +43,9 @@
       <Link>FileSystem/Application/X1BootEntrySummary.cs</Link>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/FileSystemRegistry.cs">
+      <Link>FileSystem/Application/FileSystemRegistry.cs</Link>
+    </Compile>
+  </ItemGroup>
 </Project>
