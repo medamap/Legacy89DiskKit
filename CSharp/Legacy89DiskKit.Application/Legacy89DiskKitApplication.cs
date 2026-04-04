@@ -64,14 +64,14 @@ public static class Legacy89DiskKitApplication
         return new Legacy89DiskKit.FileSystem.Application.BootEntryImportService();
     }
 
-    public static FileSystem.DiskInspectionService CreateDiskInspectionService()
+    public static Legacy89DiskKit.FileSystem.Application.DiskInspectionService CreateDiskInspectionService()
     {
-        return new FileSystem.DiskInspectionService();
+        return new Legacy89DiskKit.FileSystem.Application.DiskInspectionService();
     }
 
-    public static FileSystem.FileInspectionService CreateFileInspectionService()
+    public static Legacy89DiskKit.FileSystem.Application.FileInspectionService CreateFileInspectionService()
     {
-        return new FileSystem.FileInspectionService();
+        return new Legacy89DiskKit.FileSystem.Application.FileInspectionService();
     }
 
     public static Drive.DriveMountService CreateDriveMountService()

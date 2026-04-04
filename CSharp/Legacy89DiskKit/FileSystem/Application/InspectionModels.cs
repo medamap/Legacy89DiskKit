@@ -1,4 +1,4 @@
-namespace Legacy89DiskKit.Application.FileSystem;
+namespace Legacy89DiskKit.FileSystem.Application;
 
 public sealed record InspectionItem(string Section, string Key, string Value);
 

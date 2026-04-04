@@ -117,4 +117,19 @@
       <Link>FileSystem/Application/DirectoryLayoutService.cs</Link>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/InspectionModels.cs">
+      <Link>FileSystem/Application/InspectionModels.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/DiskInspectionService.cs">
+      <Link>FileSystem/Application/DiskInspectionService.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/FileInspectionService.cs">
+      <Link>FileSystem/Application/FileInspectionService.cs</Link>
+    </Compile>
+  </ItemGroup>
 </Project>

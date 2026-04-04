@@ -3,7 +3,7 @@ using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.FileSystem.Application;
 
-namespace Legacy89DiskKit.Application.FileSystem;
+namespace Legacy89DiskKit.FileSystem.Application;
 public sealed class DiskInspectionService
 {
     public InspectionReport BuildReport(DiskContainerMetadata metadata, IFileSystem? fileSystem, BootInfoSummary? bootSummary, string detailLevel, string encodingId)

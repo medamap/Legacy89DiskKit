@@ -5,7 +5,7 @@ using Legacy89DiskKit.Domain.FileSystem.Model.XDos;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
 using Legacy89DiskKit.Infrastructure.FileSystem.XDos;
 
-namespace Legacy89DiskKit.Application.FileSystem;
+namespace Legacy89DiskKit.FileSystem.Application;
 
 public sealed class FileInspectionService
 {
