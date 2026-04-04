@@ -5,7 +5,7 @@ using Legacy89DiskKit.Infrastructure.Drive.Medium;
 using Legacy89DiskKit.Infrastructure.Fdc;
 using Legacy89DiskKit.Infrastructure.Fdc.Medium;
 
-namespace Legacy89DiskKit.Application.Drive;
+namespace Legacy89DiskKit.Drive.Application;
 
 public class MountedMediumBindingService
 {

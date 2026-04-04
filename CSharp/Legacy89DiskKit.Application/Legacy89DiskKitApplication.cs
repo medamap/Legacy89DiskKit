@@ -74,14 +74,14 @@ public static class Legacy89DiskKitApplication
         return new Legacy89DiskKit.FileSystem.Application.FileInspectionService();
     }
 
-    public static Drive.DriveMountService CreateDriveMountService()
+    public static Legacy89DiskKit.Drive.Application.DriveMountService CreateDriveMountService()
     {
-        return new Drive.DriveMountService();
+        return new Legacy89DiskKit.Drive.Application.DriveMountService();
     }
 
-    public static Drive.MountedMediumBindingService CreateMountedMediumBindingService()
+    public static Legacy89DiskKit.Drive.Application.MountedMediumBindingService CreateMountedMediumBindingService()
     {
-        return new Drive.MountedMediumBindingService();
+        return new Legacy89DiskKit.Drive.Application.MountedMediumBindingService();
     }
 
     public static Fdc.FdcAccessService CreateFdcAccessService(IFdcController controller, IControllerClock? clock = null)

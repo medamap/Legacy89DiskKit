@@ -167,4 +167,19 @@
       <Link>CharacterEncoding/Application/EncoderRegistry.cs</Link>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/Drive/Application/DriveMountService.cs">
+      <Link>Drive/Application/DriveMountService.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/Drive/Application/MountedMediumBinding.cs">
+      <Link>Drive/Application/MountedMediumBinding.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/Drive/Application/MountedMediumBindingService.cs">
+      <Link>Drive/Application/MountedMediumBindingService.cs</Link>
+    </Compile>
+  </ItemGroup>
 </Project>
