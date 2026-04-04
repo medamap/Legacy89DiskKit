@@ -8,6 +8,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Legacy89DiskKit.Domain\Legacy89DiskKit.Domain.csproj" />
     <ProjectReference Include="..\Legacy89DiskKit.Infrastructure\Legacy89DiskKit.Infrastructure.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.Archive.Application/Legacy89DiskKit.Archive.Application.csproj" />
     <ProjectReference Include="../Legacy89DiskKit.FileSystem.Application/Legacy89DiskKit.FileSystem.Application.csproj" />
     <ProjectReference Include="../Legacy89DiskKit.CharacterEncoding.Application/Legacy89DiskKit.CharacterEncoding.Application.csproj" />
     <ProjectReference Include="../Legacy89DiskKit.Drive.Application/Legacy89DiskKit.Drive.Application.csproj" />
@@ -51,11 +52,7 @@
   <ItemGroup />
   <ItemGroup />
   <ItemGroup />
-  <ItemGroup>
-    <Compile Include="../Legacy89DiskKit/Archive/Application/ArchiveService.cs">
-      <Link>Archive/Application/ArchiveService.cs</Link>
-    </Compile>
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup />
   <ItemGroup>
     <Compile Remove="../Legacy89DiskKit/FileSystem/Application/BootEntryExportArtifact.cs" />
@@ -76,6 +73,7 @@
     <Compile Remove="../Legacy89DiskKit/Native/Application/ManagedNativeDiskSession.cs" />
     <Compile Remove="../Legacy89DiskKit/DiskImage/Application/DiskService.cs" />
     <Compile Remove="../Legacy89DiskKit/DiskImage/Application/NativeBridgeBackend.cs" />
+    <Compile Remove="../Legacy89DiskKit/Archive/Application/ArchiveService.cs" />
     <Compile Remove="../Legacy89DiskKit/FileSystem/Application/MsxBootProfileDetectorService.cs" />
     <Compile Remove="../Legacy89DiskKit/FileSystem/Application/MsxBootMetadataService.cs" />
     <Compile Remove="../Legacy89DiskKit/FileSystem/Application/HuBasicMetadataService.cs" />

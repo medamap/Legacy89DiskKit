@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Legacy89DiskKit.Domain/Legacy89DiskKit.Domain.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.Infrastructure/Legacy89DiskKit.Infrastructure.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.CharacterEncoding.Application/Legacy89DiskKit.CharacterEncoding.Application.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.FileSystem.Application/Legacy89DiskKit.FileSystem.Application.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.Native.Application/Legacy89DiskKit.Native.Application.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.DiskImage.Application/Legacy89DiskKit.DiskImage.Application.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/Archive/Application/ArchiveService.cs">
+      <Link>Archive/Application/ArchiveService.cs</Link>
+    </Compile>
+  </ItemGroup>
+</Project>
