@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
 
-namespace Legacy89DiskKit.Application.Services;
+namespace Legacy89DiskKit.FileSystem.Application;
 
 public class FileNameNormalizationService
 {

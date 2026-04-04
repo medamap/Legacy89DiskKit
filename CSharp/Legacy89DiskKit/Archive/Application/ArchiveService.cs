@@ -11,7 +11,7 @@ using Legacy89DiskKit.Native.Application;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
 using Legacy89DiskKit.FileSystem.Application;
 
-namespace Legacy89DiskKit.Application.Services;
+namespace Legacy89DiskKit.Archive.Application;
 public class ArchiveService
 {
     private readonly DiskContainerFactory _containerFactory;

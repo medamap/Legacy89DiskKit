@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
-using Legacy89DiskKit.Application.CharacterEncoding;
+using Legacy89DiskKit.CharacterEncoding.Application;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Domain.FileSystem.Interface.Layout;

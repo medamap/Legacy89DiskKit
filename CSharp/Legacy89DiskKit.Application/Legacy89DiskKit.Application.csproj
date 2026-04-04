@@ -192,4 +192,14 @@
       <Link>Native/Application/ManagedNativeDiskSession.cs</Link>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/FileNameNormalizationService.cs">
+      <Link>FileSystem/Application/FileNameNormalizationService.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/Archive/Application/ArchiveService.cs">
+      <Link>Archive/Application/ArchiveService.cs</Link>
+    </Compile>
+  </ItemGroup>
 </Project>
