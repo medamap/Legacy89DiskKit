@@ -10,9 +10,6 @@
     <ProjectReference Include="..\Legacy89DiskKit.Infrastructure\Legacy89DiskKit.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="VerificationApp.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="../Legacy89DiskKit/FileSystem/Application/DirectoryLayoutTextPlan.cs">
       <Link>FileSystem/Application/DirectoryLayoutTextPlan.cs</Link>
     </Compile>
