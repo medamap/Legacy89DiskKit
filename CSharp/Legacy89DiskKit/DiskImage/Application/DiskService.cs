@@ -9,7 +9,7 @@ using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.Native;
 using Legacy89DiskKit.Application.Native;
 
-namespace Legacy89DiskKit.Application.DiskImage;
+namespace Legacy89DiskKit.DiskImage.Application;
 
 public class DiskService : IDisposable
 {

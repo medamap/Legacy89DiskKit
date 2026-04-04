@@ -1,5 +1,5 @@
 using Legacy89DiskKit.Application;
-using Legacy89DiskKit.Application.DiskImage;
+using Legacy89DiskKit.DiskImage.Application;
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Domain.FileSystem.Model;

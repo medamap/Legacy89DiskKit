@@ -1,4 +1,4 @@
-using Legacy89DiskKit.Application.CharacterEncoding;
+using Legacy89DiskKit.CharacterEncoding.Application;
 using Legacy89DiskKit.Domain.Drive.Interface;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
@@ -24,9 +24,9 @@ public static class Legacy89DiskKitApplication
     /// <summary>
     /// Creates a preconfigured disk service with the supported filesystem providers.
     /// </summary>
-    public static DiskImage.DiskService CreateDiskService()
+    public static Legacy89DiskKit.DiskImage.Application.DiskService CreateDiskService()
     {
-        return new DiskImage.DiskService(fsRegistry: CreateFileSystemRegistry());
+        return new Legacy89DiskKit.DiskImage.Application.DiskService(fsRegistry: CreateFileSystemRegistry());
     }
 
     /// <summary>

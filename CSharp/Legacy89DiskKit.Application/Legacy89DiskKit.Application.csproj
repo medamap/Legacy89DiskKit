@@ -147,4 +147,24 @@
       <Link>FileSystem/Application/FileSystemTransferOrchestrator.cs</Link>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/DiskImage/Application/DiskService.cs">
+      <Link>DiskImage/Application/DiskService.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/DiskImage/Application/NativeBridgeBackend.cs">
+      <Link>DiskImage/Application/NativeBridgeBackend.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/CharacterEncoding/Application/CharacterEncodingResolver.cs">
+      <Link>CharacterEncoding/Application/CharacterEncodingResolver.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/CharacterEncoding/Application/EncoderRegistry.cs">
+      <Link>CharacterEncoding/Application/EncoderRegistry.cs</Link>
+    </Compile>
+  </ItemGroup>
 </Project>

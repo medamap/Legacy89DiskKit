@@ -1,7 +1,7 @@
 using Legacy89DiskKit.Application.Native;
 using Legacy89DiskKit.Domain.Native;
 
-namespace Legacy89DiskKit.Application.DiskImage;
+namespace Legacy89DiskKit.DiskImage.Application;
 
 public static class NativeBridgeBackend
 {

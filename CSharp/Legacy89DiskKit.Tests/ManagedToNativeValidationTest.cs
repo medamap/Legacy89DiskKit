@@ -2,7 +2,7 @@ using Legacy89DiskKit.Application.Native;
 using Xunit;
 using Legacy89DiskKit.NativeInterop.Core;
 using Legacy89DiskKit.Application;
-using Legacy89DiskKit.Application.DiskImage;
+using Legacy89DiskKit.DiskImage.Application;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using System.Runtime.InteropServices;
 

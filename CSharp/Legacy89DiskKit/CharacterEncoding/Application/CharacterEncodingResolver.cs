@@ -3,7 +3,7 @@ using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
 using Legacy89DiskKit.Domain.CharacterEncoding.Model;
 using Legacy89DiskKit.Domain.FileSystem.Model;
 
-namespace Legacy89DiskKit.Application.CharacterEncoding;
+namespace Legacy89DiskKit.CharacterEncoding.Application;
 
 public sealed class CharacterEncodingResolver
 {

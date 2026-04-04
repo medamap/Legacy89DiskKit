@@ -1,9 +1,9 @@
 using System.CommandLine;
 using System.Text;
 using Legacy89DiskKit.Cli;
-using Legacy89DiskKit.Application.CharacterEncoding;
+using Legacy89DiskKit.CharacterEncoding.Application;
 using Legacy89DiskKit.Application;
-using Legacy89DiskKit.Application.DiskImage;
+using Legacy89DiskKit.DiskImage.Application;
 using Legacy89DiskKit.FileSystem.Application;
 using Legacy89DiskKit.Application.Services;
 using Legacy89DiskKit.Application.Fdc.Hosts.Scripting;
