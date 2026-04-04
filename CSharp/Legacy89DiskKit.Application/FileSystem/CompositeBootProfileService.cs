@@ -1,17 +1,15 @@
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
+using Legacy89DiskKit.FileSystem.Application;
 
 namespace Legacy89DiskKit.Application.FileSystem;
-
 public class CompositeBootProfileService : IBootProfileService
 {
     private readonly X1BootEntrySummaryService _x1Service = new();
     private readonly MsxBootMetadataService _msxService = new();
     private readonly Pc88BootEntrySummaryService _pc88Service = new();
-
     public BootInfoSummary GetBootProfile(IFileSystem fileSystem)
     {
         var fsInfo = fileSystem.GetFileSystemInfo();
-
         if (fsInfo.FileSystemName == "MSX-DOS")
         {
             return _msxService.GetBootSummary(fileSystem);
@@ -36,34 +34,17 @@ public class CompositeBootProfileService : IBootProfileService
     {
         return x1.Kind switch
         {
-            X1BootEntryKind.HuBasicFileBacked => new BootInfoSummary(
-                BootInfoMode.FileBacked,
-                x1.DisplayName,
-                x1.LoadAddress,
-                x1.ExecutionAddress,
-                x1.DisplayName,
-                x1.MachineFamily),
-            X1BootEntryKind.XDosSectorResident => new BootInfoSummary(
-                BootInfoMode.SectorResident,
-                DisplayName: "X-DOS",
-                MachineFamily: x1.MachineFamily),
-            _ => new BootInfoSummary(BootInfoMode.None, MachineFamily: x1.MachineFamily)
-        };
+            X1BootEntryKind.HuBasicFileBacked => new BootInfoSummary(BootInfoMode.FileBacked, x1.DisplayName, x1.LoadAddress, x1.ExecutionAddress, x1.DisplayName, x1.MachineFamily),
+            X1BootEntryKind.XDosSectorResident => new BootInfoSummary(BootInfoMode.SectorResident, DisplayName: "X-DOS", MachineFamily: x1.MachineFamily),
+            _ => new BootInfoSummary(BootInfoMode.None, MachineFamily: x1.MachineFamily)};
     }
 
     private static BootInfoSummary MapPc88ToBootInfo(Pc88BootEntrySummary pc88)
     {
         return pc88.Kind switch
         {
-            Pc88BootEntryKind.N88BasicSectorResident => new BootInfoSummary(
-                BootInfoMode.SectorResident,
-                DisplayName: pc88.DisplayName,
-                MachineFamily: Domain.CharacterEncoding.Model.MachineType.PC8801),
-            Pc88BootEntryKind.CpmSectorResident => new BootInfoSummary(
-                BootInfoMode.SectorResident,
-                DisplayName: pc88.DisplayName,
-                MachineFamily: Domain.CharacterEncoding.Model.MachineType.PC8801),
-            _ => new BootInfoSummary(BootInfoMode.None, MachineFamily: pc88.MachineFamily)
-        };
+            Pc88BootEntryKind.N88BasicSectorResident => new BootInfoSummary(BootInfoMode.SectorResident, DisplayName: pc88.DisplayName, MachineFamily: Domain.CharacterEncoding.Model.MachineType.PC8801),
+            Pc88BootEntryKind.CpmSectorResident => new BootInfoSummary(BootInfoMode.SectorResident, DisplayName: pc88.DisplayName, MachineFamily: Domain.CharacterEncoding.Model.MachineType.PC8801),
+            _ => new BootInfoSummary(BootInfoMode.None, MachineFamily: pc88.MachineFamily)};
     }
 }

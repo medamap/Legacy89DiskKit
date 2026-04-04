@@ -4,20 +4,18 @@ using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Models;
+using Legacy89DiskKit.FileSystem.Application;
 
 namespace Legacy89DiskKit.Application.FileSystem;
-
 public sealed class BootEntryExportService : IBootEntryExportService
 {
     private readonly X1BootEntrySummaryService _x1Service = new();
     private readonly Pc88BootEntrySummaryService _pc88Service = new();
     private readonly MsxBootMetadataService _msxService = new();
     private readonly HuBasicMetadataService _huBasicMetadataService = new();
-
     public IReadOnlyList<BootEntryExportArtifact> ExportEntries(IDiskContainer container, IFileSystem fileSystem)
     {
         var fsInfo = fileSystem.GetFileSystemInfo();
-
         if (fsInfo.FileSystemName == "Hu-BASIC" || fsInfo.FileSystemName == "X-DOS")
         {
             return ExportX1Entries(container, fileSystem);
@@ -50,22 +48,14 @@ public sealed class BootEntryExportService : IBootEntryExportService
             {
                 ExportX1HuBasicFileBacked(container, fileSystem, summary)
             },
-            _ => Array.Empty<BootEntryExportArtifact>()
-        };
+            _ => Array.Empty<BootEntryExportArtifact>()};
     }
 
     private BootEntryExportArtifact ExportX1HuBasicFileBacked(IDiskContainer container, IFileSystem fileSystem, X1BootEntrySummary summary)
     {
-        var bootRecord = _huBasicMetadataService.GetBootRecordInfo(fileSystem)
-            ?? throw new InvalidOperationException("Boot record metadata was not found.");
+        var bootRecord = _huBasicMetadataService.GetBootRecordInfo(fileSystem) ?? throw new InvalidOperationException("Boot record metadata was not found.");
         var payload = ReadRecords(container, container.DiskType, bootRecord.StartRecord, bootRecord.Size);
-        return CreateArtifact(
-            MachineType.X1,
-            BootInfoMode.FileBacked,
-            summary.DisplayName,
-            payload,
-            bootRecord.LoadAddress,
-            bootRecord.ExecutionAddress);
+        return CreateArtifact(MachineType.X1, BootInfoMode.FileBacked, summary.DisplayName, payload, bootRecord.LoadAddress, bootRecord.ExecutionAddress);
     }
 
     private IReadOnlyList<BootEntryExportArtifact> ExportPc88Entries(IFileSystem fileSystem)
@@ -82,8 +72,7 @@ public sealed class BootEntryExportService : IBootEntryExportService
             {
                 CreateArtifact(MachineType.PC8801, BootInfoMode.SectorResident, summary.DisplayName, fileSystem.ReadBootArea(), null, null)
             },
-            _ => Array.Empty<BootEntryExportArtifact>()
-        };
+            _ => Array.Empty<BootEntryExportArtifact>()};
     }
 
     private IReadOnlyList<BootEntryExportArtifact> ExportMsxEntries(IFileSystem fileSystem)
@@ -100,26 +89,12 @@ public sealed class BootEntryExportService : IBootEntryExportService
         };
     }
 
-    private static BootEntryExportArtifact CreateArtifact(
-        MachineType machineFamily,
-        BootInfoMode mode,
-        string? displayName,
-        byte[] payload,
-        ushort? loadAddress,
-        ushort? executionAddress)
+    private static BootEntryExportArtifact CreateArtifact(MachineType machineFamily, BootInfoMode mode, string? displayName, byte[] payload, ushort? loadAddress, ushort? executionAddress)
     {
         var safeDisplayName = SanitizeDisplayName(string.IsNullOrWhiteSpace(displayName) ? "Entry1" : displayName);
         var prefix = GetMachinePrefix(machineFamily);
         var baseName = $"{prefix}_BootRecord_{safeDisplayName}";
-        return new BootEntryExportArtifact(
-            machineFamily,
-            mode,
-            displayName,
-            payload,
-            $"{baseName}.bin",
-            $"{baseName}.json",
-            loadAddress,
-            executionAddress);
+        return new BootEntryExportArtifact(machineFamily, mode, displayName, payload, $"{baseName}.bin", $"{baseName}.json", loadAddress, executionAddress);
     }
 
     private static string GetMachinePrefix(MachineType machineFamily) => machineFamily switch
@@ -132,13 +107,10 @@ public sealed class BootEntryExportService : IBootEntryExportService
         MachineType.FM7 => "FM-7",
         _ => "UNKNOWN"
     };
-
     private static string SanitizeDisplayName(string value)
     {
-        var chars = value
-            .Select(ch => Path.GetInvalidFileNameChars().Contains(ch) || char.IsWhiteSpace(ch) || ch == '/' || ch == '\\' ? '_' : ch)
-            .ToArray();
-        return new string(chars);
+        var chars = value.Select(ch => Path.GetInvalidFileNameChars().Contains(ch) || char.IsWhiteSpace(ch) || ch == '/' || ch == '\\' ? '_' : ch).ToArray();
+        return new string (chars);
     }
 
     private static byte[] ReadRecords(IDiskContainer container, DiskType diskType, int startRecord, int size)
@@ -148,10 +120,9 @@ public sealed class BootEntryExportService : IBootEntryExportService
         var remaining = size;
         var offset = 0;
         var record = startRecord;
-
         while (remaining > 0)
         {
-            var (cylinder, head, sector) = GetPhysicalAddressFromRecord(record, config.SectorsPerTrack);
+            var(cylinder, head, sector) = GetPhysicalAddressFromRecord(record, config.SectorsPerTrack);
             var sectorData = container.ReadSector(cylinder, head, sector);
             var copyLength = Math.Min(config.SectorSize, remaining);
             Array.Copy(sectorData, 0, result, offset, copyLength);

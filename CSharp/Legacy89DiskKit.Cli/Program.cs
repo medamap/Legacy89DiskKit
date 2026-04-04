@@ -19,9 +19,9 @@ using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.XDos;
+using Legacy89DiskKit.FileSystem.Application;
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
 var requestedLanguage = TryGetRequestedLanguage(args);
 if (requestedLanguage is { } languageCode && languageCode is not ("ja" or "en"))
 {
@@ -30,7 +30,6 @@ if (requestedLanguage is { } languageCode && languageCode is not ("ja" or "en"))
 }
 
 var effectiveArgs = RewriteVersionArgs(RewriteFullHelpArgs(RewriteUpdateCheckArgs(RewriteImplicitInspectorArgs(RewriteLegacyArgs(args)))));
-
 var localizer = FileListLocalizer.Create(requestedLanguage);
 var archiveService = new ArchiveService();
 var huBasicMetadataService = new HuBasicMetadataService();
@@ -39,9 +38,7 @@ var explicitFileSystemResolver = new ExplicitFileSystemResolver();
 var bootProfileService = Legacy89DiskKitApplication.CreateBootProfileService();
 var diskInspectionService = Legacy89DiskKitApplication.CreateDiskInspectionService();
 var fileInspectionService = Legacy89DiskKitApplication.CreateFileInspectionService();
-
 var rootCommand = new RootCommand(localizer.RootDescription);
-
 var languageOption = new Option<string?>(new[] { "--language", "-l" }, localizer.LanguageOptionDescription);
 var encodingOption = new Option<string?>(new[] { "--encoding", "-e" }, localizer.EncodingOptionDescription);
 var nativeOption = new Option<bool>(new[] { "--native" }, "Use C++ native implementation via NativeBridge");
@@ -54,11 +51,10 @@ rootCommand.AddGlobalOption(nativeOption);
 rootCommand.AddGlobalOption(checkUpdateOption);
 rootCommand.AddGlobalOption(fullHelpOption);
 rootCommand.AddGlobalOption(outputFormatOption);
-
 // Initialize backend based on command line args
 if (effectiveArgs.Contains("--native"))
 {
-    try 
+    try
     {
         NativeBridgeBackend.SetCurrent(new Legacy89DiskKit.NativeInterop.Core.CppLibraryNativeBridgeBackend());
     }
@@ -76,19 +72,16 @@ else
 
 var imageArgument = new Argument<string>("image", localizer.ImageArgumentDescription);
 var explicitFileSystemOption = new Option<string?>(new[] { "--file-system", "-f" }, localizer.ExplicitFileSystemOptionDescription);
-
 var fullHelpCommand = new Command("full-help", localizer.FullHelpCommandDescription);
 fullHelpCommand.SetHandler(() =>
 {
     PrintFullHelp(rootCommand, localizer);
 });
-
 var versionCommand = new Command("version", localizer.VersionCommandDescription);
 versionCommand.SetHandler(() =>
 {
     Console.WriteLine(VersionDisplay.GetDisplayVersion());
 });
-
 var listCommand = new Command("list", localizer.ListCommandDescription);
 listCommand.AddArgument(imageArgument);
 listCommand.AddOption(explicitFileSystemOption);
@@ -105,10 +98,9 @@ listCommand.SetHandler((string imagePath, string? fileSystemName, string? encodi
             return;
         }
 
-        var (fsInfo, entries) = BuildFileListEntries(fs, archiveService, encodingOverride);
+        var(fsInfo, entries) = BuildFileListEntries(fs, archiveService, encodingOverride);
         var encodingId = encodingOverride ?? fsInfo.DefaultEncodingId;
         Console.WriteLine($"{localizer.UsingEncodingMessage}: {encodingId} (FS Default: {fsInfo.DefaultEncodingId})");
-
         var formatter = FileListFormatterFactory.Create(fsInfo.FileSystemName);
         var bootRecordInfo = huBasicMetadataService.GetBootRecordInfo(fs);
         var bootSummary = huBasicMetadataService.GetBootSummary(fs);
@@ -120,7 +112,6 @@ listCommand.SetHandler((string imagePath, string? fileSystemName, string? encodi
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, explicitFileSystemOption, encodingOption, outputFormatOption);
-
 var fileCommand = new Command("file", localizer.FileCommandDescription);
 var fileInspectorDetailOption = new Option<string>("--detail", () => "normal", localizer.FileInspectorDetailOptionDescription);
 var diskFileArgument = new Argument<string>("disk-file", localizer.DiskFileArgumentDescription);
@@ -136,7 +127,6 @@ var targetFileNameOption = new Option<string?>(new[] { "--target-name", "-n" }, 
 var tabModeOption = new Option<string>("--tab-mode", () => "keep", localizer.TabModeOptionDescription);
 var tabWidthOption = new Option<int>("--tab-width", () => 4, localizer.TabWidthOptionDescription);
 var truncateTextOnOverflowOption = new Option<bool>("--truncate-text-on-overflow", localizer.TruncateTextOnOverflowOptionDescription);
-
 var fileExtractCommand = new Command("extract", localizer.FileExtractCommandDescription);
 fileExtractCommand.AddAlias("export");
 fileExtractCommand.AddArgument(imageArgument);
@@ -157,11 +147,7 @@ fileExtractCommand.SetHandler((string imagePath, string diskFileName, string hos
             return;
         }
 
-        CreateFileTransferService(fs.GetFileSystemInfo(), encodingOverride).ExportFile(
-            fs,
-            diskFileName,
-            hostPath,
-            new TextTransferOptions(TabMode: tabMode, TabWidth: tabWidth));
+        CreateFileTransferService(fs.GetFileSystemInfo(), encodingOverride).ExportFile(fs, diskFileName, hostPath, new TextTransferOptions(TabMode: tabMode, TabWidth: tabWidth));
         PrintSuccess(localizer, localizer.FileExtractedMessage);
     }
     catch (Exception ex)
@@ -169,7 +155,6 @@ fileExtractCommand.SetHandler((string imagePath, string diskFileName, string hos
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, diskFileArgument, hostPathArgument, explicitFileSystemOption, tabModeOption, tabWidthOption, encodingOption);
-
 var fileInjectCommand = new Command("inject", localizer.FileInjectCommandDescription);
 fileInjectCommand.AddAlias("import");
 fileInjectCommand.AddArgument(imageArgument);
@@ -200,15 +185,9 @@ fileInjectCommand.SetHandler((string imagePath, string hostFilePath, string? tar
         var normalizedName = normalizationService.Normalize(sourceName, encodingId, fsInfo.MaxBaseNameLength, fsInfo.MaxExtensionLength, existingNames);
         var data = File.ReadAllBytes(hostFilePath);
         var isAscii = IsLikelyAsciiPayload(data);
-
         if (isAscii)
         {
-            CreateFileTransferService(fsInfo, encodingOverride).ImportFile(
-                fs,
-                hostFilePath,
-                normalizedName,
-                true,
-                new TextTransferOptions(TabMode: tabMode, TabWidth: tabWidth, TruncateOnOverflow: truncateTextOnOverflow));
+            CreateFileTransferService(fsInfo, encodingOverride).ImportFile(fs, hostFilePath, normalizedName, true, new TextTransferOptions(TabMode: tabMode, TabWidth: tabWidth, TruncateOnOverflow: truncateTextOnOverflow));
         }
         else
         {
@@ -224,7 +203,6 @@ fileInjectCommand.SetHandler((string imagePath, string hostFilePath, string? tar
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, hostFileArgument, targetFileNameOption, explicitFileSystemOption, tabModeOption, tabWidthOption, truncateTextOnOverflowOption, encodingOption);
-
 var fileDeleteCommand = new Command("delete", localizer.FileDeleteCommandDescription);
 fileDeleteCommand.AddArgument(imageArgument);
 fileDeleteCommand.AddArgument(diskFileArgument);
@@ -248,7 +226,6 @@ fileDeleteCommand.SetHandler((string imagePath, string diskFileName) =>
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, diskFileArgument);
-
 var fileRenameCommand = new Command("rename", localizer.FileRenameCommandDescription);
 fileRenameCommand.AddArgument(imageArgument);
 fileRenameCommand.AddArgument(sourceNameArgument);
@@ -273,7 +250,6 @@ fileRenameCommand.SetHandler((string imagePath, string sourceName, string newNam
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, sourceNameArgument, newNameArgument);
-
 var fileCopyCommand = new Command("copy", localizer.FileCopyCommandDescription);
 fileCopyCommand.AddArgument(imageArgument);
 fileCopyCommand.AddArgument(sourceNameArgument);
@@ -298,7 +274,6 @@ fileCopyCommand.SetHandler((string imagePath, string sourceName, string targetNa
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, sourceNameArgument, targetNameArgument);
-
 var fileCrossCopyCommand = new Command("cross-copy", localizer.FileCrossCopyCommandDescription);
 fileCrossCopyCommand.AddArgument(sourceImageArgument);
 fileCrossCopyCommand.AddArgument(destImageArgument);
@@ -311,13 +286,13 @@ fileCrossCopyCommand.SetHandler((string srcPath, string destPath, string[] files
         using var srcDisk = CreateDiskService();
         srcDisk.OpenDisk(srcPath, true);
         var srcFs = RequireFileSystem(srcDisk.FileSystem, localizer);
-        if (srcFs == null) return;
-
+        if (srcFs == null)
+            return;
         using var destDisk = CreateDiskService();
         OpenWritableDisk(destDisk, destPath, localizer);
         var destFs = RequireFileSystem(destDisk.FileSystem, localizer);
-        if (destFs == null) return;
-
+        if (destFs == null)
+            return;
         IEnumerable<string> targetFiles = files;
         if (files.Length == 1 && files[0].Equals("all", StringComparison.OrdinalIgnoreCase))
         {
@@ -331,7 +306,6 @@ fileCrossCopyCommand.SetHandler((string srcPath, string destPath, string[] files
         var cloneService = Legacy89DiskKitApplication.CreateDiskCloneService(destFs.GetFileSystemInfo(), encodingOverride);
         var srcAdapter = CreateTransferAdapter(srcFs);
         var destAdapter = CreateTransferAdapter(destFs);
-
         cloneService.TransferFiles(srcFs, destFs, targetFiles, srcAdapter, destAdapter);
         PrintSuccess(localizer, localizer.FileCopiedMessage);
     }
@@ -340,7 +314,6 @@ fileCrossCopyCommand.SetHandler((string srcPath, string destPath, string[] files
         PrintError(localizer, ex.Message);
     }
 }, sourceImageArgument, destImageArgument, filesArgument, encodingOption);
-
 var fileInspectorCommand = new Command("inspector", localizer.FileInspectorCommandDescription);
 fileInspectorCommand.AddArgument(imageArgument);
 fileInspectorCommand.AddArgument(diskFileArgument);
@@ -359,7 +332,6 @@ fileInspectorCommand.SetHandler((string imagePath, string diskFileName, string d
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, diskFileArgument, fileInspectorDetailOption, outputFormatOption, explicitFileSystemOption, encodingOption);
-
 fileCommand.AddCommand(fileExtractCommand);
 fileCommand.AddCommand(fileInjectCommand);
 fileCommand.AddCommand(fileDeleteCommand);
@@ -367,7 +339,6 @@ fileCommand.AddCommand(fileRenameCommand);
 fileCommand.AddCommand(fileCopyCommand);
 fileCommand.AddCommand(fileCrossCopyCommand);
 fileCommand.AddCommand(fileInspectorCommand);
-
 var diskCommand = new Command("disk", localizer.DiskCommandDescription);
 var diskInspectorCommand = new Command("inspector", localizer.DiskInspectorCommandDescription);
 var diskInspectorDetailOption = new Option<string>("--detail", () => "short", localizer.DiskInspectorDetailOptionDescription);
@@ -386,7 +357,6 @@ diskInspectorCommand.SetHandler((string imagePath, string detail, string outputF
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, diskInspectorDetailOption, outputFormatOption, explicitFileSystemOption, encodingOption);
-
 var diskCreateCommand = new Command("create", localizer.DiskCreateCommandDescription);
 var diskCreateImageFormatOption = new Option<string?>(new[] { "--image-format", "-i" }, localizer.DiskCreateImageFormatOptionDescription);
 var diskTypeOption = new Option<string>(new[] { "--disk-type", "-d" }, () => "2d", localizer.DiskCreateDiskTypeOptionDescription);
@@ -405,14 +375,13 @@ diskCreateCommand.SetHandler((string imagePath, string? imageFormatName, string 
         var diskType = ParseDiskType(diskTypeName);
         var resolvedImagePath = ResolveCreatePath(imagePath, imageFormatName);
         var container = diskService.CreateDisk(resolvedImagePath, diskType, diskName ?? string.Empty);
-        
         if (!string.IsNullOrWhiteSpace(fileSystemName))
         {
             using var fs = explicitFileSystemResolver.Create(fileSystemName, container);
             fs.Format();
             explicitFileSystemResolver.InitializeForDetection(fs);
         }
-        
+
         PrintSuccess(localizer, localizer.DiskCreatedMessage);
     }
     catch (Exception ex)
@@ -420,7 +389,6 @@ diskCreateCommand.SetHandler((string imagePath, string? imageFormatName, string 
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, diskCreateImageFormatOption, diskTypeOption, diskFileSystemOption, diskNameOption);
-
 var diskFormatCommand = new Command("format", localizer.DiskFormatCommandDescription);
 var explicitFormatFsOption = new Option<string?>(new[] { "--file-system", "-f" }, localizer.DiskFormatFsOptionDescription);
 diskFormatCommand.AddArgument(imageArgument);
@@ -457,7 +425,6 @@ diskFormatCommand.SetHandler((string imagePath, string? explicitFileSystemName) 
 diskCommand.AddCommand(diskInspectorCommand);
 diskCommand.AddCommand(diskCreateCommand);
 diskCommand.AddCommand(diskFormatCommand);
-
 var diskSectorCopyCommand = new Command("sector-copy", localizer.DiskSectorCopyCommandDescription);
 diskSectorCopyCommand.AddArgument(sourceImageArgument);
 diskSectorCopyCommand.AddArgument(destImageArgument);
@@ -469,12 +436,12 @@ diskSectorCopyCommand.SetHandler((string srcPath, string destPath, bool force) =
     {
         if (!force && File.Exists(destPath))
         {
-            if (!ConfirmOverwrite(localizer, destPath)) return;
+            if (!ConfirmOverwrite(localizer, destPath))
+                return;
         }
 
         using var diskService = CreateDiskService();
         using var srcDisk = diskService.OpenDisk(srcPath, true);
-        
         IDiskContainer destDisk;
         if (File.Exists(destPath))
         {
@@ -487,9 +454,8 @@ diskSectorCopyCommand.SetHandler((string srcPath, string destPath, bool force) =
 
         using (destDisk)
         {
-            var cloneService = new DiskCloneService(null!, null!);
+            var cloneService = new DiskCloneService(null !, null !);
             var result = cloneService.CopySectors(srcDisk, destDisk);
-            
             destDisk.Save();
             PrintSuccess(localizer, string.Format(localizer.DiskSectorCopiedMessage, result.tracksCopied, result.sectorsSkipped));
         }
@@ -500,7 +466,6 @@ diskSectorCopyCommand.SetHandler((string srcPath, string destPath, bool force) =
     }
 }, sourceImageArgument, destImageArgument, forceOption);
 diskCommand.AddCommand(diskSectorCopyCommand);
-
 var sectorCommand = new Command("sector", localizer.SectorCommandDescription);
 var sectorLocationArgument = new Argument<int>("sector", localizer.SectorLocationArgumentDescription);
 var sectorCountArgument = new Argument<int>("count", localizer.SectorCountArgumentDescription);
@@ -524,7 +489,6 @@ sectorExportCommand.SetHandler((string imagePath, int sector, int count, string 
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, sectorLocationArgument, sectorCountArgument, hostPathArgument);
-
 var sectorImportCountOption = new Option<int?>(new[] { "--count", "-c" }, "Number of sectors to write. If omitted, infer from file length.");
 var sectorImportCommand = new Command("import", localizer.SectorImportCommandDescription);
 sectorImportCommand.AddArgument(imageArgument);
@@ -550,7 +514,6 @@ sectorImportCommand.SetHandler((string imagePath, int sector, string hostFilePat
 sectorCommand.AddCommand(sectorExportCommand);
 sectorCommand.AddCommand(sectorImportCommand);
 diskCommand.AddCommand(sectorCommand);
-
 var dumpLocationArgument = new Argument<string>("location", localizer.DumpLocationArgumentDescription);
 var dumpLengthArgument = new Argument<string>("length", localizer.DumpLengthArgumentDescription);
 var diskDumpCommand = new Command("dump", localizer.DiskDumpCommandDescription);
@@ -570,7 +533,6 @@ diskDumpCommand.SetHandler((string imagePath, string location, string length) =>
     }
 }, imageArgument, dumpLocationArgument, dumpLengthArgument);
 diskCommand.AddCommand(diskDumpCommand);
-
 var diskBootCopyCommand = new Command("boot-copy", "Copy boot area (IPL) from source disk to destination disk");
 diskBootCopyCommand.AddArgument(sourceImageArgument);
 diskBootCopyCommand.AddArgument(destImageArgument);
@@ -581,23 +543,24 @@ diskBootCopyCommand.SetHandler((string srcPath, string destPath, bool force) =>
     {
         if (!force && File.Exists(destPath))
         {
-            if (!ConfirmOverwrite(localizer, destPath)) return;
+            if (!ConfirmOverwrite(localizer, destPath))
+                return;
         }
 
         using var srcDiskService = CreateDiskService();
         using var srcDisk = srcDiskService.OpenDisk(srcPath, true);
         var srcFs = RequireFileSystem(srcDiskService.FileSystem, localizer);
-        if (srcFs == null) return;
-
+        if (srcFs == null)
+            return;
         using var destDiskService = CreateDiskService();
         IDiskContainer destDisk;
         IFileSystem? destFs;
-
         if (File.Exists(destPath))
         {
             destDisk = OpenWritableDisk(destDiskService, destPath, localizer);
             destFs = RequireFileSystem(destDiskService.FileSystem, localizer);
-            if (destFs == null) return;
+            if (destFs == null)
+                return;
         }
         else
         {
@@ -609,9 +572,8 @@ diskBootCopyCommand.SetHandler((string srcPath, string destPath, bool force) =>
 
         using (destDisk)
         {
-            var cloneService = new DiskCloneService(null!, null!);
+            var cloneService = new DiskCloneService(null !, null !);
             cloneService.TransferBootArea(srcFs, destFs);
-            
             destDisk.Save();
             PrintSuccess(localizer, "Boot area copied successfully.");
         }
@@ -622,7 +584,6 @@ diskBootCopyCommand.SetHandler((string srcPath, string destPath, bool force) =>
     }
 }, sourceImageArgument, destImageArgument, forceOption);
 diskCommand.AddCommand(diskBootCopyCommand);
-
 var hostCommand = new Command("host", localizer.HostCommandDescription);
 var hostStdioCommand = new Command("stdio", localizer.HostStdioCommandDescription);
 var hostObservableOption = new Option<bool>("--observable", localizer.HostObservableOptionDescription);
@@ -732,11 +693,7 @@ hostBundleInspectCommand.SetHandler(async (string directoryPath, string baseName
     try
     {
         var bundle = await EmulatorHostBundleReader.ReadAsync(directoryPath, baseName);
-        var report = Legacy89DiskKitApplication.BuildEmulatorHostProofReport(
-            bundle.Transcript,
-            bundle.Manifest.OpenMode,
-            bundle.Manifest.ExchangeMode);
-
+        var report = Legacy89DiskKitApplication.BuildEmulatorHostProofReport(bundle.Transcript, bundle.Manifest.OpenMode, bundle.Manifest.ExchangeMode);
         Console.WriteLine($"BaseName: {bundle.Manifest.BaseName}");
         Console.WriteLine($"OpenMode: {bundle.Manifest.OpenMode}");
         Console.WriteLine($"ExchangeMode: {bundle.Manifest.ExchangeMode}");
@@ -768,15 +725,13 @@ hostBundleVerifyCommand.SetHandler(async (string directoryPath, string baseName,
     var bundle = await Legacy89DiskKitApplication.ReadEmulatorHostBundleAsync(directoryPath, baseName);
     var expectation = ParseHostBaseline(baselineName);
     var mismatches = Legacy89DiskKitApplication.CompareEmulatorHostBundle(bundle, expectation);
-
     if (mismatches.Count == 0)
     {
         PrintSuccess(localizer, $"Host-proof bundle matched baseline: {baselineName}");
         return;
     }
 
-    throw new InvalidOperationException(
-        $"Host-proof bundle mismatches for baseline '{baselineName}': {string.Join(" ", mismatches)}");
+    throw new InvalidOperationException($"Host-proof bundle mismatches for baseline '{baselineName}': {string.Join(" ", mismatches)}");
 }, hostDirectoryArgument, hostBaseNameArgument, hostBaselineArgument);
 hostBundlePackCommand.AddArgument(hostTranscriptArgument);
 hostBundlePackCommand.AddArgument(hostDirectoryArgument);
@@ -784,29 +739,14 @@ hostBundlePackCommand.AddArgument(hostBaseNameArgument);
 hostBundlePackCommand.AddOption(hostRequestScriptOption);
 hostBundlePackCommand.AddOption(hostOpenModeOption);
 hostBundlePackCommand.AddOption(hostExchangeModeOption);
-hostBundlePackCommand.SetHandler(async (
-    string transcriptPath,
-    string directoryPath,
-    string baseName,
-    string? requestScriptPath,
-    string openMode,
-    string exchangeMode) =>
+hostBundlePackCommand.SetHandler(async (string transcriptPath, string directoryPath, string baseName, string? requestScriptPath, string openMode, string exchangeMode) =>
 {
     try
     {
         var transcript = await Legacy89DiskKitApplication.ReadEmulatorHostTranscriptAsync(transcriptPath);
-        var requestScript = string.IsNullOrWhiteSpace(requestScriptPath)
-            ? null
-            : await Legacy89DiskKitApplication.ReadEmulatorHostRequestScriptAsync(requestScriptPath);
+        var requestScript = string.IsNullOrWhiteSpace(requestScriptPath) ? null : await Legacy89DiskKitApplication.ReadEmulatorHostRequestScriptAsync(requestScriptPath);
         var report = Legacy89DiskKitApplication.BuildEmulatorHostProofReport(transcript, openMode, exchangeMode);
-
-        await Legacy89DiskKitApplication.WriteEmulatorHostBundleAsync(
-            directoryPath,
-            baseName,
-            report,
-            transcript,
-            requestScript);
-
+        await Legacy89DiskKitApplication.WriteEmulatorHostBundleAsync(directoryPath, baseName, report, transcript, requestScript);
         PrintSuccess(localizer, $"Host-proof bundle written: {Path.Combine(directoryPath, $"{baseName}.manifest.json")}");
     }
     catch (Exception ex)
@@ -873,15 +813,13 @@ hostTranscriptVerifyCommand.SetHandler(async (string transcriptPath, string base
     var report = Legacy89DiskKitApplication.BuildEmulatorHostProofReport(transcript, openMode, exchangeMode);
     var expectation = ParseHostBaseline(baselineName);
     var mismatches = Legacy89DiskKitApplication.CompareEmulatorHostProofReport(report, expectation);
-
     if (mismatches.Count == 0)
     {
         PrintSuccess(localizer, $"Host-proof transcript matched baseline: {baselineName}");
         return;
     }
 
-    throw new InvalidOperationException(
-        $"Host-proof transcript mismatches for baseline '{baselineName}': {string.Join(" ", mismatches)}");
+    throw new InvalidOperationException($"Host-proof transcript mismatches for baseline '{baselineName}': {string.Join(" ", mismatches)}");
 }, hostTranscriptArgument, hostBaselineArgument, hostOpenModeOption, hostExchangeModeOption);
 hostBundleCommand.AddCommand(hostBundleInspectCommand);
 hostBundleCommand.AddCommand(hostBundleVerifyCommand);
@@ -893,10 +831,8 @@ hostCommand.AddCommand(hostStdioCommand);
 hostCommand.AddCommand(hostScriptCommand);
 hostCommand.AddCommand(hostBundleCommand);
 hostCommand.AddCommand(hostTranscriptCommand);
-
 var bootCommand = new Command("boot", localizer.BootCommandDescription);
 var filesOption = new Option<string>("--files", () => "all", localizer.BootFilesOptionDescription);
-
 var bootShowCommand = new Command("show", localizer.BootShowCommandDescription);
 bootShowCommand.AddArgument(imageArgument);
 bootShowCommand.SetHandler((string imagePath) =>
@@ -918,10 +854,12 @@ bootShowCommand.SetHandler((string imagePath) =>
         {
             Console.WriteLine($"{localizer.BootFileLabel}: {boot.FileName}");
         }
+
         if (boot.LoadAddress.HasValue)
         {
             Console.WriteLine($"{localizer.BootLoadLabel}: {boot.LoadAddress.Value:X4}");
         }
+
         if (boot.ExecutionAddress.HasValue)
         {
             Console.WriteLine($"{localizer.BootExecLabel}: {boot.ExecutionAddress.Value:X4}");
@@ -932,7 +870,6 @@ bootShowCommand.SetHandler((string imagePath) =>
         PrintError(localizer, ex.Message);
     }
 }, imageArgument);
-
 var bootClearCommand = new Command("clear", localizer.BootClearCommandDescription);
 bootClearCommand.AddArgument(imageArgument);
 bootClearCommand.SetHandler((string imagePath) =>
@@ -955,7 +892,6 @@ bootClearCommand.SetHandler((string imagePath) =>
         PrintError(localizer, ex.Message);
     }
 }, imageArgument);
-
 var bootCloneCommand = new Command("clone", localizer.BootCloneCommandDescription);
 var cloneSrcArgument = new Argument<string>("src", localizer.SourceImageArgumentDescription);
 var cloneDestArgument = new Argument<string>("dest", localizer.DestinationImageArgumentDescription);
@@ -970,6 +906,7 @@ bootCloneCommand.SetHandler((string src, string dest, string files) =>
         {
             RejectWriteToMultiSlotD88(dest, localizer);
         }
+
         archiveService.CloneBootable(src, dest, files.Split(','));
         PrintSuccess(localizer, localizer.BootableDiskCreatedMessage);
     }
@@ -978,9 +915,10 @@ bootCloneCommand.SetHandler((string src, string dest, string files) =>
         PrintError(localizer, ex.Message);
     }
 }, cloneSrcArgument, cloneDestArgument, filesOption);
-
-var bootExportOutputOption = new Option<string>(new[] { "--output", "-o" }, localizer.BootExportOutputOptionDescription) { IsRequired = true };
-
+var bootExportOutputOption = new Option<string>(new[] { "--output", "-o" }, localizer.BootExportOutputOptionDescription)
+{
+    IsRequired = true
+};
 var bootExportCommand = new Command("export", localizer.BootExportCommandDescription);
 bootExportCommand.AddArgument(imageArgument);
 bootExportCommand.AddOption(bootExportOutputOption);
@@ -998,7 +936,6 @@ bootExportCommand.SetHandler(async (string imagePath, string outputPath) =>
 
         var exportService = Legacy89DiskKitApplication.CreateBootEntryExportService();
         var entries = exportService.ExportEntries(container, fs);
-
         if (entries.Count == 0)
         {
             PrintError(localizer, localizer.BootNoEntriesFoundMessage);
@@ -1006,14 +943,11 @@ bootExportCommand.SetHandler(async (string imagePath, string outputPath) =>
         }
 
         Directory.CreateDirectory(outputPath);
-
         foreach (var entry in entries)
         {
             var binPath = Path.Combine(outputPath, entry.SuggestedBinaryFileName);
             var jsonPath = Path.Combine(outputPath, entry.SuggestedMetadataFileName);
-
             await File.WriteAllBytesAsync(binPath, entry.Payload);
-            
             var sidecar = new System.Text.Json.Nodes.JsonObject
             {
                 ["machineFamily"] = entry.MachineFamily.ToString(),
@@ -1024,8 +958,10 @@ bootExportCommand.SetHandler(async (string imagePath, string outputPath) =>
                 ["loadAddress"] = entry.LoadAddress,
                 ["executionAddress"] = entry.ExecutionAddress
             };
-            
-            var options = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
+            var options = new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true
+            };
             var json = sidecar.ToJsonString(options);
             await File.WriteAllTextAsync(jsonPath, json);
         }
@@ -1037,11 +973,15 @@ bootExportCommand.SetHandler(async (string imagePath, string outputPath) =>
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, bootExportOutputOption);
-
-var bootImportBinaryOption = new Option<string>(new[] { "--binary", "-b" }, localizer.BootImportBinaryOptionDescription) { IsRequired = true };
-var bootImportMetadataOption = new Option<string>(new[] { "--metadata", "-m" }, localizer.BootImportMetadataOptionDescription) { IsRequired = true };
+var bootImportBinaryOption = new Option<string>(new[] { "--binary", "-b" }, localizer.BootImportBinaryOptionDescription)
+{
+    IsRequired = true
+};
+var bootImportMetadataOption = new Option<string>(new[] { "--metadata", "-m" }, localizer.BootImportMetadataOptionDescription)
+{
+    IsRequired = true
+};
 var bootImportStartRecordOption = new Option<int?>("--start-record", "Explicit start record for file-backed boot import.");
-
 var bootImportCommand = new Command("import", localizer.BootImportCommandDescription);
 bootImportCommand.AddArgument(imageArgument);
 bootImportCommand.AddOption(bootImportBinaryOption);
@@ -1053,17 +993,23 @@ bootImportCommand.SetHandler(async (string imagePath, string binaryPath, string 
     {
         var binary = await File.ReadAllBytesAsync(binaryPath);
         var json = await File.ReadAllTextAsync(metadataPath);
-        
-        var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var options = new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
         options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-        var metadata = System.Text.Json.JsonSerializer.Deserialize<Legacy89DiskKit.Application.FileSystem.BootEntryImportMetadata>(json, options);
+        var metadata = System.Text.Json.JsonSerializer.Deserialize<Legacy89DiskKit.FileSystem.Application.BootEntryImportMetadata>(json, options);
         if (metadata == null)
         {
             throw new InvalidOperationException("Failed to deserialize boot metadata from sidecar file.");
         }
+
         if (startRecord != null)
         {
-            metadata = metadata with { StartRecord = (ushort)startRecord.Value };
+            metadata = metadata with
+            {
+                StartRecord = (ushort)startRecord.Value
+            };
         }
 
         using var diskService = CreateDiskService();
@@ -1076,9 +1022,7 @@ bootImportCommand.SetHandler(async (string imagePath, string binaryPath, string 
 
         var importService = Legacy89DiskKitApplication.CreateBootEntryImportService();
         importService.ImportEntry(container, fs, metadata, binary);
-        
         container.Save();
-
         PrintSuccess(localizer, localizer.BootEntryImportedMessage);
     }
     catch (Exception ex)
@@ -1086,22 +1030,22 @@ bootImportCommand.SetHandler(async (string imagePath, string binaryPath, string 
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, bootImportBinaryOption, bootImportMetadataOption, bootImportStartRecordOption);
-
 bootCommand.AddCommand(bootExportCommand);
 bootCommand.AddCommand(bootImportCommand);
 bootCommand.AddCommand(bootShowCommand);
 bootCommand.AddCommand(bootClearCommand);
 bootCommand.AddCommand(bootCloneCommand);
-
 var layoutCommand = new Command("layout", localizer.LayoutCommandDescription);
-var beforeOption = new Option<string>("--before", localizer.LayoutBeforeOptionDescription) { IsRequired = true };
+var beforeOption = new Option<string>("--before", localizer.LayoutBeforeOptionDescription)
+{
+    IsRequired = true
+};
 var sortByOption = new Option<string>("--by", () => "name", localizer.LayoutSortByOptionDescription);
 var layoutInputOption = new Option<string?>("--input", localizer.LayoutInputOptionDescription);
 var layoutOutputOption = new Option<string?>("--output", localizer.LayoutOutputOptionDescription);
 var layoutStdinOption = new Option<bool>("--stdin", localizer.LayoutStdinOptionDescription);
 var layoutStrictOption = new Option<bool>("--strict", localizer.LayoutStrictOptionDescription);
 var labelArgument = new Argument<string>("text", localizer.LabelTextArgumentDescription);
-
 var layoutShowCommand = new Command("show", localizer.LayoutShowCommandDescription);
 layoutShowCommand.AddArgument(imageArgument);
 layoutShowCommand.SetHandler((string imagePath, string? encodingOverride) =>
@@ -1119,13 +1063,11 @@ layoutShowCommand.SetHandler((string imagePath, string? encodingOverride) =>
         var layout = directoryLayoutService.GetLayout(fs);
         foreach (var item in layout.Items.OrderBy(item => item.Order))
         {
-            var displayName = item.Entry != null
-                ? ResolveDisplayName(fs, item.Entry, archiveService, encodingOverride)
-                : item.DisplayName;
+            var displayName = item.Entry != null ? ResolveDisplayName(fs, item.Entry, archiveService, encodingOverride) : item.DisplayName;
             Console.WriteLine($"{item.Order:D3} [{item.Kind}] {DirectoryLayoutService.CreateStableId(item.Id)} {displayName}");
         }
     }
-    catch (InvalidOperationException ex) when (ex.Message.Contains("Directory layout"))
+    catch (InvalidOperationException ex)when (ex.Message.Contains("Directory layout"))
     {
         PrintError(localizer, localizer.LayoutNotSupportedMessage);
     }
@@ -1134,7 +1076,6 @@ layoutShowCommand.SetHandler((string imagePath, string? encodingOverride) =>
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, encodingOption);
-
 var layoutMoveCommand = new Command("move", localizer.LayoutMoveCommandDescription);
 layoutMoveCommand.AddArgument(imageArgument);
 layoutMoveCommand.AddArgument(sourceNameArgument);
@@ -1159,7 +1100,6 @@ layoutMoveCommand.SetHandler((string imagePath, string sourceName, string before
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, sourceNameArgument, beforeOption);
-
 var layoutInsertLabelCommand = new Command("insert-label", localizer.LayoutInsertLabelCommandDescription);
 layoutInsertLabelCommand.AddArgument(imageArgument);
 layoutInsertLabelCommand.AddArgument(labelArgument);
@@ -1184,7 +1124,6 @@ layoutInsertLabelCommand.SetHandler((string imagePath, string labelText, string 
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, labelArgument, beforeOption);
-
 var layoutSortCommand = new Command("sort", localizer.LayoutSortCommandDescription);
 layoutSortCommand.AddArgument(imageArgument);
 layoutSortCommand.AddOption(sortByOption);
@@ -1206,7 +1145,6 @@ layoutSortCommand.SetHandler((string imagePath, string sortBy) =>
             "type" => DirectorySortBy.Type,
             _ => DirectorySortBy.Name
         };
-
         directoryLayoutService.SortEntries(fs, mode);
         PrintSuccess(localizer, localizer.DirectoryEntriesSortedMessage);
     }
@@ -1215,7 +1153,6 @@ layoutSortCommand.SetHandler((string imagePath, string sortBy) =>
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, sortByOption);
-
 var layoutExportCommand = new Command("export", localizer.LayoutExportCommandDescription);
 layoutExportCommand.AddArgument(imageArgument);
 layoutExportCommand.AddOption(layoutOutputOption);
@@ -1246,7 +1183,6 @@ layoutExportCommand.SetHandler((string imagePath, string? outputPath) =>
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, layoutOutputOption);
-
 var layoutValidateCommand = new Command("validate", localizer.LayoutValidateCommandDescription);
 layoutValidateCommand.AddArgument(imageArgument);
 layoutValidateCommand.AddOption(layoutInputOption);
@@ -1273,7 +1209,6 @@ layoutValidateCommand.SetHandler((string imagePath, string? inputPath, bool from
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, layoutInputOption, layoutStdinOption, layoutStrictOption);
-
 var layoutApplyCommand = new Command("apply", localizer.LayoutApplyCommandDescription);
 layoutApplyCommand.AddArgument(imageArgument);
 layoutApplyCommand.AddOption(layoutInputOption);
@@ -1304,7 +1239,6 @@ layoutApplyCommand.SetHandler((string imagePath, string? inputPath, bool fromStd
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, layoutInputOption, layoutStdinOption, layoutStrictOption);
-
 layoutCommand.AddCommand(layoutShowCommand);
 layoutCommand.AddCommand(layoutMoveCommand);
 layoutCommand.AddCommand(layoutInsertLabelCommand);
@@ -1312,7 +1246,6 @@ layoutCommand.AddCommand(layoutSortCommand);
 layoutCommand.AddCommand(layoutExportCommand);
 layoutCommand.AddCommand(layoutValidateCommand);
 layoutCommand.AddCommand(layoutApplyCommand);
-
 var injectCommand = new Command("inject", localizer.FileInjectCommandDescription);
 injectCommand.AddArgument(imageArgument);
 injectCommand.AddArgument(hostFileArgument);
@@ -1330,7 +1263,6 @@ injectCommand.SetHandler((string imagePath, string hostFilePath, string? targetN
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, hostFileArgument, targetFileNameOption, encodingOption);
-
 var checkUpdateCommand = new Command("check-update", localizer.CheckUpdateCommandDescription);
 checkUpdateCommand.SetHandler(async () =>
 {
@@ -1338,10 +1270,8 @@ checkUpdateCommand.SetHandler(async () =>
     {
         var checker = new ReleaseUpdateChecker();
         var result = await checker.CheckAsync();
-
         Console.WriteLine($"{localizer.CheckUpdateCurrentVersionLabel}: {result.CurrentVersion}");
         Console.WriteLine($"{localizer.CheckUpdateLatestVersionLabel}: {result.LatestVersion ?? "unknown"}");
-
         if (!string.IsNullOrWhiteSpace(result.ReleaseUrl))
         {
             Console.WriteLine($"{localizer.CheckUpdateReleaseUrlLabel}: {result.ReleaseUrl}");
@@ -1352,16 +1282,13 @@ checkUpdateCommand.SetHandler(async () =>
             Console.WriteLine($"{localizer.CheckUpdateWindowsMsiLabel}: {result.WindowsMsiUrl}");
         }
 
-        Console.WriteLine(result.IsUpdateAvailable
-            ? localizer.CheckUpdateAvailableMessage
-            : localizer.CheckUpdateUpToDateMessage);
+        Console.WriteLine(result.IsUpdateAvailable ? localizer.CheckUpdateAvailableMessage : localizer.CheckUpdateUpToDateMessage);
     }
     catch (Exception ex)
     {
         PrintError(localizer, ex.Message);
     }
 });
-
 rootCommand.AddCommand(listCommand);
 rootCommand.AddCommand(fullHelpCommand);
 rootCommand.AddCommand(versionCommand);
@@ -1372,9 +1299,7 @@ rootCommand.AddCommand(bootCommand);
 rootCommand.AddCommand(layoutCommand);
 rootCommand.AddCommand(injectCommand);
 rootCommand.AddCommand(checkUpdateCommand);
-
 return await rootCommand.InvokeAsync(effectiveArgs);
-
 static string? TryGetRequestedLanguage(string[] rawArgs)
 {
     for (var i = 0; i < rawArgs.Length; i++)
@@ -1401,11 +1326,9 @@ static string? TryGetRequestedLanguage(string[] rawArgs)
 
 static string[] RewriteLegacyArgs(string[] rawArgs)
 {
-    if (rawArgs.Length >= 3 &&
-        string.Equals(rawArgs[0], "boot", StringComparison.OrdinalIgnoreCase) &&
-        !IsBootSubcommand(rawArgs[1]))
+    if (rawArgs.Length >= 3 && string.Equals(rawArgs[0], "boot", StringComparison.OrdinalIgnoreCase) && !IsBootSubcommand(rawArgs[1]))
     {
-        return [rawArgs[0], "clone", .. rawArgs[1..]];
+        return[rawArgs[0], "clone", ..rawArgs[1..]];
     }
 
     return rawArgs;
@@ -1419,7 +1342,7 @@ static string[] RewriteUpdateCheckArgs(string[] rawArgs)
     }
 
     var filteredArgs = rawArgs.Where(arg => arg != "--check-update").ToArray();
-    return ["check-update", .. filteredArgs];
+    return["check-update", ..filteredArgs];
 }
 
 static string[] RewriteFullHelpArgs(string[] rawArgs)
@@ -1430,7 +1353,7 @@ static string[] RewriteFullHelpArgs(string[] rawArgs)
     }
 
     var filteredArgs = rawArgs.Where(arg => arg != "--full-help").ToArray();
-    return ["full-help", .. filteredArgs];
+    return["full-help", ..filteredArgs];
 }
 
 static string[] RewriteVersionArgs(string[] rawArgs)
@@ -1441,7 +1364,7 @@ static string[] RewriteVersionArgs(string[] rawArgs)
     }
 
     var filteredArgs = rawArgs.Where(arg => arg is not "--version" and not "-v").ToArray();
-    return ["version", .. filteredArgs];
+    return["version", ..filteredArgs];
 }
 
 static string[] RewriteImplicitInspectorArgs(string[] rawArgs)
@@ -1457,7 +1380,7 @@ static string[] RewriteImplicitInspectorArgs(string[] rawArgs)
         return rawArgs;
     }
 
-    return ["disk", "inspector", .. rawArgs];
+    return["disk", "inspector", ..rawArgs];
 }
 
 static bool IsBootSubcommand(string value)
@@ -1467,18 +1390,7 @@ static bool IsBootSubcommand(string value)
 
 static bool IsTopLevelCommand(string value)
 {
-    return value is
-        "list" or
-        "full-help" or
-        "file" or
-        "disk" or
-        "host" or
-        "boot" or
-        "layout" or
-        "inject" or
-        "check-update" or
-        "-h" or
-        "--help";
+    return value is "list" or "full-help" or "file" or "disk" or "host" or "boot" or "layout" or "inject" or "check-update" or "-h" or "--help";
 }
 
 static bool LooksLikeDiskImagePath(string value)
@@ -1489,10 +1401,7 @@ static bool LooksLikeDiskImagePath(string value)
     }
 
     var extension = Path.GetExtension(value);
-    return extension.Equals(".d88", StringComparison.OrdinalIgnoreCase) ||
-           extension.Equals(".d77", StringComparison.OrdinalIgnoreCase) ||
-           extension.Equals(".2d", StringComparison.OrdinalIgnoreCase) ||
-           extension.Equals(".dsk", StringComparison.OrdinalIgnoreCase);
+    return extension.Equals(".d88", StringComparison.OrdinalIgnoreCase) || extension.Equals(".d77", StringComparison.OrdinalIgnoreCase) || extension.Equals(".2d", StringComparison.OrdinalIgnoreCase) || extension.Equals(".dsk", StringComparison.OrdinalIgnoreCase);
 }
 
 static DiskService CreateDiskService()
@@ -1507,8 +1416,7 @@ static DiskType ParseDiskType(string diskTypeName)
         "2d" => DiskType.TwoD,
         "2dd" => DiskType.TwoDD,
         "2hd" => DiskType.TwoHD,
-        _ => throw new InvalidOperationException($"Unsupported disk type: {diskTypeName}")
-    };
+        _ => throw new InvalidOperationException($"Unsupported disk type: {diskTypeName}")};
 }
 
 static EmulatorHostProofExpectation ParseHostBaseline(string baselineName)
@@ -1517,8 +1425,7 @@ static EmulatorHostProofExpectation ParseHostBaseline(string baselineName)
     {
         "event-d88" => EmulatorHostProofExpectationCatalog.EventDrivenFirstProofD88(),
         "event-raw" => EmulatorHostProofExpectationCatalog.EventDrivenSecondProofRaw(),
-        _ => throw new InvalidOperationException($"Unsupported host baseline: {baselineName}")
-    };
+        _ => throw new InvalidOperationException($"Unsupported host baseline: {baselineName}")};
 }
 
 static IFileSystem? RequireFileSystem(IFileSystem? fileSystem, IConsoleLocalizer localizer)
@@ -1575,8 +1482,7 @@ static void RenderFileList(FileListView view, IFileListLocalizer localizer, stri
     }
 
     Console.WriteLine(FormatRow(view.Columns.Select(column => column.Header).ToArray(), view.Columns, widths));
-    Console.WriteLine(string.Join("-+-", widths.Select(width => new string('-', width))));
-
+    Console.WriteLine(string.Join("-+-", widths.Select(width => new string ('-', width))));
     foreach (var row in view.Rows)
     {
         Console.WriteLine(FormatRow(row.Values, view.Columns, widths));
@@ -1659,24 +1565,18 @@ static string FormatRow(IReadOnlyList<string> values, IReadOnlyList<FileListColu
     var cells = new string[values.Count];
     for (int i = 0; i < values.Count; i++)
     {
-        cells[i] = columns[i].RightAlign
-            ? DisplayWidthUtility.PadLeft(values[i], widths[i])
-            : DisplayWidthUtility.PadRight(values[i], widths[i]);
+        cells[i] = columns[i].RightAlign ? DisplayWidthUtility.PadLeft(values[i], widths[i]) : DisplayWidthUtility.PadRight(values[i], widths[i]);
     }
 
     return string.Join(" | ", cells);
 }
 
-static (DiskFileSystemInfo fsInfo, FileListEntryContext[] entries) BuildFileListEntries(
-    IFileSystem fs,
-    ArchiveService archiveService,
-    string? encodingOverride)
+static (DiskFileSystemInfo fsInfo, FileListEntryContext[] entries) BuildFileListEntries(IFileSystem fs, ArchiveService archiveService, string? encodingOverride)
 {
     var fsInfo = fs.GetFileSystemInfo();
     var files = fs.GetFiles().ToArray();
     var entries = new List<FileListEntryContext>(files.Length);
     var encoder = archiveService.EncoderRegistry.GetEncoder(encodingOverride ?? fsInfo.DefaultEncodingId);
-
     foreach (var file in files)
     {
         string displayName = file.FullName;
@@ -1694,12 +1594,10 @@ static (DiskFileSystemInfo fsInfo, FileListEntryContext[] entries) BuildFileList
         long? actualSize = null;
         if (fsInfo.FileSystemName == "Hu-BASIC")
         {
-            actualSize = IsProbablyVirtualLabel(file)
-                ? 0
-                : fs.ReadFile(file.FullName).Length;
+            actualSize = IsProbablyVirtualLabel(file) ? 0 : fs.ReadFile(file.FullName).Length;
         }
 
-        var (directoryOffset, bodyOffset) = ResolveFileOffsets(fs, file);
+        var(directoryOffset, bodyOffset) = ResolveFileOffsets(fs, file);
         entries.Add(new FileListEntryContext(file, displayName, displayBaseName, displayExtension, actualSize, directoryOffset, bodyOffset));
     }
 
@@ -1712,8 +1610,7 @@ static (long? DirectoryOffset, long? BodyOffset) ResolveFileOffsets(IFileSystem 
     {
         HuBasicFileSystem huBasic => ResolveHuBasicOffsets(huBasic, file),
         XDosFileSystem xdos => ResolveXDosOffsets(xdos, file),
-        _ => (null, null)
-    };
+        _ => (null, null)};
 }
 
 static (long? DirectoryOffset, long? BodyOffset) ResolveHuBasicOffsets(HuBasicFileSystem fs, FileEntry file)
@@ -1770,14 +1667,10 @@ static bool IsProbablyVirtualLabel(FileEntry entry)
     }
 
     var looksDecorative = entry.FullName.All(ch => ch is '-' or '.' or ' ');
-    var hasSentinelAddresses = entry.LoadAddress == 0xFFFF &&
-                               entry.ExecutionAddress == 0xFFFF &&
-                               (entry.EndAddress == 0xFFFF || entry.Size == 0);
+    var hasSentinelAddresses = entry.LoadAddress == 0xFFFF && entry.ExecutionAddress == 0xFFFF && (entry.EndAddress == 0xFFFF || entry.Size == 0);
     var suspiciousCluster = entry.StartCluster >= 0x7FFF;
     var labelFlags = metadata.HasPassword && metadata.IsWriteProtected && !metadata.IsHidden && !metadata.IsVerify;
-
-    return (looksDecorative || suspiciousCluster || hasSentinelAddresses) &&
-           (labelFlags || suspiciousCluster || hasSentinelAddresses);
+    return (looksDecorative || suspiciousCluster || hasSentinelAddresses) && (labelFlags || suspiciousCluster || hasSentinelAddresses);
 }
 
 static bool IsLikelyAsciiPayload(byte[] data)
@@ -1836,8 +1729,7 @@ static string ParseImageFormat(string imageFormatName)
         "d77" or ".d77" => ".d77",
         "2d" or ".2d" => ".2d",
         "dsk" or ".dsk" => ".dsk",
-        _ => throw new InvalidOperationException($"Unsupported image format: {imageFormatName}")
-    };
+        _ => throw new InvalidOperationException($"Unsupported image format: {imageFormatName}")};
 }
 
 static void PrintFullHelp(Command rootCommand, IConsoleLocalizer localizer)
@@ -1851,11 +1743,9 @@ static void PrintFullHelp(Command rootCommand, IConsoleLocalizer localizer)
 
 static void PrintCommandHelpRecursive(Command command, string commandPath, int depth)
 {
-    var indent = new string(' ', depth * 2);
+    var indent = new string (' ', depth * 2);
     var commandAliases = string.Join(", ", command.Aliases.Where(x => !string.Equals(x, command.Name, StringComparison.OrdinalIgnoreCase)));
-    Console.WriteLine(string.IsNullOrWhiteSpace(commandAliases)
-        ? $"{indent}{commandPath}"
-        : $"{indent}{commandPath} (aliases: {commandAliases})");
+    Console.WriteLine(string.IsNullOrWhiteSpace(commandAliases) ? $"{indent}{commandPath}" : $"{indent}{commandPath} (aliases: {commandAliases})");
     if (!string.IsNullOrWhiteSpace(command.Description))
     {
         Console.WriteLine($"{indent}  {command.Description}");
@@ -1882,10 +1772,7 @@ static void PrintCommandHelpRecursive(Command command, string commandPath, int d
         }
     }
 
-    var subcommands = command.Subcommands
-        .Where(x => !string.Equals(x.Name, "help", StringComparison.OrdinalIgnoreCase))
-        .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
-        .ToArray();
+    var subcommands = command.Subcommands.Where(x => !string.Equals(x.Name, "help", StringComparison.OrdinalIgnoreCase)).OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase).ToArray();
     if (subcommands.Length == 0)
     {
         return;
@@ -1906,22 +1793,10 @@ static void PrintCommandHelpRecursive(Command command, string commandPath, int d
     }
 }
 
-static void PrintInspector(
-    string imagePath,
-    string detail,
-    string outputFormat,
-    string? fileSystemName,
-    string? encodingOverride,
-    IConsoleLocalizer localizer,
-    DiskInspectionService diskInspectionService,
-    ArchiveService archiveService,
-    HuBasicMetadataService huBasicMetadataService,
-    IBootProfileService bootProfileService,
-    ExplicitFileSystemResolver explicitFileSystemResolver)
+static void PrintInspector(string imagePath, string detail, string outputFormat, string? fileSystemName, string? encodingOverride, IConsoleLocalizer localizer, DiskInspectionService diskInspectionService, ArchiveService archiveService, HuBasicMetadataService huBasicMetadataService, IBootProfileService bootProfileService, ExplicitFileSystemResolver explicitFileSystemResolver)
 {
     using var diskService = CreateDiskService();
     var container = diskService.OpenDisk(imagePath, true);
-
     var metadata = diskService.GetContainerMetadata() ?? throw new InvalidOperationException("Container metadata is unavailable.");
     var fileSystem = ResolveFileSystem(diskService, container, fileSystemName, explicitFileSystemResolver);
     var normalizedDetail = detail.Trim().ToLowerInvariant();
@@ -1930,13 +1805,7 @@ static void PrintInspector(
         throw new InvalidOperationException($"Unsupported detail level: {detail}");
     }
 
-    var report = diskInspectionService.BuildReport(
-        metadata,
-        fileSystem,
-        fileSystem != null ? bootProfileService.GetBootProfile(fileSystem) : null,
-        normalizedDetail,
-        encodingOverride ?? fileSystem?.GetFileSystemInfo().DefaultEncodingId ?? "unknown");
-
+    var report = diskInspectionService.BuildReport(metadata, fileSystem, fileSystem != null ? bootProfileService.GetBootProfile(fileSystem) : null, normalizedDetail, encodingOverride ?? fileSystem?.GetFileSystemInfo().DefaultEncodingId ?? "unknown");
     var mergedItems = report.Items.ToList();
     if (fileSystem != null && normalizedDetail == "full")
     {
@@ -1945,14 +1814,12 @@ static void PrintInspector(
             var bootRecord = huBasicMetadataService.GetBootRecordInfo(fileSystem);
             if (bootRecord is not null)
             {
-                var fullName = string.IsNullOrWhiteSpace(bootRecord.Extension)
-                    ? bootRecord.Name
-                    : $"{bootRecord.Name}.{bootRecord.Extension}";
+                var fullName = string.IsNullOrWhiteSpace(bootRecord.Extension) ? bootRecord.Name : $"{bootRecord.Name}.{bootRecord.Extension}";
                 mergedItems.Add(new InspectionItem("Boot", "Boot File", fullName));
             }
         }
 
-        var (_, entries) = BuildFileListEntries(fileSystem, archiveService, encodingOverride);
+        var(_, entries) = BuildFileListEntries(fileSystem, archiveService, encodingOverride);
         foreach (var entry in entries.Take(10))
         {
             mergedItems.Add(new InspectionItem("Preview", "File", entry.DisplayName));
@@ -1962,17 +1829,7 @@ static void PrintInspector(
     RenderInspectionReport(report with { Items = mergedItems }, outputFormat);
 }
 
-static void PrintFileInspector(
-    string imagePath,
-    string diskFileName,
-    string detail,
-    string outputFormat,
-    string? fileSystemName,
-    string? encodingOverride,
-    IConsoleLocalizer localizer,
-    ArchiveService archiveService,
-    FileInspectionService fileInspectionService,
-    ExplicitFileSystemResolver explicitFileSystemResolver)
+static void PrintFileInspector(string imagePath, string diskFileName, string detail, string outputFormat, string? fileSystemName, string? encodingOverride, IConsoleLocalizer localizer, ArchiveService archiveService, FileInspectionService fileInspectionService, ExplicitFileSystemResolver explicitFileSystemResolver)
 {
     var normalizedDetail = detail.Trim().ToLowerInvariant();
     if (normalizedDetail is not ("short" or "normal" or "full"))
@@ -1988,10 +1845,8 @@ static void PrintFileInspector(
         return;
     }
 
-    var (_, entries) = BuildFileListEntries(fs, archiveService, encodingOverride);
-    var target = entries.FirstOrDefault(x =>
-        x.DisplayName.Equals(diskFileName, StringComparison.OrdinalIgnoreCase) ||
-        x.Entry.FullName.Equals(diskFileName, StringComparison.OrdinalIgnoreCase));
+    var(_, entries) = BuildFileListEntries(fs, archiveService, encodingOverride);
+    var target = entries.FirstOrDefault(x => x.DisplayName.Equals(diskFileName, StringComparison.OrdinalIgnoreCase) || x.Entry.FullName.Equals(diskFileName, StringComparison.OrdinalIgnoreCase));
     if (target == null)
     {
         throw new FileNotFoundException($"File not found: {diskFileName}");
@@ -2001,11 +1856,7 @@ static void PrintFileInspector(
     RenderInspectionReport(report, outputFormat);
 }
 
-static IFileSystem? ResolveFileSystem(
-    DiskService diskService,
-    IDiskContainer container,
-    string? fileSystemName,
-    ExplicitFileSystemResolver explicitFileSystemResolver)
+static IFileSystem? ResolveFileSystem(DiskService diskService, IDiskContainer container, string? fileSystemName, ExplicitFileSystemResolver explicitFileSystemResolver)
 {
     if (string.IsNullOrWhiteSpace(fileSystemName))
     {
@@ -2182,9 +2033,7 @@ static byte[] ReadDumpBytes(string imagePath, string locationText, string length
     {
         "linear-sector" => location.LinearSector,
         "chs" => FindSectorIndex(sectors, location.Cylinder, location.Head, location.Sector),
-        _ => throw new InvalidOperationException("Unsupported dump location.")
-    };
-
+        _ => throw new InvalidOperationException("Unsupported dump location.")};
     if (startIndex < 0 || startIndex >= sectors.Count)
     {
         throw new InvalidOperationException("Requested dump location is outside the disk image.");
@@ -2216,11 +2065,7 @@ static byte[] ReadDumpBytes(string imagePath, string locationText, string length
 
 static List<SectorInfo> GetOrderedSectors(IDiskContainer container)
 {
-    return container.GetAllSectors()
-        .OrderBy(x => x.Cylinder)
-        .ThenBy(x => x.Head)
-        .ThenBy(x => x.Sector)
-        .ToList();
+    return container.GetAllSectors().OrderBy(x => x.Cylinder).ThenBy(x => x.Head).ThenBy(x => x.Sector).ToList();
 }
 
 static int FindSectorIndex(IReadOnlyList<SectorInfo> sectors, int cylinder, int head, int sector)
@@ -2253,10 +2098,7 @@ static (string Kind, long Offset, int LinearSector, int Cylinder, int Head, int 
             throw new InvalidOperationException($"Unsupported dump location: {text}");
         }
 
-        return ("chs", 0, 0,
-            ParsePrefixedInt(parts[0], "cylinder"),
-            ParsePrefixedInt(parts[1], "side"),
-            ParsePrefixedInt(parts[2], "sector"));
+        return ("chs", 0, 0, ParsePrefixedInt(parts[0], "cylinder"), ParsePrefixedInt(parts[1], "side"), ParsePrefixedInt(parts[2], "sector"));
     }
 
     if (int.TryParse(value, out var linearSector))
@@ -2305,16 +2147,12 @@ static void PrintHexDump(byte[] bytes)
     {
         var chunk = bytes.Skip(offset).Take(bytesPerLine).ToArray();
         var hex = string.Join(" ", chunk.Select(x => x.ToString("X2")));
-        var ascii = new string(chunk.Select(x => x >= 0x20 && x <= 0x7E ? (char)x : '.').ToArray());
+        var ascii = new string (chunk.Select(x => x >= 0x20 && x <= 0x7E ? (char)x : '.').ToArray());
         Console.WriteLine($"{offset:X8}  {hex.PadRight(bytesPerLine * 3 - 1)}  {ascii}");
     }
 }
 
-static string ResolveDisplayName(
-    IFileSystem fs,
-    FileEntry file,
-    ArchiveService archiveService,
-    string? encodingOverride)
+static string ResolveDisplayName(IFileSystem fs, FileEntry file, ArchiveService archiveService, string? encodingOverride)
 {
     var fsInfo = fs.GetFileSystemInfo();
     var encoder = archiveService.EncoderRegistry.GetEncoder(encodingOverride ?? fsInfo.DefaultEncodingId);
@@ -2353,9 +2191,7 @@ static void RenderValidationResult(DirectoryLayoutValidationResult result, bool 
 {
     foreach (var message in result.Messages)
     {
-        var level = message.Severity == DirectoryLayoutValidationSeverity.Error
-            ? localizer.ValidationErrorLabel
-            : localizer.ValidationWarningLabel;
+        var level = message.Severity == DirectoryLayoutValidationSeverity.Error ? localizer.ValidationErrorLabel : localizer.ValidationWarningLabel;
         var line = message.LineNumber > 0 ? $"L{message.LineNumber}: " : string.Empty;
         Console.WriteLine($"{level}: {line}{message.Message}");
     }

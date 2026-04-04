@@ -6,13 +6,12 @@ using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Domain.FileSystem.Interface.Layout;
 using Legacy89DiskKit.Domain.FileSystem.Model;
 using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
+using Legacy89DiskKit.FileSystem.Application;
 
 namespace Legacy89DiskKit.Application.FileSystem;
-
 public class DirectoryLayoutService
 {
     private readonly EncoderRegistry _encoderRegistry;
-
     public DirectoryLayoutService()
     {
         _encoderRegistry = new EncoderRegistry();
@@ -32,7 +31,6 @@ public class DirectoryLayoutService
     {
         var layout = GetLayout(fileSystem);
         var lines = new List<string>(layout.Items.Count);
-
         foreach (var item in layout.Items.OrderBy(item => item.Order))
         {
             if (item.Kind == DirectoryLayoutItemKind.VirtualLabel)
@@ -78,12 +76,10 @@ public class DirectoryLayoutService
         var layout = provider.ReadDirectoryLayout();
         var source = FindByDisplayName(layout, sourceName);
         var target = FindByDisplayName(layout, targetName);
-
         var items = layout.Items.ToList();
         items.Remove(source);
         var targetIndex = items.FindIndex(item => item.Id == target.Id);
         items.Insert(targetIndex, source);
-
         var updated = Reindex(layout, items);
         provider.ApplyDirectoryLayout(updated);
         return updated;
@@ -98,7 +94,6 @@ public class DirectoryLayoutService
         var targetIndex = items.FindIndex(item => item.Id == target.Id);
         var label = CreateLabel(fileSystem, labelText, items.Count);
         items.Insert(targetIndex, label);
-
         var updated = Reindex(layout, items);
         provider.ApplyDirectoryLayout(updated);
         return updated;
@@ -108,18 +103,8 @@ public class DirectoryLayoutService
     {
         var provider = GetProvider(fileSystem);
         var layout = provider.ReadDirectoryLayout();
-
-        var virtualPositions = layout.Items
-            .Select((item, index) => new { item, index })
-            .Where(x => x.item.Kind == DirectoryLayoutItemKind.VirtualLabel)
-            .ToDictionary(x => x.index, x => x.item);
-
-        var sortedFiles = layout.Items
-            .Where(item => item.Kind == DirectoryLayoutItemKind.FileEntry)
-            .OrderBy(item => GetSortKey(item, sortBy), StringComparer.OrdinalIgnoreCase)
-            .ThenBy(item => item.DisplayName, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
+        var virtualPositions = layout.Items.Select((item, index) => new { item, index }).Where(x => x.item.Kind == DirectoryLayoutItemKind.VirtualLabel).ToDictionary(x => x.index, x => x.item);
+        var sortedFiles = layout.Items.Where(item => item.Kind == DirectoryLayoutItemKind.FileEntry).OrderBy(item => GetSortKey(item, sortBy), StringComparer.OrdinalIgnoreCase).ThenBy(item => item.DisplayName, StringComparer.OrdinalIgnoreCase).ToList();
         var rebuilt = new List<DirectoryLayoutItem>(layout.Items.Count);
         var fileIndex = 0;
         for (var i = 0; i < layout.Items.Count; i++)
@@ -150,14 +135,11 @@ public class DirectoryLayoutService
         }
 
         var encoder = ResolveEncoder(fsInfo);
-        var filesByStableId = layout.Items
-            .Where(item => item.Kind == DirectoryLayoutItemKind.FileEntry)
-            .ToDictionary(item => CreateStableId(item.Id), item => item, StringComparer.OrdinalIgnoreCase);
+        var filesByStableId = layout.Items.Where(item => item.Kind == DirectoryLayoutItemKind.FileEntry).ToDictionary(item => CreateStableId(item.Id), item => item, StringComparer.OrdinalIgnoreCase);
         var seenIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var usedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var proposedItems = new List<DirectoryLayoutItem>();
         var consumedFileIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
         foreach (var entry in plan.Entries)
         {
             if (entry.IsLabel)
@@ -202,11 +184,7 @@ public class DirectoryLayoutService
                 continue;
             }
 
-            proposedItems.Add(item with
-            {
-                DisplayName = renamedEntry.FullName,
-                Entry = renamedEntry
-            });
+            proposedItems.Add(item with { DisplayName = renamedEntry.FullName, Entry = renamedEntry });
         }
 
         foreach (var item in layout.Items.Where(item => item.Kind == DirectoryLayoutItemKind.FileEntry))
@@ -233,10 +211,7 @@ public class DirectoryLayoutService
             messages.Add(new DirectoryLayoutValidationMessage(DirectoryLayoutValidationSeverity.Error, 0, $"Directory layout exceeds capacity: {proposedItems.Count}/{capacity - 1}"));
         }
 
-        var proposedLayout = messages.Any(message => message.Severity == DirectoryLayoutValidationSeverity.Error)
-            ? null
-            : Reindex(layout, proposedItems);
-
+        var proposedLayout = messages.Any(message => message.Severity == DirectoryLayoutValidationSeverity.Error) ? null : Reindex(layout, proposedItems);
         return new DirectoryLayoutValidationResult(plan, messages, proposedLayout);
     }
 
@@ -244,7 +219,6 @@ public class DirectoryLayoutService
     {
         var entries = new List<DirectoryLayoutTextPlanEntry>();
         var lines = text.Replace("\r\n", "\n").Split('\n');
-
         for (var i = 0; i < lines.Length; i++)
         {
             var lineNumber = i + 1;
@@ -288,9 +262,7 @@ public class DirectoryLayoutService
 
     private static DirectoryLayoutItem FindByDisplayName(DirectoryEntryLayout layout, string displayName)
     {
-        var item = layout.Items.FirstOrDefault(candidate =>
-            candidate.DisplayName.Equals(displayName, StringComparison.OrdinalIgnoreCase));
-
+        var item = layout.Items.FirstOrDefault(candidate => candidate.DisplayName.Equals(displayName, StringComparison.OrdinalIgnoreCase));
         if (item == null)
         {
             throw new InvalidOperationException($"Directory entry not found: {displayName}");
@@ -303,9 +275,7 @@ public class DirectoryLayoutService
     {
         return layout with
         {
-            Items = items
-                .Select((item, index) => item with { Order = index })
-                .ToArray()
+            Items = items.Select((item, index) => item with { Order = index }).ToArray()
         };
     }
 
@@ -314,9 +284,7 @@ public class DirectoryLayoutService
         return sortBy switch
         {
             DirectorySortBy.Extension => item.Entry?.Extension ?? item.VirtualLabel?.Extension ?? string.Empty,
-            DirectorySortBy.Type => item.Entry?.FileSystemMetadata is HuBasicFileMetadata metadata
-                ? metadata.FileType.ToString()
-                : item.Kind.ToString(),
+            DirectorySortBy.Type => item.Entry?.FileSystemMetadata is HuBasicFileMetadata metadata ? metadata.FileType.ToString() : item.Kind.ToString(),
             _ => item.Entry?.FileName ?? item.VirtualLabel?.FileName ?? item.DisplayName
         };
     }
@@ -343,7 +311,6 @@ public class DirectoryLayoutService
 
         byte[]? rawName = entry.RawFileName;
         byte[]? rawExtension = entry.RawExtension;
-
         if (fsInfo.FileSystemName == "Hu-BASIC")
         {
             rawName = EncodePadded(encoder, parts.Value.Name, 13);
@@ -370,14 +337,7 @@ public class DirectoryLayoutService
         var encoder = ResolveEncoder(fsInfo);
         var label = ParseLabelText(text, fsInfo, encoder);
         var id = $"label:{seed + 1}:{label.FileName}.{label.Extension}";
-        return new DirectoryLayoutItem(
-            id,
-            seed,
-            DirectoryLayoutItemKind.VirtualLabel,
-            BuildDisplayName(label.FileName, label.Extension),
-            null,
-            label
-        );
+        return new DirectoryLayoutItem(id, seed, DirectoryLayoutItemKind.VirtualLabel, BuildDisplayName(label.FileName, label.Extension), null, label);
     }
 
     private static (string Name, string Extension)? SplitDisplayName(string displayName, DiskFileSystemInfo fsInfo)
@@ -436,7 +396,6 @@ public class DirectoryLayoutService
     }
 
     private static string NormalizeHostText(string text) => text;
-
     private static byte[] EncodePadded(ICharacterEncoder encoder, string text, int width)
     {
         var encoded = encoder.EncodeText(text);
@@ -463,9 +422,7 @@ public class DirectoryLayoutService
 
     private static int GetDirectoryCapacity(DirectoryEntryLayout layout, IFileSystem fileSystem)
     {
-        return fileSystem.GetFileSystemInfo().FileSystemName == "Hu-BASIC"
-            ? 128
-            : layout.Items.Count + 1;
+        return fileSystem.GetFileSystemInfo().FileSystemName == "Hu-BASIC" ? 128 : layout.Items.Count + 1;
     }
 
     private static string BuildDisplayName(string fileName, string extension)
@@ -509,7 +466,6 @@ public class DirectoryLayoutService
 
         fileName = TrimToEncodedBytes(fileName.Trim(), encoder, 13);
         extension = TrimToEncodedBytes(extension.Trim(), encoder, 3);
-
         if (string.IsNullOrWhiteSpace(fileName))
         {
             throw new InvalidOperationException("Label name is required.");
