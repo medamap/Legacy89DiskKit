@@ -1,3 +1,4 @@
+using Legacy89DiskKit.Application;
 using Legacy89DiskKit.CharacterEncoding.Application;
 using Legacy89DiskKit.FileSystem.Application;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
@@ -11,7 +12,7 @@ using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.XDos.Provider;
 
-namespace Legacy89DiskKit.Application.Native;
+namespace Legacy89DiskKit.Native.Application;
 
 public sealed class ManagedNativeBridgeBackend : INativeBridgeBackend
 {

@@ -7,7 +7,7 @@ using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
 using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
 using Legacy89DiskKit.Infrastructure.DiskImage.Factory;
 using Legacy89DiskKit.CharacterEncoding.Application;
-using Legacy89DiskKit.Application.Native;
+using Legacy89DiskKit.Native.Application;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
 using Legacy89DiskKit.FileSystem.Application;
 

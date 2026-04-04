@@ -1,4 +1,4 @@
-using Legacy89DiskKit.Application.Native;
+using Legacy89DiskKit.Native.Application;
 using Xunit;
 using Legacy89DiskKit.NativeInterop.Core;
 using Legacy89DiskKit.Application;

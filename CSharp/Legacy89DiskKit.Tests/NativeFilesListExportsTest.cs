@@ -1,4 +1,4 @@
-using Legacy89DiskKit.Application.Native;
+using Legacy89DiskKit.Native.Application;
 using Legacy89DiskKit.Application;
 using Legacy89DiskKit.DiskImage.Application;
 using Legacy89DiskKit.Domain.FileSystem.Model;

@@ -1,5 +1,5 @@
 using Legacy89DiskKit.DiskImage.Application;
-using Legacy89DiskKit.Application.Native;
+using Legacy89DiskKit.Native.Application;
 using Legacy89DiskKit.NativeInterop.Core;
 using Legacy89DiskKit.NativeInterop.Exports;
 using Xunit;

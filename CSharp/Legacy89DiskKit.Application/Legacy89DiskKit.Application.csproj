@@ -182,4 +182,14 @@
       <Link>Drive/Application/MountedMediumBindingService.cs</Link>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/Native/Application/ManagedNativeBridgeBackend.cs">
+      <Link>Native/Application/ManagedNativeBridgeBackend.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/Native/Application/ManagedNativeDiskSession.cs">
+      <Link>Native/Application/ManagedNativeDiskSession.cs</Link>
+    </Compile>
+  </ItemGroup>
 </Project>

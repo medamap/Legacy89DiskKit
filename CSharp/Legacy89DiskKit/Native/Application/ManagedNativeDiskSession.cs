@@ -3,7 +3,7 @@ using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Domain.Native;
 
-namespace Legacy89DiskKit.Application.Native;
+namespace Legacy89DiskKit.Native.Application;
 
 public sealed class ManagedNativeDiskSession : INativeDiskSession, IDiskContainer, IGeometryRebuildableDiskContainer
 {

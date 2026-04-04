@@ -1,4 +1,4 @@
-using Legacy89DiskKit.Application.Native;
+using Legacy89DiskKit.Native.Application;
 using System.Runtime.InteropServices;
 using Legacy89DiskKit.Application;
 using Legacy89DiskKit.DiskImage.Application;
