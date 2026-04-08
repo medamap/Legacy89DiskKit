@@ -1,4 +1,6 @@
 using System.CommandLine;
+using System.CommandLine.IO;
+using System.CommandLine.Parsing;
 using System.Text;
 using Legacy89DiskKit.Cli;
 using Legacy89DiskKit.CharacterEncoding.Application;
@@ -9,6 +11,7 @@ using Legacy89DiskKit.Archive.Application;
 using Legacy89DiskKit.Fdc.Application.Hosts.Scripting;
 using Legacy89DiskKit.Cli.Presentation.FileSystem;
 using Legacy89DiskKit.Domain.CharacterEncoding.Interface;
+using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
 using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
@@ -19,6 +22,9 @@ using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.XDos;
+using Legacy89DiskKit.LogSystem.Domain;
+using Legacy89DiskKit.LogSystem.Domain.Provider;
+using Legacy89DiskKit.LogSystem.Infrastructure.Provider.Common;
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 var requestedLanguage = TryGetRequestedLanguage(args);
@@ -50,6 +56,36 @@ rootCommand.AddGlobalOption(nativeOption);
 rootCommand.AddGlobalOption(checkUpdateOption);
 rootCommand.AddGlobalOption(fullHelpOption);
 rootCommand.AddGlobalOption(outputFormatOption);
+var logOption = new Option<string?>("--log", "Path to log file. Without a path, uses the OS-specific default location.") { Arity = ArgumentArity.ZeroOrOne };
+var logLevelOption = new Option<string>("--log-level", () => "Info", "Log level: Debug, Info, Warning, Error");
+var imageFileOverwriteOption = new Option<bool>("--image-file-overwrite", "Overwrite existing image files instead of generating numbered aliases");
+rootCommand.AddGlobalOption(logOption);
+rootCommand.AddGlobalOption(logLevelOption);
+rootCommand.AddGlobalOption(imageFileOverwriteOption);
+
+// Parse once to extract global option values via System.CommandLine
+var parseResult = rootCommand.Parse(effectiveArgs);
+var logFilePath = parseResult.GetValueForOption(logOption);
+var hasLogOption = parseResult.HasOption(logOption);
+var logLevelStr = parseResult.GetValueForOption(logLevelOption);
+var imageFileOverwrite = parseResult.GetValueForOption(imageFileOverwriteOption);
+
+var minLogType = logLevelStr?.Trim().ToLowerInvariant() switch
+{
+    "debug" => LogType.Debug,
+    "warning" => LogType.Warning,
+    "error" => LogType.Error,
+    _ => LogType.Info
+};
+
+var handlers = new List<ILogMessageHandler> { new ConsoleLogMessageHandler { MinimumLevel = minLogType } };
+if (hasLogOption)
+{
+    var resolvedLogPath = string.IsNullOrEmpty(logFilePath) ? GetDefaultLogFilePath() : logFilePath;
+    handlers.Add(new FileLogMessageHandler(resolvedLogPath, rotationEnabled: string.IsNullOrEmpty(logFilePath)) { MinimumLevel = minLogType });
+}
+CliLog.Initialize(handlers, minLogType);
+
 // Initialize backend based on command line args
 if (effectiveArgs.Contains("--native"))
 {
@@ -165,6 +201,8 @@ fileInjectCommand.AddOption(tabWidthOption);
 fileInjectCommand.AddOption(truncateTextOnOverflowOption);
 fileInjectCommand.SetHandler((string imagePath, string hostFilePath, string? targetName, string? fileSystemName, string tabMode, int tabWidth, bool truncateTextOnOverflow, string? encodingOverride) =>
 {
+    var normalizedName = targetName ?? Path.GetFileName(hostFilePath);
+    CliLog.Info($"[file inject] Starting: host={hostFilePath} disk={imagePath} target={normalizedName}", "Command");
     try
     {
         RejectWriteToMultiSlotD88(imagePath, localizer);
@@ -173,32 +211,41 @@ fileInjectCommand.SetHandler((string imagePath, string hostFilePath, string? tar
         var fs = RequireFileSystem(ResolveFileSystem(diskService, container, fileSystemName, explicitFileSystemResolver), localizer);
         if (fs == null)
         {
+            CliLog.Error($"[file inject] Failed: filesystem not available for {imagePath}", "Command");
             return;
         }
 
         var fsInfo = fs.GetFileSystemInfo();
         var encodingId = encodingOverride ?? fsInfo.DefaultEncodingId;
         var existingNames = new HashSet<string>(fs.GetFiles().Select(f => f.FullName.ToUpperInvariant()));
-        var sourceName = targetName ?? Path.GetFileName(hostFilePath);
+        var sourceName = normalizedName;
         var normalizationService = new FileNameNormalizationService(archiveService.EncoderRegistry);
-        var normalizedName = normalizationService.Normalize(sourceName, encodingId, fsInfo.MaxBaseNameLength, fsInfo.MaxExtensionLength, existingNames);
+        var resolvedName = ResolveImageFileTargetName(sourceName, encodingId, fsInfo, existingNames, normalizationService, archiveService.EncoderRegistry, imageFileOverwrite);
+
+        if (imageFileOverwrite && existingNames.Contains(resolvedName.ToUpperInvariant()))
+        {
+            CliLog.Warning($"[file inject] (OVERWRITTEN) {resolvedName} already exists on {imagePath}", "Command");
+        }
+
         var data = File.ReadAllBytes(hostFilePath);
         var isAscii = IsLikelyAsciiPayload(data);
         if (isAscii)
         {
-            CreateFileTransferService(fsInfo, encodingOverride).ImportFile(fs, hostFilePath, normalizedName, true, new TextTransferOptions(TabMode: tabMode, TabWidth: tabWidth, TruncateOnOverflow: truncateTextOnOverflow));
+            CreateFileTransferService(fsInfo, encodingOverride).ImportFile(fs, hostFilePath, resolvedName, true, new TextTransferOptions(TabMode: tabMode, TabWidth: tabWidth, TruncateOnOverflow: truncateTextOnOverflow));
         }
         else
         {
             var attributes = fs.CreateDefaultAttributes(false);
-            fs.WriteFile(normalizedName, data, attributes);
+            fs.WriteFile(resolvedName, data, attributes);
         }
 
         diskService.Session?.Save();
+        CliLog.Info($"[file inject] Finished: {resolvedName} -> {imagePath}", "Command");
         PrintSuccess(localizer, localizer.FileInjectedMessage);
     }
     catch (Exception ex)
     {
+        CliLog.Error($"[file inject] Failed: {ex.Message}", "Command");
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, hostFileArgument, targetFileNameOption, explicitFileSystemOption, tabModeOption, tabWidthOption, truncateTextOnOverflowOption, encodingOption);
@@ -207,6 +254,7 @@ fileDeleteCommand.AddArgument(imageArgument);
 fileDeleteCommand.AddArgument(diskFileArgument);
 fileDeleteCommand.SetHandler((string imagePath, string diskFileName) =>
 {
+    CliLog.Info($"[file delete] Starting: {diskFileName} from {imagePath}", "Command");
     try
     {
         using var diskService = CreateDiskService();
@@ -214,14 +262,17 @@ fileDeleteCommand.SetHandler((string imagePath, string diskFileName) =>
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
+            CliLog.Error($"[file delete] Failed: filesystem not available for {imagePath}", "Command");
             return;
         }
 
         fs.DeleteFile(diskFileName);
+        CliLog.Info($"[file delete] Finished: {diskFileName} removed from {imagePath}", "Command");
         PrintSuccess(localizer, localizer.FileDeletedMessage);
     }
     catch (Exception ex)
     {
+        CliLog.Error($"[file delete] Failed: {ex.Message}", "Command");
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, diskFileArgument);
@@ -231,6 +282,7 @@ fileRenameCommand.AddArgument(sourceNameArgument);
 fileRenameCommand.AddArgument(newNameArgument);
 fileRenameCommand.SetHandler((string imagePath, string sourceName, string newName) =>
 {
+    CliLog.Info($"[file rename] Starting: {sourceName} -> {newName} on {imagePath}", "Command");
     try
     {
         using var diskService = CreateDiskService();
@@ -238,14 +290,17 @@ fileRenameCommand.SetHandler((string imagePath, string sourceName, string newNam
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
+            CliLog.Error($"[file rename] Failed: filesystem not available for {imagePath}", "Command");
             return;
         }
 
         fs.RenameFile(sourceName, newName);
+        CliLog.Info($"[file rename] Finished: {sourceName} -> {newName} on {imagePath}", "Command");
         PrintSuccess(localizer, localizer.FileRenamedMessage);
     }
     catch (Exception ex)
     {
+        CliLog.Error($"[file rename] Failed: {ex.Message}", "Command");
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, sourceNameArgument, newNameArgument);
@@ -255,6 +310,7 @@ fileCopyCommand.AddArgument(sourceNameArgument);
 fileCopyCommand.AddArgument(targetNameArgument);
 fileCopyCommand.SetHandler((string imagePath, string sourceName, string targetName) =>
 {
+    CliLog.Info($"[file copy] Starting: {sourceName} -> {targetName} on {imagePath}", "Command");
     try
     {
         using var diskService = CreateDiskService();
@@ -262,14 +318,17 @@ fileCopyCommand.SetHandler((string imagePath, string sourceName, string targetNa
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
+            CliLog.Error($"[file copy] Failed: filesystem not available for {imagePath}", "Command");
             return;
         }
 
         fs.CopyFile(sourceName, targetName);
+        CliLog.Info($"[file copy] Finished: {sourceName} -> {targetName} on {imagePath}", "Command");
         PrintSuccess(localizer, localizer.FileCopiedMessage);
     }
     catch (Exception ex)
     {
+        CliLog.Error($"[file copy] Failed: {ex.Message}", "Command");
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, sourceNameArgument, targetNameArgument);
@@ -280,18 +339,26 @@ fileCrossCopyCommand.AddArgument(filesArgument);
 fileCrossCopyCommand.AddOption(encodingOption);
 fileCrossCopyCommand.SetHandler((string srcPath, string destPath, string[] files, string? encodingOverride) =>
 {
+    var fileList = files.Length == 1 && files[0].Equals("all", StringComparison.OrdinalIgnoreCase) ? "all" : string.Join(",", files);
+    CliLog.Info($"[file cross-copy] Starting: {fileList} from {srcPath} to {destPath}", "Command");
     try
     {
         using var srcDisk = CreateDiskService();
         srcDisk.OpenDisk(srcPath, true);
         var srcFs = RequireFileSystem(srcDisk.FileSystem, localizer);
         if (srcFs == null)
+        {
+            CliLog.Error($"[file cross-copy] Failed: source filesystem not available for {srcPath}", "Command");
             return;
+        }
         using var destDisk = CreateDiskService();
         OpenWritableDisk(destDisk, destPath, localizer);
         var destFs = RequireFileSystem(destDisk.FileSystem, localizer);
         if (destFs == null)
+        {
+            CliLog.Error($"[file cross-copy] Failed: destination filesystem not available for {destPath}", "Command");
             return;
+        }
         IEnumerable<string> targetFiles = files;
         if (files.Length == 1 && files[0].Equals("all", StringComparison.OrdinalIgnoreCase))
         {
@@ -306,10 +373,12 @@ fileCrossCopyCommand.SetHandler((string srcPath, string destPath, string[] files
         var srcAdapter = CreateTransferAdapter(srcFs);
         var destAdapter = CreateTransferAdapter(destFs);
         cloneService.TransferFiles(srcFs, destFs, targetFiles, srcAdapter, destAdapter);
+        CliLog.Info($"[file cross-copy] Finished: {fileList} from {srcPath} to {destPath}", "Command");
         PrintSuccess(localizer, localizer.FileCopiedMessage);
     }
     catch (Exception ex)
     {
+        CliLog.Error($"[file cross-copy] Failed: {ex.Message}", "Command");
         PrintError(localizer, ex.Message);
     }
 }, sourceImageArgument, destImageArgument, filesArgument, encodingOption);
@@ -368,6 +437,7 @@ diskCreateCommand.AddOption(diskFileSystemOption);
 diskCreateCommand.AddOption(diskNameOption);
 diskCreateCommand.SetHandler((string imagePath, string? imageFormatName, string diskTypeName, string? fileSystemName, string? diskName) =>
 {
+    CliLog.Info($"[disk create] Starting: {imagePath} type={diskTypeName} fs={fileSystemName ?? "auto"}", "Command");
     try
     {
         using var diskService = CreateDiskService();
@@ -381,10 +451,12 @@ diskCreateCommand.SetHandler((string imagePath, string? imageFormatName, string 
             explicitFileSystemResolver.InitializeForDetection(fs);
         }
 
+        CliLog.Info($"[disk create] Finished: {resolvedImagePath} created", "Command");
         PrintSuccess(localizer, localizer.DiskCreatedMessage);
     }
     catch (Exception ex)
     {
+        CliLog.Error($"[disk create] Failed: {ex.Message}", "Command");
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, diskCreateImageFormatOption, diskTypeOption, diskFileSystemOption, diskNameOption);
@@ -394,6 +466,7 @@ diskFormatCommand.AddArgument(imageArgument);
 diskFormatCommand.AddOption(explicitFormatFsOption);
 diskFormatCommand.SetHandler((string imagePath, string? explicitFileSystemName) =>
 {
+    CliLog.Info($"[disk format] Starting: {imagePath} fs={explicitFileSystemName ?? "detected"}", "Command");
     try
     {
         using var diskService = CreateDiskService();
@@ -403,6 +476,7 @@ diskFormatCommand.SetHandler((string imagePath, string? explicitFileSystemName) 
             using var explicitFs = explicitFileSystemResolver.Create(explicitFileSystemName, container);
             explicitFs.Format();
             explicitFileSystemResolver.InitializeForDetection(explicitFs);
+            CliLog.Info($"[disk format] Finished: {imagePath} formatted as {explicitFileSystemName}", "Command");
             PrintSuccess(localizer, localizer.DiskFormattedMessage);
             return;
         }
@@ -410,14 +484,17 @@ diskFormatCommand.SetHandler((string imagePath, string? explicitFileSystemName) 
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
+            CliLog.Error($"[disk format] Failed: filesystem not available for {imagePath}", "Command");
             return;
         }
 
         fs.Format();
+        CliLog.Info($"[disk format] Finished: {imagePath} formatted", "Command");
         PrintSuccess(localizer, localizer.DiskFormattedMessage);
     }
     catch (Exception ex)
     {
+        CliLog.Error($"[disk format] Failed: {ex.Message}", "Command");
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, explicitFormatFsOption);
@@ -431,6 +508,7 @@ var forceOption = new Option<bool>(new[] { "--force", "-f" }, localizer.DiskSect
 diskSectorCopyCommand.AddOption(forceOption);
 diskSectorCopyCommand.SetHandler((string srcPath, string destPath, bool force) =>
 {
+    CliLog.Info($"[disk sector-copy] Starting: {srcPath} -> {destPath}", "Command");
     try
     {
         if (!force && File.Exists(destPath))
@@ -456,11 +534,13 @@ diskSectorCopyCommand.SetHandler((string srcPath, string destPath, bool force) =
             var cloneService = new DiskCloneService(null !, null !);
             var result = cloneService.CopySectors(srcDisk, destDisk);
             destDisk.Save();
+            CliLog.Info($"[disk sector-copy] Finished: {srcPath} -> {destPath} tracks={result.tracksCopied}", "Command");
             PrintSuccess(localizer, string.Format(localizer.DiskSectorCopiedMessage, result.tracksCopied, result.sectorsSkipped));
         }
     }
     catch (Exception ex)
     {
+        CliLog.Error($"[disk sector-copy] Failed: {ex.Message}", "Command");
         PrintError(localizer, ex.Message);
     }
 }, sourceImageArgument, destImageArgument, forceOption);
@@ -496,6 +576,7 @@ sectorImportCommand.AddArgument(hostFileArgument);
 sectorImportCommand.AddOption(sectorImportCountOption);
 sectorImportCommand.SetHandler((string imagePath, int sector, string hostFilePath, int? count) =>
 {
+    CliLog.Info($"[sector import] Starting: {hostFilePath} -> {imagePath} sector={sector}", "Command");
     try
     {
         var data = File.ReadAllBytes(hostFilePath);
@@ -503,10 +584,12 @@ sectorImportCommand.SetHandler((string imagePath, int sector, string hostFilePat
         using var container = OpenWritableDisk(diskService, imagePath, localizer);
         WriteLinearSectors(container, sector, data, count);
         container.Save();
+        CliLog.Info($"[sector import] Finished: {hostFilePath} -> {imagePath} sector={sector}", "Command");
         PrintSuccess(localizer, localizer.FileInjectedMessage);
     }
     catch (Exception ex)
     {
+        CliLog.Error($"[sector import] Failed: {ex.Message}", "Command");
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, sectorLocationArgument, hostFileArgument, sectorImportCountOption);
@@ -538,6 +621,7 @@ diskBootCopyCommand.AddArgument(destImageArgument);
 diskBootCopyCommand.AddOption(forceOption);
 diskBootCopyCommand.SetHandler((string srcPath, string destPath, bool force) =>
 {
+    CliLog.Info($"[disk boot-copy] Starting: {srcPath} -> {destPath}", "Command");
     try
     {
         if (!force && File.Exists(destPath))
@@ -550,7 +634,10 @@ diskBootCopyCommand.SetHandler((string srcPath, string destPath, bool force) =>
         using var srcDisk = srcDiskService.OpenDisk(srcPath, true);
         var srcFs = RequireFileSystem(srcDiskService.FileSystem, localizer);
         if (srcFs == null)
+        {
+            CliLog.Error($"[disk boot-copy] Failed: source filesystem not available for {srcPath}", "Command");
             return;
+        }
         using var destDiskService = CreateDiskService();
         IDiskContainer destDisk;
         IFileSystem? destFs;
@@ -559,7 +646,10 @@ diskBootCopyCommand.SetHandler((string srcPath, string destPath, bool force) =>
             destDisk = OpenWritableDisk(destDiskService, destPath, localizer);
             destFs = RequireFileSystem(destDiskService.FileSystem, localizer);
             if (destFs == null)
+            {
+                CliLog.Error($"[disk boot-copy] Failed: destination filesystem not available for {destPath}", "Command");
                 return;
+            }
         }
         else
         {
@@ -574,11 +664,13 @@ diskBootCopyCommand.SetHandler((string srcPath, string destPath, bool force) =>
             var cloneService = new DiskCloneService(null !, null !);
             cloneService.TransferBootArea(srcFs, destFs);
             destDisk.Save();
+            CliLog.Info($"[disk boot-copy] Finished: {srcPath} -> {destPath}", "Command");
             PrintSuccess(localizer, "Boot area copied successfully.");
         }
     }
     catch (Exception ex)
     {
+        CliLog.Error($"[disk boot-copy] Failed: {ex.Message}", "Command");
         PrintError(localizer, ex.Message);
     }
 }, sourceImageArgument, destImageArgument, forceOption);
@@ -873,6 +965,7 @@ var bootClearCommand = new Command("clear", localizer.BootClearCommandDescriptio
 bootClearCommand.AddArgument(imageArgument);
 bootClearCommand.SetHandler((string imagePath) =>
 {
+    CliLog.Info($"[boot clear] Starting: {imagePath}", "Command");
     try
     {
         using var diskService = CreateDiskService();
@@ -880,14 +973,17 @@ bootClearCommand.SetHandler((string imagePath) =>
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
+            CliLog.Error($"[boot clear] Failed: filesystem not available for {imagePath}", "Command");
             return;
         }
 
         huBasicMetadataService.ClearBootRecord(fs);
+        CliLog.Info($"[boot clear] Finished: {imagePath}", "Command");
         PrintSuccess(localizer, localizer.BootClearedMessage);
     }
     catch (Exception ex)
     {
+        CliLog.Error($"[boot clear] Failed: {ex.Message}", "Command");
         PrintError(localizer, ex.Message);
     }
 }, imageArgument);
@@ -899,6 +995,7 @@ bootCloneCommand.AddArgument(cloneDestArgument);
 bootCloneCommand.AddOption(filesOption);
 bootCloneCommand.SetHandler((string src, string dest, string files) =>
 {
+    CliLog.Info($"[boot clone] Starting: {src} -> {dest} files={files}", "Command");
     try
     {
         if (File.Exists(dest))
@@ -907,10 +1004,12 @@ bootCloneCommand.SetHandler((string src, string dest, string files) =>
         }
 
         archiveService.CloneBootable(src, dest, files.Split(','));
+        CliLog.Info($"[boot clone] Finished: {src} -> {dest}", "Command");
         PrintSuccess(localizer, localizer.BootableDiskCreatedMessage);
     }
     catch (Exception ex)
     {
+        CliLog.Error($"[boot clone] Failed: {ex.Message}", "Command");
         PrintError(localizer, ex.Message);
     }
 }, cloneSrcArgument, cloneDestArgument, filesOption);
@@ -988,6 +1087,7 @@ bootImportCommand.AddOption(bootImportMetadataOption);
 bootImportCommand.AddOption(bootImportStartRecordOption);
 bootImportCommand.SetHandler(async (string imagePath, string binaryPath, string metadataPath, int? startRecord) =>
 {
+    CliLog.Info($"[boot import] Starting: {binaryPath} -> {imagePath}", "Command");
     try
     {
         var binary = await File.ReadAllBytesAsync(binaryPath);
@@ -1016,16 +1116,19 @@ bootImportCommand.SetHandler(async (string imagePath, string binaryPath, string 
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
+            CliLog.Error($"[boot import] Failed: filesystem not available for {imagePath}", "Command");
             return;
         }
 
         var importService = Legacy89DiskKitApplication.CreateBootEntryImportService();
         importService.ImportEntry(container, fs, metadata, binary);
         container.Save();
+        CliLog.Info($"[boot import] Finished: {binaryPath} -> {imagePath}", "Command");
         PrintSuccess(localizer, localizer.BootEntryImportedMessage);
     }
     catch (Exception ex)
     {
+        CliLog.Error($"[boot import] Failed: {ex.Message}", "Command");
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, bootImportBinaryOption, bootImportMetadataOption, bootImportStartRecordOption);
@@ -1081,6 +1184,7 @@ layoutMoveCommand.AddArgument(sourceNameArgument);
 layoutMoveCommand.AddOption(beforeOption);
 layoutMoveCommand.SetHandler((string imagePath, string sourceName, string beforeName) =>
 {
+    CliLog.Info($"[layout move] Starting: {sourceName} before {beforeName} on {imagePath}", "Command");
     try
     {
         using var diskService = CreateDiskService();
@@ -1088,14 +1192,17 @@ layoutMoveCommand.SetHandler((string imagePath, string sourceName, string before
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
+            CliLog.Error($"[layout move] Failed: filesystem not available for {imagePath}", "Command");
             return;
         }
 
         directoryLayoutService.MoveEntryBefore(fs, sourceName, beforeName);
+        CliLog.Info($"[layout move] Finished: {sourceName} moved before {beforeName}", "Command");
         PrintSuccess(localizer, localizer.LayoutUpdatedMessage);
     }
     catch (Exception ex)
     {
+        CliLog.Error($"[layout move] Failed: {ex.Message}", "Command");
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, sourceNameArgument, beforeOption);
@@ -1105,6 +1212,7 @@ layoutInsertLabelCommand.AddArgument(labelArgument);
 layoutInsertLabelCommand.AddOption(beforeOption);
 layoutInsertLabelCommand.SetHandler((string imagePath, string labelText, string beforeName) =>
 {
+    CliLog.Info($"[layout insert-label] Starting: label='{labelText}' before {beforeName} on {imagePath}", "Command");
     try
     {
         using var diskService = CreateDiskService();
@@ -1112,14 +1220,17 @@ layoutInsertLabelCommand.SetHandler((string imagePath, string labelText, string 
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
+            CliLog.Error($"[layout insert-label] Failed: filesystem not available for {imagePath}", "Command");
             return;
         }
 
         directoryLayoutService.InsertLabelBefore(fs, labelText, beforeName);
+        CliLog.Info($"[layout insert-label] Finished: label inserted before {beforeName}", "Command");
         PrintSuccess(localizer, localizer.LabelInsertedMessage);
     }
     catch (Exception ex)
     {
+        CliLog.Error($"[layout insert-label] Failed: {ex.Message}", "Command");
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, labelArgument, beforeOption);
@@ -1128,6 +1239,7 @@ layoutSortCommand.AddArgument(imageArgument);
 layoutSortCommand.AddOption(sortByOption);
 layoutSortCommand.SetHandler((string imagePath, string sortBy) =>
 {
+    CliLog.Info($"[layout sort] Starting: {imagePath} by={sortBy}", "Command");
     try
     {
         using var diskService = CreateDiskService();
@@ -1135,6 +1247,7 @@ layoutSortCommand.SetHandler((string imagePath, string sortBy) =>
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
+            CliLog.Error($"[layout sort] Failed: filesystem not available for {imagePath}", "Command");
             return;
         }
 
@@ -1145,10 +1258,12 @@ layoutSortCommand.SetHandler((string imagePath, string sortBy) =>
             _ => DirectorySortBy.Name
         };
         directoryLayoutService.SortEntries(fs, mode);
+        CliLog.Info($"[layout sort] Finished: {imagePath} sorted by {sortBy}", "Command");
         PrintSuccess(localizer, localizer.DirectoryEntriesSortedMessage);
     }
     catch (Exception ex)
     {
+        CliLog.Error($"[layout sort] Failed: {ex.Message}", "Command");
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, sortByOption);
@@ -1215,6 +1330,7 @@ layoutApplyCommand.AddOption(layoutStdinOption);
 layoutApplyCommand.AddOption(layoutStrictOption);
 layoutApplyCommand.SetHandler((string imagePath, string? inputPath, bool fromStdin, bool strict) =>
 {
+    CliLog.Info($"[layout apply] Starting: {imagePath} strict={strict}", "Command");
     try
     {
         using var diskService = CreateDiskService();
@@ -1222,6 +1338,7 @@ layoutApplyCommand.SetHandler((string imagePath, string? inputPath, bool fromStd
         var fs = RequireFileSystem(diskService.FileSystem, localizer);
         if (fs == null)
         {
+            CliLog.Error($"[layout apply] Failed: filesystem not available for {imagePath}", "Command");
             return;
         }
 
@@ -1230,11 +1347,17 @@ layoutApplyCommand.SetHandler((string imagePath, string? inputPath, bool fromStd
         RenderValidationResult(result, strict, localizer);
         if (result.IsValid && (!strict || result.WarningCount == 0))
         {
+            CliLog.Info($"[layout apply] Finished: {imagePath}", "Command");
             PrintSuccess(localizer, localizer.LayoutAppliedMessage);
+        }
+        else
+        {
+            CliLog.Warning($"[layout apply] Finished with errors: {imagePath}", "Command");
         }
     }
     catch (Exception ex)
     {
+        CliLog.Error($"[layout apply] Failed: {ex.Message}", "Command");
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, layoutInputOption, layoutStdinOption, layoutStrictOption);
@@ -1251,14 +1374,18 @@ injectCommand.AddArgument(hostFileArgument);
 injectCommand.AddOption(targetFileNameOption);
 injectCommand.SetHandler((string imagePath, string hostFilePath, string? targetName, string? encodingOverride) =>
 {
+    var normalizedName = targetName ?? Path.GetFileName(hostFilePath);
+    CliLog.Info($"[inject] Starting: host={hostFilePath} disk={imagePath} target={normalizedName}", "Command");
     try
     {
         RejectWriteToMultiSlotD88(imagePath, localizer);
         archiveService.InjectFile(imagePath, hostFilePath, targetName, encodingOverride);
+        CliLog.Info($"[inject] Finished: {hostFilePath} -> {imagePath}", "Command");
         PrintSuccess(localizer, localizer.FileInjectedMessage);
     }
     catch (Exception ex)
     {
+        CliLog.Error($"[inject] Failed: {ex.Message}", "Command");
         PrintError(localizer, ex.Message);
     }
 }, imageArgument, hostFileArgument, targetFileNameOption, encodingOption);
@@ -2236,4 +2363,89 @@ static bool ConfirmOverwrite(IConsoleLocalizer localizer, string path)
     Console.Write(string.Format(localizer.OverwriteConfirmationMessage, path));
     var input = Console.ReadLine()?.Trim().ToLowerInvariant();
     return input == "y" || input == "yes";
+}
+
+static string ResolveImageFileTargetName(string sourceName, string encodingId, DiskFileSystemInfo fsInfo, HashSet<string> existingNames, FileNameNormalizationService normalizationService, IEncoderRegistry encoderRegistry, bool overwriteEnabled)
+{
+    if (overwriteEnabled && existingNames.Contains(sourceName.ToUpperInvariant()))
+    {
+        if (CanRepresentRequestedImageFileName(sourceName, encodingId, fsInfo, encoderRegistry))
+        {
+            return sourceName;
+        }
+        else
+        {
+            CliLog.Warning($"[file inject] Cannot preserve requested name '{sourceName}' on this filesystem (length or encoding constraint). Falling back to alias generation.", "Command");
+        }
+    }
+
+    return normalizationService.Normalize(sourceName, encodingId, fsInfo.MaxBaseNameLength, fsInfo.MaxExtensionLength, existingNames);
+}
+
+static bool CanRepresentRequestedImageFileName(string name, string encodingId, DiskFileSystemInfo fsInfo, IEncoderRegistry encoderRegistry)
+{
+    var encoder = encoderRegistry.GetEncoder(encodingId);
+    if (encoder == null) return false;
+
+    int lastDot = name.LastIndexOf('.');
+    string basePart = lastDot > 0 ? name.Substring(0, lastDot) : name;
+    string extPart = lastDot > 0 ? name.Substring(lastDot + 1) : "";
+
+    string Sanitize(string s)
+    {
+        return System.Text.RegularExpressions.Regex.Replace(s, @"[<>:""/\\|?* .]", "_");
+    }
+
+    basePart = Sanitize(basePart);
+    extPart = Sanitize(extPart);
+
+    var baseBytes = encoder.EncodeText(basePart);
+    var extBytes = encoder.EncodeText(extPart);
+
+    bool baseOk = baseBytes.Length <= fsInfo.MaxBaseNameLength;
+    bool extOk = fsInfo.MaxExtensionLength <= 0 || extBytes.Length <= fsInfo.MaxExtensionLength;
+    return baseOk && extOk;
+}
+
+static string GetDefaultLogFilePath()
+{
+    var baseDir = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+    if (string.IsNullOrEmpty(baseDir))
+    {
+        baseDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share");
+    }
+
+    var logDir = Path.Combine(baseDir, "l89", "logs");
+    return Path.Combine(logDir, "l89.log");
+}
+
+public static class CliLog
+{
+    private static List<ILogMessageHandler> _handlers = new();
+    private static LogType _minLevel = LogType.Info;
+
+    public static void Initialize(List<ILogMessageHandler> handlers, LogType minLevel)
+    {
+        _handlers = handlers;
+        _minLevel = minLevel;
+        foreach (var h in _handlers)
+        {
+            h.MinimumLevel = minLevel;
+        }
+    }
+
+    private static void Publish(LogType type, string message, string? source)
+    {
+        if (type < _minLevel) return;
+        var logMessage = new LogMessage(type, message, DateTime.Now, source);
+        foreach (var h in _handlers)
+        {
+            h.Handle(logMessage);
+        }
+    }
+
+    public static void Debug(string message, string? source = null) => Publish(LogType.Debug, message, source);
+    public static void Info(string message, string? source = null) => Publish(LogType.Info, message, source);
+    public static void Warning(string message, string? source = null) => Publish(LogType.Warning, message, source);
+    public static void Error(string message, string? source = null) => Publish(LogType.Error, message, source);
 }

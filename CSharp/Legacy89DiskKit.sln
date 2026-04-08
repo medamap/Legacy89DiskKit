@@ -49,6 +49,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Legacy89DiskKit.FileSystem.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Legacy89DiskKit.Archive.Application", "Legacy89DiskKit.Archive.Application\Legacy89DiskKit.Archive.Application.csproj", "{874FAB9C-76EE-49E0-9097-DCAF03CAE80B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Legacy89DiskKit.LogSystem.Domain", "Legacy89DiskKit.LogSystem.Domain\Legacy89DiskKit.LogSystem.Domain.csproj", "{CADF522F-8B6E-4637-89C1-4F471D61E109}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Legacy89DiskKit.LogSystem.Application", "Legacy89DiskKit.LogSystem.Application\Legacy89DiskKit.LogSystem.Application.csproj", "{73A9AFEB-E51A-4B52-8318-24487A8AEC72}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Legacy89DiskKit.LogSystem.Infrastructure", "Legacy89DiskKit.LogSystem.Infrastructure\Legacy89DiskKit.LogSystem.Infrastructure.csproj", "{E414858D-A224-47C3-8640-72FD61260F46}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -150,5 +156,17 @@ Global
 		{874FAB9C-76EE-49E0-9097-DCAF03CAE80B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{874FAB9C-76EE-49E0-9097-DCAF03CAE80B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{874FAB9C-76EE-49E0-9097-DCAF03CAE80B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CADF522F-8B6E-4637-89C1-4F471D61E109}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CADF522F-8B6E-4637-89C1-4F471D61E109}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CADF522F-8B6E-4637-89C1-4F471D61E109}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CADF522F-8B6E-4637-89C1-4F471D61E109}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73A9AFEB-E51A-4B52-8318-24487A8AEC72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73A9AFEB-E51A-4B52-8318-24487A8AEC72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73A9AFEB-E51A-4B52-8318-24487A8AEC72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73A9AFEB-E51A-4B52-8318-24487A8AEC72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E414858D-A224-47C3-8640-72FD61260F46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E414858D-A224-47C3-8640-72FD61260F46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E414858D-A224-47C3-8640-72FD61260F46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E414858D-A224-47C3-8640-72FD61260F46}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

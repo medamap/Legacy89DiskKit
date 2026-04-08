@@ -8,6 +8,9 @@
     <ProjectReference Include="..\Legacy89DiskKit.CharacterEncoding.Infrastructure\Legacy89DiskKit.CharacterEncoding.Infrastructure.csproj" />
     <ProjectReference Include="..\Legacy89DiskKit.FileSystem.Infrastructure\Legacy89DiskKit.FileSystem.Infrastructure.csproj" />
     <ProjectReference Include="..\Legacy89DiskKit.NativeInterop\Legacy89DiskKit.NativeInterop.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.LogSystem.Domain\Legacy89DiskKit.LogSystem.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.LogSystem.Application\Legacy89DiskKit.LogSystem.Application.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.LogSystem.Infrastructure\Legacy89DiskKit.LogSystem.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Legacy89DiskKit.LogSystem.Domain\Legacy89DiskKit.LogSystem.Domain.csproj" />
+    <PackageReference Include="MessagePipe" Version="1.8.1" />
+  </ItemGroup>
+
+</Project>
