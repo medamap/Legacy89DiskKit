@@ -56,6 +56,8 @@ rootCommand.AddGlobalOption(nativeOption);
 rootCommand.AddGlobalOption(checkUpdateOption);
 rootCommand.AddGlobalOption(fullHelpOption);
 rootCommand.AddGlobalOption(outputFormatOption);
+var logExtract = ExtractLogOptions(effectiveArgs);
+effectiveArgs = logExtract.ForwardedArgs;
 var logOption = new Option<string?>("--log", "Path to log file. Without a path, uses the OS-specific default location.") { Arity = ArgumentArity.ZeroOrOne };
 var logLevelOption = new Option<string>("--log-level", () => "Info", "Log level: Debug, Info, Warning, Error");
 var imageFileOverwriteOption = new Option<bool>("--image-file-overwrite", "Overwrite existing image files instead of generating numbered aliases");
@@ -65,8 +67,8 @@ rootCommand.AddGlobalOption(imageFileOverwriteOption);
 
 // Parse once to extract global option values via System.CommandLine
 var parseResult = rootCommand.Parse(effectiveArgs);
-var logFilePath = parseResult.GetValueForOption(logOption);
-var hasLogOption = parseResult.HasOption(logOption);
+var logFilePath = logExtract.LogPath;
+var hasLogOption = logExtract.HasLog;
 var logLevelStr = parseResult.GetValueForOption(logLevelOption);
 var imageFileOverwrite = parseResult.GetValueForOption(imageFileOverwriteOption);
 
@@ -2405,6 +2407,37 @@ static bool CanRepresentRequestedImageFileName(string name, string encodingId, D
     bool baseOk = baseBytes.Length <= fsInfo.MaxBaseNameLength;
     bool extOk = fsInfo.MaxExtensionLength <= 0 || extBytes.Length <= fsInfo.MaxExtensionLength;
     return baseOk && extOk;
+}
+
+static (bool HasLog, string? LogPath, string[] ForwardedArgs) ExtractLogOptions(string[] args)
+{
+    var forwarded = new List<string>();
+    bool hasLog = false;
+    string? logPath = null;
+
+    for (int i = 0; i < args.Length; i++)
+    {
+        if (args[i] == "--log")
+        {
+            hasLog = true;
+            if (i + 1 < args.Length && !args[i + 1].StartsWith("-", StringComparison.Ordinal))
+            {
+                logPath = args[i + 1];
+                i++;
+            }
+        }
+        else if (args[i].StartsWith("--log=", StringComparison.OrdinalIgnoreCase))
+        {
+            hasLog = true;
+            logPath = args[i].Substring("--log=".Length);
+        }
+        else
+        {
+            forwarded.Add(args[i]);
+        }
+    }
+
+    return (hasLog, logPath, forwarded.ToArray());
 }
 
 static string GetDefaultLogFilePath()
