@@ -1,4 +1,5 @@
 using Legacy89DiskKit.Domain.DiskImage.Model;
+using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 
 namespace Legacy89DiskKit.Infrastructure.FileSystem.XDos;
 
@@ -22,4 +23,25 @@ public record XDosMediaGeometry(
         (c == 0 && h == 0)
             ? (BootSectorsPerTrack, (ushort)BootSectorSize, (byte)0x00)
             : (DataSectorsPerTrack, (ushort)DataSectorSize, (byte)0x00);
+
+    public static XDosMediaGeometry FromContainer(IDiskContainer container)
+    {
+        var metadata = container.GetMetadata();
+
+        int bootSectorsPerTrack = 16;
+        int bootSectorSize = 256;
+
+        int dataSectorsPerTrack = metadata.Geometry.SectorsPerTrack;
+        ushort dataSectorSize = (ushort)metadata.Geometry.BytesPerSector;
+        int totalTracks = metadata.Geometry.Cylinders * metadata.Geometry.Heads;
+
+        return new XDosMediaGeometry(
+            DataSectorsPerTrack: dataSectorsPerTrack,
+            DataSectorSize: dataSectorSize,
+            BootSectorsPerTrack: bootSectorsPerTrack,
+            BootSectorSize: bootSectorSize,
+            TotalTracks: totalTracks
+        );
+    }
 }
+

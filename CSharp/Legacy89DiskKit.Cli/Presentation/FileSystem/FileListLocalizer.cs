@@ -196,6 +196,10 @@ public interface IConsoleLocalizer : IFileListLocalizer
     string WriteProtectedLabel { get; }
     string EncodingLabel { get; }
     string FullHelpFooter { get; }
+    string ImageFileOverwriteOptionDescription { get; }
+    string LogOptionDescription { get; }
+    string LogOptionWithPathDescription { get; }
+    string ImageFileOverwriteIgnoredWarning { get; }
 }
 
 public static class FileListLocalizer
@@ -411,6 +415,10 @@ public static class FileListLocalizer
         public abstract string WriteProtectedLabel { get; }
         public abstract string EncodingLabel { get; }
         public abstract string FullHelpFooter { get; }
+        public abstract string ImageFileOverwriteOptionDescription { get; }
+        public abstract string LogOptionDescription { get; }
+        public abstract string LogOptionWithPathDescription { get; }
+        public abstract string ImageFileOverwriteIgnoredWarning { get; }
     }
 
     private sealed class EnglishConsoleLocalizer : ConsoleLocalizerBase
@@ -603,6 +611,10 @@ public static class FileListLocalizer
         public override string WriteProtectedLabel => "Write Protected";
         public override string EncodingLabel => "Encoding";
         public override string FullHelpFooter => "Use '<command> --help' for detailed help on one command.";
+        public override string ImageFileOverwriteOptionDescription => "Allow overwriting an existing file with the same name instead of generating a numbered alias";
+        public override string LogOptionDescription => "Write logs to the default system log location (OS-specific, dated, 7-day rotation)";
+        public override string LogOptionWithPathDescription => "Write logs to the specified file (appends if the file exists)";
+        public override string ImageFileOverwriteIgnoredWarning => "Image file overwrite is not possible for this filename due to filesystem constraints. Using alias generation instead.";
     }
 
     private sealed class JapaneseConsoleLocalizer : ConsoleLocalizerBase
@@ -795,5 +807,9 @@ public static class FileListLocalizer
         public override string WriteProtectedLabel => "書き込み保護";
         public override string EncodingLabel => "文字コード";
         public override string FullHelpFooter => "個別の詳細は '<command> --help' でも確認できます。";
+        public override string ImageFileOverwriteOptionDescription => "同名ファイルの上書きを番号付きエイリアス生成ではなく許可します";
+        public override string LogOptionDescription => "デフォルトのシステムログ位置へログを出力します（OS固有、日付付き、7日間ローテーション）";
+        public override string LogOptionWithPathDescription => "指定ファイルへログを出力します（ファイルが存在する場合は追記）";
+        public override string ImageFileOverwriteIgnoredWarning => "ファイル名の制約により同名ファイルの上書きができません。エイリアス生成を代わりに使用します。";
     }
 }

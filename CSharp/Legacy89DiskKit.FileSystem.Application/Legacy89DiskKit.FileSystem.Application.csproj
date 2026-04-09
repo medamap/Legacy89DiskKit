@@ -24,6 +24,11 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/FileSystem/Application/BootEntryImportJsonContext.cs">
+      <Link>FileSystem/Application/BootEntryImportJsonContext.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="../Legacy89DiskKit/FileSystem/Application/BootInfoSummary.cs">
       <Link>FileSystem/Application/BootInfoSummary.cs</Link>
     </Compile>

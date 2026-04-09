@@ -5,6 +5,12 @@ using Xunit;
 
 namespace Legacy89DiskKit.Tests;
 
+[CollectionDefinition(nameof(UpdateHttpListenerCollection), DisableParallelization = true)]
+public sealed class UpdateHttpListenerCollection
+{
+}
+
+[Collection(nameof(UpdateHttpListenerCollection))]
 public sealed class ReleaseUpdateCheckerTest
 {
     [Fact]

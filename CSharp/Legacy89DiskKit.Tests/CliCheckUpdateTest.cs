@@ -4,6 +4,7 @@ using Xunit;
 
 namespace Legacy89DiskKit.Tests;
 
+[Collection(nameof(UpdateHttpListenerCollection))]
 public sealed class CliCheckUpdateTest
 {
     [Fact]

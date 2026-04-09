@@ -35,15 +35,15 @@ public class FileNameNormalizationService
                 basePart = input;
             }
             
-            basePart = Sanitize(basePart);
-            extPart = Sanitize(extPart);
+            basePart = Sanitize(basePart, allowPeriods: false);
+            extPart = Sanitize(extPart, allowPeriods: false);
             
             extPart = ShortenByBytes(extPart, encoder, maxExt);
         }
         else
         {
             // Unified (e.g. 13 chars)
-            basePart = Sanitize(input);
+            basePart = Sanitize(input, allowPeriods: true);
         }
 
         string originalBase = basePart;
@@ -73,10 +73,12 @@ public class FileNameNormalizationService
         throw new Exception($"Failed to generate unique file name for '{input}' after 999 attempts.");
     }
 
-    private string Sanitize(string input)
+    private string Sanitize(string input, bool allowPeriods)
     {
-        // Replace illegal characters with underscores
-        return Regex.Replace(input, @"[<>:""/\\|?* .]", "_");
+        var pattern = allowPeriods
+            ? @"[<>:""/\\|?* ]"
+            : @"[<>:""/\\|?* .]";
+        return Regex.Replace(input, pattern, "_");
     }
 
     private string ShortenByBytes(string text, ICharacterEncoder encoder, int maxBytes)

@@ -18,6 +18,7 @@ public class HuBasicMetadataService
         return _bootRecordParser.Parse(fileSystem.ReadBootArea());
     }
 
+    [Obsolete("Use GetBootRecordInfo() together with CompositeBootProfileService for boot summary rendering. This method is retained only for compatibility.")]
     public BootInfoSummary GetBootSummary(IFileSystem fileSystem)
     {
         var bootArea = fileSystem.ReadBootArea();

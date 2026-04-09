@@ -25,5 +25,12 @@ public class XDosFamWriter
         _container.WriteSector(c, h, famSector, sector);
     }
 
+    public void ClearFam(int famTrack, int famSector)
+    {
+        int c = famTrack / 2;
+        int h = famTrack % 2;
+        _container.WriteSector(c, h, famSector, new byte[512]);
+    }
+
     public void ClearAll() { }
 }

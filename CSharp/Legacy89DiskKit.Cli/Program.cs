@@ -1,6 +1,8 @@
 using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.Text;
 using Legacy89DiskKit.Cli;
+using Legacy89DiskKit.Cli.Logging;
 using Legacy89DiskKit.CharacterEncoding.Application;
 using Legacy89DiskKit.Application;
 using Legacy89DiskKit.DiskImage.Application;
@@ -19,13 +21,23 @@ using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;
 using Legacy89DiskKit.Infrastructure.FileSystem.XDos;
+using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+CliLogSystem? _logSystem = null;
+string? _logPath = null;
 var requestedLanguage = TryGetRequestedLanguage(args);
 if (requestedLanguage is { } languageCode && languageCode is not ("ja" or "en"))
 {
     Console.Error.WriteLine("Unsupported language. Use 'ja' or 'en'.");
     return 1;
+}
+
+var logPath = ExtractLogPath(args);
+if (logPath is not null || args.Contains("--log"))
+{
+    _logSystem = CliLogSystem.CreateWithConsoleAndFileLogger(logPath);
+    _logPath = logPath;
 }
 
 var effectiveArgs = RewriteVersionArgs(RewriteFullHelpArgs(RewriteUpdateCheckArgs(RewriteImplicitInspectorArgs(RewriteLegacyArgs(args)))));
@@ -44,12 +56,17 @@ var nativeOption = new Option<bool>(new[] { "--native" }, "Use C++ native implem
 var checkUpdateOption = new Option<bool>("--check-update", localizer.CheckUpdateCommandDescription);
 var fullHelpOption = new Option<bool>("--full-help", localizer.FullHelpOptionDescription);
 var outputFormatOption = new Option<string>("--output-format", () => "table", localizer.OutputFormatOptionDescription);
+var logOption = new Option<string?>(new[] { "--log" }, localizer.LogOptionDescription)
+{
+    Arity = ArgumentArity.ZeroOrOne
+};
 rootCommand.AddGlobalOption(languageOption);
 rootCommand.AddGlobalOption(encodingOption);
 rootCommand.AddGlobalOption(nativeOption);
 rootCommand.AddGlobalOption(checkUpdateOption);
 rootCommand.AddGlobalOption(fullHelpOption);
 rootCommand.AddGlobalOption(outputFormatOption);
+rootCommand.AddGlobalOption(logOption);
 // Initialize backend based on command line args
 if (effectiveArgs.Contains("--native"))
 {
@@ -102,7 +119,7 @@ listCommand.SetHandler((string imagePath, string? fileSystemName, string? encodi
         Console.WriteLine($"{localizer.UsingEncodingMessage}: {encodingId} (FS Default: {fsInfo.DefaultEncodingId})");
         var formatter = FileListFormatterFactory.Create(fsInfo.FileSystemName);
         var bootRecordInfo = huBasicMetadataService.GetBootRecordInfo(fs);
-        var bootSummary = huBasicMetadataService.GetBootSummary(fs);
+        var bootSummary = bootProfileService.GetBootProfile(fs);
         var view = formatter.Format(new FileListFormatContext(fsInfo, entries, bootRecordInfo, bootSummary), localizer);
         RenderFileList(view, localizer, outputFormat);
     }
@@ -123,6 +140,7 @@ var sourceNameArgument = new Argument<string>("source", localizer.SourceNameArgu
 var targetNameArgument = new Argument<string>("target", localizer.TargetNameArgumentDescription);
 var newNameArgument = new Argument<string>("new-name", localizer.NewNameArgumentDescription);
 var targetFileNameOption = new Option<string?>(new[] { "--target-name", "-n" }, localizer.TargetFileNameOptionDescription);
+var imageFileOverwriteOption = new Option<bool>("--image-file-overwrite", localizer.ImageFileOverwriteOptionDescription);
 var tabModeOption = new Option<string>("--tab-mode", () => "keep", localizer.TabModeOptionDescription);
 var tabWidthOption = new Option<int>("--tab-width", () => 4, localizer.TabWidthOptionDescription);
 var truncateTextOnOverflowOption = new Option<bool>("--truncate-text-on-overflow", localizer.TruncateTextOnOverflowOptionDescription);
@@ -163,8 +181,12 @@ fileInjectCommand.AddOption(explicitFileSystemOption);
 fileInjectCommand.AddOption(tabModeOption);
 fileInjectCommand.AddOption(tabWidthOption);
 fileInjectCommand.AddOption(truncateTextOnOverflowOption);
-fileInjectCommand.SetHandler((string imagePath, string hostFilePath, string? targetName, string? fileSystemName, string tabMode, int tabWidth, bool truncateTextOnOverflow, string? encodingOverride) =>
+fileInjectCommand.AddOption(imageFileOverwriteOption);
+fileInjectCommand.SetHandler((string imagePath, string hostFilePath, string? targetName, string? fileSystemName, string tabMode, int tabWidth, bool truncateTextOnOverflow) =>
 {
+    var imageFileOverwrite = args.Contains("--image-file-overwrite");
+    var encodingOverride = TryGetRequestedEncoding(args);
+
     try
     {
         RejectWriteToMultiSlotD88(imagePath, localizer);
@@ -177,11 +199,32 @@ fileInjectCommand.SetHandler((string imagePath, string hostFilePath, string? tar
         }
 
         var fsInfo = fs.GetFileSystemInfo();
-        var encodingId = encodingOverride ?? fsInfo.DefaultEncodingId;
+        var encodingId = fsInfo.DefaultEncodingId;
         var existingNames = new HashSet<string>(fs.GetFiles().Select(f => f.FullName.ToUpperInvariant()));
         var sourceName = targetName ?? Path.GetFileName(hostFilePath);
+        var canOverwriteExactName = imageFileOverwrite;
+        if (canOverwriteExactName && fs.FileExists(sourceName))
+        {
+            if (TryDeleteExistingFile(fs, sourceName))
+            {
+                existingNames.Remove(sourceName.ToUpperInvariant());
+            }
+            else
+            {
+                canOverwriteExactName = false;
+                _logSystem?.Warning(localizer.ImageFileOverwriteIgnoredWarning, "file-inject");
+            }
+        }
+
         var normalizationService = new FileNameNormalizationService(archiveService.EncoderRegistry);
-        var normalizedName = normalizationService.Normalize(sourceName, encodingId, fsInfo.MaxBaseNameLength, fsInfo.MaxExtensionLength, existingNames);
+        var (normalizedName, wasOverwritten) = ResolveImageFileTargetName(
+            sourceName, encodingId, fsInfo, existingNames, normalizationService, canOverwriteExactName, _logSystem);
+
+        if (wasOverwritten)
+        {
+            _logSystem?.Info($"Overwriting existing file: {normalizedName}", "file-inject");
+        }
+
         var data = File.ReadAllBytes(hostFilePath);
         var isAscii = IsLikelyAsciiPayload(data);
         if (isAscii)
@@ -201,7 +244,7 @@ fileInjectCommand.SetHandler((string imagePath, string hostFilePath, string? tar
     {
         PrintError(localizer, ex.Message);
     }
-}, imageArgument, hostFileArgument, targetFileNameOption, explicitFileSystemOption, tabModeOption, tabWidthOption, truncateTextOnOverflowOption, encodingOption);
+}, imageArgument, hostFileArgument, targetFileNameOption, explicitFileSystemOption, tabModeOption, tabWidthOption, truncateTextOnOverflowOption);
 var fileDeleteCommand = new Command("delete", localizer.FileDeleteCommandDescription);
 fileDeleteCommand.AddArgument(imageArgument);
 fileDeleteCommand.AddArgument(diskFileArgument);
@@ -253,7 +296,8 @@ var fileCopyCommand = new Command("copy", localizer.FileCopyCommandDescription);
 fileCopyCommand.AddArgument(imageArgument);
 fileCopyCommand.AddArgument(sourceNameArgument);
 fileCopyCommand.AddArgument(targetNameArgument);
-fileCopyCommand.SetHandler((string imagePath, string sourceName, string targetName) =>
+fileCopyCommand.AddOption(imageFileOverwriteOption);
+fileCopyCommand.SetHandler((string imagePath, string sourceName, string targetName, bool imageFileOverwrite) =>
 {
     try
     {
@@ -265,20 +309,52 @@ fileCopyCommand.SetHandler((string imagePath, string sourceName, string targetNa
             return;
         }
 
-        fs.CopyFile(sourceName, targetName);
+        if (imageFileOverwrite && sourceName.Equals(targetName, StringComparison.OrdinalIgnoreCase))
+        {
+            PrintSuccess(localizer, localizer.FileCopiedMessage);
+            return;
+        }
+
+        var fsInfo = fs.GetFileSystemInfo();
+        var existingNames = new HashSet<string>(fs.GetFiles().Select(f => f.FullName.ToUpperInvariant()));
+        var canOverwriteExactName = imageFileOverwrite;
+        if (canOverwriteExactName && fs.FileExists(targetName))
+        {
+            if (TryDeleteExistingFile(fs, targetName))
+            {
+                existingNames.Remove(targetName.ToUpperInvariant());
+            }
+            else
+            {
+                canOverwriteExactName = false;
+                _logSystem?.Warning(localizer.ImageFileOverwriteIgnoredWarning, "file-copy");
+            }
+        }
+
+        var normalizationService = new FileNameNormalizationService(archiveService.EncoderRegistry);
+        var (normalizedTargetName, wasOverwritten) = ResolveImageFileTargetName(
+            targetName, fsInfo.DefaultEncodingId, fsInfo, existingNames, normalizationService, canOverwriteExactName, _logSystem);
+
+        if (wasOverwritten)
+        {
+            _logSystem?.Info($"Overwriting existing file: {normalizedTargetName}", "file-copy");
+        }
+
+        fs.CopyFile(sourceName, normalizedTargetName);
         PrintSuccess(localizer, localizer.FileCopiedMessage);
     }
     catch (Exception ex)
     {
         PrintError(localizer, ex.Message);
     }
-}, imageArgument, sourceNameArgument, targetNameArgument);
+}, imageArgument, sourceNameArgument, targetNameArgument, imageFileOverwriteOption);
 var fileCrossCopyCommand = new Command("cross-copy", localizer.FileCrossCopyCommandDescription);
 fileCrossCopyCommand.AddArgument(sourceImageArgument);
 fileCrossCopyCommand.AddArgument(destImageArgument);
 fileCrossCopyCommand.AddArgument(filesArgument);
+fileCrossCopyCommand.AddOption(imageFileOverwriteOption);
 fileCrossCopyCommand.AddOption(encodingOption);
-fileCrossCopyCommand.SetHandler((string srcPath, string destPath, string[] files, string? encodingOverride) =>
+fileCrossCopyCommand.SetHandler((string srcPath, string destPath, string[] files, bool imageFileOverwrite, string? encodingOverride) =>
 {
     try
     {
@@ -302,17 +378,66 @@ fileCrossCopyCommand.SetHandler((string srcPath, string destPath, string[] files
             targetFiles = files[0].Split(',');
         }
 
-        var cloneService = Legacy89DiskKitApplication.CreateDiskCloneService(destFs.GetFileSystemInfo(), encodingOverride);
         var srcAdapter = CreateTransferAdapter(srcFs);
         var destAdapter = CreateTransferAdapter(destFs);
-        cloneService.TransferFiles(srcFs, destFs, targetFiles, srcAdapter, destAdapter);
+        if (srcAdapter is null)
+        {
+            throw new InvalidOperationException("Source file system does not support file transfer.");
+        }
+
+        if (destAdapter is null)
+        {
+            throw new InvalidOperationException("Destination file system does not support file transfer.");
+        }
+
+        var normalizationService = new FileNameNormalizationService(archiveService.EncoderRegistry);
+        var destInfo = destFs.GetFileSystemInfo();
+        var existingNames = new HashSet<string>(destFs.GetFiles().Select(f => f.FullName.ToUpperInvariant()));
+        var encodingId = encodingOverride ?? destInfo.DefaultEncodingId;
+
+        foreach (var fileName in targetFiles)
+        {
+            var sourceEntry = srcFs.GetFiles().FirstOrDefault(f => f.FullName.Equals(fileName, StringComparison.OrdinalIgnoreCase));
+            if (sourceEntry == null)
+            {
+                throw new FileNotFoundException($"Source file not found: {fileName}");
+            }
+
+            var envelope = srcAdapter.Export(sourceEntry);
+            var targetName = envelope.FileName;
+            var canOverwriteExactName = imageFileOverwrite;
+            if (canOverwriteExactName && destFs.FileExists(targetName))
+            {
+                if (TryDeleteExistingFile(destFs, targetName))
+                {
+                    existingNames.Remove(targetName.ToUpperInvariant());
+                }
+                else
+                {
+                    canOverwriteExactName = false;
+                    _logSystem?.Warning(localizer.ImageFileOverwriteIgnoredWarning, "file-cross-copy");
+                }
+            }
+
+            var (resolvedTargetName, wasOverwritten) = ResolveImageFileTargetName(
+                targetName, encodingId, destInfo, existingNames, normalizationService, canOverwriteExactName, _logSystem);
+
+            if (wasOverwritten)
+            {
+                _logSystem?.Info($"Overwriting existing file: {resolvedTargetName}", "file-cross-copy");
+            }
+
+            destAdapter.Import(envelope, resolvedTargetName);
+            existingNames.Add(resolvedTargetName.ToUpperInvariant());
+        }
+
         PrintSuccess(localizer, localizer.FileCopiedMessage);
     }
     catch (Exception ex)
     {
         PrintError(localizer, ex.Message);
     }
-}, sourceImageArgument, destImageArgument, filesArgument, encodingOption);
+}, sourceImageArgument, destImageArgument, filesArgument, imageFileOverwriteOption, encodingOption);
 var fileInspectorCommand = new Command("inspector", localizer.FileInspectorCommandDescription);
 fileInspectorCommand.AddArgument(imageArgument);
 fileInspectorCommand.AddArgument(diskFileArgument);
@@ -846,7 +971,7 @@ bootShowCommand.SetHandler((string imagePath) =>
             return;
         }
 
-        var boot = huBasicMetadataService.GetBootSummary(fs);
+        var boot = bootProfileService.GetBootProfile(fs);
         Console.WriteLine(localizer.BootShowTitle);
         Console.WriteLine($"{localizer.BootLabel}: {FormatBootMode(localizer, boot.Mode)}");
         if (!string.IsNullOrWhiteSpace(boot.FileName))
@@ -992,12 +1117,9 @@ bootImportCommand.SetHandler(async (string imagePath, string binaryPath, string 
     {
         var binary = await File.ReadAllBytesAsync(binaryPath);
         var json = await File.ReadAllTextAsync(metadataPath);
-        var options = new System.Text.Json.JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-        options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-        var metadata = System.Text.Json.JsonSerializer.Deserialize<Legacy89DiskKit.FileSystem.Application.BootEntryImportMetadata>(json, options);
+        var metadata = System.Text.Json.JsonSerializer.Deserialize(
+            json,
+            Legacy89DiskKit.FileSystem.Application.BootEntryImportJsonContext.Default.BootEntryImportMetadata);
         if (metadata == null)
         {
             throw new InvalidOperationException("Failed to deserialize boot metadata from sidecar file.");
@@ -1249,19 +1371,68 @@ var injectCommand = new Command("inject", localizer.FileInjectCommandDescription
 injectCommand.AddArgument(imageArgument);
 injectCommand.AddArgument(hostFileArgument);
 injectCommand.AddOption(targetFileNameOption);
-injectCommand.SetHandler((string imagePath, string hostFilePath, string? targetName, string? encodingOverride) =>
+injectCommand.AddOption(imageFileOverwriteOption);
+injectCommand.SetHandler((string imagePath, string hostFilePath, string? targetName, bool imageFileOverwrite, string? encodingOverride) =>
 {
     try
     {
         RejectWriteToMultiSlotD88(imagePath, localizer);
-        archiveService.InjectFile(imagePath, hostFilePath, targetName, encodingOverride);
+        
+        using var diskService = CreateDiskService();
+        diskService.OpenDisk(imagePath, false);
+        var fs = diskService.FileSystem;
+        if (fs == null)
+            throw new Exception("Unsupported file system on target disk.");
+        
+        var fsInfo = fs.GetFileSystemInfo();
+        string encId = encodingOverride ?? fsInfo.DefaultEncodingId;
+        var existingNames = new HashSet<string>(fs.GetFiles().Select(f => f.FullName.ToUpperInvariant()));
+        string sourceName = targetName ?? Path.GetFileName(hostFilePath);
+        var canOverwriteExactName = imageFileOverwrite;
+        if (canOverwriteExactName && fs.FileExists(sourceName))
+        {
+            if (TryDeleteExistingFile(fs, sourceName))
+            {
+                existingNames.Remove(sourceName.ToUpperInvariant());
+            }
+            else
+            {
+                canOverwriteExactName = false;
+                _logSystem?.Warning(localizer.ImageFileOverwriteIgnoredWarning, "inject");
+            }
+        }
+        var normalizationService = new FileNameNormalizationService(archiveService.EncoderRegistry);
+        var (normalizedName, overwritten) = ResolveImageFileTargetName(
+            sourceName, encId, fsInfo, existingNames, normalizationService, canOverwriteExactName, _logSystem);
+        
+        if (overwritten)
+        {
+            _logSystem?.Info($"Overwriting existing file: {normalizedName}", "inject");
+        }
+
+        byte[] data = File.ReadAllBytes(hostFilePath);
+        bool isAscii = IsLikelyAsciiPayload(data);
+        Console.WriteLine($"Injecting '{sourceName}' as '{normalizedName}' (Encoding: {encId}, {(isAscii ? "ASCII" : "BIN")})...");
+        if (isAscii)
+        {
+            var encoder = archiveService.EncoderRegistry.GetEncoder(encId) ?? throw new InvalidOperationException($"Unsupported encoding: {encId}");
+            var transferService = new FileTransferService(encoder);
+            transferService.ImportFile(fs, hostFilePath, normalizedName, true, null);
+        }
+        else
+        {
+            var attributes = fs.CreateDefaultAttributes(false);
+            fs.WriteFile(normalizedName, data, attributes);
+        }
+
+        diskService.Session?.Save();
         PrintSuccess(localizer, localizer.FileInjectedMessage);
     }
     catch (Exception ex)
     {
         PrintError(localizer, ex.Message);
     }
-}, imageArgument, hostFileArgument, targetFileNameOption, encodingOption);
+}, imageArgument, hostFileArgument, targetFileNameOption, imageFileOverwriteOption, encodingOption);
 var checkUpdateCommand = new Command("check-update", localizer.CheckUpdateCommandDescription);
 checkUpdateCommand.SetHandler(async () =>
 {
@@ -1298,7 +1469,14 @@ rootCommand.AddCommand(bootCommand);
 rootCommand.AddCommand(layoutCommand);
 rootCommand.AddCommand(injectCommand);
 rootCommand.AddCommand(checkUpdateCommand);
-return await rootCommand.InvokeAsync(effectiveArgs);
+try
+{
+    return await rootCommand.InvokeAsync(effectiveArgs);
+}
+finally
+{
+    _logSystem?.Dispose();
+}
 static string? TryGetRequestedLanguage(string[] rawArgs)
 {
     for (var i = 0; i < rawArgs.Length; i++)
@@ -1317,6 +1495,61 @@ static string? TryGetRequestedLanguage(string[] rawArgs)
         if (arg.StartsWith("--language=", StringComparison.OrdinalIgnoreCase))
         {
             return arg["--language=".Length..].Trim().ToLowerInvariant();
+        }
+    }
+
+    return null;
+}
+
+static string? TryGetRequestedEncoding(string[] rawArgs)
+{
+    for (var i = 0; i < rawArgs.Length; i++)
+    {
+        var arg = rawArgs[i];
+        if (arg is "--encoding" or "-e")
+        {
+            if (i + 1 < rawArgs.Length)
+            {
+                return rawArgs[i + 1].Trim();
+            }
+
+            return null;
+        }
+
+        if (arg.StartsWith("--encoding=", StringComparison.OrdinalIgnoreCase))
+        {
+            var value = arg["--encoding=".Length..].Trim();
+            return string.IsNullOrWhiteSpace(value) ? null : value;
+        }
+
+        if (arg.StartsWith("-e=", StringComparison.OrdinalIgnoreCase))
+        {
+            var value = arg["-e=".Length..].Trim();
+            return string.IsNullOrWhiteSpace(value) ? null : value;
+        }
+    }
+
+    return null;
+}
+
+static string? ExtractLogPath(string[] rawArgs)
+{
+    for (var i = 0; i < rawArgs.Length; i++)
+    {
+        var arg = rawArgs[i];
+        if (arg == "--log")
+        {
+            if (i + 1 < rawArgs.Length && !rawArgs[i + 1].StartsWith("-"))
+            {
+                return rawArgs[i + 1];
+            }
+            return null;
+        }
+
+        if (arg.StartsWith("--log=", StringComparison.OrdinalIgnoreCase))
+        {
+            var value = arg["--log=".Length..];
+            return string.IsNullOrWhiteSpace(value) ? null : value;
         }
     }
 
@@ -2236,4 +2469,125 @@ static bool ConfirmOverwrite(IConsoleLocalizer localizer, string path)
     Console.Write(string.Format(localizer.OverwriteConfirmationMessage, path));
     var input = Console.ReadLine()?.Trim().ToLowerInvariant();
     return input == "y" || input == "yes";
+}
+
+static (string Name, bool WasOverwrite) ResolveImageFileTargetName(
+    string sourceName,
+    string encodingId,
+    DiskFileSystemInfo fsInfo,
+    HashSet<string> existingNames,
+    FileNameNormalizationService normalizationService,
+    bool allowOverwriteExactName,
+    CliLogSystem? logger)
+{
+    if (allowOverwriteExactName && CanRepresentRequestedImageFileName(sourceName, encodingId, fsInfo, normalizationService))
+    {
+        var normalizedSource = normalizationService.Normalize(
+            sourceName, encodingId, fsInfo.MaxBaseNameLength, fsInfo.MaxExtensionLength, null);
+
+        if (normalizedSource.Equals(sourceName, StringComparison.OrdinalIgnoreCase))
+        {
+            return (sourceName, true);
+        }
+
+        logger?.Warning(
+            $"Image file overwrite is not possible for '{sourceName}' due to filesystem constraints. Using alias generation instead.",
+            "image-file-overwrite");
+    }
+
+    var normalized = normalizationService.Normalize(
+        sourceName, encodingId, fsInfo.MaxBaseNameLength, fsInfo.MaxExtensionLength, existingNames);
+    return (normalized, false);
+}
+
+static bool TryDeleteExistingFile(IFileSystem fs, string fileName)
+{
+    try
+    {
+        if (fs.FileExists(fileName))
+        {
+            fs.DeleteFile(fileName);
+        }
+
+        return true;
+    }
+    catch (NotSupportedException)
+    {
+        return false;
+    }
+    catch (Exception)
+    {
+        return false;
+    }
+}
+
+static bool CanRepresentRequestedImageFileName(
+    string sourceName,
+    string encodingId,
+    DiskFileSystemInfo fsInfo,
+    FileNameNormalizationService normalizationService)
+{
+    var encoder = normalizationService is FileNameNormalizationService svc
+        ? GetEncoderForNormalization(svc, encodingId)
+        : null;
+    
+    if (encoder == null) return false;
+
+    string basePart;
+    string extPart = "";
+    
+    if (fsInfo.MaxExtensionLength > 0)
+    {
+        int lastDot = sourceName.LastIndexOf('.');
+        if (lastDot > 0)
+        {
+            basePart = sourceName.Substring(0, lastDot);
+            extPart = sourceName.Substring(lastDot + 1);
+        }
+        else
+        {
+            basePart = sourceName;
+        }
+    }
+    else
+    {
+        basePart = sourceName;
+    }
+
+    var sanitizedBase = SanitizeForFilesystem(basePart, fsInfo.MaxExtensionLength > 0);
+    var sanitizedExt = fsInfo.MaxExtensionLength > 0 ? SanitizeForFilesystem(extPart, false) : "";
+
+    var baseBytes = encoder.EncodeText(sanitizedBase);
+    var extBytes = fsInfo.MaxExtensionLength > 0 ? encoder.EncodeText(sanitizedExt) : Array.Empty<byte>();
+
+    if (baseBytes.Length > fsInfo.MaxBaseNameLength)
+        return false;
+    
+    if (fsInfo.MaxExtensionLength > 0 && extBytes.Length > fsInfo.MaxExtensionLength)
+        return false;
+
+    var reconstructed = fsInfo.MaxExtensionLength > 0 && !string.IsNullOrEmpty(extPart)
+        ? $"{sanitizedBase}.{sanitizedExt}"
+        : sanitizedBase;
+
+    return string.Equals(reconstructed, sourceName, StringComparison.OrdinalIgnoreCase);
+}
+
+static string SanitizeForFilesystem(string input, bool allowPeriods)
+{
+    var pattern = allowPeriods
+        ? @"[<>:""/\\|?* ]"
+        : @"[<>:""/\\|?* .]";
+    return System.Text.RegularExpressions.Regex.Replace(input, pattern, "_");
+}
+
+static ICharacterEncoder? GetEncoderForNormalization(
+    FileNameNormalizationService service, string encodingId)
+{
+    var field = typeof(FileNameNormalizationService).GetField("_encoderRegistry",
+        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+    if (field == null) return null;
+    
+    var registry = field.GetValue(service) as IEncoderRegistry;
+    return registry?.GetEncoder(encodingId);
 }

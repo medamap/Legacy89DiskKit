@@ -47,6 +47,103 @@ public sealed class CliTransferAndDumpTest
     }
 
     [Fact]
+    public async Task FileImport_XDos_PreservesPeriodInUnifiedName()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+        var imagePath = Path.Combine(tempDirectory, "xdos.d88");
+        var sourcePath = Path.Combine(tempDirectory, "mml.txt");
+        await File.WriteAllTextAsync(sourcePath, "MML");
+
+        try
+        {
+            var createResult = await CliCommandRunner.RunAsync(
+                "disk", "create", imagePath,
+                "--disk-type", "2d",
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, createResult.ExitCode);
+
+            var importResult = await CliCommandRunner.RunAsync(
+                "file", "import", imagePath, sourcePath,
+                "--target-name", "MML.DOC",
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, importResult.ExitCode);
+
+            var listResult = await CliCommandRunner.RunAsync(
+                "list", imagePath,
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, listResult.ExitCode);
+            Assert.Contains("MML.DOC", listResult.StandardOutput);
+            Assert.DoesNotContain("MML_DOC", listResult.StandardOutput);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDirectory))
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task FileCrossCopy_XDos_PreservesPeriodInUnifiedName()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+        var sourceImagePath = Path.Combine(tempDirectory, "xdos-src.d88");
+        var destImagePath = Path.Combine(tempDirectory, "xdos-dest.d88");
+        var sourcePath = Path.Combine(tempDirectory, "mml.txt");
+        await File.WriteAllTextAsync(sourcePath, "MML");
+
+        try
+        {
+            var createSourceResult = await CliCommandRunner.RunAsync(
+                "disk", "create", sourceImagePath,
+                "--disk-type", "2d",
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, createSourceResult.ExitCode);
+
+            var createDestResult = await CliCommandRunner.RunAsync(
+                "disk", "create", destImagePath,
+                "--disk-type", "2d",
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, createDestResult.ExitCode);
+
+            var importResult = await CliCommandRunner.RunAsync(
+                "file", "import", sourceImagePath, sourcePath,
+                "--target-name", "MML.DOC",
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, importResult.ExitCode);
+
+            var crossCopyResult = await CliCommandRunner.RunAsync(
+                "file", "cross-copy", sourceImagePath, destImagePath, "MML.DOC",
+                "--language", "en");
+            Assert.Equal(0, crossCopyResult.ExitCode);
+
+            var listResult = await CliCommandRunner.RunAsync(
+                "list", destImagePath,
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, listResult.ExitCode);
+            Assert.Contains("MML.DOC", listResult.StandardOutput);
+            Assert.DoesNotContain("MML_DOC", listResult.StandardOutput);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDirectory))
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
     public async Task FileImportExport_TextTabs_CanKeepOrExpandTabs()
     {
         var tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
@@ -215,6 +312,337 @@ public sealed class CliTransferAndDumpTest
             Assert.Equal(0, dumpResult.ExitCode);
             Assert.Contains("00000000", dumpResult.StandardOutput);
             Assert.Contains("41 41 41 41", dumpResult.StandardOutput);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDirectory))
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task FileInject_Overwrite_ReplacesExistingFile()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+        var imagePath = Path.Combine(tempDirectory, "overwrite.d88");
+        var firstPath = Path.Combine(tempDirectory, "first.txt");
+        var secondPath = Path.Combine(tempDirectory, "second.txt");
+        var exportPath = Path.Combine(tempDirectory, "out.txt");
+        await File.WriteAllTextAsync(firstPath, "FIRST");
+        await File.WriteAllTextAsync(secondPath, "SECOND");
+
+        try
+        {
+            var createResult = await CliCommandRunner.RunAsync(
+                "disk", "create", imagePath,
+                "--disk-type", "2d",
+                "--file-system", "hu-basic",
+                "--language", "en");
+            Assert.Equal(0, createResult.ExitCode);
+
+            var firstInjectResult = await CliCommandRunner.RunAsync(
+                "file", "import", imagePath, firstPath,
+                "--target-name", "TEST.TXT",
+                "--file-system", "hu-basic",
+                "--language", "en");
+            Assert.Equal(0, firstInjectResult.ExitCode);
+
+            var overwriteInjectResult = await CliCommandRunner.RunAsync(
+                "file", "import", imagePath, secondPath,
+                "--target-name", "TEST.TXT",
+                "--file-system", "hu-basic",
+                "--image-file-overwrite",
+                "--language", "en");
+            Assert.Equal(0, overwriteInjectResult.ExitCode);
+
+            var exportResult = await CliCommandRunner.RunAsync(
+                "file", "export", imagePath, "TEST.TXT", exportPath,
+                "--file-system", "hu-basic",
+                "--language", "en");
+            Assert.Equal(0, exportResult.ExitCode);
+            Assert.Equal("SECOND", await File.ReadAllTextAsync(exportPath));
+        }
+        finally
+        {
+            if (Directory.Exists(tempDirectory))
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task FileInject_NoOverwrite_GeneratesAlias()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+        var imagePath = Path.Combine(tempDirectory, "alias.d88");
+        var firstPath = Path.Combine(tempDirectory, "first.txt");
+        var secondPath = Path.Combine(tempDirectory, "second.txt");
+        await File.WriteAllTextAsync(firstPath, "FIRST");
+        await File.WriteAllTextAsync(secondPath, "SECOND");
+
+        try
+        {
+            var createResult = await CliCommandRunner.RunAsync(
+                "disk", "create", imagePath,
+                "--disk-type", "2d",
+                "--file-system", "hu-basic",
+                "--language", "en");
+            Assert.Equal(0, createResult.ExitCode);
+
+            var firstInjectResult = await CliCommandRunner.RunAsync(
+                "file", "import", imagePath, firstPath,
+                "--target-name", "TEST.TXT",
+                "--file-system", "hu-basic",
+                "--language", "en");
+            Assert.Equal(0, firstInjectResult.ExitCode);
+
+            var secondInjectResult = await CliCommandRunner.RunAsync(
+                "file", "import", imagePath, secondPath,
+                "--target-name", "TEST.TXT",
+                "--file-system", "hu-basic",
+                "--language", "en");
+            Assert.Equal(0, secondInjectResult.ExitCode);
+
+            var listResult = await CliCommandRunner.RunAsync(
+                "list", imagePath,
+                "--file-system", "hu-basic",
+                "--language", "en");
+            Assert.Equal(0, listResult.ExitCode);
+            Assert.Contains("TEST", listResult.StandardOutput);
+            Assert.Contains("TEST001", listResult.StandardOutput);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDirectory))
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task FileInject_OverwriteOnXDos_ReplacesExistingFile()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+        var imagePath = Path.Combine(tempDirectory, "xdos-overwrite.d88");
+        var firstPath = Path.Combine(tempDirectory, "first.txt");
+        var secondPath = Path.Combine(tempDirectory, "second.txt");
+        await File.WriteAllTextAsync(firstPath, "FIRST");
+        await File.WriteAllTextAsync(secondPath, "SECOND");
+
+        try
+        {
+            var createResult = await CliCommandRunner.RunAsync(
+                "disk", "create", imagePath,
+                "--disk-type", "2d",
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, createResult.ExitCode);
+
+            var firstInjectResult = await CliCommandRunner.RunAsync(
+                "file", "import", imagePath, firstPath,
+                "--target-name", "TEST",
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, firstInjectResult.ExitCode);
+
+            var overwriteInjectResult = await CliCommandRunner.RunAsync(
+                "file", "import", imagePath, secondPath,
+                "--target-name", "TEST",
+                "--file-system", "xdos",
+                "--image-file-overwrite",
+                "--language", "en");
+            Assert.Equal(0, overwriteInjectResult.ExitCode);
+            Assert.DoesNotContain("filesystem constraints", overwriteInjectResult.StandardOutput + overwriteInjectResult.StandardError);
+
+            var listResult = await CliCommandRunner.RunAsync(
+                "list", imagePath,
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, listResult.ExitCode);
+            Assert.Contains("TEST", listResult.StandardOutput);
+            Assert.DoesNotContain("TES001", listResult.StandardOutput);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDirectory))
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task FileCrossCopy_Overwrite_XDos_ReplacesExistingFile()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+        var sourceImagePath = Path.Combine(tempDirectory, "xdos-src.d88");
+        var destImagePath = Path.Combine(tempDirectory, "xdos-dest.d88");
+        var sourcePath = Path.Combine(tempDirectory, "source.txt");
+        var destSeedPath = Path.Combine(tempDirectory, "dest-seed.txt");
+        await File.WriteAllTextAsync(sourcePath, "SOURCE");
+        await File.WriteAllTextAsync(destSeedPath, "DEST");
+
+        try
+        {
+            var createSourceResult = await CliCommandRunner.RunAsync(
+                "disk", "create", sourceImagePath,
+                "--disk-type", "2d",
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, createSourceResult.ExitCode);
+
+            var createDestResult = await CliCommandRunner.RunAsync(
+                "disk", "create", destImagePath,
+                "--disk-type", "2d",
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, createDestResult.ExitCode);
+
+            var sourceInjectResult = await CliCommandRunner.RunAsync(
+                "file", "import", sourceImagePath, sourcePath,
+                "--target-name", "MML.DOC",
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, sourceInjectResult.ExitCode);
+
+            var destInjectResult = await CliCommandRunner.RunAsync(
+                "file", "import", destImagePath, destSeedPath,
+                "--target-name", "MML.DOC",
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, destInjectResult.ExitCode);
+
+            var overwriteCrossCopyResult = await CliCommandRunner.RunAsync(
+                "file", "cross-copy", sourceImagePath, destImagePath, "MML.DOC",
+                "--image-file-overwrite",
+                "--language", "en");
+            Assert.Equal(0, overwriteCrossCopyResult.ExitCode);
+
+            var listResult = await CliCommandRunner.RunAsync(
+                "list", destImagePath,
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, listResult.ExitCode);
+            Assert.Contains("MML.DOC", listResult.StandardOutput);
+            Assert.DoesNotContain("MML.DOC001", listResult.StandardOutput);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDirectory))
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task FileCopy_Overwrite_DeletesExistingTarget()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+        var imagePath = Path.Combine(tempDirectory, "copy-overwrite.d88");
+        var sourcePath = Path.Combine(tempDirectory, "source.txt");
+        await File.WriteAllTextAsync(sourcePath, "SOURCE");
+
+        try
+        {
+            var createResult = await CliCommandRunner.RunAsync(
+                "disk", "create", imagePath,
+                "--disk-type", "2d",
+                "--file-system", "hu-basic",
+                "--language", "en");
+            Assert.Equal(0, createResult.ExitCode);
+
+            var importResult = await CliCommandRunner.RunAsync(
+                "file", "import", imagePath, sourcePath,
+                "--target-name", "ORIGINAL.TXT",
+                "--file-system", "hu-basic",
+                "--language", "en");
+            Assert.Equal(0, importResult.ExitCode);
+
+            var copyResult = await CliCommandRunner.RunAsync(
+                "file", "copy", imagePath, "ORIGINAL.TXT", "TARGET.TXT",
+                "--language", "en");
+            Assert.Equal(0, copyResult.ExitCode);
+
+            var overwriteCopyResult = await CliCommandRunner.RunAsync(
+                "file", "copy", imagePath, "ORIGINAL.TXT", "TARGET.TXT",
+                "--image-file-overwrite",
+                "--language", "en");
+            Assert.Equal(0, overwriteCopyResult.ExitCode);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDirectory))
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task FileCopy_Overwrite_XDos_ReplacesExistingFile()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+        var imagePath = Path.Combine(tempDirectory, "copy-overwrite-xdos.d88");
+        var sourcePath = Path.Combine(tempDirectory, "source.txt");
+        var targetSeedPath = Path.Combine(tempDirectory, "target-seed.txt");
+        var exportPath = Path.Combine(tempDirectory, "out.txt");
+        await File.WriteAllTextAsync(sourcePath, "SOURCE");
+        await File.WriteAllTextAsync(targetSeedPath, "TARGET");
+
+        try
+        {
+            var createResult = await CliCommandRunner.RunAsync(
+                "disk", "create", imagePath,
+                "--disk-type", "2d",
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, createResult.ExitCode);
+
+            var sourceImportResult = await CliCommandRunner.RunAsync(
+                "file", "import", imagePath, sourcePath,
+                "--target-name", "SOURCE.TXT",
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, sourceImportResult.ExitCode);
+
+            var seedImportResult = await CliCommandRunner.RunAsync(
+                "file", "import", imagePath, targetSeedPath,
+                "--target-name", "TARGET.TXT",
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, seedImportResult.ExitCode);
+
+            var overwriteCopyResult = await CliCommandRunner.RunAsync(
+                "file", "copy", imagePath, "SOURCE.TXT", "TARGET.TXT",
+                "--image-file-overwrite",
+                "--language", "en");
+            Assert.Equal(0, overwriteCopyResult.ExitCode);
+
+            var exportResult = await CliCommandRunner.RunAsync(
+                "file", "export", imagePath, "TARGET.TXT", exportPath,
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, exportResult.ExitCode);
+            Assert.Equal("SOURCE", await File.ReadAllTextAsync(exportPath));
+
+            var listResult = await CliCommandRunner.RunAsync(
+                "list", imagePath,
+                "--file-system", "xdos",
+                "--language", "en");
+            Assert.Equal(0, listResult.ExitCode);
+            Assert.Contains("TARGET.TXT", listResult.StandardOutput);
+            Assert.DoesNotContain("TARGET.TXT001", listResult.StandardOutput);
         }
         finally
         {
