@@ -3,6 +3,7 @@ using Legacy89DiskKit.Domain.DiskImage.Interface.Container;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Domain.FileSystem.Interface.FileSystem;
 using Legacy89DiskKit.Domain.FileSystem.Model;
+using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
 using Xunit;
 
 namespace Legacy89DiskKit.Tests.Application;
@@ -14,6 +15,7 @@ public class DiskCloneServiceTest
         public List<FileEntry> Files { get; } = new();
         public List<string> DirectWrites { get; } = new();
         public DiskFileSystemInfo Info { get; set; } = new("FakeFs", 0, 0, 256, 0, "FAKE", "FAKE", 8, 3);
+        public int WriteLimit { get; set; } = int.MaxValue;
 
         public DiskFileSystemInfo GetFileSystemInfo() => Info;
         public FileSystemCapabilities Capabilities =>
@@ -24,7 +26,27 @@ public class DiskCloneServiceTest
         public IEnumerable<FileEntry> GetFiles() => Files;
         public bool FileExists(string fileName) => Files.Any(f => f.FullName.Equals(fileName, StringComparison.OrdinalIgnoreCase));
         public byte[] ReadFile(string fileName) => Array.Empty<byte>();
-        public void WriteFile(string fileName, byte[] data, ExtendedFileAttributes attributes, ushort? loadAddress = null, ushort? executionAddress = null) => DirectWrites.Add(fileName);
+        public void WriteFile(string fileName, byte[] data, ExtendedFileAttributes attributes, ushort? loadAddress = null, ushort? executionAddress = null)
+        {
+            if (DirectWrites.Count >= WriteLimit)
+            {
+                throw new IOException("Disk full.");
+            }
+
+            DirectWrites.Add(fileName);
+            var parts = fileName.Split('.', 2);
+            Files.Add(new FileEntry(
+                parts[0],
+                parts.Length > 1 ? parts[1] : string.Empty,
+                data.Length,
+                null,
+                null,
+                attributes,
+                0,
+                loadAddress,
+                null,
+                executionAddress));
+        }
         public void DeleteFile(string fileName) { }
         public void RenameFile(string oldName, string newName) { }
         public void CopyFile(string sourceName, string targetName) { }
@@ -177,5 +199,74 @@ public class DiskCloneServiceTest
         Assert.Empty(destination.DirectWrites);
         Assert.Single(destinationAdapter.ImportedFileNames);
         Assert.Equal("X-DOS System", destinationAdapter.ImportedFileNames[0]);
+    }
+
+    [Fact]
+    public void TransferFiles_RepeatedRuns_AllocateSequentialUnifiedNames()
+    {
+        var registry = new Legacy89DiskKit.CharacterEncoding.Application.EncoderRegistry();
+        registry.Register("X1", new X1CharacterEncoder());
+        var service = new DiskCloneService(null!, new FileNameNormalizationService(registry));
+
+        var source = new FakeFileSystem
+        {
+            Info = new DiskFileSystemInfo("X-DOS", 0, 0, 512, 0, "X1", "X1", 16, 0)
+        };
+        var destination = new FakeFileSystem
+        {
+            Info = new DiskFileSystemInfo("X-DOS", 0, 0, 512, 0, "X1", "X1", 16, 0)
+        };
+
+        source.Files.Add(new FileEntry(
+            "MML",
+            "DOC",
+            3,
+            null,
+            null,
+            new ExtendedFileAttributes(Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes.None, 0, false, "X-DOS")));
+
+        service.TransferFiles(source, destination, new[] { "MML.DOC" });
+        service.TransferFiles(source, destination, new[] { "MML.DOC" });
+
+        Assert.Equal(new[] { "MML.DOC", "MML.DOC001" }, destination.DirectWrites);
+    }
+
+    [Fact]
+    public void TransferFiles_WhenTargetRunsOutOfSpace_ThrowsDiskFull()
+    {
+        var registry = new Legacy89DiskKit.CharacterEncoding.Application.EncoderRegistry();
+        registry.Register("X1", new X1CharacterEncoder());
+        var service = new DiskCloneService(null!, new FileNameNormalizationService(registry));
+
+        var source = new FakeFileSystem
+        {
+            Info = new DiskFileSystemInfo("X-DOS", 0, 0, 512, 0, "X1", "X1", 16, 0)
+        };
+        var destination = new FakeFileSystem
+        {
+            Info = new DiskFileSystemInfo("X-DOS", 0, 0, 512, 0, "X1", "X1", 16, 0),
+            WriteLimit = 1
+        };
+
+        source.Files.Add(new FileEntry(
+            "FILE01",
+            "BIN",
+            3,
+            null,
+            null,
+            new ExtendedFileAttributes(Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes.None, 0, false, "X-DOS")));
+        source.Files.Add(new FileEntry(
+            "FILE02",
+            "BIN",
+            3,
+            null,
+            null,
+            new ExtendedFileAttributes(Legacy89DiskKit.Domain.FileSystem.Model.FileAttributes.None, 0, false, "X-DOS")));
+
+        var ex = Assert.Throws<Legacy89DiskKit.Domain.FileSystem.Exception.FileSystemException>(() =>
+            service.TransferFiles(source, destination, new[] { "FILE01.BIN", "FILE02.BIN" }));
+
+        Assert.Contains("Disk full.", ex.Message);
+        Assert.Single(destination.DirectWrites);
     }
 }

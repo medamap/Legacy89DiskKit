@@ -38,6 +38,16 @@ public class XDosFatWriter
 
     public void MarkUsed(int track, int sector) => SetSectorUsed(track, sector);
 
+    private void SetSectorFree(int track, int sector)
+    {
+        int offset = BitmapOffset + track * 2;
+        ushort word = BinaryPrimitives.ReadUInt16BigEndian(_fatSector.AsSpan(offset));
+        word = (ushort)(word | (1 << (16 - sector)));
+        BinaryPrimitives.WriteUInt16BigEndian(_fatSector.AsSpan(offset), word);
+    }
+
+    public void MarkFree(int track, int sector) => SetSectorFree(track, sector);
+
     public List<(int Track, int Sector)> AllocateRecords(int count)
     {
         var allocated = new List<(int, int)>();

@@ -11,10 +11,17 @@ public class X1BootEntrySummaryService
         var fsInfo = fileSystem.GetFileSystemInfo();
         if (fsInfo.FileSystemName == "Hu-BASIC")
         {
-            var summary = _huBasicMetadataService.GetBootSummary(fileSystem);
-            if (summary.Mode == BootInfoMode.FileBacked)
+            var bootRecord = _huBasicMetadataService.GetBootRecordInfo(fileSystem);
+            if (bootRecord != null)
             {
-                return new X1BootEntrySummary(X1BootEntryKind.HuBasicFileBacked, summary.FileName, summary.LoadAddress, summary.ExecutionAddress, MachineFamily: MachineType.X1);
+                var fullName = string.IsNullOrWhiteSpace(bootRecord.Extension) ? bootRecord.Name : $"{bootRecord.Name}.{bootRecord.Extension}";
+                return new X1BootEntrySummary(X1BootEntryKind.HuBasicFileBacked, fullName, bootRecord.LoadAddress, bootRecord.ExecutionAddress, MachineFamily: MachineType.X1);
+            }
+
+            var bootArea = fileSystem.ReadBootArea();
+            if (bootArea.Any(value => value != 0x00))
+            {
+                return new X1BootEntrySummary(X1BootEntryKind.None, MachineFamily: MachineType.X1);
             }
 
             return new X1BootEntrySummary(X1BootEntryKind.None, MachineFamily: MachineType.X1);

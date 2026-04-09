@@ -1,3 +1,8 @@
+---
+name: pre-report-check
+description: Run a mandatory self-check before reporting completion so git state, architecture rules, validation, and delivery quality are verified.
+---
+
 # Pre-Report Self-Check Skill
 
 ユーザーに「完了」を報告する前に、Gemini CLI 自身が必ず実行し、以下の項目を一つずつ自問自答して確認するためのスキルです。

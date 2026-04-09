@@ -13,4 +13,13 @@ public sealed class CliVersionTest
         Assert.Equal(0, result.ExitCode);
         Assert.Matches(@"^2\.1\.0 build-\d{14}-\d{5}\r?\n?$", result.StandardOutput);
     }
+
+    [Fact]
+    public async Task BareLog_DoesNotBreakVersionCommand()
+    {
+        var result = await CliCommandRunner.RunAsync("--log", "--version");
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Matches(@"^2\.1\.0 build-\d{14}-\d{5}\r?\n?$", result.StandardOutput);
+    }
 }

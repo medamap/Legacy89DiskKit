@@ -1,3 +1,8 @@
+---
+name: xdos-semantics-engine
+description: Provide conservative X-DOS byte-window annotation and hardware-port hinting for repository-local analysis without upgrading semantic certainty on its own.
+---
+
 # XDOS Semantics Engine Skill (Analysis-Only)
 
 This skill provides conservative Z80 byte-window annotation for X-DOS kernel analysis based on documented X1 series hardware facts already stored in this repository.

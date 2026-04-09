@@ -414,6 +414,33 @@ public class XDosFileSystemTest
     }
 
     [Fact]
+    public void DeleteFile_RemovesEntryAndAllowsRewrite()
+    {
+        using var svc = Legacy89DiskKitApplication.CreateDiskService();
+        var path = GetTempPath("XDOS_DELETE.D88");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var container = svc.CreateDisk(path, DiskType.TwoDD);
+        var fs = new XDosFileSystem(container);
+        fs.Format();
+
+        var original = Encoding.ASCII.GetBytes("ORIGINAL");
+        var replacement = Encoding.ASCII.GetBytes("REPLACEMENT");
+
+        fs.WriteFile("DELETE.TXT", original, fs.CreateDefaultAttributes(true));
+        Assert.True(fs.FileExists("DELETE.TXT"));
+
+        fs.DeleteFile("DELETE.TXT");
+        Assert.False(fs.FileExists("DELETE.TXT"));
+
+        fs.WriteFile("DELETE.TXT", replacement, fs.CreateDefaultAttributes(true));
+        container.Save();
+
+        var entry = fs.GetFilesWithMetadata().First(e => e.FileName == "DELETE.TXT");
+        Assert.Equal(replacement.Length, entry.FileSize);
+        Assert.StartsWith("REPLACEMENT", Encoding.ASCII.GetString(fs.ReadFile("DELETE.TXT")));
+    }
+
+    [Fact]
     public void WriteFile_BinaryIntent_DefaultsToFileType0x0100()
     {
         using var svc = Legacy89DiskKitApplication.CreateDiskService();
@@ -845,5 +872,59 @@ public class XDosFileSystemTest
         var file = fs2.GetFiles().First(f => f.FileName.Trim() == "INVALID.BIN");
 
         Assert.Null(file.LastModifiedAt);
+    }
+
+    [Fact]
+    public void Reopen_TwoD_XdosClone_VerifiesReadBack()
+    {
+        var srcPath = Path.Combine(
+            TestDiskFixtureFactory.CreateTempDiskPath(""),
+            "REOPEN_SRC.D88");
+        File.Copy(
+            "/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/images/disk_org/x1/XDOS_SYS.D88",
+            srcPath,
+            overwrite: true);
+
+        var dstPath = "/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/images/test/20260408-2d-xdos-reopen-only.d88";
+        if (File.Exists(dstPath)) File.Delete(dstPath);
+
+        IDiskContainer dstContainer;
+        XDosFileSystem dstFs;
+        {
+            using var dstSvc = Legacy89DiskKitApplication.CreateDiskService();
+            dstContainer = dstSvc.CreateDisk(dstPath, DiskType.TwoD);
+            dstFs = new XDosFileSystem(dstContainer);
+        }
+
+        using (var srcSvc = Legacy89DiskKitApplication.CreateDiskService())
+        {
+            var srcContainer = srcSvc.OpenDisk(srcPath, readOnly: true);
+            var srcFs = new XDosFileSystem(srcContainer);
+
+            var cloneService = Legacy89DiskKitApplication.CreateDiskCloneService(srcFs.GetFileSystemInfo());
+            cloneService.CloneXDosBootable(srcFs, new XDosTransferAdapter(srcFs), dstFs, new XDosTransferAdapter(dstFs));
+        }
+
+        dstContainer.Save();
+        dstContainer.Dispose();
+
+        using var verifySvc = Legacy89DiskKitApplication.CreateDiskService();
+        var verifyContainer = verifySvc.OpenDisk(dstPath, readOnly: true);
+        var verifyFs = new XDosFileSystem(verifyContainer);
+
+        var verifyFiles = verifyFs.GetFiles().ToList();
+        Assert.NotEmpty(verifyFiles);
+
+        foreach (var entry in verifyFiles)
+        {
+            var data = verifyFs.ReadFile(entry.FileName);
+            Assert.NotEmpty(data);
+        }
+
+        var verifyBoot = verifyFs.ReadBootArea();
+        Assert.NotEmpty(verifyBoot);
+        Assert.NotEqual(0, verifyBoot[0]);
+
+        Assert.True(File.Exists(dstPath), $"Output file should exist at {dstPath}");
     }
 }

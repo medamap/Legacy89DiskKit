@@ -28,6 +28,13 @@ namespace Legacy89DiskKit.Tests
         }
 
         [Fact]
+        public void Normalize_ThreePartName_StillUsesLastDotFor8Dot3()
+        {
+            var result = _service.Normalize("MML.VERSION.DOC", "SJIS", 8, 3);
+            Assert.Equal("MML_V001.DOC", result);
+        }
+
+        [Fact]
         public void Normalize_LongName_TruncatesTo5Plus3_MSX()
         {
             // MSX: maxBase=8, prefixLength = 8-3 = 5
@@ -88,6 +95,13 @@ namespace Legacy89DiskKit.Tests
             // Unified (ext=0), max=13 (HuBasic-like) -> prefix=10
             var result = _service.Normalize("VERYLONGFILENAME", "X1", 13, 0);
             Assert.Equal("VERYLONGFI001", result);
+        }
+
+        [Fact]
+        public void Normalize_UnifiedName_PreservesPeriod()
+        {
+            var result = _service.Normalize("MML.DOC", "X1", 16, 0);
+            Assert.Equal("MML.DOC", result);
         }
     }
 }

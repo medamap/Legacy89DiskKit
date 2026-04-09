@@ -21,13 +21,13 @@ public class XDosFileSystem : IFileSystem
     private XDosFatWriter              _fatWriter = null!;
     private XDosFamWriter              _famWriter = null!;
     private XDosDirWriter              _dirWriter = null!;
-    private readonly XDosMediaGeometry _geometry;
+    private XDosMediaGeometry _geometry;
     private IReadOnlyList<XDosDirectoryEntry>? _cachedDirectory;
 
     public XDosFileSystem(IDiskContainer container)
     {
         _container    = container;
-        _geometry     = XDosMediaGeometry.FromDiskType(container.DiskType);
+        _geometry     = XDosMediaGeometry.FromContainer(container);
         _dirParser    = new XDosDirParser();
         InitializeHelpers();
     }
@@ -45,6 +45,7 @@ public class XDosFileSystem : IFileSystem
     public FileSystemCapabilities Capabilities =>
         FileSystemCapabilities.SupportsBootArea |
         FileSystemCapabilities.SupportsAttributes |
+        FileSystemCapabilities.SupportsInternalCopy |
         FileSystemCapabilities.FixedFileNameLength;
 
     public XDosMediaGeometry Geometry => _geometry;
@@ -260,9 +261,60 @@ public class XDosFileSystem : IFileSystem
         return entries;
     }
 
-    public void DeleteFile(string fileName)                              => throw new NotSupportedException();
+    public void DeleteFile(string fileName)
+    {
+        if (_container.IsReadOnly) throw new InvalidOperationException("Read-only.");
+
+        var entry = GetDirectory().FirstOrDefault(e => !e.IsEmpty && e.FileName.Equals(fileName, StringComparison.OrdinalIgnoreCase))
+            ?? throw new FileNotFoundException($"File not found: {fileName}");
+
+        var famEntries = _fam.ReadFam(entry.FamPointer);
+        foreach (var famEntry in famEntries)
+        {
+            for (int i = 0; i < famEntry.RecordCount; i++)
+            {
+                var track = famEntry.Track + ((famEntry.Sector - 1 + i) / _geometry.DataSectorsPerTrack);
+                var sector = ((famEntry.Sector - 1 + i) % _geometry.DataSectorsPerTrack) + 1;
+                _fatWriter.MarkFree(track, sector);
+            }
+        }
+
+        if (entry.FamPointer.Track != 0)
+        {
+            _fatWriter.MarkFree(entry.FamPointer.Track, entry.FamPointer.Sector);
+            _famWriter.ClearFam(entry.FamPointer.Track, entry.FamPointer.Sector);
+        }
+
+        _fatWriter.Commit();
+        Array.Copy(_fatWriter.FatSector, _fat.FatSector, _fat.FatSector.Length);
+
+        var dirSlot = FindDirectorySlot(entry.RawFileName, entry.RawFileType);
+        if (dirSlot.HasValue)
+        {
+            _dirWriter.ClearEntry(dirSlot.Value.Sector, dirSlot.Value.Offset);
+        }
+
+        _cachedDirectory = null;
+    }
     public void RenameFile(string old, string @new)                      => throw new NotSupportedException();
-    public void CopyFile(string src, string dst)                         => throw new NotSupportedException();
+    public void CopyFile(string src, string dst)
+    {
+        if (_container.IsReadOnly) throw new InvalidOperationException("Read-only.");
+
+        var entry = GetDirectory().FirstOrDefault(e => !e.IsEmpty && e.FileName.Equals(src, StringComparison.OrdinalIgnoreCase))
+            ?? throw new FileNotFoundException($"File not found: {src}");
+
+        var data = _recordReader.ReadFile(entry);
+        var attrs = new ExtendedFileAttributes(FileAttributes.None, entry.Attribute, entry.FileType == XDosFileType.Asc, "X-DOS");
+        WriteFileInternal(
+            dst,
+            data,
+            attrs,
+            loadAddress:        entry.StartAddress,
+            executionAddress:   entry.FileType == XDosFileType.Asc ? null : entry.ExecAddressOrSizeHigh,
+            forcedRawType:      entry.RawFileType,
+            forcedTimestampRaw: entry.TimestampRaw);
+    }
     public void UpdateAttributes(string fn, ExtendedFileAttributes attr) => throw new NotSupportedException();
 
     public ExtendedFileAttributes CreateDefaultAttributes(bool isAscii)
@@ -273,6 +325,7 @@ public class XDosFileSystem : IFileSystem
         if (_container.IsReadOnly) throw new InvalidOperationException();
         if (_container is IGeometryRebuildableDiskContainer rebuildable)
         {
+            _geometry = XDosMediaGeometry.FromDiskType(_container.DiskType);
             rebuildable.RebuildGeometry((c, h) => _geometry.GetTrackGeometry(c, h));
             InitializeHelpers();
         }

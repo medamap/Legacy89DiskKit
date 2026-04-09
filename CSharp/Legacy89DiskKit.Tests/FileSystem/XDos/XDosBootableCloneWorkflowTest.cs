@@ -141,4 +141,56 @@ public class XDosBootableCloneWorkflowTest
         Assert.Equal(srcFs.ReadBootArea(), verifyFs.ReadBootArea());
         Assert.Equal(srcFs.GetFiles().Count(), verifyFs.GetFiles().Count());
     }
+
+    [Fact]
+    public void Reopen_RealXdosSysClone_VerifiesReadBack()
+    {
+        var srcPath = Path.Combine(
+            TestDiskFixtureFactory.CreateTempDiskPath(""),
+            "REAL_XDOS_SRC.D88");
+        File.Copy(
+            "/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/images/disk_org/x1/XDOS_SYS.D88",
+            srcPath,
+            overwrite: true);
+
+        var dstPath = TestDiskFixtureFactory.CreateTempDiskPath("REAL_XDOS_REOPEN.D88");
+        if (File.Exists(dstPath)) File.Delete(dstPath);
+
+        IDiskContainer dstContainer;
+        XDosFileSystem dstFs;
+        {
+            using var dstSvc = Legacy89DiskKitApplication.CreateDiskService();
+            dstContainer = dstSvc.CreateDisk(dstPath, DiskType.TwoD);
+            dstFs = new XDosFileSystem(dstContainer);
+        }
+
+        using (var srcSvc = Legacy89DiskKitApplication.CreateDiskService())
+        {
+            var srcContainer = srcSvc.OpenDisk(srcPath, readOnly: true);
+            var srcFs = new XDosFileSystem(srcContainer);
+
+            var cloneService = Legacy89DiskKitApplication.CreateDiskCloneService(srcFs.GetFileSystemInfo());
+            cloneService.CloneXDosBootable(srcFs, new XDosTransferAdapter(srcFs), dstFs, new XDosTransferAdapter(dstFs));
+        }
+
+        dstContainer.Save();
+        dstContainer.Dispose();
+
+        using var verifySvc = Legacy89DiskKitApplication.CreateDiskService();
+        var verifyContainer = verifySvc.OpenDisk(dstPath, readOnly: true);
+        var verifyFs = new XDosFileSystem(verifyContainer);
+
+        var verifyFiles = verifyFs.GetFiles().ToList();
+        Assert.NotEmpty(verifyFiles);
+
+        foreach (var entry in verifyFiles)
+        {
+            var data = verifyFs.ReadFile(entry.FileName);
+            Assert.NotEmpty(data);
+        }
+
+        var verifyBoot = verifyFs.ReadBootArea();
+        Assert.NotEmpty(verifyBoot);
+        Assert.NotEqual(0, verifyBoot[0]);
+    }
 }
