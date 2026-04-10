@@ -14,10 +14,10 @@ This skill is used *before* implementing a feature. It explains the intended app
     - The intended technical approach (classes, interfaces, logic).
     - The user's specific requirements and constraints.
 2.  **Consultation**: Run the consultation command:
-    `codex exec 'これからこれをこういうふうに実装するので、アドバイスや注意点をください、ユーザーの要求はこれです： <absolute_path_to_consultation_report>'`
+    `codex exec "$(cat <absolute_path_to_consultation_report>)\n\nこれからこれをこういうふうに実装するので、アドバイスや注意点をください。"`
 3.  **Refinement**: Review Codex's feedback. If there are valid concerns or better suggestions, update the implementation plan or approach accordingly.
 4.  **Proceed**: Move to EXECUTION mode once the approach is refined.
 
 ## Commands
 
-- `codex exec 'これからこれをこういうふうに実装するので、アドバイスや注意点をください、ユーザーの要求はこれです： <path>'`: Sends the consultation report at `<path>` to Codex for advice.
+- `codex exec "$(cat <path>)\n\nこれからこれをこういうふうに実装するので、アドバイスや注意点をください。"`: Sends the consultation report at `<path>` to Codex for advice.

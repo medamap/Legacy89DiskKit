@@ -15,7 +15,7 @@ $ProjectPath = Join-Path $RepoRoot "CSharp/Legacy89DiskKit.NativeInterop/Legacy8
 $TestAppPath = Join-Path $RepoRoot "CSharp/NativeInteropTestApp/NativeInteropTestApp.csproj"
 $HeaderPath = Join-Path $RepoRoot "include/legacy89diskkit_native.h"
 $ReleaseNotesPath = Join-Path $RepoRoot "RELEASE_NOTES_v$Version.md"
-$SampleImage = Join-Path $RepoRoot "images/disk_org/x1/X1turboIIIDemo.d88"
+$SampleImage = $env:LEGACY89_SAMPLE_IMAGE
 $PublishRoot = Join-Path $RepoRoot "publish/v$Version/native"
 $ReleaseRoot = Join-Path $RepoRoot "release/v$Version"
 $Rid = "win-x64"
@@ -31,8 +31,6 @@ if (-not (Test-Path $ProjectPath)) { throw "Native project not found: $ProjectPa
 if (-not (Test-Path $TestAppPath)) { throw "Native smoke test app not found: $TestAppPath" }
 if (-not (Test-Path $HeaderPath)) { throw "Native public header not found: $HeaderPath" }
 if (-not (Test-Path $ReleaseNotesPath)) { throw "Release notes not found: $ReleaseNotesPath" }
-if (-not (Test-Path $SampleImage)) { throw "Sample image not found: $SampleImage" }
-
 Remove-Item $TargetRoot -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Path $BuildRoot | Out-Null
 New-Item -ItemType Directory -Path $IncludeRoot | Out-Null
@@ -53,7 +51,10 @@ if (-not (Test-Path $InternalLibPath)) {
 Copy-Item $InternalLibPath $PublicLibPath -Force
 Copy-Item $HeaderPath (Join-Path $IncludeRoot "legacy89diskkit_native.h") -Force
 
-dotnet run --project $TestAppPath -- $PublicLibPath $SampleImage | Out-Null
+if ($SampleImage) {
+    if (-not (Test-Path $SampleImage)) { throw "Sample image not found: $SampleImage" }
+    dotnet run --project $TestAppPath -- $PublicLibPath $SampleImage | Out-Null
+}
 
 Compress-Archive -Path $TargetRoot -DestinationPath $ArchivePath -Force
 

@@ -1,0 +1,35 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+    Name="Legacy89DiskKit CLI"
+    Manufacturer="Legacy89DiskKit"
+    Version="$(var.Version)"
+    UpgradeCode="9886F42A-5C11-4BA3-AF62-5C4A8018E0B1"
+    Scope="perUser">
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Legacy89DiskKit CLI is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="INSTALLFOLDER" Name="Legacy89DiskKit" />
+    </StandardDirectory>
+
+    <Feature Id="MainFeature" Title="Legacy89DiskKit CLI" Level="1">
+      <ComponentGroupRef Id="CliFiles" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="CliFiles" Directory="INSTALLFOLDER">
+      <Component Guid="5D8586B6-6C46-49EE-B89F-FB8AC4AC3305">
+        <File Source="$(var.SourceDir)\Legacy89DiskKit.Cli.exe" KeyPath="yes" />
+        <File Source="$(var.SourceDir)\l89.cmd" />
+        <Environment
+          Name="PATH"
+          Value="[INSTALLFOLDER]"
+          Permanent="no"
+          Part="last"
+          Action="set"
+          System="no" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

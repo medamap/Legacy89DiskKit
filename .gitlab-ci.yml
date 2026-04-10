@@ -1,0 +1,14 @@
+stages:
+  - verify
+
+enforce_main_source_branch:
+  stage: verify
+  image: alpine:3.20
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  script:
+    - |
+      if [ "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" = "main" ] && [ "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME" != "develop" ]; then
+        echo "Only develop can merge into main."
+        exit 1
+      fi

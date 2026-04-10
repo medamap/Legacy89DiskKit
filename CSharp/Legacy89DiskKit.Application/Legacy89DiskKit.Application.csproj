@@ -1,18 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\Legacy89DiskKit.Domain\Legacy89DiskKit.Domain.csproj" />
-    <ProjectReference Include="..\Legacy89DiskKit.Infrastructure\Legacy89DiskKit.Infrastructure.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.CharacterEncoding.Domain\Legacy89DiskKit.CharacterEncoding.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.DiskImage.Domain\Legacy89DiskKit.DiskImage.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.Drive.Domain\Legacy89DiskKit.Drive.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.Fdc.Domain\Legacy89DiskKit.Fdc.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.FileSystem.Domain\Legacy89DiskKit.FileSystem.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.Native.Domain\Legacy89DiskKit.Native.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.Timing.Domain\Legacy89DiskKit.Timing.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.CharacterEncoding.Infrastructure\Legacy89DiskKit.CharacterEncoding.Infrastructure.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.DiskImage.Infrastructure\Legacy89DiskKit.DiskImage.Infrastructure.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.Drive.Infrastructure\Legacy89DiskKit.Drive.Infrastructure.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.Fdc.Infrastructure\Legacy89DiskKit.Fdc.Infrastructure.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.FileSystem.Infrastructure\Legacy89DiskKit.FileSystem.Infrastructure.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.Archive.Application/Legacy89DiskKit.Archive.Application.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.FileSystem.Application/Legacy89DiskKit.FileSystem.Application.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.CharacterEncoding.Application/Legacy89DiskKit.CharacterEncoding.Application.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.Drive.Application/Legacy89DiskKit.Drive.Application.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.Fdc.Application/Legacy89DiskKit.Fdc.Application.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.Native.Application/Legacy89DiskKit.Native.Application.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.DiskImage.Application/Legacy89DiskKit.DiskImage.Application.csproj" />
   </ItemGroup>
-
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
   <ItemGroup>
-    <Compile Remove="VerificationApp.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/BootEntryExportArtifact.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/BootEntryImportMetadata.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/BootInfoSummary.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/DirectoryLayoutTextPlan.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/TextTransferOptions.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/Pc88BootEntrySummary.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/X1BootEntrySummary.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/FileSystemRegistry.cs" />
+    <Compile Remove="../Legacy89DiskKit/CharacterEncoding/Application/CharacterEncodingResolver.cs" />
+    <Compile Remove="../Legacy89DiskKit/CharacterEncoding/Application/EncoderRegistry.cs" />
+    <Compile Remove="../Legacy89DiskKit/Drive/Application/DriveMountService.cs" />
+    <Compile Remove="../Legacy89DiskKit/Drive/Application/MountedMediumBinding.cs" />
+    <Compile Remove="../Legacy89DiskKit/Drive/Application/MountedMediumBindingService.cs" />
+    <Compile Remove="../Legacy89DiskKit/Fdc/Application/**/*.cs" />
+    <Compile Remove="../Legacy89DiskKit/Native/Application/ManagedNativeBridgeBackend.cs" />
+    <Compile Remove="../Legacy89DiskKit/Native/Application/ManagedNativeDiskSession.cs" />
+    <Compile Remove="../Legacy89DiskKit/DiskImage/Application/DiskService.cs" />
+    <Compile Remove="../Legacy89DiskKit/DiskImage/Application/NativeBridgeBackend.cs" />
+    <Compile Remove="../Legacy89DiskKit/Archive/Application/ArchiveService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/MsxBootProfileDetectorService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/MsxBootMetadataService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/HuBasicMetadataService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/IBootProfileService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/CompositeBootProfileService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/IBootEntryExportService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/IBootEntryImportService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/X1BootEntrySummaryService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/Pc88BootEntrySummaryService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/BootEntryExportService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/BootEntryImportService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/ExplicitFileSystemResolver.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/DirectoryLayoutService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/InspectionModels.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/DiskInspectionService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/FileInspectionService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/FileTransferService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/DiskCloneService.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/FileSystemTransferOrchestrator.cs" />
+    <Compile Remove="../Legacy89DiskKit/FileSystem/Application/FileNameNormalizationService.cs" />
   </ItemGroup>
-
 </Project>

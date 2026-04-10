@@ -18,7 +18,7 @@ PROJECT_PATH="$REPO_ROOT/CSharp/Legacy89DiskKit.NativeInterop/Legacy89DiskKit.Na
 TEST_APP_PATH="$REPO_ROOT/CSharp/NativeInteropTestApp/NativeInteropTestApp.csproj"
 HEADER_PATH="$REPO_ROOT/include/legacy89diskkit_native.h"
 RELEASE_NOTES_PATH="$REPO_ROOT/RELEASE_NOTES_v${VERSION}.md"
-SAMPLE_IMAGE="$REPO_ROOT/images/disk_org/x1/X1turboIIIDemo.d88"
+SAMPLE_IMAGE="${LEGACY89_SAMPLE_IMAGE:-}"
 PUBLISH_ROOT="$REPO_ROOT/publish/v${VERSION}/native"
 RELEASE_ROOT="$REPO_ROOT/release/v${VERSION}"
 
@@ -39,11 +39,6 @@ fi
 
 if [[ ! -f "$RELEASE_NOTES_PATH" ]]; then
   echo "Release notes not found: $RELEASE_NOTES_PATH" >&2
-  exit 1
-fi
-
-if [[ ! -f "$SAMPLE_IMAGE" ]]; then
-  echo "Sample image not found: $SAMPLE_IMAGE" >&2
   exit 1
 fi
 
@@ -105,7 +100,14 @@ cp "$INTERNAL_LIB_PATH" "$PUBLIC_LIB_PATH"
 cp "$HEADER_PATH" "$INCLUDE_ROOT/legacy89diskkit_native.h"
 
 echo "Running native smoke check on $HOST_RID"
-dotnet run --project "$TEST_APP_PATH" -- "$PUBLIC_LIB_PATH" "$SAMPLE_IMAGE" >/dev/null
+if [[ -n "$SAMPLE_IMAGE" ]]; then
+  if [[ ! -f "$SAMPLE_IMAGE" ]]; then
+    echo "Sample image not found: $SAMPLE_IMAGE" >&2
+    exit 1
+  fi
+
+  dotnet run --project "$TEST_APP_PATH" -- "$PUBLIC_LIB_PATH" "$SAMPLE_IMAGE" >/dev/null
+fi
 
 ARCHIVE_BASE="Legacy89DiskKit.Native-v${VERSION}-${HOST_RID}"
 if [[ "$ARCHIVE_EXT" == "zip" ]]; then

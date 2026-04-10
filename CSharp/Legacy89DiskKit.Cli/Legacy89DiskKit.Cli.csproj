@@ -1,9 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\Legacy89DiskKit.Domain\Legacy89DiskKit.Domain.csproj" />
-    <ProjectReference Include="..\Legacy89DiskKit.Infrastructure\Legacy89DiskKit.Infrastructure.csproj" />
     <ProjectReference Include="..\Legacy89DiskKit.Application\Legacy89DiskKit.Application.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.CharacterEncoding.Domain\Legacy89DiskKit.CharacterEncoding.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.DiskImage.Domain\Legacy89DiskKit.DiskImage.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.FileSystem.Domain\Legacy89DiskKit.FileSystem.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.CharacterEncoding.Infrastructure\Legacy89DiskKit.CharacterEncoding.Infrastructure.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.FileSystem.Infrastructure\Legacy89DiskKit.FileSystem.Infrastructure.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.NativeInterop\Legacy89DiskKit.NativeInterop.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -13,6 +17,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
+    <Version>2.1.0</Version>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PublishAot Condition="'$(PublishAot)' == ''">false</PublishAot>

@@ -1,0 +1,47 @@
+address	label	class	source	note
+0x0FF8	fdc_status_cmd	confirmed	XDOSUTIL.D88	MB8877A Status (R) / Command (W) (Seen in 01 F8 0F)
+0x0FF9	fdc_track	probable	x1_io_ports_reference.md	FDC Track Register
+0x0FFA	fdc_sector	probable	x1_io_ports_reference.md	FDC Sector Register
+0x0FFB	fdc_data	probable	x1_io_ports_reference.md	FDC Data Register
+0x0FFC	fdc_control	probable	XDOSUTIL.D88	Drive Select, Side Select (bit 4), Motor latch (Seen as 0E FC)
+0x1D00	ipl_rom_on	placeholder	x1_io_ports_reference.md	Map IPL ROM to 0000-7FFF (Any offset in 1DxxH)
+0x1E00	ipl_rom_off	placeholder	x1_io_ports_reference.md	Disable IPL ROM (Any offset in 1ExxH)
+0x1F80	dma_ctrl	placeholder	x1_io_ports_reference.md	Z80 DMA control/status
+0x7000	dir_area	confirmed	make_BGM	Directory sector buffer
+0x7200	bdir_area	confirmed	make_BGM	bdir system code buffer
+0x7220	bdir_pt	confirmed	make_BGM	Pointer within the system binary area
+0x7400	fam_area	confirmed	make_BGM	FAM cluster chain buffer
+0xC800	kernel_base	probable	X-DOS_Filesystem_Analysis.md	Hypothesized X-DOS kernel load address
+0xC860	sys_wrd_impl	confirmed	XDOS_SYS.D88	Implementation of sys_wrd
+0xC866	sys_entry2_impl	confirmed	XDOS_SYS.D88	Implementation of Entry 2
+0xC86C	sys_rdd_impl	confirmed	XDOS_SYS.D88	Implementation of sys_rdd
+0xC876	sys_wopen_impl	confirmed	XDOS_SYS.D88	Implementation of sys_wopen
+0xC898	sys_file_impl	confirmed	XDOS_SYS.D88	Implementation of sys_file (Returns via HL)
+0xC8A6	sys_entry5_impl	confirmed	XDOS_SYS.D88	Implementation of Entry 5
+0xC8B6	sys_entry6_impl	confirmed	XDOS_SYS.D88	Implementation of Entry 6
+0xC8C4	sys_devi_impl	confirmed	XDOS_SYS.D88	Implementation of sys_devi
+0xC8D2	sys_devo_impl	confirmed	XDOS_SYS.D88	Implementation of sys_devo
+0xC914	sys_ropen_impl	confirmed	XDOS_SYS.D88	Implementation of sys_ropen
+0xC91B	sys_entry9_impl	confirmed	XDOS_SYS.D88	Implementation of Entry 9
+0xC934	helper_c934	confirmed	XDOS_SYS.D88	Helper routine (nibble swap and call 0xC9EA)
+0xC938	helper_c934_mid	confirmed	XDOS_SYS.D88	Mid-entry point for helper_c934 (bypasses ld (bc),a)
+0xC97E	helper_c97e	confirmed	XDOS_SYS.D88	Helper routine (pop bc, pop hl, ret)
+0xC9BC	helper_c9bc	confirmed	XDOS_SYS.D88	Helper routine (ld a, 0x50; call 0xEB32)
+0xCA1E	sys_call_impl	confirmed	XDOS_SYS.D88	Implementation of sys_call
+0xD6AF	helper_d6af	confirmed	XDOS_SYS.D88	Implementation delegate for sys_rdd
+0xDEAA	sys_load_impl	confirmed	XDOS_SYS.D88	Implementation of sys_load
+0xE691	side_latch_shadow	probable	XDOSUTIL.D88	Probable shadow RAM for side-select bit
+0xECE2	sys_dtadr	confirmed	x-dos.h	Data load address variable (word)
+0xECE4	sys_size	confirmed	x-dos.h	Data size variable (word)
+0xECE6	sys_exadr	confirmed	x-dos.h	Execution address variable (word)
+0xED1E	defdev	confirmed	make_BGM	Default drive register
+0xED78	sys_wopen	confirmed	XDOS_SYS.D88	Open file for write (BC=type)
+0xED7B	sys_wrd	confirmed	XDOS_SYS.D88	Write data from memory (uses sys_dtadr, sys_size)
+0xED81	sys_rdd	confirmed	XDOS_SYS.D88	Read data into memory (uses sys_dtadr)
+0xED84	sys_file	confirmed	XDOS_SYS.D88	Set active filename (DE=ptr)
+0xED8D	sys_devi	confirmed	XDOS_SYS.D88	Device input (HL=buf, DE=rec, A=cnt)
+0xED90	sys_devo	confirmed	XDOS_SYS.D88	Device output (HL=buf, DE=rec, A=cnt)
+0xED96	sys_ropen	confirmed	XDOS_SYS.D88	Open file for read (CY=1 on error)
+0xEDC0	sys_load	confirmed	XDOS_SYS.D88	Load/Save (A=0:load, A=1:save)
+0xEDF0	sys_call	confirmed	XDOS_SYS.D88	Generic OS call dispatcher (DE=entry)
+0xEE00	fat_area	confirmed	make_BGM	FAT bitmap loaded here

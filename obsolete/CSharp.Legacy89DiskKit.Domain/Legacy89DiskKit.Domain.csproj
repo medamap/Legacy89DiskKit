@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Legacy89DiskKit.CharacterEncoding.Domain\Legacy89DiskKit.CharacterEncoding.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.DiskImage.Domain\Legacy89DiskKit.DiskImage.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.Drive.Domain\Legacy89DiskKit.Drive.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.Fdc.Domain\Legacy89DiskKit.Fdc.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.FileSystem.Domain\Legacy89DiskKit.FileSystem.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.Native.Domain\Legacy89DiskKit.Native.Domain.csproj" />
+    <ProjectReference Include="..\Legacy89DiskKit.Timing.Domain\Legacy89DiskKit.Timing.Domain.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="CharacterEncoding/**/*.cs" />
+    <Compile Remove="DiskImage/**/*.cs" />
+    <Compile Remove="Drive/**/*.cs" />
+    <Compile Remove="Fdc/**/*.cs" />
+    <Compile Remove="FileSystem/**/*.cs" />
+    <Compile Remove="Native/**/*.cs" />
+    <Compile Remove="Timing/**/*.cs" />
+  </ItemGroup>
+
+</Project>
