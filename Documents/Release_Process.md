@@ -137,7 +137,7 @@ Update the following before tagging:
 
 - `README.md`
 - `Documents/ROADMAP.md`
-- `Documents/handoff/task.md`
+- `Documents/Roadmap_V2.md`
 - `RELEASE_NOTES_vX.Y.Z.md`
 - `Documents/Wasm_Integration_Guide.md`
 
@@ -148,7 +148,7 @@ Requirements:
 - README must describe WASM as documented-only for `v2.0.0`
 - release process must match the actual project layout
 - roadmap must reflect the current product model
-- handoff task list must remain the execution backlog
+- Roadmap V2 must remain the active migration backlog
 
 ## Release Notes
 
@@ -177,7 +177,8 @@ The local release script expects:
 - release notes:
   - `RELEASE_NOTES_vX.Y.Z.md`
 - host smoke-test sample image:
-  - `images/disk_org/x1/X1turboIIIDemo.d88`
+  - set `LEGACY89_SAMPLE_IMAGE` to a local disk image path when you want a media-based smoke check
+  - if `LEGACY89_SAMPLE_IMAGE` is not set, the release scripts still run help-only smoke checks
 
 The native release script expects:
 
@@ -188,7 +189,8 @@ The native release script expects:
 - public header:
   - `include/legacy89diskkit_native.h`
 - host smoke-test sample image:
-  - `images/disk_org/x1/X1turboIIIDemo.d88`
+  - set `LEGACY89_SAMPLE_IMAGE` to a local disk image path when you want a media-based smoke check
+  - if `LEGACY89_SAMPLE_IMAGE` is not set, the release scripts still run help-only smoke checks
 
 ## Packaging Layout
 
@@ -209,6 +211,7 @@ Archive names:
 - `Legacy89DiskKit.Cli-vX.Y.Z-linux-x64.tar.gz`
 - `Legacy89DiskKit.Cli-vX.Y.Z-osx-x64.tar.gz`
 - `Legacy89DiskKit.Cli-vX.Y.Z-osx-arm64.tar.gz`
+- `Legacy89DiskKit.Cli-vX.Y.Z-win-x64.msi` (when built on Windows with WiX v4)
 - `Legacy89DiskKit.Native-vX.Y.Z-<host-rid>.zip|tar.gz`
 
 ## Smoke Checks
@@ -219,6 +222,11 @@ The local release script verifies at minimum:
 - `Legacy89DiskKit.Cli disk --help`
 - `Legacy89DiskKit.Cli list --help`
 - one real command against a known sample image on the host platform
+
+The installed-command smoke check should verify at minimum:
+
+- `l89 --help`
+- `l89 --check-update`
 
 Also verify that documented options match the actual CLI:
 
@@ -265,6 +273,14 @@ The effective script behavior is equivalent to:
 dotnet publish CSharp/Legacy89DiskKit.NativeInterop/Legacy89DiskKit.NativeInterop.csproj -c Release -r <host-rid> -p:PublishAot=true -p:NativeLib=Shared -o publish/vX.Y.Z/native/<host-rid>/build
 ```
 
+## Optional Windows MSI Packaging
+
+On a Windows host with WiX v4 installed, create the per-user MSI after the `win-x64` standalone publish is available:
+
+```powershell
+./scripts/build-cli-msi.ps1 -Version X.Y.Z
+```
+
 ## Final v2.0.0 Closure Checklist
 
 Complete these in order before tagging:
@@ -275,7 +291,7 @@ Complete these in order before tagging:
 4. confirm CLI smoke checks passed
 5. confirm native smoke checks passed
 6. confirm README, release process, and integration guides are aligned
-7. confirm `Documents/handoff/task.md` marks all required `Phase 19` items complete
+7. confirm `Documents/Roadmap_V2.md` and `Documents/ROADMAP.md` are aligned with the current migration and release state
 8. only then create the tag and release
 
 Mandatory `v2.0.0` deliverables:

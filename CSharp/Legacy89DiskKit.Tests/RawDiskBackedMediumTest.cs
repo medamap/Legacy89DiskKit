@@ -1,0 +1,166 @@
+using Legacy89DiskKit.Domain.Drive.Interface;
+using Legacy89DiskKit.Domain.Fdc.Interface;
+using Legacy89DiskKit.Domain.Fdc.Model;
+using Legacy89DiskKit.Infrastructure.Fdc;
+using Legacy89DiskKit.Infrastructure.DiskImage.Container;
+using Legacy89DiskKit.Infrastructure.Drive.Medium;
+using Legacy89DiskKit.Infrastructure.Fdc.Medium;
+using Xunit;
+
+namespace Legacy89DiskKit.Tests;
+
+public class RawDiskBackedMediumTest
+{
+    [Fact]
+    public void RawDiskBackedSectorAddressableMedium_CanReadDecodedSectorData()
+    {
+        using var container = RawDiskContainer.CreateNewInMemory(Domain.DiskImage.Model.DiskType.TwoD);
+        container.WriteSector(0, 0, 1, CreateSector(256, 0x44));
+
+        ISectorAddressableMedium medium = new RawDiskBackedSectorAddressableMedium(container);
+
+        var data = medium.ReadSector(0, 0, 1);
+
+        Assert.Equal("raw-sector-image", medium.MediumKind);
+        Assert.True(medium.SectorExists(0, 0, 1));
+        Assert.Equal(0x44, data[0]);
+    }
+
+    [Fact]
+    public void RawDiskBackedControllerFacingMedium_CanServeReadSectorLikeFlow()
+    {
+        using var container = RawDiskContainer.CreateNewInMemory(Domain.DiskImage.Model.DiskType.TwoD);
+        var sector = CreateSector(256, 0x7E);
+        sector[1] = 0x3C;
+        sector[2] = 0x11;
+        container.WriteSector(0, 0, 1, sector);
+
+        IControllerFacingMedium medium = new RawDiskBackedControllerFacingMedium(container);
+
+        medium.Reset();
+        medium.SelectSide(0);
+        medium.WriteTrackRegister(0);
+        medium.WriteSectorRegister(1);
+        medium.WriteCommand(0x80);
+
+        Assert.True(medium.IsBusy);
+        Assert.Equal((byte)FdcStatusFlags.Busy, medium.ReadStatus());
+        Assert.False(medium.IsIrqAsserted);
+        Assert.False(medium.IsDrqAsserted);
+
+        medium.Advance(TimeSpan.FromMilliseconds(1));
+
+        Assert.Equal("raw-sector-image", medium.MediumKind);
+        Assert.True(medium.IsReady);
+        Assert.False(medium.IsWriteProtected);
+        Assert.False(medium.IsBusy);
+        Assert.True(medium.IsIrqAsserted);
+        Assert.True(medium.IsDrqAsserted);
+        Assert.Equal(0x7E, medium.ReadDataRegister());
+        Assert.True(medium.IsDrqAsserted);
+        Assert.Equal(0x3C, medium.ReadDataRegister());
+        Assert.True(medium.IsDrqAsserted);
+        Assert.Equal(0x11, medium.ReadDataRegister());
+        Assert.True(medium.IsDrqAsserted);
+    }
+
+    [Fact]
+    public void RawDiskBackedControllerFacingMedium_ReturnsRecordNotFoundStatusForMissingSector()
+    {
+        using var container = RawDiskContainer.CreateNewInMemory(Domain.DiskImage.Model.DiskType.TwoD);
+        IControllerFacingMedium medium = new RawDiskBackedControllerFacingMedium(container);
+
+        medium.Reset();
+        medium.SelectSide(0);
+        medium.WriteTrackRegister(0);
+        medium.WriteSectorRegister(99);
+        medium.WriteCommand(0x80);
+
+        Assert.True(medium.IsBusy);
+        medium.Advance(TimeSpan.FromMilliseconds(1));
+
+        Assert.Equal((byte)FdcStatusFlags.RecordNotFound, medium.ReadStatus());
+        Assert.False(medium.IsBusy);
+        Assert.True(medium.IsIrqAsserted);
+        Assert.False(medium.IsDrqAsserted);
+    }
+
+    [Fact]
+    public void RawDiskBackedControllerFacingMedium_CanRestoreSeekAndForceInterrupt()
+    {
+        using var container = RawDiskContainer.CreateNewInMemory(Domain.DiskImage.Model.DiskType.TwoD);
+        IControllerFacingMedium medium = new RawDiskBackedControllerFacingMedium(container);
+
+        medium.Reset();
+        medium.WriteTrackRegister(4);
+        medium.WriteDataRegister(2);
+        medium.WriteCommand(0x10);
+
+        Assert.True(medium.IsBusy);
+        medium.Advance(TimeSpan.FromMilliseconds(1));
+
+        Assert.Equal(2, medium.ReadTrackRegister());
+        Assert.False(medium.IsBusy);
+        Assert.True(medium.IsIrqAsserted);
+
+        medium.WriteCommand(0xD0);
+        Assert.False(medium.IsIrqAsserted);
+
+        medium.WriteTrackRegister(8);
+        medium.WriteCommand(0x00);
+        Assert.True(medium.IsBusy);
+        medium.Advance(TimeSpan.FromMilliseconds(1));
+        Assert.Equal(0, medium.ReadTrackRegister());
+        Assert.False(medium.IsBusy);
+        Assert.True(medium.IsIrqAsserted);
+    }
+
+    [Fact]
+    public void FdcMediumController_GetVisibleState_DoesNotConsumeRawTransferData()
+    {
+        using var container = RawDiskContainer.CreateNewInMemory(Domain.DiskImage.Model.DiskType.TwoD);
+        var sector = CreateSector(256, 0x7E);
+        sector[1] = 0x3C;
+        container.WriteSector(0, 0, 1, sector);
+
+        var controller = new FdcMediumController(new RawDiskBackedControllerFacingMedium(container));
+
+        controller.WriteRegister(Domain.Fdc.Model.FdcRegister.Track, 0);
+        controller.WriteRegister(Domain.Fdc.Model.FdcRegister.Sector, 1);
+        controller.WriteRegister(Domain.Fdc.Model.FdcRegister.CommandStatus, 0x80);
+
+        Assert.True(controller.GetVisibleState().Busy);
+        controller.Advance(TimeSpan.FromMilliseconds(1));
+
+        var visible = controller.GetVisibleState();
+
+        Assert.Equal(0x7E, visible.Data);
+        Assert.Equal(0, visible.SelectedDrive);
+        Assert.Equal(0, visible.SelectedSide);
+        Assert.True(visible.Drq);
+        Assert.Equal(0x7E, controller.ReadRegister(Domain.Fdc.Model.FdcRegister.Data));
+        Assert.Equal(0x3C, controller.ReadRegister(Domain.Fdc.Model.FdcRegister.Data));
+    }
+
+    [Fact]
+    public void RawDiskBackedControllerFacingMedium_ReturnsUnsupportedCommandStatus()
+    {
+        using var container = RawDiskContainer.CreateNewInMemory(Domain.DiskImage.Model.DiskType.TwoD);
+        IControllerFacingMedium medium = new RawDiskBackedControllerFacingMedium(container);
+
+        medium.Reset();
+        medium.WriteCommand(0xFF);
+
+        Assert.Equal((byte)FdcStatusFlags.UnsupportedCommand, medium.ReadStatus());
+        Assert.True(medium.IsIrqAsserted);
+        Assert.False(medium.IsDrqAsserted);
+        Assert.False(medium.IsBusy);
+    }
+
+    private static byte[] CreateSector(int size, byte firstByte)
+    {
+        var data = new byte[size];
+        data[0] = firstByte;
+        return data;
+    }
+}

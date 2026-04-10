@@ -1,67 +1,29 @@
 using System.Runtime.InteropServices;
 using System.Linq;
-using Legacy89DiskKit.Application.DiskImage;
-using Legacy89DiskKit.Domain.FileSystem.Interface.Registry;
-using Legacy89DiskKit.Application.CharacterEncoding;
-using Legacy89DiskKit.Infrastructure.CharacterEncoding.Encoder;
-using Legacy89DiskKit.Domain.CharacterEncoding.Interface.Registry;
-using Legacy89DiskKit.Application.FileSystem;
-using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
-using Legacy89DiskKit.Infrastructure.FileSystem.Pc88.Provider;
-using Legacy89DiskKit.Infrastructure.FileSystem.Msx.Provider;
 using Legacy89DiskKit.NativeInterop.Types;
 using Legacy89DiskKit.NativeInterop.Core;
+using Legacy89DiskKit.DiskImage.Application;
 
 namespace Legacy89DiskKit.NativeInterop.Exports;
 
 public static class DiskExports
 {
-    private static IFileSystemRegistry? _defaultRegistry;
-    private static IEncoderRegistry? _defaultEncoderRegistry;
-
-    private static IEncoderRegistry GetDefaultEncoderRegistry()
-    {
-        if (_defaultEncoderRegistry == null)
-        {
-            var registry = new EncoderRegistry();
-            registry.Register("X1", new X1CharacterEncoder());
-            registry.Register("PC88", new Pc8801CharacterEncoder());
-            registry.Register("MSX", new Msx1CharacterEncoder());
-            _defaultEncoderRegistry = registry;
-        }
-        return _defaultEncoderRegistry;
-    }
-
-    private static IFileSystemRegistry GetDefaultRegistry()
-    {
-        if (_defaultRegistry == null)
-        {
-            var registry = new FileSystemRegistry();
-            registry.Register(new HuBasicFileSystemProvider());
-            registry.Register(new N88BasicFileSystemProvider());
-            registry.Register(new MsxDosFileSystemProvider());
-            // Add other providers here as they are implemented
-            _defaultRegistry = registry;
-        }
-        return _defaultRegistry;
-    }
-
     [UnmanagedCallersOnly(EntryPoint = "ldk_open_disk")]
-    public static int OpenDisk(IntPtr pathPtr, bool readOnly)
+    public static int OpenDisk(IntPtr pathPtr, int readOnlyFlag)
     {
         try
         {
             string? path = Marshal.PtrToStringUTF8(pathPtr);
             if (string.IsNullOrEmpty(path)) return (int)LdkStatus.ErrorInvalidArgument;
 
-            var service = new DiskService(null, GetDefaultRegistry());
-            service.OpenDisk(path, readOnly);
-            
-            return HandleManager.Register(service);
+            var readOnly = NativeBoolean.ToManagedBoolean(readOnlyFlag);
+            var isWritable = !readOnly;
+            var session = NativeBridgeBackend.Current.OpenDisk(path, readOnly);
+            return HandleManager.Register(session, new HandleMetadata("open-disk", isWritable));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 
@@ -74,14 +36,15 @@ public static class DiskExports
             string? name = Marshal.PtrToStringUTF8(namePtr) ?? "";
             if (string.IsNullOrEmpty(path)) return (int)LdkStatus.ErrorInvalidArgument;
 
-            var service = new DiskService(null, GetDefaultRegistry());
-            service.CreateDisk(path, (Legacy89DiskKit.Domain.DiskImage.Model.DiskType)diskType, name);
-            
-            return HandleManager.Register(service);
+            var session = NativeBridgeBackend.Current.CreateDisk(
+                path,
+                (Legacy89DiskKit.Domain.DiskImage.Model.DiskType)diskType,
+                name);
+            return HandleManager.Register(session, new HandleMetadata("create-disk", true));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 
@@ -98,10 +61,10 @@ public static class DiskExports
     [UnmanagedCallersOnly(EntryPoint = "ldk_get_file_system_info")]
     public static int GetFileSystemInfo(int handle, IntPtr infoPtr)
     {
-        if (!HandleManager.TryGet(handle, out var service) || service == null)
+        if (!HandleManager.TryGet(handle, out var session) || session == null)
             return (int)LdkStatus.ErrorInvalidHandle;
 
-        var fs = service.FileSystem;
+        var fs = session.FileSystem;
         if (fs == null) return (int)LdkStatus.ErrorFileNotFound;
 
         var info = fs.GetFileSystemInfo();
@@ -119,13 +82,27 @@ public static class DiskExports
         return (int)LdkStatus.Success;
     }
 
+    [UnmanagedCallersOnly(EntryPoint = "ldk_get_container_metadata")]
+    public static int GetContainerMetadata(int handle, IntPtr metadataPtr)
+    {
+        if (!HandleManager.TryGet(handle, out var session) || session == null)
+            return (int)LdkStatus.ErrorInvalidHandle;
+
+        var metadata = session.GetContainerMetadata();
+        if (metadata == null) return (int)LdkStatus.ErrorFileNotFound;
+
+        var nativeMetadata = NativeDiskContainerMetadataFactory.Create(metadata);
+        Marshal.StructureToPtr(nativeMetadata, metadataPtr, false);
+        return (int)LdkStatus.Success;
+    }
+
     [UnmanagedCallersOnly(EntryPoint = "ldk_get_files_count")]
     public static int GetFilesCount(int handle, IntPtr outCountPtr)
     {
-        if (!HandleManager.TryGet(handle, out var service) || service == null)
+        if (!HandleManager.TryGet(handle, out var session) || session == null)
             return (int)LdkStatus.ErrorInvalidHandle;
 
-        var fs = service.FileSystem;
+        var fs = session.FileSystem;
         if (fs == null) return (int)LdkStatus.ErrorFileNotFound;
 
         var files = fs.GetFiles();
@@ -139,10 +116,10 @@ public static class DiskExports
     [UnmanagedCallersOnly(EntryPoint = "ldk_get_files")]
     public static int GetFiles(int handle, IntPtr bufferPtr, int capacity)
     {
-        if (!HandleManager.TryGet(handle, out var service) || service == null)
+        if (!HandleManager.TryGet(handle, out var session) || session == null)
             return (int)LdkStatus.ErrorInvalidHandle;
 
-        var fs = service.FileSystem;
+        var fs = session.FileSystem;
         if (fs == null) return (int)LdkStatus.ErrorFileNotFound;
 
         var files = fs.GetFiles().ToList();
@@ -154,8 +131,8 @@ public static class DiskExports
             var file = files[i];
             var nativeFile = new NativeFileEntry
             {
-                FileName = file.FileName,
-                Extension = file.Extension,
+                FileName = CreatePaddedBytes(file.RawFileName, file.FileName, 16),
+                Extension = CreatePaddedBytes(file.RawExtension, file.Extension, 8),
                 Size = (int)file.Size,
                 LoadAddress = file.LoadAddress ?? 0,
                 ExecutionAddress = file.ExecutionAddress ?? 0,
@@ -169,13 +146,28 @@ public static class DiskExports
         return count;
     }
 
+    private static byte[] CreatePaddedBytes(byte[]? rawBytes, string fallbackString, int length)
+    {
+        var result = new byte[length];
+        if (rawBytes != null && rawBytes.Length > 0)
+        {
+            Array.Copy(rawBytes, result, Math.Min(rawBytes.Length, length));
+        }
+        else
+        {
+            var bytes = System.Text.Encoding.ASCII.GetBytes(fallbackString);
+            Array.Copy(bytes, result, Math.Min(bytes.Length, length));
+        }
+        return result;
+    }
+
     [UnmanagedCallersOnly(EntryPoint = "ldk_read_boot_area")]
     public static int ReadBootArea(int handle, IntPtr bufferPtr, int capacity)
     {
-        if (!HandleManager.TryGet(handle, out var service) || service == null)
+        if (!HandleManager.TryGet(handle, out var session) || session == null)
             return (int)LdkStatus.ErrorInvalidHandle;
 
-        var fs = service.FileSystem;
+        var fs = session.FileSystem;
         if (fs == null) return (int)LdkStatus.ErrorFileNotFound;
 
         try
@@ -185,19 +177,19 @@ public static class DiskExports
             Marshal.Copy(data, 0, bufferPtr, size);
             return size;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 
     [UnmanagedCallersOnly(EntryPoint = "ldk_write_boot_area")]
     public static int WriteBootArea(int handle, IntPtr dataPtr, int length)
     {
-        if (!HandleManager.TryGet(handle, out var service) || service == null)
+        if (!HandleManager.TryGet(handle, out var session) || session == null)
             return (int)LdkStatus.ErrorInvalidHandle;
 
-        var fs = service.FileSystem;
+        var fs = session.FileSystem;
         if (fs == null) return (int)LdkStatus.ErrorFileNotFound;
 
         try
@@ -207,19 +199,19 @@ public static class DiskExports
             fs.WriteBootArea(data);
             return (int)LdkStatus.Success;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 
     [UnmanagedCallersOnly(EntryPoint = "ldk_format")]
     public static int Format(int handle)
     {
-        if (!HandleManager.TryGet(handle, out var service) || service == null)
+        if (!HandleManager.TryGet(handle, out var session) || session == null)
             return (int)LdkStatus.ErrorInvalidHandle;
 
-        var fs = service.FileSystem;
+        var fs = session.FileSystem;
         if (fs == null) return (int)LdkStatus.ErrorFileNotFound;
 
         try
@@ -227,9 +219,9 @@ public static class DiskExports
             fs.Format();
             return (int)LdkStatus.Success;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return (int)LdkStatus.ErrorGeneric;
+            return (int)NativeStatusMapper.FromException(ex);
         }
     }
 }

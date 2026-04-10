@@ -1,176 +1,193 @@
 # Legacy89DiskKit
 
-Legacy89DiskKit is a C# library and CLI for working with Japanese retro disk images and filesystem layouts from the 1980s and 1990s.
+Legacy89DiskKit is a retro disk-image toolkit for Japanese 8-bit and 16-bit computer formats from the 1980s and 1990s.
 
-The project is moving toward a `v2.0.0` product model with four named lines:
+The current public product focus is:
 
-- `Legacy89DiskKit.Cli`: standalone end-user tool
-- `Legacy89DiskKit.CSharp`: reusable managed library
+- `Legacy89DiskKit.Cli`: standalone end-user CLI
+- `Legacy89DiskKit.CSharp`: supported managed integration surface
 - `Legacy89DiskKit.Native`: documented native bridge companion
-- `Legacy89DiskKit.Wasm`: planned browser/runtime line
-
-Today, the CLI is the primary release-critical artifact. The C# library remains supported for integration work. The native bridge is a documented companion deliverable with host-platform verification. WASM is a documented future line for `v2.0.0`, not a shipped artifact.
-
-For managed integration, the supported public surface is centered on `Legacy89DiskKit.Application`. `Domain` models may be used as result and work objects. Direct `Infrastructure` usage remains possible for advanced experimentation, but it is not part of the supported compatibility contract.
-
-For native integration, the public bridge contract is the documented `ldk_*` C ABI under the `Legacy89DiskKit.Native` product identity. The current implementation is still backed by the managed/native-interop bridge and is not the final portable bare-metal core.
-
-For WASM planning, the current `v2.0.0` contract is documented-only and browser-first, with a path-independent and buffer-first API direction. No WASM artifact is required for `v2.0.0`.
-
-The current CLI focuses on practical disk inspection and editing workflows for:
-
-- Hu-BASIC disks used by Sharp X1 systems
-- N88-BASIC disks used by PC-8801 systems
-- MSX-DOS disks
+- `Legacy89DiskKit.Wasm`: planned future line
 
 ## Current Scope
 
-### Disk image containers
+Current disk container support:
 
 - `.d88`
 - `.d77`
 - raw `.2d`
 - raw `.dsk`
 
-### Current CLI command groups
+Current CLI command groups:
 
 - `list`
 - `file`
 - `disk`
+- `host`
 - `boot`
 - `layout`
 - `inject`
 
-This repository intentionally documents only the commands that exist in the current CLI.
+The CLI is the primary release artifact.
 
 ## Build
 
 ```bash
-dotnet build CSharp/Legacy89DiskKit.Cli/Legacy89DiskKit.Cli.csproj
-dotnet test CSharp/Legacy89DiskKit.Tests/Legacy89DiskKit.Tests.csproj /p:UseAppHost=false
+./scripts/build.sh
 ```
 
-## Run
+```powershell
+pwsh ./scripts/build.ps1
+```
+
+The build scripts run the managed build and tests first. If `cmake` is available, they also build the C++ library, run native tests, and then run the managed-to-native validation pass. When the native toolchain is unavailable, the scripts print a clear skip message because C# is currently ahead of C++ integration.
+
+## Installed Command
 
 ```bash
-dotnet CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll --help
+l89 --help
 ```
 
-## Standalone CLI Packaging
+## Packaging
 
-`v2.0.0` is being defined around standalone CLI delivery. The intended release matrix is:
-
-- Windows x64
-- Linux x64
-- macOS x64
-- macOS arm64
-
-The default release path is self-contained single-file publishing rather than Native AOT. Native AOT remains an optional future optimization path if it becomes stable on all target platforms.
-
-The canonical local release path is:
+The canonical local CLI release path is:
 
 ```bash
-./scripts/release-cli.sh 2.0.0
+./scripts/release-cli.sh 2.1.0
 ```
-
-This script runs tests, publishes the standalone CLI for the official matrix, performs host smoke checks, and creates normalized archives under `release/v2.0.0/`.
-
-See [Documents/Release_Process.md](Documents/Release_Process.md) for the release checklist and archive conventions.
 
 An optional PowerShell companion exists for Windows:
 
 ```powershell
-pwsh ./scripts/release-cli.ps1 -Version 2.0.0
+pwsh ./scripts/release-cli.ps1 -Version 2.1.0
 ```
 
 Native companion release automation:
 
 ```bash
-./scripts/release-native.sh 2.0.0
+./scripts/release-native.sh 2.1.0
 ```
 
-The native bridge currently guarantees host-platform verification and a documented C ABI. Broader native platform support remains an intended direction, but may still be unverified on the current release host.
+## Install
 
-Current `v2.0.0` native verification status:
-
-- verified: host platform
-- attempted but not yet verified: additional same-OS targets may still fail on the current release host
-- not required for the `v2.0.0` gate: full multi-platform native bridge verification
-
-## Minimal Examples
-
-### List files and disk summary
+On macOS or Linux, install a published CLI and create the public `l89` command:
 
 ```bash
-dotnet CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll \
-  list images/disk_org/x1/X1turboIIIDemo.d88 -e sjis
+./scripts/install.sh
 ```
 
-### Inject a host file into a disk image
+If your current shell does not pick up the updated `PATH` automatically, run the printed `export PATH=...` line once.
+
+To install from an existing published directory instead:
 
 ```bash
-dotnet CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll \
-  inject images/test_inject.2D ./README.md
+./scripts/install.sh --source ./publish/v2.1.0/linux-x64 --prefix ~/.local
 ```
 
-### Export, validate, and apply a layout plan
+On Windows, install the CLI into the current user profile and add it to `PATH`:
+
+```powershell
+./scripts/install.ps1
+```
+
+The PowerShell installer also updates the current PowerShell session `PATH` when needed.
+
+To install from an existing published directory instead:
+
+```powershell
+./scripts/install.ps1 -SourcePath .\publish\v2.1.0\win-x64
+```
+
+To uninstall:
 
 ```bash
-dotnet CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll \
-  layout export images/disk_org/x1/XPL3A.2D > plan.txt
-
-cat plan.txt | dotnet CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll \
-  layout validate images/disk_org/x1/XPL3A.2D --stdin
-
-cat plan.txt | dotnet CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll \
-  layout apply images/disk_org/x1/XPL3A.2D --stdin
+./scripts/uninstall.sh
 ```
 
-### Show boot metadata
+```powershell
+./scripts/uninstall.ps1
+```
+
+The installed command is always:
+
+```text
+l89
+```
+
+## Quick Examples
+
+Show CLI help:
 
 ```bash
-dotnet CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll \
-  boot show images/disk_org/x1/X1turboIIIDemo.d88
+l89 --help
+l89 --full-help
 ```
 
-### Create and initialize a new disk image
+Create blank media:
 
 ```bash
-dotnet CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll \
-  disk create images/workdisk.d88 -d 2d -f hu-basic -n WORKDISK
+l89 disk create ./workdisk --image-format d88 --disk-type 2d
 ```
 
-### Reinitialize an existing image with an explicit filesystem
+Format an existing image explicitly:
 
 ```bash
-dotnet CSharp/Legacy89DiskKit.Cli/bin/Debug/net9.0/Legacy89DiskKit.Cli.dll \
-  disk format images/workdisk.d88 -f hu-basic
+l89 disk format ./workdisk.d88 --file-system hu-basic
 ```
 
-`disk create` is the standard blank-media flow. `disk format` reinitializes an existing image and still supports detection-based formatting when no explicit filesystem is provided.
+Inspect a disk image:
 
-## CLI Notes
+```bash
+l89 ./workdisk.d88
+l89 disk inspector ./workdisk.d88 --detail full
+```
 
-- `--language` / `-l` changes UI language.
-- `--encoding` / `-e` overrides disk filename decoding and related text I/O encoding.
-- `layout export` writes to standard output unless `--output` is specified.
-- `layout validate` and `layout apply` can read from standard input with `--stdin`.
-- Hu-BASIC writes are currently limited to `65535` bytes per file. Files above that size are rejected before writing.
+Import or export one file:
 
-## Living Documents
+```bash
+l89 file import ./workdisk.d88 ./hello.txt --target-name HELLO.TXT
+l89 file export ./workdisk.d88 HELLO.TXT ./hello-out.txt
+```
 
-- [Release process](Documents/Release_Process.md)
-- [C# integration guide](Documents/CSharp_Integration_Guide.md)
-- [Native integration guide](Documents/Native_Integration_Guide.md)
-- [WASM integration guide](Documents/Wasm_Integration_Guide.md)
-- [Current project task list](Documents/handoff/task.md)
-- [Roadmap](Documents/ROADMAP.md)
-- [Hu-BASIC disk format specification](Documents/HuBasic_Format_Specification.md)
-- [D88 format reference](Documents/D88_Format.md)
-- [Document index](Documents/Folder.md)
+Inspect or move raw sectors:
+
+```bash
+l89 disk sector export ./workdisk.d88 0 1 ./sector.bin
+l89 disk sector import ./workdisk.d88 0 ./sector.bin --count 1
+l89 disk dump ./workdisk.d88 cylinder0,side0,sector1 32
+```
+
+Show boot metadata:
+
+```bash
+l89 boot show ./workdisk.d88
+```
+
+Check for a newer release:
+
+```bash
+l89 --check-update
+```
+
+When building a Windows release on a Windows machine with WiX v4 installed, create the MSI with:
+
+```powershell
+./scripts/build-cli-msi.ps1 -Version 2.1.0
+```
+
+## Guides
+
+- [Platform support status](Documents/guides/Platform_Support_Status.md)
+- [Common use cases](Documents/guides/Common_Use_Cases.md)
+- [Release process](Documents/governance/Release_Process.md)
+- [Roadmap V2 handoff](Documents/governance/Agent_Handoff_Roadmap_V2.md)
+- [Roadmap V2 migration plan](Documents/governance/Roadmap_V2.md)
+- [C# integration guide](Documents/guides/CSharp_Integration_Guide.md)
+- [Native integration guide](Documents/guides/Native_Integration_Guide.md)
+- [WASM integration guide](Documents/guides/Wasm_Integration_Guide.md)
 
 ## Notes
 
-- Historical AI consultation notes and superseded planning documents were quarantined under `Documents/obsolete/2026-03-doc-audit/`.
-- Deferred implementation items remain tracked in `Documents/handoff/task.md`.
-- GitHub Actions remains deferred. Local release automation is the current source of truth for standalone CLI packaging.
+- `--language` changes CLI UI language.
+- `--encoding` overrides filename decoding and related text I/O encoding.
+- Public release work is being reset toward a fresh `v2.1.0` line.

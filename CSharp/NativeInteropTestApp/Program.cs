@@ -19,6 +19,20 @@ class Program
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    public struct NativeDiskContainerMetadata
+    {
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 16)]
+        public string ImageFormat;
+        public int DiskType;
+        public int Cylinders;
+        public int Heads;
+        public int SectorsPerTrack;
+        public int BytesPerSector;
+        public int IsWriteProtected;
+        public long DeclaredImageSize;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
     public struct NativeFileEntry
     {
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 16)]
@@ -32,13 +46,58 @@ class Program
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    private delegate int OpenDiskDelegate(IntPtr path, bool readOnly);
+    private delegate int GetAbiVersionDelegate();
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetCapabilityFlagsDelegate();
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetCapabilitySummaryDelegate(IntPtr buffer, int capacity);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetStatusNameDelegate(int statusCode, IntPtr buffer, int capacity);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetStatusCountDelegate();
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetStatusCodeAtDelegate(int index);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetStatusNameAtDelegate(int index, IntPtr buffer, int capacity);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetCatalogCountDelegate();
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetCatalogItemDelegate(int index, IntPtr buffer, int capacity);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetSummaryDelegate(IntPtr buffer, int capacity);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int IsHandleValidDelegate(int handle);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetOpenHandleCountDelegate();
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetHandleStringDelegate(int handle, IntPtr buffer, int capacity);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int CloseAllHandlesDelegate();
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int OpenDiskDelegate(IntPtr path, int readOnlyFlag);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int CloseDiskDelegate(int handle);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int GetFileSystemInfoDelegate(int handle, ref NativeFileSystemInfo info);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int GetContainerMetadataDelegate(int handle, ref NativeDiskContainerMetadata metadata);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int GetFilesCountDelegate(int handle, out int count);
@@ -70,20 +129,78 @@ class Program
         }
 
         IntPtr libraryHandle = NativeLibrary.Load(libPath);
+        var getAbiVersion = LoadDelegate<GetAbiVersionDelegate>(libraryHandle, "ldk_get_abi_version");
+        var getCapabilityFlags = LoadDelegate<GetCapabilityFlagsDelegate>(libraryHandle, "ldk_get_capability_flags");
+        var getCapabilitySummary = LoadDelegate<GetCapabilitySummaryDelegate>(libraryHandle, "ldk_get_capability_summary");
+        var getStatusName = LoadDelegate<GetStatusNameDelegate>(libraryHandle, "ldk_get_status_name");
+        var getStatusCount = LoadDelegate<GetStatusCountDelegate>(libraryHandle, "ldk_get_status_count");
+        var getStatusCodeAt = LoadDelegate<GetStatusCodeAtDelegate>(libraryHandle, "ldk_get_status_code_at");
+        var getStatusNameAt = LoadDelegate<GetStatusNameAtDelegate>(libraryHandle, "ldk_get_status_name_at");
+        var getSupportedFileSystemCount = LoadDelegate<GetCatalogCountDelegate>(libraryHandle, "ldk_get_supported_file_system_count");
+        var getSupportedFileSystemName = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_supported_file_system_name");
+        var getSupportedPlatformCount = LoadDelegate<GetCatalogCountDelegate>(libraryHandle, "ldk_get_supported_platform_count");
+        var getSupportedPlatformName = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_supported_platform_name");
+        var getSupportedImageFormatCount = LoadDelegate<GetCatalogCountDelegate>(libraryHandle, "ldk_get_supported_image_format_count");
+        var getSupportedImageFormatName = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_supported_image_format_name");
+        var getInvalidHandleValue = LoadDelegate<GetAbiVersionDelegate>(libraryHandle, "ldk_get_invalid_handle_value");
+        var getHandleLifecycleSummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_handle_lifecycle_summary");
+        var getHandleValueSummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_handle_value_summary");
+        var getBufferStringPolicySummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_buffer_string_policy_summary");
+        var getMutationPolicySummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_mutation_policy_summary");
+        var getBackendKind = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_backend_kind");
+        var getBackendImplementation = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_backend_implementation");
+        var getBackendTarget = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_backend_target");
+        var getBackendSummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_backend_summary");
+        var getExportCount = LoadDelegate<GetCatalogCountDelegate>(libraryHandle, "ldk_get_export_count");
+        var getExportNameAt = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_export_name_at");
+        var getExportGroupAt = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_export_group_at");
+        var getMutatingOperationCount = LoadDelegate<GetCatalogCountDelegate>(libraryHandle, "ldk_get_mutating_operation_count");
+        var getMutatingOperationNameAt = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_mutating_operation_name_at");
+        var getOpenModeSummary = LoadDelegate<GetSummaryDelegate>(libraryHandle, "ldk_get_open_mode_summary");
+        var getOpenModeCount = LoadDelegate<GetCatalogCountDelegate>(libraryHandle, "ldk_get_open_mode_count");
+        var getOpenModeNameAt = LoadDelegate<GetCatalogItemDelegate>(libraryHandle, "ldk_get_open_mode_name_at");
+        var isHandleValid = LoadDelegate<IsHandleValidDelegate>(libraryHandle, "ldk_is_handle_valid");
+        var getOpenHandleCount = LoadDelegate<GetOpenHandleCountDelegate>(libraryHandle, "ldk_get_open_handle_count");
+        var getHandleSourceOperation = LoadDelegate<GetHandleStringDelegate>(libraryHandle, "ldk_get_handle_source_operation");
+        var getHandleIsWritable = LoadDelegate<IsHandleValidDelegate>(libraryHandle, "ldk_get_handle_is_writable");
+        var getHandleSummary = LoadDelegate<GetHandleStringDelegate>(libraryHandle, "ldk_get_handle_summary");
+        var closeAllHandles = LoadDelegate<CloseAllHandlesDelegate>(libraryHandle, "ldk_close_all_handles");
         var openDisk = LoadDelegate<OpenDiskDelegate>(libraryHandle, "ldk_open_disk");
         var closeDisk = LoadDelegate<CloseDiskDelegate>(libraryHandle, "ldk_close_disk");
         var getFileSystemInfo = LoadDelegate<GetFileSystemInfoDelegate>(libraryHandle, "ldk_get_file_system_info");
+        var getContainerMetadata = LoadDelegate<GetContainerMetadataDelegate>(libraryHandle, "ldk_get_container_metadata");
         var getFilesCount = LoadDelegate<GetFilesCountDelegate>(libraryHandle, "ldk_get_files_count");
         var getFiles = LoadDelegate<GetFilesDelegate>(libraryHandle, "ldk_get_files");
 
         Console.WriteLine("Native Interop Test Application");
+        Console.WriteLine($"ABI Version: {getAbiVersion()}");
+        Console.WriteLine($"Capability Flags: 0x{getCapabilityFlags():X}");
+        Console.WriteLine($"Capability Summary: {ReadString(getCapabilitySummary)}");
+        Console.WriteLine($"Success Status Name: {ReadStatusName(getStatusName, 0)}");
+        Console.WriteLine($"Status Catalog: {ReadStatusCatalog(getStatusCount, getStatusCodeAt, getStatusNameAt)}");
+        Console.WriteLine($"Supported File Systems: {ReadCatalog(getSupportedFileSystemCount, getSupportedFileSystemName)}");
+        Console.WriteLine($"Supported Platforms: {ReadCatalog(getSupportedPlatformCount, getSupportedPlatformName)}");
+        Console.WriteLine($"Supported Image Formats: {ReadCatalog(getSupportedImageFormatCount, getSupportedImageFormatName)}");
+        Console.WriteLine($"Invalid Handle Value: {getInvalidHandleValue()}");
+        Console.WriteLine($"Handle Lifecycle: {ReadString(getHandleLifecycleSummary)}");
+        Console.WriteLine($"Handle Value Policy: {ReadString(getHandleValueSummary)}");
+        Console.WriteLine($"Buffer/String Policy: {ReadString(getBufferStringPolicySummary)}");
+        Console.WriteLine($"Mutation Policy: {ReadString(getMutationPolicySummary)}");
+        Console.WriteLine($"Backend Kind: {ReadString(getBackendKind)}");
+        Console.WriteLine($"Backend Implementation: {ReadString(getBackendImplementation)}");
+        Console.WriteLine($"Backend Target: {ReadString(getBackendTarget)}");
+        Console.WriteLine($"Backend Summary: {ReadString(getBackendSummary)}");
+        Console.WriteLine($"Export Catalog: {ReadExportCatalog(getExportCount, getExportNameAt, getExportGroupAt)}");
+        Console.WriteLine($"Mutating Operations: {ReadCatalog(getMutatingOperationCount, getMutatingOperationNameAt)}");
+        Console.WriteLine($"Open Mode Summary: {ReadString(getOpenModeSummary)}");
+        Console.WriteLine($"Open Modes: {ReadCatalog(getOpenModeCount, getOpenModeNameAt)}");
         Console.WriteLine($"Opening disk: {diskImagePath}");
 
         IntPtr diskPathPtr = Marshal.StringToCoTaskMemUTF8(diskImagePath);
         int handle;
         try
         {
-            handle = openDisk(diskPathPtr, true);
+            handle = openDisk(diskPathPtr, 1);
         }
         finally
         {
@@ -98,6 +215,11 @@ class Program
         }
 
         Console.WriteLine($"Disk opened. Handle: {handle}");
+        Console.WriteLine($"Handle valid: {isHandleValid(handle) != 0}");
+        Console.WriteLine($"Open handle count: {getOpenHandleCount()}");
+        Console.WriteLine($"Handle source: {ReadHandleString(getHandleSourceOperation, handle)}");
+        Console.WriteLine($"Handle writable: {getHandleIsWritable(handle) != 0}");
+        Console.WriteLine($"Handle summary: {ReadHandleString(getHandleSummary, handle)}");
 
         NativeFileSystemInfo info = new NativeFileSystemInfo();
         int res = getFileSystemInfo(handle, ref info);
@@ -112,6 +234,22 @@ class Program
         else
         {
             Console.WriteLine($"Failed to get file system info. Error code: {res}");
+        }
+
+        NativeDiskContainerMetadata metadata = new NativeDiskContainerMetadata();
+        res = getContainerMetadata(handle, ref metadata);
+        if (res == 0)
+        {
+            Console.WriteLine($"--- Container Metadata ---");
+            Console.WriteLine($"Format: {metadata.ImageFormat}");
+            Console.WriteLine($"Disk Type: {metadata.DiskType}");
+            Console.WriteLine($"Geometry: {metadata.Cylinders}/{metadata.Heads}/{metadata.SectorsPerTrack}/{metadata.BytesPerSector}");
+            Console.WriteLine($"Write Protected: {metadata.IsWriteProtected != 0}");
+            Console.WriteLine($"Declared Size: {metadata.DeclaredImageSize}");
+        }
+        else
+        {
+            Console.WriteLine($"Failed to get container metadata. Error code: {res}");
         }
 
         int count;
@@ -148,6 +286,10 @@ class Program
         }
 
         closeDisk(handle);
+        Console.WriteLine($"Handle valid after close: {isHandleValid(handle) != 0}");
+        Console.WriteLine($"Open handle count after close: {getOpenHandleCount()}");
+        Console.WriteLine($"Close all handles result: {closeAllHandles()}");
+        Console.WriteLine($"Open handle count after reset: {getOpenHandleCount()}");
         NativeLibrary.Free(libraryHandle);
         Console.WriteLine("Disk closed.");
         return 0;
@@ -157,5 +299,133 @@ class Program
     {
         var symbol = NativeLibrary.GetExport(libraryHandle, exportName);
         return Marshal.GetDelegateForFunctionPointer<T>(symbol);
+    }
+
+    private static string ReadString(GetCapabilitySummaryDelegate reader)
+    {
+        IntPtr buffer = Marshal.AllocHGlobal(256);
+        try
+        {
+            int length = reader(buffer, 256);
+            return Marshal.PtrToStringUTF8(buffer, length) ?? string.Empty;
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
+        }
+    }
+
+    private static string ReadStatusName(GetStatusNameDelegate reader, int statusCode)
+    {
+        IntPtr buffer = Marshal.AllocHGlobal(256);
+        try
+        {
+            int length = reader(statusCode, buffer, 256);
+            return Marshal.PtrToStringUTF8(buffer, length) ?? string.Empty;
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
+        }
+    }
+
+    private static string ReadCatalog(GetCatalogCountDelegate getCount, GetCatalogItemDelegate getItem)
+    {
+        var count = getCount();
+        var items = new List<string>(count);
+
+        for (var i = 0; i < count; i++)
+        {
+            IntPtr buffer = Marshal.AllocHGlobal(256);
+            try
+            {
+                var length = getItem(i, buffer, 256);
+                items.Add(Marshal.PtrToStringUTF8(buffer, length) ?? string.Empty);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(buffer);
+            }
+        }
+
+        return string.Join(", ", items);
+    }
+
+    private static string ReadStatusCatalog(GetStatusCountDelegate getCount, GetStatusCodeAtDelegate getCode, GetStatusNameAtDelegate getName)
+    {
+        var count = getCount();
+        var items = new List<string>(count);
+
+        for (var i = 0; i < count; i++)
+        {
+            IntPtr buffer = Marshal.AllocHGlobal(256);
+            try
+            {
+                var length = getName(i, buffer, 256);
+                var name = Marshal.PtrToStringUTF8(buffer, length) ?? string.Empty;
+                items.Add($"{getCode(i)}:{name}");
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(buffer);
+            }
+        }
+
+        return string.Join(", ", items);
+    }
+
+    private static string ReadExportCatalog(GetCatalogCountDelegate getCount, GetCatalogItemDelegate getName, GetCatalogItemDelegate getGroup)
+    {
+        var count = getCount();
+        var items = new List<string>(count);
+
+        for (var i = 0; i < count; i++)
+        {
+            IntPtr nameBuffer = Marshal.AllocHGlobal(128);
+            IntPtr groupBuffer = Marshal.AllocHGlobal(64);
+            try
+            {
+                var nameLength = getName(i, nameBuffer, 128);
+                var groupLength = getGroup(i, groupBuffer, 64);
+                var name = Marshal.PtrToStringUTF8(nameBuffer, nameLength) ?? string.Empty;
+                var group = Marshal.PtrToStringUTF8(groupBuffer, groupLength) ?? string.Empty;
+                items.Add($"{group}:{name}");
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(nameBuffer);
+                Marshal.FreeHGlobal(groupBuffer);
+            }
+        }
+
+        return string.Join(", ", items);
+    }
+
+    private static string ReadString(GetSummaryDelegate reader)
+    {
+        IntPtr buffer = Marshal.AllocHGlobal(256);
+        try
+        {
+            var length = reader(buffer, 256);
+            return Marshal.PtrToStringUTF8(buffer, length) ?? string.Empty;
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
+        }
+    }
+
+    private static string ReadHandleString(GetHandleStringDelegate reader, int handle)
+    {
+        IntPtr buffer = Marshal.AllocHGlobal(256);
+        try
+        {
+            var length = reader(handle, buffer, 256);
+            return Marshal.PtrToStringUTF8(buffer, length) ?? string.Empty;
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
+        }
     }
 }

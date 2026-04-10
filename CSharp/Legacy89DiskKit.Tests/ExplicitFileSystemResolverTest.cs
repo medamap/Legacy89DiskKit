@@ -1,4 +1,4 @@
-using Legacy89DiskKit.Application.FileSystem;
+using Legacy89DiskKit.FileSystem.Application;
 using Legacy89DiskKit.Domain.DiskImage.Model;
 using Legacy89DiskKit.Infrastructure.DiskImage.Container;
 using Legacy89DiskKit.Infrastructure.FileSystem.HuBasic.Provider;
@@ -68,6 +68,32 @@ public class ExplicitFileSystemResolverTest
             using var container = D88DiskContainer.CreateNew(path, DiskType.TwoD, "TEST");
             var ex = Assert.Throws<InvalidOperationException>(() => resolver.Create("msx-dos", container));
             Assert.Contains("2DD", ex.Message);
+        }
+        finally
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("cpm")]
+    [InlineData("fat12")]
+    [InlineData("fat32")]
+    [InlineData("pc-9801-harddisk")]
+    [InlineData("msx-cartridge")]
+    public void Create_ReservedFileSystem_ThrowsReservedMessage(string fileSystemName)
+    {
+        var resolver = new ExplicitFileSystemResolver();
+        var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.d88");
+
+        try
+        {
+            using var container = D88DiskContainer.CreateNew(path, DiskType.TwoD, "TEST");
+            var ex = Assert.Throws<NotSupportedException>(() => resolver.Create(fileSystemName, container));
+            Assert.Contains("This feature is reserved, please request!!", ex.Message);
         }
         finally
         {

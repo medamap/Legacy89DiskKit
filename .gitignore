@@ -3,6 +3,10 @@
 *.user
 *.userosscache
 *.sln.docstates
+IgnoreTools/
+communication/
+scripts/legacy_analysis/
+__pycache__/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -348,3 +352,5 @@ images/
 !images/.gitkeep
 temp/
 out.txt
+opencode.json
+.takt/

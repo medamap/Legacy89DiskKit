@@ -1,0 +1,184 @@
+{
+  "outputRoot": "/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/images/test",
+  "cleanupOutputRoot": true,
+  "items": [
+    {
+      "name": "blank_2d.d88",
+      "operation": "create-blank",
+      "diskType": "2d",
+      "bootRuntimeGuarantee": "unformatted"
+    },
+    {
+      "name": "blank_2dd.d88",
+      "operation": "create-blank",
+      "diskType": "2dd",
+      "bootRuntimeGuarantee": "unformatted"
+    },
+    {
+      "name": "blank_2hd.d88",
+      "operation": "create-blank",
+      "diskType": "2hd",
+      "bootRuntimeGuarantee": "unformatted"
+    },
+    {
+      "name": "hubasic_x1_2d.d88",
+      "operation": "format",
+      "diskType": "2d",
+      "fileSystem": "hu-basic",
+      "bootRuntimeGuarantee": "formatted-only"
+    },
+    {
+      "name": "hubasic_x1_2dd.d88",
+      "operation": "format",
+      "diskType": "2dd",
+      "fileSystem": "hu-basic",
+      "bootRuntimeGuarantee": "formatted-only"
+    },
+    {
+      "name": "hubasic_x1_2hd.d88",
+      "operation": "format",
+      "diskType": "2hd",
+      "physicalProfile": "x1-hubasic-2hd",
+      "fileSystem": "hu-basic",
+      "bootRuntimeGuarantee": "formatted-only"
+    },
+    {
+      "name": "hubasic_x1_2d_boot.d88",
+      "operation": "format",
+      "diskType": "2d",
+      "fileSystem": "hu-basic",
+      "bootRuntimeGuarantee": "boot-only"
+    },
+    {
+      "name": "hubasic_x1_2dd_boot.d88",
+      "operation": "format",
+      "diskType": "2dd",
+      "fileSystem": "hu-basic",
+      "bootRuntimeGuarantee": "boot-only"
+    },
+    {
+      "name": "hubasic_x1_2hd_boot.d88",
+      "operation": "format",
+      "diskType": "2hd",
+      "physicalProfile": "x1-hubasic-2hd",
+      "fileSystem": "hu-basic",
+      "bootRuntimeGuarantee": "boot-only"
+    },
+    {
+      "name": "hubasic_x1_2d_boot.d88",
+      "operation": "logical-copy-x1",
+      "sourceImage": "/Volumes/PoppoSSD2T/DiskImages/Sharp X1/[OS] HuBASIC CZ-8FB01 V1.0 (Hudson Soft - Sharp)/[OS] HuBASIC CZ-8FB01 V1.0.d88",
+      "sourceFileSystem": "hu-basic",
+      "destinationFileSystem": "hu-basic",
+      "bootRuntimeGuarantee": "boot-and-files"
+    },
+    {
+      "name": "hubasic_x1_2dd_boot.d88",
+      "operation": "logical-copy-x1",
+      "sourceImage": "/Volumes/PoppoSSD2T/DiskImages/Sharp X1/[OS] HuBASIC CZ-8FB02 V1.0 (X1turbo) (Hudson Soft - Sharp)/[OS] HuBASIC CZ-8FB02 V1.0 (X1turbo) [FD] [2HD format]/[OS] HuBASIC CZ-8FB02 V1.0 (X1turbo) {boot 2HD}.d88",
+      "sourceFileSystem": "hu-basic",
+      "destinationFileSystem": "hu-basic",
+      "bootRuntimeGuarantee": "boot-and-files,tentative-source"
+    },
+    {
+      "name": "hubasic_x1_2hd_boot.d88",
+      "operation": "logical-copy-x1",
+      "sourceImage": "/Volumes/PoppoSSD2T/DiskImages/Sharp X1/[OS] HuBASIC CZ-8FB02 V1.0 (X1turbo) (Hudson Soft - Sharp)/[OS] HuBASIC CZ-8FB02 V1.0 (X1turbo) [FD] [2HD format]/[OS] HuBASIC CZ-8FB02 V1.0 (X1turbo) {boot 2HD}.d88",
+      "sourceFileSystem": "hu-basic",
+      "destinationFileSystem": "hu-basic",
+      "bootRuntimeGuarantee": "boot-and-files"
+    },
+    {
+      "name": "xdos_x1_2d.d88",
+      "operation": "format",
+      "diskType": "2d",
+      "fileSystem": "xdos",
+      "bootRuntimeGuarantee": "formatted-only"
+    },
+    {
+      "name": "xdos_x1_2dd.d88",
+      "operation": "format",
+      "diskType": "2dd",
+      "fileSystem": "xdos",
+      "bootRuntimeGuarantee": "formatted-only"
+    },
+    {
+      "name": "xdos_x1_2hd.d88",
+      "operation": "format",
+      "diskType": "2hd",
+      "fileSystem": "xdos",
+      "bootRuntimeGuarantee": "formatted-only"
+    },
+    {
+      "name": "cpm_x1_2d.d88",
+      "operation": "copy-image",
+      "sourceImage": "/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/images/d88disks/cpm_2d.d88",
+      "bootRuntimeGuarantee": "formatted-from-sample"
+    },
+    {
+      "name": "cpm_x1_2dd.d88",
+      "operation": "cpm-minimal-format",
+      "diskType": "2dd",
+      "bootRuntimeGuarantee": "tentative-minimal-format"
+    },
+    {
+      "name": "cpm_x1_2hd.d88",
+      "operation": "cpm-minimal-format",
+      "diskType": "2hd",
+      "physicalProfile": "x1-cpm-2hd",
+      "bootRuntimeGuarantee": "tentative-minimal-format"
+    },
+    {
+      "name": "xdos_x1_2d_boot.d88",
+      "operation": "xdos-clone-all",
+      "diskType": "2d",
+      "sourceImage": "/Volumes/PoppoSSD2T/DiskImages/Sharp X1/[OS] X-DOS V.2.5a Rel.1.0/[OS] X-DOS V.2.5a Rel.1.0.d88",
+      "bootRuntimeGuarantee": "boot-and-files"
+    },
+    {
+      "name": "xdos_x1_2dd_boot.d88",
+      "operation": "xdos-clone-all",
+      "diskType": "2dd",
+      "sourceImage": "/Volumes/PoppoSSD2T/DiskImages/Sharp X1/[OS] X-DOS V.2.5a Rel.1.0/[OS] X-DOS V.2.5a Rel.1.0.d88",
+      "bootRuntimeGuarantee": "boot-and-files,tentative-runtime"
+    },
+    {
+      "name": "xdos_x1_2hd_boot.d88",
+      "operation": "xdos-clone-all",
+      "diskType": "2hd",
+      "sourceImage": "/Volumes/PoppoSSD2T/DiskImages/Sharp X1/[OS] X-DOS V.2.5a Rel.1.0/[OS] X-DOS V.2.5a Rel.1.0.d88",
+      "bootRuntimeGuarantee": "boot-and-files,tentative-runtime"
+    },
+    {
+      "name": "cpm_x1_2d_boot.d88",
+      "operation": "copy-image",
+      "sourceImage": "/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/images/d88disks/[OS] CPM 2.2.d88",
+      "bootRuntimeGuarantee": "boot-and-files-from-sample"
+    },
+    {
+      "name": "cpm_x1_2dd_boot.d88",
+      "operation": "cpm-minimal-format",
+      "diskType": "2dd",
+      "bootRuntimeGuarantee": "tentative-boot-and-runtime"
+    },
+    {
+      "name": "cpm_x1_2dd_boot.d88",
+      "operation": "cpm-seed-from-source",
+      "sourceImage": "/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/images/d88disks/[OS] CPM 2.2.d88",
+      "bootRuntimeGuarantee": "tentative-boot-and-runtime"
+    },
+    {
+      "name": "cpm_x1_2hd_boot.d88",
+      "operation": "cpm-minimal-format",
+      "diskType": "2hd",
+      "physicalProfile": "x1-cpm-2hd",
+      "bootRuntimeGuarantee": "tentative-boot-and-runtime"
+    },
+    {
+      "name": "cpm_x1_2hd_boot.d88",
+      "operation": "cpm-seed-from-source",
+      "sourceImage": "/Volumes/PoppoSSD2T/Projects/ClaudeCodeProjects/Legacy89DiskKit/images/d88disks/[OS] CPM 2.2.d88",
+      "bootRuntimeGuarantee": "tentative-boot-and-runtime"
+    }
+  ]
+}

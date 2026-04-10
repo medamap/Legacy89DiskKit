@@ -80,7 +80,7 @@ This release makes the CLI the primary end-user artifact and defines the public 
 - `README.md`
 - `Documents/Release_Process.md`
 - `Documents/ROADMAP.md`
-- `Documents/handoff/task.md`
+- `Documents/Roadmap_V2.md`
 
 ## Full Changelog
 

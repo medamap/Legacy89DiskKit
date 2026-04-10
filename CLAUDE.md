@@ -6,7 +6,7 @@ Legacy89DiskKitは、1980〜90年代の日本のレトロコンピュータで�
 ## 主要な情報
 
 ### リリース手順
-- 新バージョンのリリース手順: [Documents/Release_Process.md](Documents/Release_Process.md)
+- 新バージョンのリリース手順: [Documents/governance/Release_Process.md](Documents/governance/Release_Process.md)
 
 ### テスト実行
 ```bash
@@ -95,7 +95,7 @@ dotnet build -c Release
 ## 現在進行中の作業: ディスクコピー機能実装
 
 ### 現在の実装状況
-詳細な進捗状況は [Documents/Disk_Copy_Implementation_Status.md](Documents/Disk_Copy_Implementation_Status.md) を参照
+詳細な進捗状況は [Documents/obsolete/2026-03-doc-audit/Disk_Copy_Implementation_Status.md](Documents/obsolete/2026-03-doc-audit/Disk_Copy_Implementation_Status.md) を参照
 
 ### 次に実装すべき項目（優先順）
 1. **ファイル名自動短縮機能** - 8文字制限ファイルシステム対応

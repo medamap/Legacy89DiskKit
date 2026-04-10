@@ -1,5 +1,5 @@
 using Legacy89DiskKit.Domain.FileSystem.Model;
-using Legacy89DiskKit.Application.FileSystem;
+using Legacy89DiskKit.FileSystem.Application;
 
 namespace Legacy89DiskKit.Cli.Presentation.FileSystem;
 
@@ -18,7 +18,8 @@ public class HuBasicFileListFormatter : IFileListFormatter
             new FileListColumn(localizer.LoadHeader, true),
             new FileListColumn(localizer.EndHeader, true),
             new FileListColumn(localizer.ExecHeader, true),
-            new FileListColumn(localizer.ClusterHeader, true),
+            new FileListColumn(localizer.DirectoryAddressHeader, true),
+            new FileListColumn(localizer.BodyAddressHeader, true),
             new FileListColumn(localizer.NoteHeader)
         };
 
@@ -32,7 +33,8 @@ public class HuBasicFileListFormatter : IFileListFormatter
                 FormatHex(entry.Entry.LoadAddress),
                 FormatEnd(entry),
                 FormatHex(entry.Entry.ExecutionAddress),
-                entry.Entry.StartCluster.ToString(),
+                FormatOffset(entry.DirectoryOffset),
+                FormatOffset(entry.BodyOffset),
                 footnotes.Register(GetNotes(entry.Entry, localizer).ToArray())
             }))
             .ToArray();
@@ -122,6 +124,11 @@ public class HuBasicFileListFormatter : IFileListFormatter
     private static string FormatHex(ushort? value)
     {
         return value.HasValue ? $"{value.Value:X4}" : "----";
+    }
+
+    private static string FormatOffset(long? value)
+    {
+        return value.HasValue ? $"{value.Value:X8}" : "--------";
     }
 
     private static IReadOnlyList<FileListSummaryItem> CreateSummary(FileListFormatContext context, IFileListLocalizer localizer)

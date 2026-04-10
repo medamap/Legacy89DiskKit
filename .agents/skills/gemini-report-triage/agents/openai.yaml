@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gemini Report Triage"
+  short_description: "Review Gemini reports and queue retries."
+  default_prompt: "Use this skill to inspect Gemini reports, decide pass or fail, and queue any retry instruction."

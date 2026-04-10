@@ -1,0 +1,4 @@
+interface:
+  display_name: "Legacy89 Gemini Context"
+  short_description: "Shared Legacy89 rules, samples, and checks."
+  default_prompt: "Use this skill to load the shared Legacy89 rules, sample images, and verification expectations for Gemini tasks."

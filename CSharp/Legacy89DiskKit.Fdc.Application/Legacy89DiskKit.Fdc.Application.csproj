@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Legacy89DiskKit.DiskImage.Domain/Legacy89DiskKit.DiskImage.Domain.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.Drive.Domain/Legacy89DiskKit.Drive.Domain.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.Fdc.Domain/Legacy89DiskKit.Fdc.Domain.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.Timing.Domain/Legacy89DiskKit.Timing.Domain.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.DiskImage.Infrastructure/Legacy89DiskKit.DiskImage.Infrastructure.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.Drive.Infrastructure/Legacy89DiskKit.Drive.Infrastructure.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.Fdc.Infrastructure/Legacy89DiskKit.Fdc.Infrastructure.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.Drive.Application/Legacy89DiskKit.Drive.Application.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Legacy89DiskKit/Fdc/Application/**/*.cs">
+      <Link>Fdc/Application</Link>
+    </Compile>
+  </ItemGroup>
+</Project>

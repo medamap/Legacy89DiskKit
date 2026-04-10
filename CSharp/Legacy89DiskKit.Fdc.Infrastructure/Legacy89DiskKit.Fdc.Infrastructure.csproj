@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Legacy89DiskKit.Fdc.Domain/Legacy89DiskKit.Fdc.Domain.csproj" />
+    <ProjectReference Include="../Legacy89DiskKit.DiskImage.Infrastructure/Legacy89DiskKit.DiskImage.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>
